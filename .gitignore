@@ -1,0 +1,8 @@
+build/
+*.md
+!README.md
+__pycache__/
+.env
+*.cu
+results/
+.vscode/

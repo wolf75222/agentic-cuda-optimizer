@@ -1,0 +1,8 @@
+langgraph==1.2.11
+langchain-openai==1.6.0
+openai==3.16.2
+pydantic==2.13.5
+numpy==2.3.4
+matplotlib==3.11.2
+python-dotenv==1.2.3
+Brotli==1.2.0
