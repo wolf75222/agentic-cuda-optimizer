@@ -63,3 +63,32 @@ and never approve research_ready. Kernel reconstruction needs no external corpus
 Kernel source,
 baseline source, real input bytes, raw measurements, configuration, contracts,
 environment and provenance evidence remain included.
+
+## Offline search-tree visualization
+
+Render a trusted local completed campaign's cold experiments database without
+submitting or repeating any computation:
+
+    .venv/bin/python scripts/render_search_tree.py \
+      --database results/RUN_ID/experiments.sqlite \
+      --output /absolute/new-directory/search-tree \
+      --trust-local-pickle
+
+The output contains a standalone `search-tree.svg` and a readable
+`search-tree.json`: exact recorded scores, parent/child links, candidate/source
+hashes, pending trials, eligibility and closure history. The greedy ablation is
+shown as candidate lineage with its individual observations, without inventing
+a single TreeQuest score. Search scores and the search incumbent are explicitly
+distinct from final gain and certification. An optional `--manifest FILE` records
+a same-run external status declaration without qualifying it.
+
+The selected database must be trusted: its persisted search snapshot is a Python
+pickle. The renderer rejects private suite journals, unknown schemas, nonempty
+WAL/journal files and sources changing during capture. It reads the cold source
+with SQLite's immutable read-only mode, backs it up into a temporary directory,
+checks integrity and verifies source fingerprints before and after. It never
+checkpoints or writes to the original. For an active campaign, use an existing
+coherent exported experiments database; do not stop its process for a picture.
+The output must be a fresh directory outside the generation/database directory.
+Its JSON includes the readable ledger and search RNG and remains protected with
+directory mode 0700 and file mode 0600 while campaigns continue.

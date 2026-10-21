@@ -155,9 +155,9 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 67,
-    "latest_local_junit_entries": 931,
-    "latest_local_testcase_nodes": 926
+    "evidence_entries": 72,
+    "latest_local_junit_entries": 955,
+    "latest_local_testcase_nodes": 950
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -5155,6 +5155,435 @@
         "Unavailable profiling and unavailable local CUDA fallback are retained. No counters or local ROMEO-equivalent timing are invented.",
         "No final common evaluation, full study completion or scientific superiority is established."
       ]
+    },
+    "tuning_constraints_773755": {
+      "path": "results/tuning-constraints-20261021/inspection-summary.json",
+      "sha256": "94130b3079977f37f341bcb417725aa8448acd53d48ae1b631a5d54148e47492",
+      "bytes": 11768,
+      "kind": "romeo_static_dsl_source_macro_control",
+      "ok": true,
+      "status": "dsl_source_macro_acceptance_passed",
+      "job_id": "773755",
+      "session_id": "dsl-source-macro-81eccb45cd84496e9283648f12c34af0",
+      "terminal": {
+        "job_id": "773755",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:01:03",
+        "nodes": "romeo-a041",
+        "terminal": true
+      },
+      "observed_at_utc": "2026-10-21T18:06:44.728569+00:00",
+      "source_version": {
+        "HEAD": "ef057b378b5f9192719b8115330fed679bc88043",
+        "dirty_state": [],
+        "source_sha256": {
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750",
+          "examples/naive_matmul.cu": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a",
+          "optimizer_agent/autotuning.py": "14fe7412c867a6006c0bcd1f1d465f47b303b2bc54f314bbee1e5a6076c65d02",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "optimizer_agent/tuning_constraints.py": "88f49acd3a9e4d8a7b35e39d65781888729a9274e8a091b11f2ff8cf48f83070",
+          "scripts/gpu_autotuning_acceptance.py": "4b163e5226bbfdf68ac6f7d8085b0fa94bb6b1be9c64d36feceedf6c9bfc2e0b",
+          "scripts/gpu_tuning_constraints_acceptance.py": "330f79e2da960b70bde771f30844301a5b4995c22adbf984f5d43fb719d8ecda"
+        },
+        "frozen_source_files_verified": 61,
+        "source_file_hash_mismatches": []
+      },
+      "authority_reference": {
+        "path": "results/tuning-constraints-20261021/tuning-constraints-acceptance.json",
+        "sha256": "933ff5bf2ad09f0bb53124b5aa9ccc2ba2d0525bb6285aa03abdc3a0c451624f",
+        "bytes": 543708
+      },
+      "proof_manifest": {
+        "path": "results/tuning-constraints-20261021/inspection-proof-sha256.json",
+        "sha256": "d75d90461e8385e29370e8a38071d2c36031cb4f5b61813bf169968f3e1e74bc",
+        "bytes": 130988,
+        "file_count": 964,
+        "excluded_paths": [
+          "inspection-proof-sha256.json",
+          "inspection-summary.json"
+        ],
+        "exclusion_reason": "Self and derived summary are excluded; the summary links the finalized manifest hash without circular self-reference."
+      },
+      "protection_reference": {
+        "path": "results/tuning-constraints-20261021/inspection-protection.json",
+        "sha256": "d7a21d5e75b91eefeff3006e3aacecee992b68d17d9e814d3b0d5fab2145ca0e",
+        "bytes": 1964
+      },
+      "protected_job_references": [
+        {
+          "path": "results/tuning-constraints-20261021/inspection-protected-jobs-earlier.json",
+          "sha256": "b9cafa8d5ec41a411ba9537974cf716ee422d8b14f7011b22d888efcceb57e65",
+          "bytes": 1707
+        },
+        {
+          "path": "results/tuning-constraints-20261021/inspection-protected-jobs-postflight.json",
+          "sha256": "2b334d53d9e2219d5e628c27d1e59930f0cf20d73162760f571888d0150d9c94",
+          "bytes": 1985
+        }
+      ],
+      "checks": {
+        "entire_fixed_domain_observed": true,
+        "dsl_filters_hardware_valid_tile_12": true,
+        "filtered_configuration_never_sent_to_gpu": true,
+        "both_admitted_configurations_validated_and_measured": true,
+        "independent_full_validation_precedes_each_first_benchmark": true,
+        "three_distinct_source_bytes": true,
+        "macro_and_launch_coupled_exactly": true,
+        "native_compilation_or_content_cache_and_static_shared_evidence": true,
+        "raw_series_preserved": true,
+        "native_request_ids_unique": true,
+        "winner_has_an_additional_full_native_measurement": true,
+        "fresh_winner_measurement": true,
+        "all_requests_owned_job": true,
+        "no_model_invocations": true
+      },
+      "contract_hash": "4d7bbf6982ce3d0ed33b7e1fcfa20d9d9d8f83a302a6a7ade51760f60e387f15",
+      "hardware_identity": {
+        "name": "NVIDIA GH200 120GB",
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "uuid": "7c184a2e41ea3d2bdf5b1699c95fc1fe",
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+      },
+      "parameter_space": {
+        "TILE": [
+          8,
+          12,
+          16
+        ]
+      },
+      "constraints": [
+        {
+          "op": "bounds",
+          "parameters": [
+            "TILE"
+          ],
+          "values": [
+            8,
+            16
+          ]
+        },
+        {
+          "op": "divisible",
+          "parameters": [
+            "TILE"
+          ],
+          "values": [
+            8
+          ]
+        }
+      ],
+      "parameter_bindings": [
+        {
+          "parameter": "TILE",
+          "target": "source_macro"
+        },
+        {
+          "parameter": "TILE",
+          "target": "block_x"
+        },
+        {
+          "parameter": "TILE",
+          "target": "block_y"
+        },
+        {
+          "parameter": "TILE",
+          "target": "tile_x"
+        },
+        {
+          "parameter": "TILE",
+          "target": "tile_y"
+        }
+      ],
+      "termination_reason": "domain_exhausted",
+      "usage": {
+        "benchmark_requests": 24,
+        "cuda_event_kernel_seconds": 0.0014298559981398284,
+        "harness_requests": 66,
+        "native_cache_hits": 63,
+        "native_cache_misses": 3,
+        "native_compile_stage_wall_seconds": 0.151311485,
+        "native_reservation_wall_seconds": 1.4235179433599114
+      },
+      "ledger_usage": {
+        "limits": {},
+        "reserved": {},
+        "spent": {
+          "compilations": 2.0,
+          "local_configurations": 3.0
+        }
+      },
+      "model_calls": 0,
+      "model_tokens": 0,
+      "observed_facts": {
+        "variants": [
+          {
+            "TILE": 8,
+            "artifact_hash": "f7f9b47e4a2df30eca49a35dadd7bc7c97a4539b242feceecdd2b3141b1f03cc",
+            "candidate_id": "tune-ae881b3ac421854dcf99497b",
+            "configuration_reason": null,
+            "configuration_status": "measured",
+            "dsl_admitted": true,
+            "hardware_reason": null,
+            "launch_rule": {
+              "block": [
+                8,
+                8,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "square_2d",
+              "shared_memory_bytes": 0,
+              "tile_x": 8,
+              "tile_y": 8,
+              "version": 1
+            },
+            "native_benchmark_requests": 6,
+            "native_run_requests": 14,
+            "selection_measurement_id": "0204c275a0094e3fab89a2bb14f633e9",
+            "source_sha256": "d9813efa31eb56d28c8c382476ec1b7199e1232a06978fa1467bbe65ab102cba",
+            "static_shared_memory_bytes": 512,
+            "validation_id": "293a6bbd83084927a75f2e4086dfd0f9"
+          },
+          {
+            "TILE": 12,
+            "artifact_hash": "fa4e0c48174c05ba5cef7c8c36262479f7c90948d5518323c9e691bb3db0901e",
+            "candidate_id": "tune-2992dbf37a8d0b8d85eb368a",
+            "configuration_reason": "parameter restriction rejected configuration",
+            "configuration_status": "filtered",
+            "dsl_admitted": false,
+            "hardware_reason": null,
+            "launch_rule": {
+              "block": [
+                12,
+                12,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "square_2d",
+              "shared_memory_bytes": 0,
+              "tile_x": 12,
+              "tile_y": 12,
+              "version": 1
+            },
+            "native_benchmark_requests": 0,
+            "native_run_requests": 0,
+            "selection_measurement_id": null,
+            "source_sha256": "b60b3d40e8c947bbfbbdc52abf6ae6e334f1c6fc41094a19e76afbaca63ad043",
+            "static_shared_memory_bytes": 1152,
+            "validation_id": null
+          },
+          {
+            "TILE": 16,
+            "artifact_hash": "85f46c62e170e1490465b60ee407289d2b52232a5831f26060e67008c0ae6b1c",
+            "candidate_id": "tune-89c708c257470c6321d476ff",
+            "configuration_reason": null,
+            "configuration_status": "measured",
+            "dsl_admitted": true,
+            "hardware_reason": null,
+            "launch_rule": {
+              "block": [
+                16,
+                16,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "square_2d",
+              "shared_memory_bytes": 0,
+              "tile_x": 16,
+              "tile_y": 16,
+              "version": 1
+            },
+            "native_benchmark_requests": 12,
+            "native_run_requests": 14,
+            "selection_measurement_id": "876284f4729746939cc4263bf211b0d3",
+            "source_sha256": "9ed6e31a8d0d5bd3b70e2a15712e1e7393da46d6b20c1cd33d4a063eb6c6763f",
+            "static_shared_memory_bytes": 2048,
+            "validation_id": "31ece09de788415aabd220a1b5560404"
+          }
+        ],
+        "winner": {
+          "artifact_hash": "85f46c62e170e1490465b60ee407289d2b52232a5831f26060e67008c0ae6b1c",
+          "candidate_id": "tune-89c708c257470c6321d476ff",
+          "launch_rule": {
+            "block": [
+              16,
+              16,
+              1
+            ],
+            "elements_key": "n",
+            "grid": [
+              1,
+              1,
+              1
+            ],
+            "kind": "square_2d",
+            "shared_memory_bytes": 0,
+            "tile_x": 16,
+            "tile_y": 16,
+            "version": 1
+          },
+          "parameters": {
+            "TILE": 16
+          },
+          "source_hash": "9ed6e31a8d0d5bd3b70e2a15712e1e7393da46d6b20c1cd33d4a063eb6c6763f"
+        },
+        "selection_measurement_id": "876284f4729746939cc4263bf211b0d3",
+        "fresh_winner_measurement_id": "e9bad0799a914d65a269e950b10a139e",
+        "winner_evaluation_id_is_fresh": true,
+        "winner_artifact_unchanged": true,
+        "request_integrity": {
+          "actual_gpu_uuids": [
+            "7c184a2e41ea3d2bdf5b1699c95fc1fe"
+          ],
+          "actual_toolchain_fields_match": [
+            "uuid",
+            "architecture",
+            "driver_version",
+            "nvrtc_version",
+            "cuda_toolkit_version",
+            "harness_build_id"
+          ],
+          "all_response_envelope_fingerprints_match": true,
+          "benchmark_requests": 24,
+          "compiled_source_bytes_match_every_request": true,
+          "count": 66,
+          "job_ids": [
+            "773755"
+          ],
+          "monotonic_reservations_do_not_overlap": true,
+          "native_ok": 66,
+          "raw_cuda_event_samples_ms": 240,
+          "reported_rpc_controller_seconds": 52.26700709090801,
+          "reported_ssh_roundtrips": 66,
+          "run_requests": 42,
+          "transport_modes": {
+            "exchange_v1": 66
+          },
+          "unique_request_ids": 66,
+          "worker_pids": [
+            1498766
+          ],
+          "worker_sessions": [
+            "dsl-source-macro-81eccb45cd84496e9283648f12c34af0"
+          ]
+        },
+        "correctness_sizes": [
+          1,
+          17,
+          63,
+          32,
+          64
+        ],
+        "performance_sizes": [
+          32,
+          64
+        ]
+      },
+      "scope": "Functional static DSL/source_macro/launch coupling control on frozen ef057b3. Domain TILE8/12/16 is exhausted: hardware-valid12 rejected by the declarative DSL before any native request;8/16 independently validated then measured with exact macro/block/tile/grid coupling. Winner16 receives a distinct fresh native measurement. No model, final holdout or section16 optimizer quality claim.",
+      "limitations": [
+        "Static functional control only; no model generation, final holdout, sanitizer qualification, paired promotion or general optimizer gain is claimed.",
+        "Ledger compilations2 counts tuner configurations; native cache misses3 include baseline. Cached and compiled native evidence are distinguished by the original receipts.",
+        "Native CUDA-event times, native reservation/compile times, transport elapsed time and Slurm walltime have separate units/scopes; none is substituted for another.",
+        "The intermediate tuning-search.json was written before terminal qualification; only tuning-constraints-acceptance.json is the final success authority.",
+        "Protected job observations are discrete snapshots with a time gap before this allocation; independently completed primary jobs are not classified as interference."
+      ]
+    },
+    "local_ac02_renderer_release": {
+      "path": "work/live/ac02-renderer-release-local.json",
+      "sha256": "dd87a54bbad7c1f49bef6c89123b9a2449d45c71f277f1b1f9635072eb9bb764",
+      "bytes": 1814,
+      "kind": "local_cpu_test_release",
+      "tests_passed": 950,
+      "subtests_passed": 5,
+      "junit_reported_results": 955,
+      "junit_reference": {
+        "path": "work/live/ac02-renderer-release-tests.xml",
+        "sha256": "4ae6547e9a527535e9657edcbc9785242e3df24cd11bceb96129190279cea743",
+        "bytes": 148005
+      },
+      "post_run_source_files": [
+        {
+          "path": "optimizer_agent/codex_backend.py",
+          "sha256": "e0701b9d67b85aac8e0f110dd991710416f2a1cc90599c719652d65db593c6df",
+          "bytes": 35221
+        },
+        {
+          "path": "tests/test_codex_research.py",
+          "sha256": "c900c7f514ae4c39a983b75b7478854092239fa1ebfa134c4b4f54f70087496e",
+          "bytes": 37961
+        },
+        {
+          "path": "tests/test_uncovered_technique_protocol.py",
+          "sha256": "f89f8669a4dd00583a37483f2888d0d4f617148038e8dc1f61d30c1a9b91d2e4",
+          "bytes": 9501
+        },
+        {
+          "path": "scripts/render_search_tree.py",
+          "sha256": "d6926e2667a288d8799a960b4b22f9535837fae3a8d32f4ebc5013640e7167a5",
+          "bytes": 23512
+        },
+        {
+          "path": "tests/test_render_search_tree.py",
+          "sha256": "467f95ccb70148e95ac048814fe9b9dc246ce71552753c9c7934c1f17df360d9",
+          "bytes": 11268
+        }
+      ],
+      "scope": "CPU tests and local rendering only; transport/model/CUDA fixtures are explicit. No live AC02 sequence or new ROMEO measurement is inferred.",
+      "source_identity_limit": "Post-run hashes; JUnit does not embed a pre-run content hash. Exact-SHA CI remains separate."
+    },
+    "search_tree_renderer_local": {
+      "path": "work/live/search-tree-renderer-acceptance.json",
+      "sha256": "017c4f0ef835de72191c5603bd9de31f4a9de07e8b54df52c0c4eb8ff4ed8048",
+      "bytes": 9440,
+      "kind": "local_real_search_visualization",
+      "ok": true,
+      "status": "passed_local_rendering",
+      "source_script": {
+        "path": "scripts/render_search_tree.py",
+        "sha256": "d6926e2667a288d8799a960b4b22f9535837fae3a8d32f4ebc5013640e7167a5",
+        "bytes": 23512
+      },
+      "scope": "Three cold archived databases rendered: real policy closure control, full and greedy matmul3141. No database mutation, model/GPU/SSH call or certification inferred. Private JSON/RNG retained."
+    },
+    "source:optimizer_agent/codex_backend.py:declarative-techniques": {
+      "path": "optimizer_agent/codex_backend.py",
+      "sha256": "e0701b9d67b85aac8e0f110dd991710416f2a1cc90599c719652d65db593c6df",
+      "bytes": 35221,
+      "kind": "implementation_source",
+      "HEAD_before_commit": "ef057b378b5f9192719b8115330fed679bc88043",
+      "scope": "Working content after reviewed gel; source existence alone does not establish execution."
+    },
+    "source:scripts/render_search_tree.py": {
+      "path": "scripts/render_search_tree.py",
+      "sha256": "d6926e2667a288d8799a960b4b22f9535837fae3a8d32f4ebc5013640e7167a5",
+      "bytes": 23512,
+      "kind": "implementation_source",
+      "HEAD_before_commit": "ef057b378b5f9192719b8115330fed679bc88043",
+      "scope": "Working content after reviewed gel; source existence alone does not establish execution."
     }
   },
   "requirements": {
@@ -5922,7 +6351,8 @@
           "source:optimizer_agent/diagnostics.py",
           "source:optimizer_agent/campaign_workflow.py",
           "source:optimizer_agent/campaign.py",
-          "source:optimizer_agent/workflow.py"
+          "source:optimizer_agent/workflow.py",
+          "source:optimizer_agent/codex_backend.py:declarative-techniques"
         ],
         "scope": "Responsabilité implémentée dans les contenus/fonctions hashés, pas qualification globale."
       },
@@ -5932,7 +6362,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_ac02_renderer_release"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -5942,7 +6373,7 @@
           "test_campaign_workflow": 5,
           "test_campaign_runtime": 18
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate."
       },
       "romeo_executed": {
         "ok": true,
@@ -5978,7 +6409,8 @@
           "source:optimizer_agent/research_service.py",
           "source:optimizer_agent/codex_backend.py",
           "source:optimizer_agent/pmpp_guidance.py",
-          "source:optimizer_agent/diagnostics.py"
+          "source:optimizer_agent/diagnostics.py",
+          "source:optimizer_agent/codex_backend.py:declarative-techniques"
         ],
         "scope": "Responsabilité implémentée dans les contenus/fonctions hashés, pas qualification globale."
       },
@@ -5988,7 +6420,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_ac02_renderer_release"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -5996,7 +6429,7 @@
           "test_campaign_diagnostics": 6,
           "test_diagnostic_loop_acceptance": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate."
       },
       "romeo_executed": {
         "ok": true,
@@ -6351,12 +6784,13 @@
         "applicable": true,
         "evidence": [
           "autotuning",
-          "diagnostic_loop"
+          "diagnostic_loop",
+          "tuning_constraints_773755"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
       },
       "remaining": [
-        "DSL récent de contraintes pas encore exercé par campagne modèle réelle."
+        "DSL, macro source et couplage de lancement acquis sur contrôle statique 773755 ; exploration de variantes par une proposition modèle réelle et autres DSL/domaines non généralisés."
       ]
     },
     "SEC-7": {
@@ -6656,12 +7090,13 @@
         "applicable": true,
         "evidence": [
           "autotuning",
-          "contracts_cache_reconstruction"
+          "contracts_cache_reconstruction",
+          "tuning_constraints_773755"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
       },
       "remaining": [
-        "DSL récent:63 tests locaux mais campagneGPU non acquise; plafonds globaux retirés par demande humaine."
+        "Contrôle statique DSL/source_macro réel acquis au 773755 :12 filtré,8/16 mesurés, gagnant16 remesuré. Aucune campagne modèle ou supériorité générale déduite ; plafonds globaux toujours retirés par demande humaine."
       ]
     },
     "SEC-9": {
@@ -7035,7 +7470,8 @@
           "source:optimizer_agent/diagnostics.py",
           "source:optimizer_agent/autotuning.py",
           "source:optimizer_agent/tuning_constraints.py",
-          "source:optimizer_agent/campaign.py"
+          "source:optimizer_agent/campaign.py",
+          "source:optimizer_agent/codex_backend.py:declarative-techniques"
         ],
         "scope": "Responsabilité implémentée dans les contenus/fonctions hashés, pas qualification globale."
       },
@@ -7045,7 +7481,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_ac02_renderer_release"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -7064,7 +7501,7 @@
           "test_gpu_autotuning_acceptance": 2,
           "test_gpu_contract_acceptance": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate."
       },
       "romeo_executed": {
         "ok": false,
@@ -7395,7 +7832,8 @@
           "source:optimizer_agent/suite_orchestrator.py",
           "source:optimizer_agent/upstream_original.py",
           "source:optimizer_agent/gain_observer.py",
-          "source:optimizer_agent/native_read_isolation.py"
+          "source:optimizer_agent/native_read_isolation.py",
+          "source:scripts/render_search_tree.py"
         ],
         "scope": "Responsabilité implémentée dans les contenus/fonctions hashés, pas qualification globale."
       },
@@ -7406,7 +7844,9 @@
         "evidence": [
           "local_release",
           "ci_45407a2",
-          "local_unscored_release"
+          "local_unscored_release",
+          "local_ac02_renderer_release",
+          "search_tree_renderer_local"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -7422,7 +7862,7 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -7943,7 +8383,8 @@
           "source:optimizer_agent/research_service.py",
           "source:optimizer_agent/codex_backend.py",
           "source:optimizer_agent/pmpp_guidance.py",
-          "source:optimizer_agent/diagnostics.py"
+          "source:optimizer_agent/diagnostics.py",
+          "source:optimizer_agent/codex_backend.py:declarative-techniques"
         ],
         "scope": "Responsabilité implémentée dans les contenus/fonctions hashés, pas qualification globale."
       },
@@ -7953,7 +8394,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_ac02_renderer_release"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -7961,7 +8403,7 @@
           "test_campaign_diagnostics": 6,
           "test_diagnostic_loop_acceptance": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate."
       },
       "romeo_executed": {
         "ok": false,
@@ -8472,12 +8914,13 @@
         "applicable": true,
         "evidence": [
           "autotuning",
-          "contracts_cache_reconstruction"
+          "contracts_cache_reconstruction",
+          "tuning_constraints_773755"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
       },
       "remaining": [
-        "Gagnant remesuré réel acquis; DSL déclaratif récent encore sans campagneGPU."
+        "Contrôle statique 773755 acquis : configuration invalide au regard du DSL rejetée avant CUDA, deux configurations admissibles mesurées, gagnant remesuré. Portée limitée au domaine et au contrat cités."
       ],
       "expected_result": "Restrictions appliquées, chaque configuration validée, coûts comptés et gagnant remesuré indépendamment."
     },
@@ -9493,12 +9936,13 @@
         "applicable": true,
         "evidence": [
           "autotuning",
-          "contracts_cache_reconstruction"
+          "contracts_cache_reconstruction",
+          "tuning_constraints_773755"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
       },
       "remaining": [
-        "DSL récent:63 tests locaux mais campagneGPU non acquise; plafonds globaux retirés par demande humaine."
+        "Mécanisme DSL/source_macro acquis sur contrôle statique 773755 ; cette preuve sans modèle ne qualifie pas la stratégie proposée par un LLM. Aucun plafond global réintroduit."
       ],
       "derived_from": "SEC-8"
     },
@@ -9815,6 +10259,25 @@
       "GPU_reexecution": false,
       "SSH_activity": false,
       "model_activity": false
+    },
+    {
+      "at": "2026-10-21T18:13:02.838195+00:00",
+      "action": "Added frozen successful773755 static DSL/source_macro control and its immutable authority/inspection/manifest/protection references. Existing receipts and phase statuses are unchanged; no new execution.",
+      "evidence": [
+        "tuning_constraints_773755"
+      ],
+      "GPU_reexecution": false,
+      "SSH_activity": false,
+      "model_activity": false
+    },
+    {
+      "observed_at_utc": "2026-10-21T18:19:52.335635+00:00",
+      "kind": "ac02_schema_bug_fix_and_search_visualization",
+      "evidence": [
+        "local_ac02_renderer_release",
+        "search_tree_renderer_local"
+      ],
+      "scope": "The old covered-techniques schema made new-technique research unreachable through a compliant actual provider. The declaration is now admitted only into semantic validation; all research/reference/applicability guards remain. Live AC02 and full section16 stay incomplete."
     }
   ]
 }

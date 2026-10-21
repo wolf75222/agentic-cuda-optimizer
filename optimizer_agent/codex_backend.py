@@ -152,8 +152,9 @@ def proposal_schema_for_dossier(dossier: Any) -> dict:
     if not identifiers:
         raise ValueError("Researched proposals require actually retrieved source IDs")
     schema["properties"]["references"] = {"type": "array", "items": {"type": "string", "enum": identifiers}}
-    schema["properties"]["techniques"] = {"type": "array", "items": {
-        "type": "string", "enum": list(dossier.covered_techniques)}}
+    # Techniques are declarations, not authorizations. A newly declared one
+    # must reach ResearchDossier.validate_proposal so it can request research
+    # before any candidate is created or executed. Source IDs remain closed.
     return schema
 
 
@@ -530,8 +531,13 @@ Keep exact TreeQuest parent_id {parent_id!r} and effective source_parent_id
 source and parameters. When this is a repair, retain the failed candidate as
 the effective source parent while keeping the TreeQuest parent unchanged.
 Use contract_hash
-{contract_hash!r}, and strategy_family {family!r}. Propose only techniques listed
-in the dossier's covered_techniques. Cite dossier source_id values as references.
+{contract_hash!r}, and strategy_family {family!r}. Declare every technique needed
+by the proposed transformation. A technique outside the dossier's
+covered_techniques is a request for additional research, never authorization to
+create or execute a candidate; the controller blocks it until a renewed,
+applicable dossier covers it. Do not omit a technique to bypass this guard.
+Cite only the dossier's actually retrieved source_id values as references; do
+not invent evidence for an uncovered technique.
 Each source_id is bound to supplied passage receipts. Only those exact passages
 were provided to synthesis; requested symbols/locators and downloaded full bodies
 are not evidence that omitted text was read. Do not infer omitted implementations.

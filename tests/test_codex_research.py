@@ -270,6 +270,10 @@ class ResearchTests(unittest.TestCase):
             self.assertIn("tiling", schema["properties"]["pmpp_topics"]["items"]["enum"])
             proposal_schema = proposal_schema_for_dossier(dossier)
             self.assertEqual(set(proposal_schema["properties"]["references"]["items"]["enum"]), {"code", "cccl", "cuda", "pmpp"})
+            # Declaring a new technique must reach the dossier's semantic
+            # NeedsResearch guard; this never authorizes an unread source.
+            self.assertEqual(proposal_schema["properties"]["techniques"], PROPOSAL_SCHEMA["properties"]["techniques"])
+            self.assertNotIn("enum", proposal_schema["properties"]["techniques"]["items"])
 
     def test_adaptation_prerequisite_schema_preserves_genuinely_false_checks(self):
         with tempfile.TemporaryDirectory() as directory:

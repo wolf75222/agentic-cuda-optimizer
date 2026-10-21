@@ -107,6 +107,13 @@ CUDA Events measure the kernel; transfers, compilation and profiling are exclude
 
 SQLite separately persists LangGraph checkpoints, TreeQuest tree/RNG/pending trials, immutable evidence, integration journal and observed resource use. A result has one tree reward; cached observations retain their IDs and intentional remeasurements receive new ones. Final exposure is persisted before execution; interrupted finalization requires a new independent holdout.
 
+Render an archived, trusted cold search database to JSON and SVG with
+`scripts/render_search_tree.py --database results/RUN_ID/experiments.sqlite --output /absolute/new-directory --trust-local-pickle`.
+The renderer preserves search scores, lineage, pending trials and closure reasons;
+it makes no model, SSH or GPU call. Active WAL files are refused. The visualization
+does not infer final certification. See [portable exports](docs/portable_exports.md)
+for input trust and private-state handling.
+
 ## Profiling and fallback
 
 Nsight Compute runs on ROMEO first, in the serialized allocation, with a diagnostic question and explicit metrics. Permission errors such as `ERR_NVGPUCTRPERM` and missing tools are retained with bounded attempts. A configured local CUDA runner/Nsight can provide fallback diagnostics with its own hardware fingerprint. The tested Mac has no CUDA GPU, so local fallback is unavailable.
