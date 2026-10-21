@@ -925,35 +925,26 @@ def main(argv=None):
     parser.add_argument("command", choices=("run", "resume", "compare", "plan-suite", "suite", "report-suite"))
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--worker-session", help="New isolated Slurm session for an unfinished resume after the old worker has stopped")
+    parser.add_argument("--concurrency", type=int, choices=(2, 3, 4), default=2)
+    parser.add_argument("--include-greedy", action="store_true", help="Add the isolated parent-selection ablation to the actual upstream comparison")
     args = parser.parse_args(argv)
     config = CampaignConfig.load(args.config)
     if args.command in ("plan-suite", "suite", "report-suite"):
-        from .quality_suite import plan_suite, summarize_suite
-        plan = plan_suite(config)
+        from .quality_suite import plan_suite
+        from .suite_orchestrator import SuiteOrchestrator
+        from .suite_report import write_report
+        plan = plan_suite(config, include_greedy=args.include_greedy)
         plan_directory = (REPO / config.results_dir / config.run_id).resolve()
-        write_json(plan_directory / "suite-plan.json", plan)
-        manifests = {}
-        for entry in plan["entries"]:
-            values = dict(entry["config"])
-            for name in ("actions", "search_sizes", "final_sizes", "required_sanitizers"):
-                values[name] = tuple(values[name])
-            selected = CampaignConfig(**values)
-            path = REPO / selected.results_dir / selected.run_id / "manifest.json"
-            if args.command == "suite" and not path.exists():
-                try:
-                    manifests[selected.run_id] = execute(selected)
-                except Exception as error:
-                    manifests[selected.run_id] = {"certification_status": "finalization_incomplete", "error": str(error)}
-            elif path.exists():
-                manifests[selected.run_id] = read_json(path)
-        if args.command == "plan-suite":
-            print(json.dumps({"plan": str(plan_directory / "suite-plan.json"), "campaigns": len(plan["entries"]),
-                              "submitted": 0, "global_resource_caps": None}, indent=2))
-        else:
-            report = summarize_suite(plan, manifests)
-            write_json(plan_directory / "suite-report.json", report)
-            print(json.dumps({"report": str(plan_directory / "suite-report.json"), "complete": report["complete"]}, indent=2))
-        return 0
+        # Every entry must dispatch through its method-specific adapter. The
+        # original and native Codex baselines cannot use execute(selected),
+        # which would silently run the improved agent under another label.
+        orchestrator = SuiteOrchestrator(plan, plan_directory, concurrency=args.concurrency)
+        status = orchestrator.run() if args.command == "suite" else orchestrator.status()
+        write_report(plan_directory, status)
+        print(json.dumps({"plan": str(plan_directory / "plan.json"), "campaigns": len(plan["entries"]),
+                          "complete": status["summary"]["complete"],
+                          "submitted": args.command == "suite", "global_resource_caps": None}, indent=2))
+        return 0 if args.command != "suite" or status["summary"]["complete"] else 1
     if args.command == "compare":
         result = compare(config, worker_session_id=args.worker_session)
         print(json.dumps(result, indent=2))

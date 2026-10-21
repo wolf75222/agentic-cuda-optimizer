@@ -1,0 +1,688 @@
+"""Durable §16 campaign scheduler and sealed, same-GPU final groups.
+
+One controller owns the journal lock. A stable worker intent is committed
+before submission; resumption attaches to that exact session. An ambiguous
+or terminal incomplete attempt is retained, never silently regenerated.
+"""
+from __future__ import annotations
+
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
+from dataclasses import asdict, replace
+import fcntl
+import hashlib
+import importlib.util
+import json
+import multiprocessing
+import os
+from pathlib import Path
+import secrets
+import shutil
+import sqlite3
+import subprocess
+import time
+import traceback
+
+from .campaign_config import CampaignConfig
+from .quality_suite import TOOLS, stable_id, summarize_suite
+
+REPO = Path(__file__).resolve().parents[1]
+TERMINAL = {"completed", "failed", "recovery_required"}
+
+
+def infrastructure_category(error):
+    if isinstance(error, (TimeoutError, subprocess.TimeoutExpired)):
+        return "transport_timeout"
+    message = str(error)
+    if message.startswith(("Atomic SSH upload timed out", "Remote artifact read timed out", "Remote request timed out")):
+        return "transport_timeout"
+    if message.startswith("Worker session ") and " is terminal (job " in message:
+        return "worker_terminal_incomplete"
+    return None
+
+
+def _walk(value):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from _walk(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _walk(child)
+
+
+def _hash(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def write_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(path.suffix + ".tmp")
+    temp.write_text(json.dumps(value, indent=2, allow_nan=False, default=str))
+    os.replace(temp, path)
+
+
+def read_json(path):
+    return json.loads(Path(path).read_text())
+
+
+def config_from_dict(data):
+    data = dict(data)
+    for name in ("actions", "search_sizes", "final_sizes", "required_sanitizers"):
+        if name in data:
+            data[name] = tuple(data[name])
+    return CampaignConfig(**data)
+
+
+def candidate_receipt(candidate):
+    return {"candidate_id": candidate.candidate_id, "source_path": str(candidate.source),
+            "source_hash": candidate._source_hash, "artifact_hash": candidate.artifact_hash,
+            "kernel": candidate.kernel, "launch_rule": asdict(candidate.launch_rule),
+            "parameters": dict(candidate.parameters)}
+
+
+def load_candidate(receipt, *, destination=None):
+    # Import the same direct modules as CampaignRuntime and the harness client.
+    from .campaign import Candidate
+    from .frozen_launch import parse_launch_rule
+    path = Path(receipt.get("source_path", receipt.get("source", ""))).resolve()
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != receipt["source_hash"]:
+        raise ValueError("Frozen candidate source hash mismatch")
+    if destination:
+        destination = Path(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if destination.exists() and destination.read_bytes() != data:
+            raise ValueError("An existing frozen source cannot be replaced")
+        destination.write_bytes(data)
+        path = destination
+    result = Candidate(receipt["candidate_id"], path, receipt["kernel"],
+                       parse_launch_rule(receipt["launch_rule"]), receipt.get("parameters", {}))
+    if result.artifact_hash != receipt["artifact_hash"]:
+        raise ValueError("Frozen candidate artifact hash mismatch")
+    return result
+
+
+class SuiteJournal:
+    def __init__(self, directory, plan):
+        self.directory = Path(directory).resolve()
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self.path = self.directory / "suite.sqlite"
+        with self.connection() as db:
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY,kind TEXT NOT NULL,payload TEXT NOT NULL,
+                    state TEXT NOT NULL,session TEXT NOT NULL,job_id TEXT,result TEXT,error TEXT,started REAL,finished REAL);
+                CREATE TABLE IF NOT EXISTS sealed_groups(id TEXT PRIMARY KEY,seed TEXT NOT NULL,commitment TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS task_attempts(task_id TEXT NOT NULL,attempt INTEGER NOT NULL,
+                    snapshot TEXT NOT NULL,seed TEXT,commitment TEXT,reason TEXT NOT NULL,created REAL NOT NULL,
+                    PRIMARY KEY(task_id,attempt));
+            """)
+            columns = {r["name"] for r in db.execute("PRAGMA table_info(tasks)")}
+            if "attempt" not in columns:
+                db.execute("ALTER TABLE tasks ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0")
+            previous = db.execute("SELECT value FROM metadata WHERE key='plan_hash'").fetchone()
+            plan_hash = _hash(plan)
+            if previous and previous[0] != plan_hash:
+                raise ValueError("Suite plan changed; immutable campaign identities cannot be mixed")
+            db.execute("INSERT OR IGNORE INTO metadata VALUES('plan_hash',?)", (plan_hash,))
+            db.execute("INSERT OR IGNORE INTO metadata VALUES('instance_id',?)", (secrets.token_hex(16),))
+            instance = db.execute("SELECT value FROM metadata WHERE key='instance_id'").fetchone()[0]
+            for entry in plan["entries"]:
+                key = entry["config"]["run_id"]
+                session = "suite-gen-" + hashlib.sha256((instance + ":" + key).encode()).hexdigest()[:32]
+                db.execute("INSERT OR IGNORE INTO tasks(id,kind,payload,state,session) VALUES(?,?,?,?,?)",
+                           (key, "generation", json.dumps(entry, sort_keys=True), "pending", session))
+            for group in sorted({e["group_id"] for e in plan["entries"]}):
+                entries = [e for e in plan["entries"] if e["group_id"] == group]
+                # Private seed precommitted before any generator starts; final
+                # data itself is instantiated only after every method is frozen.
+                seed = secrets.randbits(63)
+                db.execute("INSERT OR IGNORE INTO sealed_groups VALUES(?,?,?)",
+                           (group, str(seed), hashlib.sha256(str(seed).encode()).hexdigest()))
+                session = "suite-final-" + hashlib.sha256((instance + ":" + group).encode()).hexdigest()[:32]
+                db.execute("INSERT OR IGNORE INTO tasks(id,kind,payload,state,session) VALUES(?,?,?,?,?)",
+                           (group, "final", json.dumps(entries, sort_keys=True), "pending", session))
+        os.chmod(self.path, 0o600)
+        write_json(self.directory / "plan.json", plan)
+        write_json(self.directory / "final-seed-commitments.json", self.commitments())
+
+    @contextmanager
+    def connection(self):
+        db = sqlite3.connect(self.path, timeout=30)
+        db.row_factory = sqlite3.Row
+        try:
+            yield db
+            db.commit()
+        finally:
+            db.close()
+
+    @contextmanager
+    def controller(self):
+        with (self.directory / "controller.lock").open("a+") as file:
+            try:
+                fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as error:
+                raise RuntimeError("Another suite controller owns this journal") from error
+            try:
+                yield
+            finally:
+                fcntl.flock(file, fcntl.LOCK_UN)
+
+    def tasks(self, kind=None):
+        with self.connection() as db:
+            rows = db.execute("SELECT * FROM tasks" + (" WHERE kind=?" if kind else "") + " ORDER BY id", (kind,) if kind else ()).fetchall()
+        return [{**dict(row), "payload": json.loads(row["payload"]), "result": json.loads(row["result"]) if row["result"] else None} for row in rows]
+
+    def update(self, key, **values):
+        allowed = {"state", "job_id", "result", "error", "started", "finished", "session", "attempt"}
+        if not values or set(values) - allowed:
+            raise ValueError("Invalid journal update")
+        if "result" in values:
+            values["result"] = json.dumps(values["result"], allow_nan=False)
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            db.execute("UPDATE tasks SET " + ",".join(f"{name}=?" for name in values) + " WHERE id=?", (*values.values(), key))
+
+    def commitments(self):
+        with self.connection() as db:
+            return {r["id"]: r["commitment"] for r in db.execute("SELECT id,commitment FROM sealed_groups")}
+
+    def seed(self, key):
+        with self.connection() as db:
+            return int(db.execute("SELECT seed FROM sealed_groups WHERE id=?", (key,)).fetchone()[0])
+
+
+def _script(name):
+    spec = importlib.util.spec_from_file_location("suite_" + name, REPO / "scripts" / (name + ".py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def generation_adapter(entry, runner, directory, session, *, resume=False):
+    config = config_from_dict(entry["config"])
+    mode = entry["mode"]
+    if mode == "true_upstream":
+        from .upstream_original import run_upstream_campaign
+        result = run_upstream_campaign(config, runner, directory, resume=resume, finalize=False)
+    elif mode == "native_codex_vanilla":
+        from .codex_backend import default_codex_executable
+        from .vanilla_gpu_service import VanillaGPUService
+        receipt_path = Path(directory) / "evidence/receipt.json"
+        if receipt_path.exists():
+            result = read_json(receipt_path)
+            if result.get("status") != "completed":
+                raise RuntimeError("Native one-prompt attempt is incomplete; preserve it rather than issue a duplicate prompt")
+            result["candidate"] = read_json(Path(directory) / "evidence/candidate.json")
+        else:
+            if Path(directory).exists() and any(Path(directory).iterdir()):
+                raise RuntimeError("Native attempt has partial artifacts; an uncertain prompt is never automatically repeated")
+            result = _script("run_codex_vanilla").run_vanilla(config, directory, session, default_codex_executable(),
+                service_factory=lambda config, protected, workspace, session_id, repo_dir:
+                    VanillaGPUService(config, protected, workspace, session_id, repo_dir=repo_dir, runner=runner))
+    else:
+        from .campaign import run_on_runner
+        result = run_on_runner(config, runner, Path(directory), resume=resume, generation_only=True)
+    if not result.get("candidate"):
+        launch = read_json(Path(directory) / "best-launch.json")
+        source = Path(directory) / "best.cu"
+        receipt = {**launch, "source_path": str(source.resolve()), "source_hash": hashlib.sha256(source.read_bytes()).hexdigest(), "kernel": config.workload}
+        result["candidate"] = candidate_receipt(load_candidate(receipt))
+    candidate = load_candidate(result["candidate"])
+    usage = dict(result.get("usage", {}))
+    if "input_tokens" in usage and "model_tokens" not in usage:
+        usage["model_tokens"] = usage["input_tokens"] + usage.get("output_tokens", 0)
+    if mode == "native_codex_vanilla":
+        usage["model_calls"] = 1
+        usage["native_completed_turns"] = len(result.get("usage_events", []))
+        result.setdefault("elapsed_seconds", result.get("ended_at", time.time())-result["started_at"])
+    result = {**result, "candidate": candidate_receipt(candidate), "generation_complete": True,
+              "mode": mode, "status": "generation_complete", "evidence_path": str(Path(directory).resolve()),
+              "usage": usage, "model_call_unit":"Codex CLI invocations; provider-internal model/tool cycles may be unreported",
+              "generation_scores_excluded_from_suite_final": True}
+    return result
+
+
+def observed_metrics(directory, result):
+    """Report only recorded costs; absence is unknown, never a zero cost."""
+    directory = Path(directory)
+    trials = []
+    for path in sorted((directory / "generation/trials").glob("*/result.json")):
+        row = read_json(path)
+        tell = row.get("tell", {})
+        trials.append({"trial_id": path.parent.name, "valid": tell.get("valid"),
+                       "evaluation_id": row.get("evaluation_id", tell.get("evaluation_id"))})
+    configurations = []
+    for path in sorted((directory / "generation/trials").glob("*/autotuning.json")):
+        row = read_json(path)
+        configurations.extend(row.get("configurations", row.get("trials", row.get("observations", []))))
+    evaluated = {}
+    for path in sorted((directory / "generation/trials").glob("*/evaluation-*.json")):
+        row = read_json(path)
+        identity = row.get("artifact_hash", row.get("candidate_id", row.get("evaluation_id")))
+        if identity:
+            evaluated[identity] = {"artifact_or_candidate_id": identity, "valid": row.get("ok"), "status": row.get("status")}
+    for row in configurations:
+        if row.get("validation"):
+            validation = row["validation"]
+            identity = validation.get("artifact_hash", row.get("candidate_id"))
+            evaluated[identity] = {"artifact_or_candidate_id": identity, "valid": validation.get("ok"), "status": validation.get("status")}
+    native_responses = [read_json(path) for path in (directory / "generation/evidence/requests").glob("*/response.json")]
+    native_configurations = {}
+    for response in native_responses:
+        if response.get("operation") in {"validate", "benchmark"} and response.get("artifact_hash"):
+            identity = response["artifact_hash"]
+            native_configurations[identity] = response
+            evaluated[identity] = {"artifact_or_candidate_id":identity,"valid":response.get("ok"),
+                                  "status":response.get("result",{}).get("status")}
+    requests = []
+    for path in sorted((directory / "request-receipts").glob("*.json")):
+        requests.append(read_json(path))
+    reports = [row.get("report", {}) for row in requests]
+    known_validity = [row for row in evaluated.values() if type(row["valid"]) is bool]
+    usage = result.get("usage", {})
+    events_path = directory / "generation/events.json"
+    events = read_json(events_path) if events_path.exists() else []
+    research_events = [row for row in events if "research" in str(row.get("kind", row.get("event", "")))]
+    model_events = {row["payload"]["call_id"]: row for row in events if row.get("kind") == "model"}
+    promotions = [row["created_at"] for row in events if row.get("kind") == "promotion"]
+    clock_path = directory / "generation/clock.json"
+    started = read_json(clock_path)["started_at"] if clock_path.exists() else None
+    first = min(promotions) if promotions else None
+    first_models = [row for row in model_events.values() if first and row["created_at"] <= first]
+    research_models = [row for row in model_events.values() if "research" in str(row["payload"].get("purpose", ""))]
+    native_audit_path = directory / "generation/evidence/requests.jsonl"
+    native_audit = [json.loads(line) for line in native_audit_path.read_text().splitlines() if line.strip()] if native_audit_path.exists() else []
+    first_provisional = next((row["timestamp"] for row in native_audit if row.get("operation") == "benchmark" and row.get("ok") is True), None)
+    return {"candidate_configurations_with_recorded_validity": len(known_validity),
+        "correct_candidates": sum(row["valid"] for row in known_validity),
+        "correct_candidate_fraction": (sum(row["valid"] for row in known_validity)/len(known_validity)) if known_validity else None,
+        "trial_results": trials, "candidate_validation_results": list(evaluated.values()),
+        "configuration_observations": len(configurations) + len(native_configurations),
+        "native_gpu_service_requests": len(native_audit) if native_audit_path.exists() else None,
+        "native_rejected_service_requests": sum(row.get("status") != "complete" for row in native_audit) if native_audit_path.exists() else None,
+        "first_valid_search_measurement_unix": first_provisional,
+        "first_valid_search_measurement_scope": "Provisional correctness-admitted search result; no paired useful-gain decision",
+        "configurations_filtered_before_compilation": sum(row.get("status") == "filtered" for row in configurations),
+        "configurations_independently_validated": sum(row.get("validation") is not None for row in configurations),
+        "harness_requests": len(requests),
+        "cuda_event_kernel_seconds": sum(sum(row.get("latency_samples_ms", []))/1000 for row in reports) if requests else None,
+        "native_compile_stage_wall_seconds": sum((row.get("compile_ms") or 0)/1000 for row in reports) if requests else None,
+        "native_reservation_wall_seconds": sum(row.get("reservation_wall_seconds", 0) for row in reports) if requests else None,
+        "compile_cache_hits": sum(row.get("compile_cache_hit") is True for row in reports),
+        "compile_cache_misses": sum(row.get("compile_cache_hit") is False for row in reports),
+        "research_events": len(research_events) if events_path.exists() else None,
+        "research_model_wall_seconds": sum(row["payload"].get("elapsed_seconds", 0) for row in research_models) if model_events else None,
+        "research_model_tokens": sum(sum(row["payload"].get("usage", {}).get(key, 0) for key in ("input_tokens", "output_tokens")) for row in research_models) if model_events else None,
+        "time_to_first_useful_gain_seconds": first-started if first is not None and started is not None else result.get("time_to_first_useful_gain_seconds"),
+        "model_tokens_to_first_useful_gain": sum(sum(row["payload"].get("usage", {}).get(key, 0) for key in ("input_tokens", "output_tokens")) for row in first_models) if first is not None else None,
+        "model_calls_to_first_useful_gain": len(first_models) if first is not None else None,
+        "cuda_event_seconds_to_first_useful_gain": sum(sum(row.get("report", {}).get("latency_samples_ms", []))/1000 for row in requests if first and row.get("ended_at_unix", float("inf")) <= first) if first else None,
+        "time_to_final_generation_seconds": result.get("elapsed_seconds"),
+        "first_useful_gain_status": "observed" if first is not None else "no_promoted_gain" if events_path.exists() else "not_recorded_by_method",
+        "unknown_metrics": [name for name in ("time_to_first_useful_gain_seconds", "research_seconds") if result.get(name, usage.get(name)) is None],
+        "gpu_seconds_ledger_scope": "Reserved trial wall time includes model/research/SSH; distinct from CUDA Event active kernel time"}
+
+
+class RecordingRunner:
+    def __init__(self, runner, directory):
+        self.runner, self.directory = runner, Path(directory)
+
+    def __getattr__(self, key):
+        return getattr(self.runner, key)
+
+    def run(self, run_id, request):
+        receipt = {"run_id": run_id, "request": asdict(request), "started_at_unix": time.time()}
+        try:
+            receipt["report"] = self.runner.run(run_id, request)
+            return receipt["report"]
+        except Exception as error:
+            receipt["error"] = str(error)
+            raise
+        finally:
+            receipt["ended_at_unix"] = time.time()
+            write_json(self.directory / (run_id + ".json"), receipt)
+
+
+def evaluate_group(entries, generations, runner, directory, seed, commitment):
+    """Freeze all methods, then reveal fresh data once on one borrowed GPU."""
+    from .campaign import WorkloadSuite, WorkloadContract, Evaluator, device_identity
+    directory = Path(directory)
+    config = config_from_dict(entries[0]["config"])
+    config = replace(config, run_id=entries[0]["group_id"], seed=seed, final_sizes=config.search_sizes)
+    properties = runner.get_device_properties(0)
+    suite = WorkloadSuite(config.workload, directory / "sealed-inputs", config)
+    baseline = suite.baseline(REPO / config.baseline_source)
+    candidates, results = {"baseline": baseline}, {}
+    # Authenticate/copy artifacts before creating any held-out inputs.
+    for entry in entries:
+        generation = generations.get(entry["config"]["run_id"], {})
+        try:
+            receipt = generation["candidate"]
+            candidates[entry["mode"]] = load_candidate(receipt, destination=directory / "frozen" / entry["mode"] / "kernel.cu")
+        except Exception as error:
+            results[entry["mode"]] = {"status": "generation_unavailable", "qualified": False, "error": str(error)}
+    write_json(directory / "frozen-candidates.json", {key: candidate_receipt(value) for key, value in candidates.items()})
+    cases = suite.cases(final=True)
+    inputs = {str(Path(a.input_file).relative_to(directory)): hashlib.sha256(Path(a.input_file).read_bytes()).hexdigest()
+              for case in cases for a in case.request.arguments if getattr(a, "input_file", None)}
+    metadata = {"target_environment": device_identity(properties), "fixed_shape_domain": list(config.search_sizes),
+        "seed": seed, "seed_commitment": commitment, "input_hashes": inputs,
+        "scope": "Exclusive shared GPU; CUDA Event kernel time; input reset per launch; no transfer/compile timings in ranking",
+        "generation_closed": True, "outcome_dependent_retries": False}
+    write_json(directory / "holdout-reveal.json", metadata)
+    contract = WorkloadContract(config.run_id, 1, config.workload, suite.signature,
+        "Independent NumPy float64 CPU oracle with float32 outputs; fixed domain with fresh sealed data",
+        benchmark_series=config.benchmark_series, launches_per_series=config.launches_per_series, warmup=config.warmup,
+        confidence=config.confidence_level, min_relative_gain=config.min_relative_gain,
+        max_critical_regression=config.max_critical_regression, confirmation_batches=config.confirmation_batches,
+        required_sanitizers=TOOLS, allowed_precision="float32", metadata_json=json.dumps(metadata, sort_keys=True))
+    evaluator = Evaluator(runner, contract, suite.oracle, {"short": cases[:1], "search": cases, "performance": cases})
+    proof = {"schema_version": 1, "kind": "shared_final_group", "group_id": config.run_id,
+        "workload": config.workload, "campaign_seed": entries[0]["seed"], "final_seed": seed, "seed_commitment": commitment,
+        "contract_hash": evaluator.contract_hash, "contract": asdict(contract), "environment": device_identity(properties),
+        "input_hashes": inputs, "shapes": list(config.search_sizes), "candidates": results,
+        "baseline": candidate_receipt(baseline), "generation_scores_used": False, "execution_complete": False}
+    # All independent validations and sanitizers precede every ranking call.
+    qualifications = {}
+    for mode, candidate in candidates.items():
+        qualifications[mode] = evaluator.qualify_sanitizers(candidate, suite="search")
+        write_json(directory / "qualification" / (mode + ".json"), qualifications[mode])
+    transport_failures = [row for qualification in qualifications.values() for row in _walk(qualification)
+                          if infrastructure_category(row.get("error", ""))]
+    if transport_failures:
+        proof.update(infrastructure_category="transport_timeout", infrastructure_interrupted=True,
+                     qualifications=qualifications, evaluation_finished=False)
+        write_json(directory / "group-result.pending.json", proof)
+        return proof
+    baseline_ok = qualifications["baseline"].get("ok") is True
+    if baseline_ok:
+        proof["baseline_measurement"] = evaluator.benchmark(baseline)
+        baseline_ok = proof["baseline_measurement"].get("ok") is True
+        write_json(directory / "group-result.pending.json", proof)
+    for entry in entries:
+        mode = entry["mode"]
+        if mode not in candidates:
+            continue
+        candidate, qualification = candidates[mode], qualifications[mode]
+        result = {**candidate_receipt(candidate), "qualified": qualification.get("ok") is True,
+            "sanitizer_qualification": qualification, "status": "final_validation_failed"}
+        if result["qualified"] and baseline_ok:
+            if candidate.artifact_hash == baseline.artifact_hash:
+                result["status"] = "validated_no_gain"
+            else:
+                confirmation = evaluator.confirm(candidate, baseline)
+                result["confirmation"] = confirmation
+                result["confirmation_completed_at_unix"] = time.time()
+                generation = generations.get(entry["config"]["run_id"], {})
+                generation_started = generation.get("task_started_at_unix")
+                result["time_to_independently_confirmed_final_gain_seconds"] = (
+                    result["confirmation_completed_at_unix"]-generation_started
+                    if confirmation.get("status") == "promoted" and generation_started is not None else None)
+                result["status"] = "certified" if confirmation.get("status") == "promoted" else "validated_gain_uncertified"
+                if not confirmation.get("ok"):
+                    result["status"] = "final_measurement_failed"
+                    result["qualified"] = False
+        elif not baseline_ok:
+            result["status"] = "baseline_validation_failed"
+            result["qualified"] = False
+        proof["candidates"][mode] = result
+        write_json(directory / "group-result.pending.json", proof)
+    proof["baseline_qualification"] = qualifications["baseline"]
+    proof["method_comparisons"] = {}
+    # Predeclared direct pairs; one fixed confirmation each, including losses.
+    for other in (entry["mode"] for entry in entries if entry["mode"] != "full"):
+        if all(mode in candidates and qualifications[mode].get("ok") is True for mode in ("full", other)):
+            proof["method_comparisons"]["full_vs_" + other] = evaluator.confirm(candidates["full"], candidates[other])
+            write_json(directory / "group-result.pending.json", proof)
+    proof["all_modes_available"] = all(e["mode"] in candidates for e in entries)
+    proof["evaluation_finished"] = True
+    return proof
+
+
+class SuiteOrchestrator:
+    def __init__(self, plan, directory, *, concurrency=2, backend_factory=None,
+                 generate=generation_adapter, qualify=evaluate_group):
+        if type(concurrency) is not int or not 2 <= concurrency <= 4:
+            raise ValueError("GPU worker concurrency must be between two and four")
+        self.plan, self.directory, self.concurrency = plan, Path(directory).resolve(), concurrency
+        self.journal = SuiteJournal(self.directory, plan)
+        self.backend_factory, self.generate, self.qualify = backend_factory, generate, qualify
+
+    def _backend(self, task, config, directory):
+        if self.backend_factory:
+            return self.backend_factory(task, config, directory)
+        from .campaign import SlurmBackend, SlurmConfig
+        path = Path(config.execution_config)
+        if not path.is_absolute():
+            path = REPO / path
+        return SlurmBackend(SlurmConfig.load(path), REPO, directory / "worker", session_id=task["session"])
+
+    def _directory(self, task):
+        root = self.directory / ("campaigns" if task["kind"] == "generation" else "final-groups") / task["id"]
+        return root if task.get("attempt", 0) == 0 else root / "attempts" / ("%03d" % task["attempt"])
+
+    def _task(self, task):
+        # Spawned workers can outlive a killed controller. Their own lock
+        # prevents a resumed controller from dispatching the same generation
+        # twice while the original model/GPU process is still alive.
+        lock_dir = self.directory / "task-locks"
+        lock_dir.mkdir(exist_ok=True)
+        with (lock_dir / (hashlib.sha256(task["id"].encode()).hexdigest() + ".lock")).open("a+") as file:
+            try:
+                fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return
+            try:
+                self._execute_task(task)
+            finally:
+                fcntl.flock(file, fcntl.LOCK_UN)
+
+    def _execute_task(self, task):
+        kind = task["kind"]
+        entry = task["payload"] if kind == "generation" else task["payload"][0]
+        config = config_from_dict(entry["config"])
+        directory = self._directory(task)
+        result_path = directory / "result.json"
+        backend, result, terminal = None, None, None
+        started = task["started"] or time.time()
+        ready_at = None
+        self.journal.update(task["id"], state="running", started=started)
+        try:
+            # A result written before a controller interruption is authoritative;
+            # recover the exact worker only to obtain its terminal receipt.
+            if result_path.exists():
+                result = read_json(result_path)
+                if result.get("worker_terminal", {}).get("terminal"):
+                    if result.get("candidate"):
+                        load_candidate(result["candidate"])
+                    terminal = result["worker_terminal"]
+                    success = (result.get("execution_complete") is True and terminal.get("state") == "COMPLETED"
+                        and str(terminal.get("exit_code")) == "0:0" and str(terminal.get("job_id")) == str(task["job_id"])
+                        and result.get("session_id") == task["session"])
+                    self.journal.update(task["id"], state="completed" if success else "recovery_required", result=result, finished=time.time())
+                    return
+            if kind == "final" and result is None and (directory / "holdout-reveal.json").exists():
+                raise RuntimeError("Final inputs were already revealed before interruption; no outcome-dependent final repeat is permitted")
+            backend = self._backend(task, config, directory)
+            backend.start(allow_terminal=result is not None)
+            self.journal.update(task["id"], job_id=str(backend.job_id))
+            if result is None:
+                backend.wait_until_ready()
+                ready_at = time.time()
+                recording = RecordingRunner(backend.runner(), directory / "request-receipts")
+                if kind == "generation":
+                    result = self.generate(task["payload"], recording, directory / "generation", task["session"], resume=task["state"] == "running")
+                else:
+                    generations = {r["id"]: r["result"] or {} for r in self.journal.tasks("generation")}
+                    result = self.qualify(task["payload"], generations, recording, directory,
+                        self.journal.seed(task["id"]), self.journal.commitments()[task["id"]])
+                result["metrics"] = {**observed_metrics(directory, result), **result.get("metrics", {})}
+                result.update(session_id=task["session"], job_id=str(backend.job_id), task_evidence_path=str(directory))
+                write_json(result_path, result)
+            backend.close()
+            terminal = backend.wait_until_finished(timeout=60)
+            result["worker_terminal"] = terminal
+            result["task_started_at_unix"] = started
+            result["task_finished_at_unix"] = time.time()
+            result["total_task_wall_seconds_including_queue"] = result["task_finished_at_unix"]-started
+            result["queue_and_worker_start_wall_seconds"] = ready_at-started if ready_at is not None else None
+            result["execution_complete"] = bool(terminal.get("terminal") and terminal.get("state") == "COMPLETED"
+                and str(terminal.get("exit_code")) == "0:0" and str(terminal.get("job_id")) == str(backend.job_id))
+            if kind == "generation":
+                result["execution_complete"] &= result.get("generation_complete") is True
+            else:
+                result["execution_complete"] &= result.get("evaluation_finished") is True
+            if not terminal.get("terminal") or terminal.get("state") != "COMPLETED" or str(terminal.get("exit_code")) != "0:0":
+                result["infrastructure_category"] = "worker_terminal_incomplete"
+            write_json(result_path, result)
+            self.journal.update(task["id"], state="completed" if result["execution_complete"] else "recovery_required",
+                                result=result, finished=time.time())
+        except Exception as error:
+            failure = {"status": "failed", "error": str(error), "traceback": traceback.format_exc(),
+                "session_id": task["session"], "job_id": str(getattr(backend, "job_id", "")) or None,
+                "execution_complete": False, "partial_result": result, "infrastructure_category": infrastructure_category(error)}
+            if backend is not None and getattr(backend, "job_id", None):
+                try:
+                    backend.close()
+                    failure["worker_terminal"] = backend.wait_until_finished(timeout=60)
+                except Exception as close_error:
+                    failure["cleanup_error"] = str(close_error)
+            write_json(directory / "failure.json", failure)
+            self.journal.update(task["id"], state="recovery_required", result=result or failure, error=str(error), finished=time.time())
+
+    def recover_final(self, task_id, reason):
+        """Explicit new independent attempt after a proven infrastructure loss.
+
+        This never retries a complete group or an invalid kernel. Earlier
+        decisions in an infrastructure-interrupted group are retained, including
+        losses; the new group is an explicitly separate measurement context.
+        """
+        if not reason or len(reason.strip()) < 20:
+            raise ValueError("Describe the concrete infrastructure incident in at least twenty characters")
+        with self.journal.controller():
+            task = next((row for row in self.journal.tasks("final") if row["id"] == task_id), None)
+            if not task or task["state"] != "recovery_required":
+                raise ValueError("Only an incomplete final group can receive explicit infrastructure recovery")
+            directory = self._directory(task)
+            if (directory / "worker/slurm-diagnostics/quarantined.json").exists():
+                raise ValueError("A CUDA/context quarantine is not eligible for infrastructure-only final recovery")
+            evidence = [task.get("result") or {}]
+            for name in ("failure.json", "group-result.pending.json"):
+                if (directory / name).exists():
+                    evidence.append(read_json(directory / name))
+            evidence += [read_json(path) for path in (directory / "qualification").glob("*.json")]
+            records = list(_walk(evidence))
+            if any(row.get("status") in {"numerical_error", "memory_error", "contract_violation", "compilation_error",
+                    "sanitizer_qualification_failed", "validated_no_gain"} for row in records):
+                raise ValueError("A numerical, contract or sanitizer failure cannot be retried as infrastructure")
+            prior_decisions = [{key: row.get(key) for key in ("evaluation_id", "status", "interval", "artifact_hash", "incumbent_artifact_hash")}
+                for row in records if row.get("interval") and row.get("status") in {"promoted", "not_improved", "inconclusive"}]
+            categories = {row.get("infrastructure_category") for row in records}
+            if not categories & {"transport_timeout", "worker_terminal_incomplete"}:
+                raise ValueError("No qualified transport/worker infrastructure incident was recorded")
+            if not task.get("job_id"):
+                raise ValueError("Unknown scheduler ownership must be resolved before a new allocation")
+            lock_dir = self.directory / "task-locks"
+            lock_dir.mkdir(exist_ok=True)
+            with (lock_dir / (hashlib.sha256(task_id.encode()).hexdigest()+".lock")).open("a+") as handle:
+                try:
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError as error:
+                    raise ValueError("The previous final worker process is still active") from error
+                config = config_from_dict(task["payload"][0]["config"])
+                backend = self._backend(task, config, directory)
+                backend.job_id = str(task["job_id"])
+                terminal = backend.status()
+                from .execution_backend import TERMINAL_STATES, slurm_state
+                if slurm_state(terminal) not in TERMINAL_STATES or str(terminal.get("job_id")) != str(task["job_id"]):
+                    raise ValueError("Previous owned GPU job is not confirmed terminal")
+                # Reauthenticate every generator source before committing a new
+                # private input distribution. No model call is made here.
+                generations = {row["id"]: row for row in self.journal.tasks("generation")}
+                for entry in task["payload"]:
+                    generation = generations[entry["config"]["run_id"]]["result"] or {}
+                    if generation.get("candidate"):
+                        load_candidate(generation["candidate"])
+                seed = secrets.randbits(63)
+                commitment = hashlib.sha256(str(seed).encode()).hexdigest()
+                session = "suite-final-" + secrets.token_hex(16)
+                with self.journal.connection() as db:
+                    db.execute("BEGIN IMMEDIATE")
+                    old = db.execute("SELECT seed,commitment FROM sealed_groups WHERE id=?",(task_id,)).fetchone()
+                    snapshot = {"task":task,"evidence":evidence,"observed_metrics":observed_metrics(directory, task.get("result") or {}),
+                                "prior_statistical_decisions":prior_decisions,"terminal":terminal}
+                    db.execute("INSERT INTO task_attempts VALUES(?,?,?,?,?,?,?)",(task_id, task["attempt"],
+                        json.dumps(snapshot,sort_keys=True), old["seed"], old["commitment"], reason, time.time()))
+                    db.execute("UPDATE sealed_groups SET seed=?,commitment=? WHERE id=?",(str(seed),commitment,task_id))
+                    db.execute("UPDATE tasks SET state='pending',session=?,job_id=NULL,result=NULL,error=NULL,started=NULL,finished=NULL,attempt=attempt+1 WHERE id=?",(session,task_id))
+                audit = {"task_id":task_id,"previous_attempt":task["attempt"],"new_attempt":task["attempt"]+1,
+                    "reason":reason,"infrastructure_categories":sorted(str(v) for v in categories if v),
+                    "previous_session":task["session"],"previous_job_terminal":terminal,
+                    "previous_seed_commitment":old["commitment"],"new_seed_commitment":commitment,
+                    "new_session":session,"model_calls":0,"new_job_submitted":False,
+                    "prior_statistical_decisions_retained":prior_decisions,
+                    "raw_timings_pooled_between_attempts":False}
+                write_json(self.directory/"recovery-audit"/(task_id+".%03d.json"%(task["attempt"]+1)),audit)
+                write_json(self.directory/"final-seed-commitments.json",self.journal.commitments())
+                return audit
+
+    def status(self):
+        tasks = self.journal.tasks()
+        manifests = {r["id"]: r["result"] for r in tasks if r["kind"] == "generation" and r["result"]}
+        groups = {r["id"]: r["result"] for r in tasks if r["kind"] == "final" and r["result"]}
+        summary = summarize_suite(self.plan, manifests, groups)
+        with self.journal.connection() as db:
+            previous_attempts = [{"task_id": row["task_id"], "attempt": row["attempt"], "reason": row["reason"],
+                "seed_commitment": row["commitment"], "receipt": json.loads(row["snapshot"])}
+                for row in db.execute("SELECT * FROM task_attempts ORDER BY task_id,attempt")]
+        return {"schema_version": 1, "tasks": [{k: r[k] for k in ("id", "kind", "state", "session", "job_id", "error")} for r in tasks],
+                "previous_attempts": previous_attempts,
+                "final_groups": {key: {name: result.get(name) for name in (
+                    "task_evidence_path", "environment", "contract_hash", "worker_terminal", "metrics",
+                    "total_task_wall_seconds_including_queue", "execution_complete", "all_modes_available")}
+                    | {"method_comparisons": {name: {field: row.get(field) for field in ("status", "ok", "interval", "artifact_hash", "incumbent_artifact_hash")}
+                         for name, row in result.get("method_comparisons", {}).items()}} for key, result in groups.items()},
+                "summary": summary, "concurrency": self.concurrency, "global_resource_caps": None}
+
+    def run(self):
+        with self.journal.controller():
+            # Reuse only authenticated complete receipts. A changed source or
+            # failed terminal state cannot be hidden by a cached journal flag.
+            for task in self.journal.tasks():
+                if task["state"] != "completed":
+                    continue
+                result = task["result"] or {}
+                terminal = result.get("worker_terminal", {})
+                if not (result.get("execution_complete") and terminal.get("terminal") and terminal.get("state") == "COMPLETED"
+                        and str(terminal.get("exit_code")) == "0:0" and result.get("session_id") == task["session"]
+                        and str(terminal.get("job_id")) == str(task["job_id"])):
+                    raise ValueError("Completed task lacks a successful owned terminal receipt")
+                if task["kind"] == "generation":
+                    load_candidate(result["candidate"])
+                else:
+                    load_candidate(result["baseline"])
+                    for value in result.get("candidates", {}).values():
+                        if value.get("source_path"):
+                            load_candidate(value)
+            # The original optimizer temporarily installs its pinned direct
+            # imports. Separate spawned Python processes keep those aliases,
+            # LangGraph stores and model transports isolated between methods.
+            pool = ThreadPoolExecutor if self.backend_factory else ProcessPoolExecutor
+            options = {} if self.backend_factory else {"mp_context": multiprocessing.get_context("spawn")}
+            with pool(max_workers=self.concurrency, **options) as workers:
+                # Stable sessions recover active work; known failures are retained.
+                for kind in ("generation", "final"):
+                    tasks = self.journal.tasks(kind)
+                    if kind == "final":
+                        generations = {r["id"]: r for r in self.journal.tasks("generation")}
+                        tasks = [r for r in tasks if all(generations[e["config"]["run_id"]]["state"] in TERMINAL for e in r["payload"])]
+                    futures = [workers.submit(self._task, row) for row in tasks if row["state"] in {"pending", "running"}]
+                    for future in as_completed(futures):
+                        future.result()
+                        write_json(self.directory / "status.json", self.status())
+        result = self.status()
+        write_json(self.directory / "status.json", result)
+        return result

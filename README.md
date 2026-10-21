@@ -35,7 +35,7 @@ This baseline retains existing execution policies and uses a writable isolated
 workspace. The parent service owns the oracle, workload and GPU evidence outside
 that workspace. There is no global token, tool-count or turn-time ceiling. Its
 frozen kernel still requires independent final evaluation. The campaign `compare`
-command is a distinct generation-only single-prompt baseline with shell tools
+command is a distinct structured single-prompt baseline with shell tools
 disabled; the two protocols are identified separately in the results.
 
 No API key is needed for the primary CLI path when ChatGPT authentication works. A cached model list does not establish account access. The terminal CLI `0.143.0` rejected Luna, while the application’s bundled `0.163.0-alpha.10.2` was verified to run it. The backend selects `CODEX_CLI_PATH`, then an existing ChatGPT application binary on macOS, then `codex` on `PATH`. Override explicitly if needed:
@@ -73,7 +73,7 @@ The worker keeps its native CUDA process/context and compiled modules between no
 
 The built-in suite supports square float32 GEMM, reduction, inclusive scan, 1D three-point stencil, three-tap convolution and RMS normalization: `matmul`, `reduction`, `scan`, `stencil`, `convolution`, `normalization`. Each has small/tail cases and a separate lazily generated final suite. Scope remains one kernel, fixed ABI/layout/precision and deterministic launch arithmetic.
 
-Use a new `run_id` after a workload, numerical policy, protocol, GPU or incompatible toolchain change. Completed runs are not overwritten. `compare` reserves one GPU for agent and vanilla, using the same CPU oracle, initial kernel, distribution and measurement rules. Vanilla has one ordinary optimization prompt with no mandatory research or tuning and is explicitly experimental. Actual resource consumption is reported. This pilot does not establish general optimizer superiority.
+Use a new `run_id` after a workload, numerical policy, protocol, GPU or incompatible toolchain change. Completed runs are not overwritten. `compare` reserves one GPU for the improved agent and a structured single-prompt proposal without shell tools, using the same CPU oracle, initial kernel, distribution and measurement rules. True tools-enabled vanilla Codex is the separate native CLI baseline above. Actual resource consumption is reported. This pilot does not establish general optimizer superiority.
 
 The contract explicitly fixes disjoint input/output allocations, read-only inputs,
 fully overwritten output, float32 arithmetic and launch independence. Direct
@@ -85,14 +85,15 @@ If an unfinished campaign's worker has stopped, `resume --config FILE --worker-s
 The multi-campaign protocol and isolated ablations are explicit commands:
 
 ```sh
-# Writes a 90-campaign plan; submits zero jobs.
-./scripts/run_optimizer.sh plan-suite --config configs/gemm-comparison.json
+# Writes 126 generation entries plus 18 common final groups; submits zero jobs.
+.venv/bin/python scripts/run_quality_suite.py plan --config configs/quality-romeo.json --directory results/quality-study --include-greedy
 # Explicitly executes the planned studies (substantial GPU/model use).
-./scripts/run_optimizer.sh suite --config configs/gemm-comparison.json
-./scripts/run_optimizer.sh report-suite --config configs/gemm-comparison.json
+.venv/bin/python scripts/run_quality_suite.py run --directory results/quality-study --concurrency 2
+.venv/bin/python scripts/run_quality_suite.py status --directory results/quality-study
+.venv/bin/python scripts/run_quality_suite.py report --directory results/quality-study
 ```
 
-The plan repeats three seeds over six families and full/greedy-parent/no-tuning/no-research/no-PMPP modes. Each ablation retains the other evaluation rules. The greedy mode reproduces the original incumbent-parent policy; it is not a measurement of the entire unmodified upstream program. That reference still requires its own run and resource receipts. Missing and uncertified campaigns remain visible in the report.
+The plan repeats three seeds over six families and the improved agent, actual pinned upstream agent, native one-prompt Codex, and no-tuning/no-research/no-PMPP modes. `--include-greedy` adds the isolated parent-selection ablation, giving 126 generations; without it, there are 108. Every group freezes all methods before fresh data, four sanitizers and paired comparisons on one new GPU. The greedy mode is distinct from executing the authenticated original LangGraph. Missing, failed and regressing campaigns retain their denominator. See [the complete protocol and recovery commands](docs/quality_suite.fr.md) and [original-agent adaptations](docs/upstream_original.md).
 
 ## Architecture and evaluation
 
