@@ -26,10 +26,18 @@ FROZEN_PAIRS = {"agent_vs_baseline": ("agent", "baseline"),
                 "native_codex_vs_baseline": ("native_codex", "baseline"),
                 "agent_vs_native_codex": ("agent", "native_codex")}
 FROZEN_RECEIPT = "results/gemm-frozen-final-20261021/comparison.json"
+DIAGNOSTIC_V2_AUDIT = "work/live/research-convolution-diagnostic-b9bda60.json"
+POLICY_AUTHORITY = "results/policy-controls-20261021/search-policy-acceptance.json"
+PARENT_OBSERVATION = "results/policy-controls-20261021/selected-parent-observation.json"
 PROOF_PATHS = (
     ("Autotuning réel", "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json"),
     ("Précision, cache et reconstruction", "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json"),
     ("Diagnostic et nouvelle recherche", "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json"),
+    ("Diagnostic ciblé avec lecteur v2", DIAGNOSTIC_V2_AUDIT),
+    ("Helper diagnostic v2 — exécution incomplète (773095)", "results/diagnostic-loop-v2-20261021/diagnostic-loop-acceptance.json"),
+    ("Contrôles TreeQuest — autorité partielle (773380)", POLICY_AUTHORITY),
+    ("Parent sélectionné — observation distincte du contrôle strict", PARENT_OBSERVATION),
+    ("Contraintes d’autotuning — contrôle réel", "results/tuning-constraints-20261021/tuning-constraints-acceptance.json"),
     ("Comparaison GEMM figée, quatre artefacts bruts", FROZEN_RECEIPT),
     ("Transport GPU RPC réel", "results/gpu-rpc-acceptance/20261021-current/allocation-receipt.json"),
     ("Isolation profil/benchmark et contrôle final négatif", "results/gpu-final-isolation-acceptance/20261021-current/allocation-receipt.json"),
@@ -112,27 +120,99 @@ def ci_qualifies_checkout(ci, source):
                 ci.get("conclusion") == "success" and ci.get("status") == "completed")
 
 
+def _linked_receipt_verified(repo, reference):
+    if not isinstance(reference, dict) or not reference.get("path") or not reference.get("sha256"):
+        return False
+    path = (Path(repo)/reference["path"]).resolve()
+    return bool(path.is_relative_to(Path(repo).resolve()) and path.is_file() and
+                hashlib.sha256(path.read_bytes()).hexdigest() == reference["sha256"])
+
+
+def _diagnostic_v2_control(repo, value):
+    """Check the archived audit's links, without repeating research or GPU work."""
+    chains = value.get("chains") or []
+    checks = {"audit_kind": value.get("kind") == "actual_convolution_diagnostic_targeted_research_read_only_audit",
+              "three_measured_chains": value.get("all_three_chains_measured") is True and len(chains) == 3,
+              "three_declared_modes": {c.get("mode") for c in chains} == {"full", "greedy_parent", "no_autotuning"},
+              "launch_source_identified": bool(re.fullmatch(r"[0-9a-f]{40}", value.get("controller_launch_source", "")))}
+    versions = value.get("relevant_source_versions") or {}
+    checks["frozen_source_hashes"] = bool(versions) and all(
+        re.fullmatch(r"[0-9a-f]{64}", v.get("frozen_sha256", "")) and
+        v.get("frozen_sha256") == v.get("launch_sha256") for v in versions.values())
+    for chain in chains:
+        diagnostic, dossier, proposal, measurement, trial = (chain.get(key) or {} for key in
+            ("diagnostic", "targeted_dossier", "next_proposal", "measurement", "next_trial"))
+        linked = [diagnostic, dossier, proposal, measurement, measurement.get("candidate_source"),
+                  dossier.get("supplied_content"), dossier.get("web_events")]
+        checks[chain.get("mode", "unknown")] = bool(
+            chain.get("status") == "diagnostic_targeted_research_proposal_measured" and
+            diagnostic.get("immutable_identity_and_evidence_hashes_verified") is True and
+            diagnostic.get("diagnostic_id") and trial.get("diagnostic_id") == diagnostic["diagnostic_id"] and
+            dossier.get("diagnostic_ids") == [diagnostic["diagnostic_id"]] and
+            dossier.get("research_ready_guard_replayed") is True and
+            dossier.get("all_source_bodies_passages_and_supplied_content_verified") is True and
+            dossier.get("pmpp_installed_original_and_cards_verified") is True and
+            proposal.get("strict_schema_parent_contract_family_and_dossier_guard_replayed") is True and
+            measurement.get("ok") is True and measurement.get("status") == "measured" and
+            measurement.get("candidate_artifact_recomputed") is True and
+            measurement.get("all_series_owned_job_same_hardware_and_exact_proposal_source") is True and
+            len(measurement.get("cases", [])) == 7 and
+            all(c.get("samples", 0) > 0 for c in measurement.get("cases", [])) and
+            all(_linked_receipt_verified(repo, reference) for reference in linked))
+    verified = all(checks.values())
+    jobs = sorted({str(c["worker"]["job_id"]) for c in chains if c.get("worker", {}).get("job_id")})
+    return {"ok": verified if value else None, "authentication_checks": checks,
+        "status": "trois chaînes vérifiées — mesures de recherche existantes" if verified else
+                  "preuve incomplète ou liens non authentifiés" if value else "en attente — aucun reçu acquis",
+        "job_id": ", ".join(jobs) or None, "job_ids": jobs,
+        "source_head": value.get("controller_launch_source"),
+        "execution_source_sha256": {k:v.get("frozen_sha256") for k,v in versions.items()},
+        "new_gpu_execution": False,
+        "scope": "Audit en lecture seule de trois chaînes diagnostic→web→dossier v2→proposition acceptée→mesure SEARCH, "
+                 "7 cas par chaîne, sources figées b9bda60. Authentification et gardes déjà rejouées dans le reçu ; "
+                 "liens SHA revérifiés pour le rapport. Profilage indisponible conservé. Aucune nouvelle exécution GPU, "
+                 "aucune finale commune ni qualification globale déduite."}
+
+
 def control_receipts(repo):
     receipts = []
     for name, relative in PROOF_PATHS:
         path = Path(repo) / relative
         value = load(path, {})
         terminal = value.get("terminal") or value.get("worker_terminal") or {}
-        provenance = value.get("source_provenance", {})
-        receipts.append({"label": name, "path": relative,
+        provenance = value.get("source_provenance") or value.get("execution_source") or {}
+        row = {"label": name, "path": relative,
             "receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
             "status": value.get("status", "reçu disponible" if value else "en attente"),
             "ok": value.get("ok"), "job_id": terminal.get("job_id", value.get("job_id")),
             "terminal": terminal, "source_head": provenance.get("HEAD", value.get("source_HEAD")),
             "source_dirty_state": provenance.get("dirty_state", value.get("snapshot_dirty_after")),
-            "execution_source_sha256": provenance.get("sources", value.get("execution_source_sha256", value.get("source_sha256_map", {}))),
+            "execution_source_sha256": provenance.get("sources", provenance.get("source_sha256", value.get("execution_source_sha256", value.get("source_sha256_map", {})))),
             "sources_unchanged": value.get("sources_unchanged"), "available": path.is_file(),
-            "scope": value.get("scope", value.get("evidence_kind"))})
-    receipts.append({"label": "Diagnostic ciblé avec lecteur v2", "path": None,
-        "receipt_sha256": None, "status": "en attente — aucun reçu acquis", "ok": None,
-        "job_id": None, "terminal": {}, "source_head": None, "source_dirty_state": None,
-        "execution_source_sha256": {}, "sources_unchanged": None, "available": False,
-        "scope": "Les dossiers de démarrage v2 ne prouvent pas une nouvelle boucle diagnostic→recherche v2; le reçu historique reste distinct."})
+            "scope": value.get("scope", value.get("evidence_kind")),
+            "criteria_checks": value.get("criteria_checks")}
+        if relative == DIAGNOSTIC_V2_AUDIT:
+            row.update(_diagnostic_v2_control(repo, value))
+        elif relative == PARENT_OBSERVATION:
+            authority = value.get("authority") or {}
+            primary = authority.get("primary_receipt") or {}
+            primary_path = path.parent/primary.get("path", "")
+            row.update(ok=None, authority=authority,
+                authority_receipt_verified=bool(primary_path.is_file() and primary.get("sha256") and
+                    hashlib.sha256(primary_path.read_bytes()).hexdigest() == primary["sha256"]),
+                scope="Observation secondaire d’un parent réellement plus lent, entrée générateur exacte. "
+                      "Aucune nouvelle mesure. Le contrôle strict prédéclaré AC-05 et l’autorité du helper restent faux ; "
+                      "cette observation ne les requalifie pas.")
+        elif relative == POLICY_AUTHORITY and value:
+            mark = lambda criterion: "acquis" if value.get("criteria_checks", {}).get(criterion) is True else (
+                "faux" if value.get("criteria_checks", {}).get(criterion) is False else "inconnu")
+            row["scope"] = (f"Autorité du contrôle statique : AC-05 {mark('AC-05')}, AC-06 {mark('AC-06')}, "
+                            f"AC-10 {mark('AC-10')}. Le statut du helper reste distinct du terminal Slurm. Hors cohortes §16.")
+        elif "diagnostic-loop-v2-20261021/" in relative and value:
+            row["scope"] = ("Helper 773095 incomplet : diagnostic, recherche ciblée et proposition acceptée ; "
+                            "compilation math.h échouée, sans exécution/mesure/intégration du quatrième candidat. "
+                            "Le terminal Slurm COMPLETED ne valide pas la boucle.")
+        receipts.append(row)
     return receipts
 
 
@@ -529,7 +609,8 @@ def main():
     report["control_receipts"] = control_receipts(REPO)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
-                 value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis"] for value in report["control_receipts"]]
+                 value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis",
+                 value["scope"] or "non renseigné"] for value in report["control_receipts"]]
     links = " · ".join(f"<a href='{escape(p.name)}'>{escape(p.name)}</a>" for p in sorted(output.glob("*.zip")))
     ci_html = (f"<a href='{escape(ci.get('url',''))}'>CI du SHA publié</a> : " + ("réussie sur les sources propres de ce SHA" if ci_ok else "ne qualifie pas ce checkout source"))
     consumed = report["project_observed_consumption"]
@@ -580,7 +661,7 @@ Les traces conservent séparément les tokens mis en cache. Aucun coût en dolla
 Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les outils ; les CUDA Events ne mesurent que le kernel.
 Les coûts absents sont inconnus. Le rapport JSON contient les compteurs de compilation, cache, recherche, configurations et premier gain utile lorsque la méthode les observe.</p>
 <details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{study_campaign_table(summary)}</details>
-<h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu'], receipts)}
+<h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu','Périmètre et limites'], receipts)}
 <p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.
 Ces indisponibilités restent des diagnostics explicites ; aucun compteur n'est inventé et aucun temps instrumenté ne participe au classement.
 Les scénarios destructifs antérieurs ont vérifié la mise en quarantaine et le remplacement du worker. Les reprises de processus rejouent des preuves CUDA archivées sans produire de nouvelle mesure GPU.</p>

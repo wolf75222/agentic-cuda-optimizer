@@ -113,13 +113,15 @@
   "priority_gaps": [
     {
       "id": "PASSAGES_V2_LIVE",
-      "state": "startup_model_dossier_proposal_measurement_acquired",
+      "state": "production_targeted_diagnostic_v2_research_proposal_search_measurement_acquired",
       "evidence": [
         "study_v2_full_first_proposal",
         "study_v2_greedy_parent_first_proposal",
-        "diagnostic_loop"
+        "diagnostic_loop",
+        "diagnostic_loop_v2",
+        "convolution_targeted_diagnostic_b9bda60"
       ],
-      "remaining": "Startupv2 désormais acquis au45407a2. Diagnostic/newfamilyv2 et retour technique non couverte restent non exercés;limiteCLI sur parent.evaluations brut bloque tours suivants. La boucle diagnostic770679 reste historique au76da,avec lectures parfois partielles."
+      "remaining": "Boucle ciblée v2 acquise en production convolution 1729 full/greedy_parent/no_autotuning au b9bda60 ; ni AC-02 complet ni finales §16 acquis. Le helper 773095 séparé reste incomplet après math.h, sans relance."
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
@@ -153,9 +155,9 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 61,
-    "latest_local_junit_entries": 897,
-    "latest_local_testcase_nodes": 892
+    "evidence_entries": 67,
+    "latest_local_junit_entries": 931,
+    "latest_local_testcase_nodes": 926
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -4331,6 +4333,828 @@
       "junit_reported_results": 897,
       "junit_sha256": "501cdfc86587137ba0d2dd6fca6823893d2a3d48f6d35946714a015da9d295de",
       "scope": "Hashes exacts des sources/tests du checkout modifié au06bd4be;régressionsCPU unscored rehost et consommation observée. Pas de nouvelle preuveROMEO ni CI des changements dirty."
+    },
+    "diagnostic_loop_v2": {
+      "path": "results/diagnostic-loop-v2-20261021/acceptance-summary.json",
+      "sha256": "227b575c8580c3018cf99e660d9de4581afe1a9e220f480e260e185a146c5ce1",
+      "bytes": 50025,
+      "kind": "romeo_partial_diagnostic_loop_execution",
+      "ok": false,
+      "status": "incomplete",
+      "job_id": "773095",
+      "session_id": "diagnostic-acceptance-5809f8acdcb64e3fad2efcc634de109f",
+      "terminal": {
+        "job_id": "773095",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:22:22",
+        "nodes": "romeo-a047",
+        "terminal": true
+      },
+      "observed_at_utc": "2026-10-21T17:22:57.580562+00:00",
+      "source_version": {
+        "HEAD": "06bd4be0ab2e725deb52f38412d6f42c123d51e6",
+        "dirty_state": [],
+        "source_sha256": {
+          "scripts/diagnostic_loop_acceptance.py": "4fe47ba6fff32df669d83b2e03c4eac03246aef712ce43283d0cdcad26de0422",
+          "optimizer_agent/campaign.py": "11f6b463c56789d72c0134e06c01e6789c8870c54fc7d536c81e764e7e64212e",
+          "optimizer_agent/campaign_workflow.py": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f",
+          "optimizer_agent/codex_backend.py": "db15f2cc52fb76fe62093872a57c90c6a36953a5fac658fb7cbef2aa09f31246",
+          "optimizer_agent/research_service.py": "5fdbd0ac1791aadfc492263e777315cbdba3d21e13e14d96af25f01d3d91fe77",
+          "optimizer_agent/search_policy.py": "6212c2743e020007f775ae98d83dcf6e16148b35905df994ede5bb66d3ba2fae",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750"
+        }
+      },
+      "authority_reference": {
+        "path": "results/diagnostic-loop-v2-20261021/diagnostic-loop-acceptance.json",
+        "sha256": "5d21840663b29a70b96289fcb8a6fda94cd346f9bc28b5ede7924ba59d70b751",
+        "bytes": 26852
+      },
+      "proof_manifest": {
+        "path": "results/diagnostic-loop-v2-20261021/proof-sha256.json",
+        "sha256": "e96d644ede51be3349aeba69e42440c632c93be3e89e42af494f7473be6f46fe",
+        "bytes": 237809,
+        "file_count": 1764,
+        "excluded_paths": [
+          "proof-sha256.json",
+          "acceptance-summary.json"
+        ],
+        "exclusion_scope": "Both paths are absent from the immutable file-to-hash map; the derived summary links the manifest SHA without self-reference."
+      },
+      "protected_job_references": [
+        {
+          "path": "results/diagnostic-loop-v2-20261021/protected-jobs-before.json",
+          "sha256": "cdb3c7e05169a5fb5a583cb2125a1525c7d6ee5172fcec7aaa828b9ab4935bc3",
+          "bytes": 2491
+        },
+        {
+          "path": "results/diagnostic-loop-v2-20261021/protected-jobs-after.json",
+          "sha256": "56e3c99e91650e75f3915a25c7e8b8cf072f5882132c080ef850ca573f3b693f",
+          "bytes": 3968
+        }
+      ],
+      "observed_facts": {
+        "postflight_nine_check_status": {
+          "three_independent_actual_control_evaluations": "observed_in_existing_receipts",
+          "controls_valid_and_not_promoted": "observed_in_existing_receipts",
+          "stagnation_links_actual_measurements": "observed_in_existing_receipts",
+          "actual_targeted_new_dossier": "observed_in_existing_receipts",
+          "diagnostic_dossier_proposal_chain": "observed_in_existing_receipts",
+          "guarded_proposal_actually_validated_and_measured": "failed_at_compilation",
+          "three_controls_integrated_once_registry_evidence": "observed_in_existing_receipts",
+          "fourth_trial_integrated_once": "not_reached",
+          "no_final_holdout_exposed": "observed_in_existing_receipts"
+        },
+        "all_selected_passage_sha256_verified": true,
+        "research_ids": [
+          "72b9859e972a45d0be9f6f14bb0b517f",
+          "d8c84c72a1354b4397a0a07810f6e3ad"
+        ],
+        "diagnostic_id": "diag-2e57ff5b0c1cd4053f0360b0e483b9421a3ba79ec2fd270f559285fb0eb79dbf",
+        "model_stage_counts": {
+          "kernel_generation": 1,
+          "documentary_synthesis": 2,
+          "web_research": 2
+        },
+        "model_call_ids": [
+          "50ca6591fb844b56bb52f27fcb0c4481",
+          "f14d7281a8214b6791f2562bb9b2a7c4",
+          "23bf4753b27a43bf84df6cb19df97ab8",
+          "fe69722e850947d6980e4de7ea87c447",
+          "b937b091ad434a5f9584b7bce857f895"
+        ],
+        "model_usage_totals": {
+          "input_tokens": 3987535,
+          "cached_input_tokens": 3428992,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 127120,
+          "reasoning_output_tokens": 109205
+        },
+        "qualification_failure": {
+          "status": "compilation_error",
+          "stage": "compile",
+          "error": "NVRTC cannot open generated #include <math.h>",
+          "evaluation_id": "020df44ec0bb40e1aaf6dc56d464ae16",
+          "candidate_id": "40e8dfe22305adabc35307ba",
+          "artifact_hash": "02b4eabf7e8bcb9d8d3e72d6edcf437fcbfd72bc837338d0433b3e59942b6270",
+          "source_sha256": "c118f5ec0e6ff7cd4b5146f6ac7cd1a0a6a19efe63a6ff6a4a6dc2967ce6b497",
+          "proposal_call_id": "50ca6591fb844b56bb52f27fcb0c4481",
+          "proposal_receipt_sha256": "87e63bd5e60efefbcf397c6f730c994d62de5ae2f71f287ba7f9bf37d85d165c",
+          "evaluation_receipt_sha256": "e96e29e1a8d89dea396de64cb1e78cecaa08f15ab750ed8814f2f72b81dbe0ba"
+        },
+        "fourth_generated_candidate_kernel_executions": 0,
+        "fourth_generated_candidate_benchmarks": 0,
+        "fourth_generated_candidate_integrations": 0,
+        "three_static_controls_integrated": 3,
+        "protected_jobs_unchanged": true
+      },
+      "scope": "06bd4be clean: three measured static controls -> actual stagnation diagnostic -> targeted web research -> verified v2 passage dossier -> genuine strict proposal accepted. Compilation of the fourth candidate fails at generated #include <math.h>; no fourth-candidate execution, measurement, integration or loop success. Excluded from section16 cohorts.",
+      "limitations": [
+        "Helper nine checks were not reached; nine postflight stage observations are distinct from successful helper checks.",
+        "The frozen helper configured two repairs but used a one-shot fourth-trial path; the later LangGraph helper fix is CPU-tested separately and does not requalify this run.",
+        "Selected source parent was baseline without bulky stored evaluations; actual large-parent compaction was not exercised.",
+        "ROMEO profiling counters denied; local CUDA fallback unavailable. No profiling success or local ranking claim."
+      ]
+    },
+    "search_policy_controls_773380": {
+      "path": "results/policy-controls-20261021/inspection-summary.json",
+      "sha256": "28d08c9d3a9e482414368e46530d12ab3df7c12de28d4afe83633e27601d9e13",
+      "bytes": 10567,
+      "kind": "romeo_static_policy_controls",
+      "ok": false,
+      "status": "partial_or_incomplete",
+      "job_id": "773380",
+      "session_id": "ac0506-b581b14ae2114d638b61348cc98f43e8",
+      "terminal": {
+        "job_id": "773380",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:06:15",
+        "nodes": "romeo-a047",
+        "terminal": true
+      },
+      "observed_at_utc": "2026-10-21T17:47:35.635471+00:00",
+      "source_version": {
+        "HEAD": "498d3befc3836dd5edbac3b279d0c3d13e551e3b",
+        "dirty_state": [],
+        "source_sha256": {
+          "scripts/gpu_search_policy_acceptance.py": "12969fa46d99105aaee6549203114d8f7c76820377ccea6c86c9496e6c82f11f",
+          "optimizer_agent/campaign.py": "adb2d47ecec93a500aa7ae0d48a3e3a5f05d745e0ff15f8d073f8d91d1b4d316",
+          "optimizer_agent/campaign_workflow.py": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f",
+          "optimizer_agent/codex_backend.py": "31aff2d472098e9420f892e0629fb21fb1dd17d34fc17a60ee8fb6e385d9ae87",
+          "optimizer_agent/research_service.py": "5fdbd0ac1791aadfc492263e777315cbdba3d21e13e14d96af25f01d3d91fe77",
+          "optimizer_agent/search_policy.py": "98012ce7b5b2889e7c9b968dc63717ce6e1f46c14ffba2577428ae954289c656",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750"
+        }
+      },
+      "authority_reference": {
+        "path": "results/policy-controls-20261021/search-policy-acceptance.json",
+        "sha256": "7a0f30b643ec5083f4b2390d5b4b4ebf7b0177b2d1c4d97872f667f49c504559",
+        "bytes": 646697
+      },
+      "protection_reference": {
+        "path": "results/policy-controls-20261021/inspection-protection.json",
+        "sha256": "0f9f59f4ea2e71da75ef428bc538d1d09af9121b17676dff5a75ba9b61ae6393",
+        "bytes": 1529
+      },
+      "protected_job_references": [
+        {
+          "path": "results/policy-controls-20261021/inspection-protected-jobs-during.json",
+          "sha256": "2b8993e7720a663ed231ef6f8a395769759b6582ee350d4bd40d618c33207e2e",
+          "bytes": 2641
+        },
+        {
+          "path": "results/policy-controls-20261021/inspection-protected-jobs-postflight.json",
+          "sha256": "b9cafa8d5ec41a411ba9537974cf716ee422d8b14f7011b22d888efcceb57e65",
+          "bytes": 1707
+        }
+      ],
+      "proof_manifest": {
+        "path": "results/policy-controls-20261021/inspection-proof-sha256.json",
+        "sha256": "8a1f74d05270dd0c7b5d0db6c37f1a10c20f01e4b296ee24fd93476451e5d1a0",
+        "bytes": 864857,
+        "file_count": 6341,
+        "excluded_paths": [
+          "inspection-proof-sha256.json",
+          "inspection-summary.json"
+        ]
+      },
+      "criteria_checks": {
+        "AC-05": false,
+        "AC-06": true,
+        "AC-10": true
+      },
+      "checks": {
+        "initial_controls_really_validated_and_measured": true,
+        "fast_incumbent_freshly_confirmed": true,
+        "slow_control_paired_interval_below_one": true,
+        "slow_parent_naturally_selected": false,
+        "selected_source_and_parameters_received_exactly": true,
+        "initial_plus_two_repairs_really_failed_compilation": true,
+        "forbidden_pair_absent_from_new_batch": true,
+        "closure_restored_from_same_durable_snapshot": true,
+        "invalid_candidate_never_selected_as_parent": true,
+        "other_parent_branch_really_benchmarked": true,
+        "closed_parent_source_and_results_consultable": true,
+        "critical_control_aggregate_lower_bound_above_threshold": true,
+        "critical_regression_alone_rejects_promotion": true,
+        "confirmed_incumbent_preserved": true
+      },
+      "treequest": {
+        "revision": "3fac4f8b07e14ed92742471492a59764993b9ab0",
+        "eligibility_extension": 1,
+        "source_pin_verified": true
+      },
+      "hardware_identity": {
+        "name": "NVIDIA GH200 120GB",
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "uuid": "a9bd3aa096c14163307c7756e99dba0d",
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+      },
+      "usage": {
+        "harness_requests": 445,
+        "benchmark_requests": 162,
+        "native_reservation_wall_seconds": 4.799788278527558,
+        "cuda_event_kernel_seconds": 0.3186351042124443,
+        "native_compile_stage_wall_seconds": 0.612756101,
+        "native_cache_hits": 422,
+        "native_cache_misses": 23
+      },
+      "model_calls": 0,
+      "model_tokens": 0,
+      "observed_facts": {
+        "AC06": {
+          "branch_decision": {
+            "author": "static_acceptance_control",
+            "counters": {
+              "compilation_failures": 3,
+              "repairs": 2
+            },
+            "evidence": [
+              "2e23df4c05ad4c4facd5951e391dbca8",
+              "d8e3c2747784495c815ff900c2b41fc5",
+              "2dff684b35d2447098b5fac5658eee75"
+            ],
+            "reason": "Declared static broken transformation: initial compilation and two local repairs exhausted",
+            "scope": "parent_action",
+            "state": "closed",
+            "target_id": [
+              "expansion-4",
+              "static_repair"
+            ],
+            "timestamp": "2026-10-21T17:43:56.782908+00:00"
+          },
+          "closed_snapshot_sha256": "d8294e3e058d2fd788d30a128f408eb1d7eca203ce602c927995f2b22e38db33",
+          "continued_branch_candidate_id": "continued-branch",
+          "continued_branch_trial_id": "01M5FS01KT86977TMG8NBTGMMX",
+          "qualified": true,
+          "repair_evaluation_ids": [
+            "2e23df4c05ad4c4facd5951e391dbca8",
+            "d8e3c2747784495c815ff900c2b41fc5",
+            "2dff684b35d2447098b5fac5658eee75"
+          ],
+          "restored_snapshot_sha256": "d8294e3e058d2fd788d30a128f408eb1d7eca203ce602c927995f2b22e38db33"
+        },
+        "AC10": {
+          "aggregate_interval": {
+            "bootstrap_samples": 2000,
+            "case_gains": {
+              "copy-16384": {
+                "gain": 0.05485025972488021,
+                "lower": 0.05466706147272595,
+                "upper": 0.055210157389129544
+              },
+              "copy-65536": {
+                "gain": 9.892575928791537,
+                "lower": 9.723025613474912,
+                "upper": 10.063999987493668
+              }
+            },
+            "confidence": 0.95,
+            "gain": 7.6296191046854736,
+            "lower": 7.504083273787956,
+            "seed": 0,
+            "upper": 7.757701153353512
+          },
+          "aggregate_promotion_threshold": 1.01,
+          "critical_cases_ok": false,
+          "evaluation_id": "1d133b4f8c484aa6b0bc2640cdf68d4e",
+          "incumbent_after": {
+            "candidate_id": "fast",
+            "version": 1
+          },
+          "incumbent_before": {
+            "candidate_id": "fast",
+            "version": 1
+          },
+          "qualified": true,
+          "status": "not_improved"
+        },
+        "AC05_predeclared_result": {
+          "qualified": false,
+          "reason": "The declared slow variant was not naturally selected in the fixed16 selections; the helper check stays false.",
+          "selected_slow_variant_count": 0,
+          "selection_count": 16,
+          "selection_seed": 1729
+        },
+        "raw_selected_parent_observation_without_requalification": {
+          "all_three_generator_inputs_equal_selected_parent": true,
+          "best_measured_candidate_id": "fast",
+          "best_weighted_latency_ms": 0.05513922369011937,
+          "generator_input_sha256": "48fb7aab747163a69061668ca8a2ae77042bb5823fa2aca4597ba0756c2d6037",
+          "scope": "Raw measured parent/actual generator lineage only; this observation does not change the predeclared AC05 check.",
+          "selected_parent_id": "expansion-4",
+          "selected_parent_parameters": {
+            "control_variant": "baseline",
+            "delay_cycles": 1000000
+          },
+          "selected_parent_source_sha256": "c3a2d9021a2b377a1354aa41751dc5957f620cbbcaf588d377e7b801b19c1bab",
+          "selected_parent_weighted_latency_ms": 0.5106806303914401,
+          "trial_id": "01M5FRZYW4G60RF35GGWHMXBC6"
+        },
+        "request_integrity": {
+          "count": 445,
+          "job_ids": [
+            "773380"
+          ],
+          "gpu_uuids": [
+            "a9bd3aa096c14163307c7756e99dba0d"
+          ],
+          "request_envelope_fingerprints_all_match": true,
+          "worker_pids": [
+            2073375
+          ],
+          "monotonic_reservations_do_not_overlap": true,
+          "native_ok": 442,
+          "cuda_event_samples_count": 810
+        },
+        "protected_postflight_states": {
+          "771747": "RUNNING",
+          "771748": "RUNNING",
+          "771749": "RUNNING",
+          "771750": "NOT_LISTED_IN_ACTIVE_QUEUE",
+          "772379": "RUNNING"
+        }
+      },
+      "scope": "Static clock64-delayed copy controls only. AC06 parent/action closure and AC10 critical-regression rejection acquired on ROMEO. The predeclared named-slow AC05 check is false and overall helper remains partial_or_incomplete/ok=false. No model or section16 quality claim.",
+      "limitations": [
+        "Static intentionally delayed controls, excluded from section16 quality cohorts; no optimizer gain or model quality claim.",
+        "Overall helper remains partial because AC05 predeclared slow-variant selection was not acquired. No forcing, reseeding or replay was performed.",
+        "Protection uses discrete primary-supplied scheduler snapshots; initial raw capture time was not persisted, and no continuous state or causality is inferred."
+      ]
+    },
+    "local_original_intent_release": {
+      "path": "work/live/original-intent-release-local.json",
+      "sha256": "5d9a875e3937383182b1564c73a6e2bea4ca987ac106dd2d8efa130af8516234",
+      "bytes": 1266,
+      "kind": "local_cpu_test_release",
+      "published_commit": "498d3befc3836dd5edbac3b279d0c3d13e551e3b",
+      "tests_passed": 926,
+      "subtests_passed": 5,
+      "junit_reported_results": 931,
+      "junit_reference": {
+        "path": "work/live/policy-tests-original-intent-release.xml",
+        "sha256": "ec92f062732db6654e6a7a58745e7f28085978ebdb4e505c6a4531b6c04447a7",
+        "bytes": 143837
+      },
+      "source_manifest": {
+        "path": "results/quality-study-v2/controller-sources/498d3befc3836dd5edbac3b279d0c3d13e551e3b/source.json",
+        "sha256": "0b914237037c8e56d2a2f9f1726a8d27cea8b33d7323b6b2571770ad7a2e0b90",
+        "bytes": 18163,
+        "file_count": 165
+      },
+      "current_files_match_published_snapshot": true,
+      "scope": "Post-run content hashes match the committed clean snapshot. JUnit itself does not embed pre-run source hashes; exact-SHA GitHub CI is separate. CPU only; no new test, GPU, SSH or model invocation by this audit.",
+      "limitations": [
+        "The archived receipt declares five subtests; JUnit contains926 testcase nodes and931 reported results, no separate subtest nodes.",
+        "Post-run hashes match the clean committed snapshot; JUnit does not embed a pre-run source hash."
+      ]
+    },
+    "ci_498d3be": {
+      "path": "work/live/ci-498d3be.json",
+      "sha256": "d6100525f1e8f520b04c80c78f24686228d14d49f3fb9687d0d2330825de83d0",
+      "bytes": 1968,
+      "kind": "github_ci_result",
+      "headSha": "498d3befc3836dd5edbac3b279d0c3d13e551e3b",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39645485171",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39645485171/job/119379807253"
+        }
+      ],
+      "scope": "Archived exact-SHA498d3be GitHub CI completed successfully (pytest and compileall). No live network refresh; this does not qualify later untracked helpers, GPU executions, model behavior or section16 cohorts."
+    },
+    "selected_parent_observation_773380": {
+      "path": "results/policy-controls-20261021/selected-parent-observation.json",
+      "sha256": "38398d749a6d24f78c378c501c408284e7e16285e69cd0359afe6b9a32d175bf",
+      "bytes": 197019,
+      "kind": "romeo_general_selected_parent_observation",
+      "status": "observed_general_AC05_with_strict_control_still_false",
+      "job_id": "773380",
+      "terminal": {
+        "elapsed": "00:06:15",
+        "exit_code": "0:0",
+        "job_id": "773380",
+        "nodes": "romeo-a047",
+        "state": "COMPLETED",
+        "terminal": true
+      },
+      "source_version": {
+        "HEAD": "498d3befc3836dd5edbac3b279d0c3d13e551e3b",
+        "dirty_state": [],
+        "source_sha256": {
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/experiment_store.py": "177402db9445b433db0298ddea636896ad50423298bab9b8843f2b3586787d42",
+          "optimizer_agent/search_policy.py": "98012ce7b5b2889e7c9b968dc63717ce6e1f46c14ffba2577428ae954289c656",
+          "optimizer_agent/treequest_eligibility.py": "ffed452e4e5f9e0556bab743ad3c1931f76ee3031f508fd4e58a79ad54cd7db4",
+          "scripts/gpu_search_policy_acceptance.py": "12969fa46d99105aaee6549203114d8f7c76820377ccea6c86c9496e6c82f11f"
+        }
+      },
+      "authority": {
+        "initial_manifest_membership": "New supplementary leaf outside the initial inspection manifest; no original manifest is amended",
+        "original_receipts_modified": false,
+        "primary_ok": false,
+        "primary_receipt": {
+          "bytes": 646697,
+          "path": "search-policy-acceptance.json",
+          "sha256": "7a0f30b643ec5083f4b2390d5b4b4ebf7b0177b2d1c4d97872f667f49c504559"
+        },
+        "primary_status": "partial_or_incomplete",
+        "strict_AC05": false,
+        "strict_checks_modified": false,
+        "strict_named_slow_selected": false
+      },
+      "scope": "General AC-05 specification scenario observed on static controls: natural selection of the measured slower non-root parent expansion-4, exact source/parameters received by the generator, and actual independent measurement of child expansion-12. The strict named-slow predicate and overall helper status remain false/partial. Supplementary leaf outside the initial immutable manifest.",
+      "comparison_scope": "Parent and fast weighted geometric latencies are separately measured descriptive values, not a new paired speedup estimate",
+      "observed_facts": {
+        "selected_trial_id": "01M5FRYCM6HHN6CQX0PKKXQTEQ",
+        "selected_parent_id": "expansion-4",
+        "generated_child_id": "expansion-12",
+        "best_candidate_id": "fast",
+        "generator_input_exact": true,
+        "selected_source_sha256": "c3a2d9021a2b377a1354aa41751dc5957f620cbbcaf588d377e7b801b19c1bab",
+        "generator_source_sha256": "c3a2d9021a2b377a1354aa41751dc5957f620cbbcaf588d377e7b801b19c1bab",
+        "selected_parameters_sha256": "bbab789b589a1baa238ccfbbfb942a087cf7eaa83e75e0f7ce8a27e7f212ccfe",
+        "generator_parameters_sha256": "bbab789b589a1baa238ccfbbfb942a087cf7eaa83e75e0f7ce8a27e7f212ccfe",
+        "variant_override": null,
+        "chronology_rowids": {
+          "confirmed_fast_promotion": 8,
+          "selected_nonbest_parent": 45
+        },
+        "chronology_ordered": true,
+        "measurements": {
+          "fast": {
+            "candidate_id": "fast",
+            "evaluation_id": "9c8c9719c34046d1bace5110f8d83a9e",
+            "artifact_hash": "53ceaef77e92e1a3d57dc247d9d96017bd87c0d1c9f3f2173bbe10d579505fa1",
+            "source_sha256": "beeac5f506c3a91f6df4debca079f8c5a612b0d13131a32eaf9b4eb559179753",
+            "weighted_geometric_latency_ms": 0.05513922369011937,
+            "measurement_reference": {
+              "bytes": 57365,
+              "path": "results/policy-controls-20261021/measurements/9c8c9719c34046d1bace5110f8d83a9e.json",
+              "sha256": "4dd2ceb0bf16e4918d0e565b9c1478f4aaf0a9ebcbf324fe66ea7f0a8a3920aa"
+            }
+          },
+          "generated_child": {
+            "candidate_id": "expansion-12",
+            "evaluation_id": "998ddf30b4284b53b8d896e2af204529",
+            "artifact_hash": "2dbe33095f20bed4d1907796a7d664b214ed5ea5c98e8e19290418e5468b9253",
+            "source_sha256": "be153414670805c7184772fbb020ad2cc798e2d1870d734e3950352153a57779",
+            "weighted_geometric_latency_ms": 0.5095404769740633,
+            "measurement_reference": {
+              "bytes": 57590,
+              "path": "results/policy-controls-20261021/measurements/998ddf30b4284b53b8d896e2af204529.json",
+              "sha256": "7d1afc77ea06025577f5fa1771b7978abf25aa30d16c11db58b487ddf0592cbe"
+            }
+          },
+          "parent": {
+            "candidate_id": "expansion-4",
+            "evaluation_id": "a5968e7586af432e9ee5e8b2ce567f1e",
+            "artifact_hash": "9cc30b27a5111bb35aa84288a3e6482a3d16c3c0e7b4b75e38d13343994b910c",
+            "source_sha256": "c3a2d9021a2b377a1354aa41751dc5957f620cbbcaf588d377e7b801b19c1bab",
+            "weighted_geometric_latency_ms": 0.5106806303914401,
+            "measurement_reference": {
+              "bytes": 57292,
+              "path": "results/policy-controls-20261021/measurements/a5968e7586af432e9ee5e8b2ce567f1e.json",
+              "sha256": "4a157670cca4caf4f98f27343dcd370c1c650cc307ddfd23e11426fbc4212217"
+            }
+          }
+        }
+      },
+      "limitations": [
+        "General specification scenario observed with static controls; strict named-slow predicate and primary helper ok remain false.",
+        "New supplementary leaf outside the initial immutable inspection manifest; the original receipts/manifests remain unchanged.",
+        "Separately measured weighted latencies are descriptive; no new paired speedup or optimizer performance is inferred."
+      ],
+      "observed_scope": {
+        "excluded_from_quality_cohorts": true,
+        "gpu_requests_during_observation": 0,
+        "model_calls_during_observation": 0,
+        "no_new_measurements": true,
+        "not_observed": "The narrower predefined script predicate requiring control_variant=slow remains false",
+        "observed": "A valid non-root baseline descendant was naturally selected after fast had been confirmed and promoted; its exact source and parameters were passed to the declared static generator",
+        "optimizer_performance_claim": false,
+        "requirement": "spec.md section 15 AC-05: selected candidate slower than global best; exact source and parameters passed to generation",
+        "selection_or_seed_modified": false,
+        "ssh_calls_during_observation": 0,
+        "static_acceptance_control": true
+      }
+    },
+    "convolution_targeted_diagnostic_b9bda60": {
+      "path": "work/live/research-convolution-diagnostic-b9bda60.json",
+      "sha256": "37ea5f4779535722dd2e946cea140c0ad42a355ae6a66967f988d7b6338d49ba",
+      "bytes": 159716,
+      "kind": "actual_convolution_diagnostic_targeted_research_read_only_audit",
+      "observed_at_utc": "2026-10-21T17:52:23.989034+00:00",
+      "source_version": {
+        "HEAD": "b9bda60145ebf438fecd2837bdc2b1b00474674c",
+        "frozen_source_checkout": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/study-source-b9bda60",
+        "relevant_source_versions": {
+          "optimizer_agent/research_service.py": {
+            "frozen_sha256": "5fdbd0ac1791aadfc492263e777315cbdba3d21e13e14d96af25f01d3d91fe77",
+            "launch_sha256": "5fdbd0ac1791aadfc492263e777315cbdba3d21e13e14d96af25f01d3d91fe77",
+            "primary_sha256": "5fdbd0ac1791aadfc492263e777315cbdba3d21e13e14d96af25f01d3d91fe77"
+          },
+          "optimizer_agent/codex_backend.py": {
+            "frozen_sha256": "db15f2cc52fb76fe62093872a57c90c6a36953a5fac658fb7cbef2aa09f31246",
+            "launch_sha256": "db15f2cc52fb76fe62093872a57c90c6a36953a5fac658fb7cbef2aa09f31246",
+            "primary_sha256": "31aff2d472098e9420f892e0629fb21fb1dd17d34fc17a60ee8fb6e385d9ae87"
+          },
+          "optimizer_agent/diagnostics.py": {
+            "frozen_sha256": "d1c9ddc23275e90499f8af2f5e980ecc2a48584b6cf49d0388c92f42af916af9",
+            "launch_sha256": "d1c9ddc23275e90499f8af2f5e980ecc2a48584b6cf49d0388c92f42af916af9",
+            "primary_sha256": "d1c9ddc23275e90499f8af2f5e980ecc2a48584b6cf49d0388c92f42af916af9"
+          },
+          "optimizer_agent/campaign.py": {
+            "frozen_sha256": "adb2d47ecec93a500aa7ae0d48a3e3a5f05d745e0ff15f8d073f8d91d1b4d316",
+            "launch_sha256": "adb2d47ecec93a500aa7ae0d48a3e3a5f05d745e0ff15f8d073f8d91d1b4d316",
+            "primary_sha256": "adb2d47ecec93a500aa7ae0d48a3e3a5f05d745e0ff15f8d073f8d91d1b4d316"
+          },
+          "optimizer_agent/campaign_workflow.py": {
+            "frozen_sha256": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f",
+            "launch_sha256": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f",
+            "primary_sha256": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f"
+          },
+          "optimizer_agent/pmpp_guidance.py": {
+            "frozen_sha256": "f640ffb9d3002e66d93add246ca6ef99f0619ccdad82ccefeff544fac3765147",
+            "launch_sha256": "f640ffb9d3002e66d93add246ca6ef99f0619ccdad82ccefeff544fac3765147",
+            "primary_sha256": "f640ffb9d3002e66d93add246ca6ef99f0619ccdad82ccefeff544fac3765147"
+          },
+          "optimizer_agent/evaluation.py": {
+            "frozen_sha256": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+            "launch_sha256": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+            "primary_sha256": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838"
+          },
+          "optimizer_agent/workload_semantics.py": {
+            "frozen_sha256": "eb6fac717966f23a1625df009ac8bf7ba065c1cd8ec3df7f8d31a91beb1bb287",
+            "launch_sha256": "eb6fac717966f23a1625df009ac8bf7ba065c1cd8ec3df7f8d31a91beb1bb287",
+            "primary_sha256": "eb6fac717966f23a1625df009ac8bf7ba065c1cd8ec3df7f8d31a91beb1bb287"
+          },
+          "optimizer_agent/tuning_constraints.py": {
+            "frozen_sha256": "88f49acd3a9e4d8a7b35e39d65781888729a9274e8a091b11f2ff8cf48f83070",
+            "launch_sha256": "88f49acd3a9e4d8a7b35e39d65781888729a9274e8a091b11f2ff8cf48f83070",
+            "primary_sha256": "88f49acd3a9e4d8a7b35e39d65781888729a9274e8a091b11f2ff8cf48f83070"
+          },
+          "optimizer_agent/compile_cache.py": {
+            "frozen_sha256": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+            "launch_sha256": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+            "primary_sha256": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e"
+          }
+        },
+        "guard_replay_source": "Exact clean frozen launch checkout study-source-b9bda60; primary source differences are recorded separately. No source files rewritten."
+      },
+      "all_three_chains_measured": true,
+      "chains": [
+        {
+          "mode": "full",
+          "run_id": "quality-20261021-v2.convolution.1729.full",
+          "worker": {
+            "job_id": "771747",
+            "session_id": "suite-gen-922260caf84d772754ff26b9bac862db",
+            "hostname": "romeo-a049",
+            "gpu_uuids": [
+              "GPU-e813caa7-7836-4b88-9952-40e9d16aa543"
+            ],
+            "device": {
+              "name": "NVIDIA GH200 120GB",
+              "architecture": "sm_90",
+              "compute_capability": {
+                "major": 9,
+                "minor": 0
+              },
+              "uuid": "e813caa778364b88995240e9d16aa543",
+              "driver_version": 13010,
+              "nvrtc_version": "12.6",
+              "cuda_toolkit_version": 12060,
+              "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+            }
+          },
+          "status": "diagnostic_targeted_research_proposal_measured",
+          "diagnostic": {
+            "diagnostic_id": "diag-55e2f2f2b5c1f583302c55d03a03a55182c64ed605c7c0b3a95988615410bdd8",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/diagnostics/diag-55e2f2f2b5c1f583302c55d03a03a55182c64ed605c7c0b3a95988615410bdd8.json",
+            "sha256": "fb5aac1f599a2df2d52c7e55b49750bbcc1181b4d361792f761b5991e0911fab",
+            "immutable_identity_and_evidence_hashes_verified": true
+          },
+          "targeted_dossier": {
+            "research_id": "b491c3bc6f7c42ce86f4502a549a5944",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/research/b491c3bc6f7c42ce86f4502a549a5944.json",
+            "sha256": "b73dcfa28bdff53ca4fb1de2fc12ad8709df0db0966ef8c13dbee81755649ad7",
+            "diagnostic_ids": [
+              "diag-55e2f2f2b5c1f583302c55d03a03a55182c64ed605c7c0b3a95988615410bdd8"
+            ],
+            "research_ready_guard_replayed": true,
+            "receipt_version": 2,
+            "observed_search_calls": 8,
+            "observed_query_count": 24,
+            "all_source_bodies_passages_and_supplied_content_verified": true,
+            "truncated_passage_count": 9,
+            "pmpp_installed_original_and_cards_verified": true
+          },
+          "proposal": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FRCHSWVZFQ0Z7GFBG982B1/proposal-0-1.json",
+            "sha256": "5e27269ab1747f6bfe57f2b84954febbdfcff5d435d6c5f537a72ac729cce05e",
+            "call_id": "76af1ef5dc48402aac771d491a1fa61d",
+            "strict_schema_parent_contract_family_and_dossier_guard_replayed": true,
+            "source_parent_id": "92e3eee0843813db15ead09c",
+            "source_sha256": "8763b65e2be913db775ddb6eb8b62d02a1ab18509e2123f492734e748b9909eb"
+          },
+          "measurement": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FRCHSWVZFQ0Z7GFBG982B1/evaluation-d1e8dcbfba288e980347ef5d.json",
+            "sha256": "5fc79f7d81e8c6f7fc53012e58ae651a47be39e04f2f259c1322a484ab4031c6",
+            "evaluation_id": "e5e75210c154476f92f25d0470273938",
+            "candidate_id": "d1e8dcbfba288e980347ef5d",
+            "artifact_hash": "d3890a83e7cc8a7ddd2a51da1f5d3de66462f72eb06d881a17f003e92e5a82e2",
+            "candidate_artifact_recomputed": true,
+            "status": "measured",
+            "ok": true,
+            "series_reports": 49,
+            "reports_and_raw_sample_digest_sha256": "ca4b06005e469c3456d2ea859bfb9a9d35c0082c4e46ef744ca883a4ebc1aab9",
+            "all_series_owned_job_same_hardware_and_exact_proposal_source": true,
+            "scope": "Independent SEARCH benchmark; no final common evaluation or scientific superiority claim."
+          }
+        },
+        {
+          "mode": "greedy_parent",
+          "run_id": "quality-20261021-v2.convolution.1729.greedy_parent",
+          "worker": {
+            "job_id": "771749",
+            "session_id": "suite-gen-03c1af25e31ac57672a0fbffa22a420d",
+            "hostname": "romeo-a041",
+            "gpu_uuids": [
+              "GPU-ec947ba1-3e15-9860-163d-330d6c66d1b4"
+            ],
+            "device": {
+              "name": "NVIDIA GH200 120GB",
+              "architecture": "sm_90",
+              "compute_capability": {
+                "major": 9,
+                "minor": 0
+              },
+              "uuid": "ec947ba13e159860163d330d6c66d1b4",
+              "driver_version": 13010,
+              "nvrtc_version": "12.6",
+              "cuda_toolkit_version": 12060,
+              "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+            }
+          },
+          "status": "diagnostic_targeted_research_proposal_measured",
+          "diagnostic": {
+            "diagnostic_id": "diag-d1d2280b91507586880ea8776fda3d185be054f9425e51840cdf7a11ffe848f3",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.greedy_parent/generation/diagnostics/diag-d1d2280b91507586880ea8776fda3d185be054f9425e51840cdf7a11ffe848f3.json",
+            "sha256": "2a300b02ab29395f05afc8db6de58e3b0fbeb82a28ace4401743abf4fe74b4b9",
+            "immutable_identity_and_evidence_hashes_verified": true
+          },
+          "targeted_dossier": {
+            "research_id": "cc86ce13118d4d16a6fe2bfda5361e48",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.greedy_parent/generation/research/cc86ce13118d4d16a6fe2bfda5361e48.json",
+            "sha256": "3fb497d58807e9d7eb72dd957a9b08beca7086a083aaf65bd849c15bdb8e6779",
+            "diagnostic_ids": [
+              "diag-d1d2280b91507586880ea8776fda3d185be054f9425e51840cdf7a11ffe848f3"
+            ],
+            "research_ready_guard_replayed": true,
+            "receipt_version": 2,
+            "observed_search_calls": 3,
+            "observed_query_count": 8,
+            "all_source_bodies_passages_and_supplied_content_verified": true,
+            "truncated_passage_count": 15,
+            "pmpp_installed_original_and_cards_verified": true
+          },
+          "proposal": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.greedy_parent/generation/trials/53159c84e83a43f381e5e3c7c6155e12/proposal-0-1.json",
+            "sha256": "c5f3e53a4487586f42d9ca8b1f828a1cffbfbdba850613707f5f96d9b4f478e8",
+            "call_id": "7b72189191cc436b8bf862aa310c34de",
+            "strict_schema_parent_contract_family_and_dossier_guard_replayed": true,
+            "source_parent_id": "baseline",
+            "source_sha256": "686ae38222bb37dd3c9ff6096c191dc766f560883db47256ea838d3281b94974"
+          },
+          "measurement": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.greedy_parent/generation/trials/53159c84e83a43f381e5e3c7c6155e12/evaluation-9c9bae4cd99da41de6db0a14.json",
+            "sha256": "f589c3fedc4e3424d6f727fadf31683c0ffcd1bf6047abb192076ecf85c20a1a",
+            "evaluation_id": "ae0ccdb8665c4dda916b75eb564e1914",
+            "candidate_id": "9c9bae4cd99da41de6db0a14",
+            "artifact_hash": "fb929a8ab17f1814155e709b0bcfb16b047d4f33b92e915096749c4932f59b52",
+            "candidate_artifact_recomputed": true,
+            "status": "measured",
+            "ok": true,
+            "series_reports": 49,
+            "reports_and_raw_sample_digest_sha256": "b93355fcc4e111f3b794da6ded7f1604b612cb1dff3f1f58ea3063390208c9e8",
+            "all_series_owned_job_same_hardware_and_exact_proposal_source": true,
+            "scope": "Independent SEARCH benchmark; no final common evaluation or scientific superiority claim."
+          }
+        },
+        {
+          "mode": "no_autotuning",
+          "run_id": "quality-20261021-v2.convolution.1729.no_autotuning",
+          "worker": {
+            "job_id": "771748",
+            "session_id": "suite-gen-93ba0b996e973866caedcfc8034d7754",
+            "hostname": "romeo-a049",
+            "gpu_uuids": [
+              "GPU-8db3b427-5a19-6392-6a56-1d1e203924ce"
+            ],
+            "device": {
+              "name": "NVIDIA GH200 120GB",
+              "architecture": "sm_90",
+              "compute_capability": {
+                "major": 9,
+                "minor": 0
+              },
+              "uuid": "8db3b4275a1963926a561d1e203924ce",
+              "driver_version": 13010,
+              "nvrtc_version": "12.6",
+              "cuda_toolkit_version": 12060,
+              "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+            }
+          },
+          "status": "diagnostic_targeted_research_proposal_measured",
+          "diagnostic": {
+            "diagnostic_id": "diag-6766461a6353bea2c4df85f50ab955a617d1e7150448ef0010abccc6dd020886",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/generation/diagnostics/diag-6766461a6353bea2c4df85f50ab955a617d1e7150448ef0010abccc6dd020886.json",
+            "sha256": "76a9d56af6a87786f068090dd7dbbb14abcc3cd0a197ca3b4081b917dcea0824",
+            "immutable_identity_and_evidence_hashes_verified": true
+          },
+          "targeted_dossier": {
+            "research_id": "0e2a66cab75148ae8973108eecaaa43c",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/generation/research/0e2a66cab75148ae8973108eecaaa43c.json",
+            "sha256": "ffba61c69307cc8243061b3108a5ea38a2a9aac5dc13f8350244597a401e3d56",
+            "diagnostic_ids": [
+              "diag-6766461a6353bea2c4df85f50ab955a617d1e7150448ef0010abccc6dd020886"
+            ],
+            "research_ready_guard_replayed": true,
+            "receipt_version": 2,
+            "observed_search_calls": 2,
+            "observed_query_count": 8,
+            "all_source_bodies_passages_and_supplied_content_verified": true,
+            "truncated_passage_count": 5,
+            "pmpp_installed_original_and_cards_verified": true
+          },
+          "proposal": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/generation/trials/01M5FREHE8BWFTG5HM5ERJBNYD/proposal-0-1.json",
+            "sha256": "353dc591a053a0b830e6ad72f0223f60baedd904f260f38925f15794efaeeaa5",
+            "call_id": "adb12ea799eb43429e5c3de7647c2c37",
+            "strict_schema_parent_contract_family_and_dossier_guard_replayed": true,
+            "source_parent_id": "a96fb9d8c1a287f3ed20002c",
+            "source_sha256": "66a964b6173791f62b3b30d20ab70baa364941aec50c1630ec89ea14ca9f83bb"
+          },
+          "measurement": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/generation/trials/01M5FREHE8BWFTG5HM5ERJBNYD/evaluation-1b838fdfec75ee6b9cc6c51e.json",
+            "sha256": "c80feb812b09b9511f26815afec23041a26dbff5176c85a345256408d611f042",
+            "evaluation_id": "dace838d262e43a39e157715637c6bbb",
+            "candidate_id": "1b838fdfec75ee6b9cc6c51e",
+            "artifact_hash": "287c9f52c8c4b91c8067ec9f1413832c417cc92ba22f55f427d6ad5a55f5e49a",
+            "candidate_artifact_recomputed": true,
+            "status": "measured",
+            "ok": true,
+            "series_reports": 49,
+            "reports_and_raw_sample_digest_sha256": "d0d0279ce4e96854238d9ceb03c656a428f2c8f499583393ded15d3950c52291",
+            "all_series_owned_job_same_hardware_and_exact_proposal_source": true,
+            "scope": "Independent SEARCH benchmark; no final common evaluation or scientific superiority claim."
+          }
+        }
+      ],
+      "scope": "Actual diagnostic → targeted web research → verified v2 dossier → strict accepted proposal → independent SEARCH validation/measurement in convolution1729 full, greedy_parent and no_autotuning at frozen b9bda60. No final common evaluation, complete AC-02 sequence or study-wide performance claim.",
+      "actions": {
+        "only_file_written": "work/live/research-convolution-diagnostic-b9bda60.json",
+        "runtime_docs_logs_research_receipts_modified": false,
+        "new_model_calls": 0,
+        "new_gpu_requests": 0,
+        "ssh_calls": 0,
+        "tests_rerun": false,
+        "private_final_seed_files_or_seed_tables_opened": false,
+        "controller_interrupted": false
+      },
+      "limitations": [
+        "Production search measurements on convolution1729 full/greedy_parent/no_autotuning only; no final common comparison or overall study completion.",
+        "This acquired production loop does not requalify the separate773095 helper which failed compilation.",
+        "No complete AC02 new-family -> compatible-adjustment -> uncovered-technique return-to-research sequence is inferred.",
+        "Exact model stdin bytes are not separately archived; supplied-content manifests, actual completed calls and frozen prompt construction code are linked instead."
+      ],
+      "proof_scope": [
+        "Actual targeted live-web calls, exact source/passages provenance, immutable measured diagnostics, new accepted proposals and independently measured ROMEO SEARCH kernels.",
+        "Observed queries are deduplicated completed tool actions; declared queries remain separate.",
+        "Full downloaded bodies are authenticated separately from supplied passages. Truncated selections and launcher status remain explicit. A .md code-context source is documentation/snippets, not a directly compiled convolution implementation.",
+        "PMPP is the unchanged original project-authored guide and installed cards; no complete-book consultation claim.",
+        "Exact model stdin bytes are not separately archived. Evidence binds the supplied-content manifest to unchanged launch prompt-construction source and completed call receipts; it does not prove exhaustive cognitive consultation.",
+        "Unavailable profiling and unavailable local CUDA fallback are retained. No counters or local ROMEO-equivalent timing are invented.",
+        "No final common evaluation, full study completion or scientific superiority is established."
+      ]
     }
   },
   "requirements": {
@@ -4413,7 +5237,7 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Étude §16 et chaîne modèle avec passages v2 non acquises; aucune supériorité globale."
+        "Étude §16 complète non acquise ; les chaînes modèle avec passages v2 sont acquises uniquement dans les scopes et versions cités, sans supériorité globale."
       ]
     },
     "SEC-1.1": {
@@ -4755,12 +5579,13 @@
           "autotuning",
           "contracts_cache_reconstruction",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "search_policy_controls_773380"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16."
       },
       "remaining": [
-        "Réparations réelles multibranches et DSL récent à compléter."
+        "Réparations et fermeture parent_action statiques acquises au 773380 ; la réparation d’une proposition modèle après compilation math.h n’a pas été exécutée dans 773095. DSL récent et autres parcours restent distincts."
       ]
     },
     "SEC-4": {
@@ -5017,12 +5842,14 @@
           "diagnostic_loop",
           "passages_v2_http",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "diagnostic_loop_v2",
+          "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
       },
       "remaining": [
-        "Démarrage v2 acquis sur deux campagnes GEMM. Nouvelle famille, retour technique non couverte et diagnostic ciblé v2 restent à exercer; tours suivants bloqués par taille d’entrée CLI."
+        "Chaînes ciblées diagnostic → recherche v2 → proposition → mesure SEARCH acquises en production convolution 1729 au b9bda60. Scénario AC-02 complet (nouvelle famille, ajustement, retour technique) et finales communes §16 non acquis ; helper 773095 séparé toujours échoué."
       ]
     },
     "SEC-5.1": {
@@ -5118,20 +5945,22 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "partial",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
         "evidence": [
           "diagnostic_loop",
           "passages_v2_http",
           "study_v2_full_transport_failure",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "diagnostic_loop_v2",
+          "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
       },
       "remaining": [
-        "Startup v2 acquis. Diagnostic → recherche réelle acquis seulement au76da historique; diagnostic_ids des dossiers actuels vide. Tours2/3 bloqués par entrée CLI de2.11–2.16Mcaractères, limite technique1 048 576; correctif résumé+hash des mesures non encore exercé dans ces campagnes figées."
+        "Portée acquise : trois chaînes de production convolution 1729 au b9bda60. Aucun achèvement §16 ni scénario AC-02 complet déduit. Le helper 773095 séparé reste incomplet après math.h, sans relance. Les octets du stdin modèle ne sont pas archivés séparément ; manifestes et code de construction du prompt sont liés explicitement."
       ]
     },
     "SEC-5.3": {
@@ -5177,9 +6006,11 @@
           "diagnostic_loop",
           "passages_v2_http",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "diagnostic_loop_v2",
+          "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
       },
       "remaining": [
         "Réutilisation compatible et introduction d’une technique non couverte:scénario réel complet AC02 encore manquant."
@@ -5275,12 +6106,14 @@
         "applicable": true,
         "evidence": [
           "gemm_agent_final",
-          "process_recovery"
+          "process_recovery",
+          "search_policy_controls_773380",
+          "selected_parent_observation_773380"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16. Le scénario général AC-05 est observé séparément : le parent non racine expansion-4, plus lent que fast, est naturellement sélectionné après promotion ; sa source et ses paramètres exacts parviennent au générateur et l’enfant expansion-12 est réellement mesuré. Cette observation ne change ni le check strict ni le statut global du helper."
       },
       "remaining": [
-        "Scénarios multibranches complets et comparaison original non acquis."
+        "Contrôles statiques de parent plus lent, fermeture parent_action et continuation d’une autre branche acquis au 773380. Check strict du variant slow faux ; comparaison original et qualification globale de politique non acquises."
       ]
     },
     "SEC-6.1": {
@@ -5326,16 +6159,18 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "partial",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
         "evidence": [
-          "gemm_agent_final"
+          "gemm_agent_final",
+          "search_policy_controls_773380",
+          "selected_parent_observation_773380"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16. Le scénario général AC-05 est observé séparément : le parent non racine expansion-4, plus lent que fast, est naturellement sélectionné après promotion ; sa source et ses paramètres exacts parviennent au générateur et l’enfant expansion-12 est réellement mesuré. Cette observation ne change ni le check strict ni le statut global du helper."
       },
       "remaining": [
-        "Parent choisi plus lent que meilleur: preuve locale, scénario GPU spécifique manquant."
+        "Scénario général de parent sélectionné plus lent acquis sur contrôles statiques 773380 (expansion-4 → expansion-12). Le check du helper exigeant le variant nommé slow reste faux et son statut global partial_or_incomplete reste inchangé. Aucune qualification des cohortes §16."
       ]
     },
     "SEC-6.2": {
@@ -5378,14 +6213,16 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "pending",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
-        "evidence": [],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "evidence": [
+          "search_policy_controls_773380"
+        ],
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16."
       },
       "remaining": [
-        "Toutes portées/épuisement réparations avec autres branches réelles continuant non exercés."
+        "Portée acquise : contrôles statiques, trois échecs de compilation puis fermeture parent_action durable et autre branche effectivement mesurée. Autres portées de fermeture et parcours modèle non généralisés."
       ]
     },
     "SEC-6.3": {
@@ -5719,9 +6556,10 @@
           "gemm_structured_final",
           "frozen_gemm",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "search_policy_controls_773380"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16."
       },
       "remaining": [],
       "limitations": [
@@ -7079,9 +7917,10 @@
           "diagnostic_loop",
           "passages_v2_http",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "diagnostic_loop_v2"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16."
       },
       "remaining": [],
       "expected_result": "Garde bloquante et recherche déclenchée ; aucun candidat n’est généré en contournant l’exigence.",
@@ -7271,16 +8110,18 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "partial",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
         "evidence": [
-          "gemm_agent_final"
+          "gemm_agent_final",
+          "search_policy_controls_773380",
+          "selected_parent_observation_773380"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16. Le scénario général AC-05 est observé séparément : le parent non racine expansion-4, plus lent que fast, est naturellement sélectionné après promotion ; sa source et ses paramètres exacts parviennent au générateur et l’enfant expansion-12 est réellement mesuré. Cette observation ne change ni le check strict ni le statut global du helper."
       },
       "remaining": [
-        "Parent plus lent que meilleur testé localement; scénario réel spécifique non acquis."
+        "Scénario général de parent sélectionné plus lent acquis sur contrôles statiques 773380 (expansion-4 → expansion-12). Le check du helper exigeant le variant nommé slow reste faux et son statut global partial_or_incomplete reste inchangé. Aucune qualification des cohortes §16."
       ],
       "expected_result": "Le générateur reçoit exactement son source et ses paramètres."
     },
@@ -7319,14 +8160,16 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "pending",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
-        "evidence": [],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "evidence": [
+          "search_policy_controls_773380"
+        ],
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16."
       },
       "remaining": [
-        "Réparations/fermetures/batch avec autres branches réelles continuant non exercés intégralement."
+        "Scénario acquis sur contrôles statiques 773380 ; aucune garantie générale sur tous les kernels, modèles ou portées de fermeture."
       ],
       "expected_result": "Aucune nouvelle expansion interdite, même en lot ; les autres pistes continuent ; les résultats restent consultables."
     },
@@ -7518,17 +8361,18 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "partial",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
         "evidence": [
           "frozen_gemm",
-          "gemm_agent_final"
+          "gemm_agent_final",
+          "search_policy_controls_773380"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16."
       },
       "remaining": [
-        "Intervalles/bruit et régressions visibles; scénario dédié régression critique+incumbent à compléter sur cible."
+        "Contrôle statique 773380 acquis : gain agrégé IC95% [7.504083, 7.757701] > 1.01 mais cas critique régressif et incumbent fast/version1 inchangé. Aucun gain d’optimiseur ni garantie statistique universelle."
       ],
       "expected_result": "Meilleur confirmé conservé ; décision et mesures enregistrées."
     },
@@ -8384,12 +9228,14 @@
         "applicable": true,
         "evidence": [
           "gemm_agent_final",
-          "process_recovery"
+          "process_recovery",
+          "search_policy_controls_773380",
+          "selected_parent_observation_773380"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773380 au 498d3be : AC-06 et AC-10 acquis sur contrôles statiques déclarés. Le check AC-05 pré-déclaré exigeant le variant nommé slow reste faux ; le helper global reste partiel, sans extension aux cohortes §16. Le scénario général AC-05 est observé séparément : le parent non racine expansion-4, plus lent que fast, est naturellement sélectionné après promotion ; sa source et ses paramètres exacts parviennent au générateur et l’enfant expansion-12 est réellement mesuré. Cette observation ne change ni le check strict ni le statut global du helper."
       },
       "remaining": [
-        "Scénarios multibranches complets et comparaison original non acquis."
+        "Contrôles statiques de parent plus lent, fermeture parent_action et continuation d’une autre branche acquis au 773380. Check strict du variant slow faux ; comparaison original et qualification globale de politique non acquises."
       ],
       "derived_from": "SEC-6"
     },
@@ -8495,12 +9341,14 @@
           "passages_v2_http",
           "study_v2_full_transport_failure",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "diagnostic_loop_v2",
+          "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
       },
       "remaining": [
-        "Startup v2 acquis. Diagnostic → recherche réelle acquis seulement au76da historique; diagnostic_ids des dossiers actuels vide. Tours2/3 bloqués par entrée CLI de2.11–2.16Mcaractères, limite technique1 048 576; correctif résumé+hash des mesures non encore exercé dans ces campagnes figées."
+        "Démarrage et retour diagnostic ciblé v2 acquis dans les campagnes citées ; le scénario AC-02 complet nouvelle famille → ajustement compatible → technique non couverte → retour recherche reste partiel. Helper 773095 séparé non requalifié."
       ],
       "derived_from": "SEC-5.2"
     },
@@ -8943,6 +9791,30 @@
     {
       "at": "2026-10-21T17:14:41.635514+00:00",
       "action": "Added existing892tests+5subtests JUnit and post-run dirty source manifest;no tests rerun and no new ROMEO claims."
+    },
+    {
+      "at": "2026-10-21T17:52:26.286996+00:00",
+      "action": "Catalogued frozen773095 diagnostic-v2 partial chain and773380 static policy controls; AC06/AC10 scope acquired, named-slow AC05/helper remain false. Added archived926+5CPU release and exact-SHA498d3beCI, without rerun.",
+      "evidence": [
+        "diagnostic_loop_v2",
+        "search_policy_controls_773380",
+        "local_original_intent_release",
+        "ci_498d3be"
+      ],
+      "GPU_reexecution": false,
+      "SSH_activity": false,
+      "model_activity": false
+    },
+    {
+      "at": "2026-10-21T17:55:28.361034+00:00",
+      "action": "Added independently frozen generalAC05 selected-parent observation (strict helper predicate still false) and existing production convolution diagnostic-v2-to-SEARCH measurement chains. No new runtime activity, original proof manifests unchanged.",
+      "evidence": [
+        "selected_parent_observation_773380",
+        "convolution_targeted_diagnostic_b9bda60"
+      ],
+      "GPU_reexecution": false,
+      "SSH_activity": false,
+      "model_activity": false
     }
   ]
 }

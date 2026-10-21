@@ -11,6 +11,7 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
 from scripts.report_study_fr import study_aggregate_table, study_campaign_table
+from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from optimizer_agent.suite_report import write_report, method_outcome_cells
 
 
@@ -436,5 +437,100 @@ def test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope(
     assert actual["execution_source_sha256"] == {"portable_export.py": "executed-source-hash"}
     pending = next(row for row in rows if row["label"] == "Diagnostic ciblé avec lecteur v2")
     assert not pending["available"] and pending["ok"] is None
-    assert pending["path"] is pending["receipt_sha256"] is pending["job_id"] is None
+    assert pending["path"] == DIAGNOSTIC_V2_AUDIT
+    assert pending["receipt_sha256"] is pending["job_id"] is None
     assert "en attente" in pending["status"]
+
+
+def diagnostic_v2_audit_fixture(tmp_path):
+    def linked(name, value):
+        path = tmp_path/"audit-linked"/name
+        save(path, value)
+        return {"path":str(path.relative_to(tmp_path)), "sha256":hashlib.sha256(path.read_bytes()).hexdigest()}
+    chains = []
+    for index, mode in enumerate(["full", "greedy_parent", "no_autotuning"]):
+        diagnostic_id = "diag-"+mode
+        diagnostic = {**linked(mode+"-diagnostic.json", {"diagnostic_id":diagnostic_id}),
+                      "diagnostic_id":diagnostic_id, "immutable_identity_and_evidence_hashes_verified":True}
+        dossier = {**linked(mode+"-dossier.json", {"diagnostic_ids":[diagnostic_id]}),
+                   "diagnostic_ids":[diagnostic_id], "research_ready_guard_replayed":True,
+                   "all_source_bodies_passages_and_supplied_content_verified":True,
+                   "pmpp_installed_original_and_cards_verified":True,
+                   "supplied_content":linked(mode+"-supplied.json", {}),
+                   "web_events":linked(mode+"-web.json", [])}
+        proposal = {**linked(mode+"-proposal.json", {}),
+                    "strict_schema_parent_contract_family_and_dossier_guard_replayed":True}
+        measurement = {**linked(mode+"-measurement.json", {"ok":True}), "ok":True, "status":"measured",
+                       "candidate_artifact_recomputed":True,
+                       "all_series_owned_job_same_hardware_and_exact_proposal_source":True,
+                       "candidate_source":linked(mode+"-source.json", {"test_source":"copy"}),
+                       "cases":[{"case_id":str(n), "samples":140} for n in range(7)]}
+        chains.append({"mode":mode, "status":"diagnostic_targeted_research_proposal_measured",
+                       "diagnostic":diagnostic,"targeted_dossier":dossier,"next_proposal":proposal,
+                       "measurement":measurement,"next_trial":{"diagnostic_id":diagnostic_id},
+                       "worker":{"job_id":str(771747+index)}})
+    value = {"kind":"actual_convolution_diagnostic_targeted_research_read_only_audit",
+             "controller_launch_source":"b9bda60145ebf438fecd2837bdc2b1b00474674c",
+             "all_three_chains_measured":True,"chains":chains,
+             "relevant_source_versions":{"research_service.py":{"frozen_sha256":"a"*64,"launch_sha256":"a"*64}}}
+    save(tmp_path/DIAGNOSTIC_V2_AUDIT, value)
+    return value
+
+
+def test_actual_diagnostic_audit_replaces_pending_only_with_verified_measured_chain_links(tmp_path):
+    audit = diagnostic_v2_audit_fixture(tmp_path)
+    row = next(r for r in control_receipts(tmp_path) if r["label"]=="Diagnostic ciblé avec lecteur v2")
+    assert row["available"] and row["ok"] is True and all(row["authentication_checks"].values())
+    assert row["source_head"] == audit["controller_launch_source"]
+    assert row["job_ids"] == ["771747","771748","771749"]
+    assert row["new_gpu_execution"] is False and "7 cas" in row["scope"]
+    assert "Profilage indisponible" in row["scope"] and "Aucune nouvelle exécution GPU" in row["scope"]
+    path = tmp_path/DIAGNOSTIC_V2_AUDIT
+    assert row["receipt_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+    # A past assertion is not sufficient if a linked measured artifact changed.
+    measured = tmp_path/audit["chains"][0]["measurement"]["path"]
+    measured.write_text('{"ok":false}')
+    failed = next(r for r in control_receipts(tmp_path) if r["label"]==row["label"])
+    assert failed["available"] and failed["ok"] is False
+    assert failed["authentication_checks"]["full"] is False
+
+
+def test_present_but_unproved_diagnostic_receipt_is_not_qualification(tmp_path):
+    save(tmp_path/DIAGNOSTIC_V2_AUDIT, {"all_three_chains_measured":True})
+    row = next(r for r in control_receipts(tmp_path) if r["label"]=="Diagnostic ciblé avec lecteur v2")
+    assert row["available"] and row["ok"] is False
+    assert "incomplète" in row["status"]
+
+
+def test_partial_authorities_and_secondary_parent_observation_remain_separate(tmp_path):
+    terminal = {"state":"COMPLETED","exit_code":"0:0"}
+    save(tmp_path/"results/diagnostic-loop-v2-20261021/diagnostic-loop-acceptance.json", {
+        "status":"incomplete","ok":False,"job_id":"773095","terminal":dict(terminal,job_id="773095")})
+    save(tmp_path/POLICY_AUTHORITY, {"status":"partial_or_incomplete","ok":False,"job_id":"773380",
+        "terminal":dict(terminal,job_id="773380"),"criteria_checks":{"AC-05":False,"AC-06":True,"AC-10":True}})
+    primary = tmp_path/POLICY_AUTHORITY
+    save(tmp_path/PARENT_OBSERVATION, {"status":"observed_general_AC05_with_strict_control_still_false",
+        "job_id":"773380","terminal":dict(terminal,job_id="773380"),
+        "authority":{"primary_ok":False,"strict_AC05":False,
+            "primary_receipt":{"path":primary.name,"sha256":hashlib.sha256(primary.read_bytes()).hexdigest()}},
+        "execution_source":{"HEAD":"498d3be","source_sha256":{"search_policy.py":"observed-sha"}}})
+    rows = control_receipts(tmp_path)
+    helper = next(r for r in rows if r["job_id"]=="773095")
+    policy = next(r for r in rows if r["path"]==POLICY_AUTHORITY)
+    observation = next(r for r in rows if r["path"]==PARENT_OBSERVATION)
+    assert helper["ok"] is False and helper["status"]=="incomplete"
+    assert "sans exécution/mesure/intégration" in helper["scope"]
+    assert policy["ok"] is False and policy["criteria_checks"]=={"AC-05":False,"AC-06":True,"AC-10":True}
+    assert "AC-05 faux" in policy["scope"]
+    assert observation["ok"] is None and observation["authority_receipt_verified"] is True
+    assert observation["authority"]["strict_AC05"] is False and "ne les requalifie pas" in observation["scope"]
+    assert observation["source_head"]=="498d3be"
+
+
+def test_tuning_constraint_control_remains_pending_until_success_is_explicit(tmp_path):
+    relative = "results/tuning-constraints-20261021/tuning-constraints-acceptance.json"
+    row = next(r for r in control_receipts(tmp_path) if r["path"]==relative)
+    assert row["available"] is False and row["ok"] is None and row["status"]=="en attente"
+    save(tmp_path/relative, {"status":"started"})
+    present = next(r for r in control_receipts(tmp_path) if r["path"]==relative)
+    assert present["available"] is True and present["ok"] is None and present["status"]=="started"
