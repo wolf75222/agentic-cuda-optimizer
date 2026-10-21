@@ -367,7 +367,13 @@ class OriginalCodexTransport:
         prompt = ("Transport the following original chat conversation without changing its task. "
             "Return kind=tool_calls and arguments_json for calls to the listed tools, or kind=final "
             "with text containing the exact response requested by the conversation. "
-            "The final text can itself be a JSON document matching the original supplied schema.\n"+
+            "These modes are mutually exclusive: kind=final requires tool_calls=[]; "
+            "kind=tool_calls requires a non-empty tool_calls list. "
+            "Any required tools must be requested and executed before a final response; "
+            "never include pending or previously executed tool calls in a final response. "
+            "For a final response, respect the response format requested by the conversation. "
+            "If JSON is requested, the final text must contain exactly one JSON document matching the original supplied schema, "
+            "without surrounding prose, Markdown fences, or concatenated documents.\n"+
             json.dumps({"messages":[message.model_dump(mode="json") for message in messages],"available_tools":tool_specs},default=str))
         result = self._call(prompt,CHAT_SCHEMA)
         response = result.payload

@@ -97,6 +97,78 @@ class OriginalResponses:
             events=[],call_id=f"cpu-{len(self.prompts)}",model="gpt-6-luna",reasoning_effort="max",elapsed_seconds=.01)
 
 
+def original_transport_with_simulated_tool(backend, directory):
+    tool = SimpleNamespace(name="get_device_properties",description="Explicit CPU fixture tool, never executed",
+        args_schema=SimpleNamespace(model_json_schema=lambda: {
+            "type":"object","properties":{"device":{"type":"integer"}},
+            "required":["device"],"additionalProperties":False}))
+    return module.OriginalCodexTransport(backend,directory=directory).bind_tools([tool])
+
+
+@pytest.mark.parametrize("case,error",[
+    ("final_with_calls","Final chat response cannot contain unexecuted tool calls"),
+    ("empty_calls","Original tool-call response is empty"),
+])
+def test_original_transport_rejects_mixed_or_empty_modes_without_reinterpreting_reply(tmp_path,monkeypatch,case,error):
+    backend = OriginalResponses((8,),"convolution",tools=True)
+    simulated_reply = backend.generate_json
+    def invalid_envelope(*args,**kwargs):
+        result = simulated_reply(*args,**kwargs)
+        if case == "final_with_calls":
+            result.payload["kind"] = "final"
+            result.payload["text"] = '{"action":"stop"}'
+        else:
+            result.payload["tool_calls"] = []
+        return result
+    monkeypatch.setattr(backend,"generate_json",invalid_envelope)
+    messages = [module.AIMessage(content="Explicit simulated original task")]
+    transport = original_transport_with_simulated_tool(backend,tmp_path/"transport")
+    with pytest.raises(ValueError,match=error):
+        transport.invoke(messages)
+    saved = json.loads((tmp_path/"transport"/"calls.json").read_text())
+    assert len(saved) == 1 and len(backend.prompts) == 1
+    assert saved[0]["result"]["payload"]["kind"] == ("final" if case == "final_with_calls" else "tool_calls")
+    resumed = original_transport_with_simulated_tool(backend,tmp_path/"transport")
+    with pytest.raises(ValueError,match=error):
+        resumed.invoke(messages)
+    assert len(backend.prompts) == 1
+    assert json.loads((tmp_path/"transport"/"calls.json").read_text()) == saved
+
+
+@pytest.mark.parametrize("use_tools",[False,True])
+def test_original_transport_keeps_both_valid_response_modes(tmp_path,use_tools):
+    backend = OriginalResponses((8,),"convolution",tools=use_tools)
+    transport = original_transport_with_simulated_tool(backend,tmp_path/"transport")
+    reply = transport.invoke([module.AIMessage(content="Explicit simulated original task")])
+    if use_tools:
+        assert reply.content == ""
+        assert len(reply.tool_calls) == 1
+        assert reply.tool_calls[0]["name"] == "get_device_properties"
+        assert reply.tool_calls[0]["args"] == {"device":0}
+    else:
+        assert reply.tool_calls == []
+        assert json.loads(reply.content) == {
+            "action":"stop","reason":"The initial kernel is correct; no further evidenced experiment remains."}
+
+
+def test_original_transport_prompt_requires_exclusive_modes_and_exact_requested_json(tmp_path):
+    backend = OriginalResponses((8,),"convolution")
+    messages = [module.AIMessage(content='Original format request: return exactly {"action":"stop"}.')]
+    original_messages = [message.model_dump(mode="json") for message in messages]
+    transport = original_transport_with_simulated_tool(backend,tmp_path/"transport")
+    transport.invoke(messages)
+    instructions,conversation = backend.prompts[0].split("\n",1)
+    assert "kind=final requires tool_calls=[]" in instructions
+    assert "kind=tool_calls requires a non-empty tool_calls list" in instructions
+    assert "tools must be requested and executed before a final response" in instructions
+    assert "pending or previously executed tool calls" in instructions
+    assert "For a final response, respect the response format requested by the conversation" in instructions
+    assert "If JSON is requested, the final text must contain exactly one JSON document matching the original supplied schema" in instructions
+    assert "without surrounding prose, Markdown fences, or concatenated documents" in instructions
+    assert json.loads(conversation)["messages"] == original_messages
+    assert [message.model_dump(mode="json") for message in messages] == original_messages
+
+
 @pytest.fixture(scope="module")
 def pinned(tmp_path_factory):
     return module.snapshot_upstream(tmp_path_factory.mktemp("pinned-original"))[0]

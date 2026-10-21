@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T22:23:22.807677+00:00",
+  "generated_at_utc": "2026-10-21T22:46:08.142712+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -88,13 +88,27 @@
       "scope": "Historical initial checkout identity retained above; changed source bytes separately pinned in source_current entries. Latest coherent local suite and exact published CI are not inferred here."
     },
     "latest_published_release_observation": {
-      "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
-      "observed_at_utc": "2026-10-21T22:06:38.277890+00:00",
-      "ci_evidence": "ci_dfd93d0",
-      "local_test_evidence": "local_research_cache_final_suite_release",
-      "standalone_final_evidence": "standalone_final_suite_dfd93d0_774520",
-      "catalog_integrity_evidence": "catalog_integrity_dfd93d0",
-      "scope": "Publication, CI, suite locale et contrôle ROMEO ont chacun leur reçu et leur portée ; aucun achèvement AC-02 ou §16 déduit. Les snapshots source_current gardent leurs métadonnées de capture historiques ; aucun changement futur du renderer n’est couvert par la CI DFD."
+      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "observed_at_utc": "2026-10-21T22:44:20.652232+00:00",
+      "publication_evidence": "published_report_metrics_de38abb",
+      "ci_evidence": "ci_de38abb",
+      "ci_skipped_scope_evidence": "ci_de38abb_skipped_scope",
+      "local_focused_evidence": [
+        "local_report_per_case_v2_dfd93d0",
+        "local_observed_metrics_fix_dfd93d0"
+      ],
+      "previous_observations": [
+        {
+          "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+          "observed_at_utc": "2026-10-21T22:06:38.277890+00:00",
+          "ci_evidence": "ci_dfd93d0",
+          "local_test_evidence": "local_research_cache_final_suite_release",
+          "standalone_final_evidence": "standalone_final_suite_dfd93d0_774520",
+          "catalog_integrity_evidence": "catalog_integrity_dfd93d0",
+          "scope": "Publication, CI, suite locale et contrôle ROMEO ont chacun leur reçu et leur portée ; aucun achèvement AC-02 ou §16 déduit. Les snapshots source_current gardent leurs métadonnées de capture historiques ; aucun changement futur du renderer n’est couvert par la CI DFD."
+        }
+      ],
+      "scope": "Rapports et bilan publiés puis CI exacte acquise avec deux skips documentés. Le nouveau prompt de transport ee93e538 est postérieur : preuve locale séparée, sans modèle réel ni CI du futur SHA."
     },
     "latest_renderer_snapshot_observation": {
       "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
@@ -108,6 +122,18 @@
       "focused_test_evidence": "local_observed_metrics_fix_dfd93d0",
       "historical_annotation_evidence": "historical_observed_metrics_view_dfd93d0",
       "scope": "Correction prospective du bilan et annotation hors ligne seulement. Aucun ancien résultat, manifeste ou contrôleur DFD réécrit ; aucune reprise des campagnes pour ce motif."
+    },
+    "latest_original_transport_prompt_observation": {
+      "HEAD_before_publication": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "source_evidence": "source_current:optimizer_agent/upstream_original.py",
+      "local_test_evidence": "local_upstream_transport_prompt_v2_de38abb",
+      "scope": "Modification prospective du préfixe de transport seulement. Ancien résultat, intention, réponse et méthode failed du job 774527 inchangés ; aucun nouveau modèle/GPU."
+    },
+    "planned_controller_source_transition": {
+      "state": "planned_after_natural_completion_of_four_current_tasks",
+      "current_controller_source": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "future_prompt_source_evidence": "source_current:optimizer_agent/upstream_original.py",
+      "scope": "Plan de transition annoncé par le primaire après la fin naturelle des quatre tâches conservées. Aucune interruption, application à chaud ou exécution de ce futur source déduite. Aucun plafond global de tokens, coût, appels modèle/outils ou durée cumulée."
     }
   },
   "policy": {
@@ -154,7 +180,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "twenty_generations_first_common_final_observed_after_natural_55_drain",
+      "state": "twenty_two_generation_results_one_common_final_unqualified_native_export",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -168,9 +194,11 @@
         "common_final_convolution_1729_terminal",
         "study_v2_fifteen_completed_generations_55_dispatch",
         "section16_protocol_review_55",
-        "study_v2_twenty_completed_generations_55_drain"
+        "study_v2_twenty_completed_generations_55_drain",
+        "original_convolution2718_774527_dfd_terminal",
+        "native_convolution3141_774528_dfd_terminal"
       ],
-      "remaining": "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Six alias historiques ne fournissent pas de contrastes mesurés distincts."
+      "remaining": "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Dispersion, exports et reconstructions restent à terminer."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -190,14 +218,17 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 164,
+    "evidence_entries": 170,
     "latest_local_junit_entries": 1453,
     "latest_local_testcase_nodes": 1440,
-    "study_v2_completed_generation_receipts": 20,
+    "study_v2_completed_generation_receipts": 22,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
-    "latest_local_subtests": 13
+    "latest_local_subtests": 13,
+    "latest_ci_tests_passed": 1457,
+    "latest_ci_subtests_passed": 13,
+    "latest_ci_tests_skipped": 2
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -7642,7 +7673,7 @@
       "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
       "uncommitted_patch_at_capture": true,
       "observed_at_utc": "2026-10-21T22:23:22.807677+00:00",
-      "scope": "Correction postérieure à DFD limitée à la liste unknown_metrics, fondée sur les valeurs déjà calculées et leurs noms exacts. Aucun autre calcul de coût, mesure ou classement modifié. 63 tests CPU ciblés ; pas de nouvelle suite complète ou CI de ces octets. Le contrôleur figé DFD et son ancien snapshot restent inchangés.",
+      "scope": "Correction postérieure à DFD limitée à unknown_metrics, fondée sur les valeurs déjà calculées et leurs noms exacts. Aucun autre calcul de coût, mesure ou classement modifié. 63 tests CPU ciblés, puis publication et CI exacte de38abb des octets b00d927. Le contrôleur DFD conserve ses anciens octets ; cette CI ne couvre pas le prompt de transport ee93e538.",
       "definitions": [
         {
           "name": "infrastructure_category",
@@ -7796,6 +7827,12 @@
           "publication_evidence": "ci_dfd93d0",
           "identity_evidence": "catalog_integrity_dfd93d0"
         }
+      ],
+      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "published_release_evidence": [
+        "published_report_metrics_de38abb",
+        "ci_de38abb",
+        "ci_de38abb_skipped_scope"
       ]
     },
     "source_current:optimizer_agent/suite_report.py": {
@@ -7890,11 +7927,11 @@
     "source_current:optimizer_agent/upstream_original.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/upstream_original.py",
-      "sha256": "52f34c99025b65dab8e9cb81f51ef544d428e185f9c718c34abbe637c4127085",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "ee93e53897a2c131c58ee6a2c66bfd2de6c964d44fc2de606d998ab8599024c5",
+      "HEAD_before_publication": "de38abbd6b73353e7758481addb869ea2ea0170b",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T22:44:20.652232+00:00",
+      "scope": "Prompt de transport prospectif ee93e538 testé localement par 41 cas CPU ; cette capture n’est pas une exécution du futur modèle, une CI du prochain SHA ou une requalification du job 774527. L’AST hors préfixe d’instructions et CHAT_SCHEMA sont inchangés ; ancien snapshot DFD/de38abb conservé.",
       "definitions": [
         {
           "name": "write_json",
@@ -7930,15 +7967,77 @@
         },
         {
           "name": "OriginalHarnessTransport",
-          "line": 422
+          "line": 428
         },
         {
           "name": "_candidate_receipt",
-          "line": 460
+          "line": 466
         },
         {
           "name": "run_upstream_campaign",
-          "line": 466
+          "line": 472
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/upstream_original.py",
+          "sha256": "52f34c99025b65dab8e9cb81f51ef544d428e185f9c718c34abbe637c4127085",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "write_json",
+              "line": 53
+            },
+            {
+              "name": "durable_json",
+              "line": 61
+            },
+            {
+              "name": "content_hash",
+              "line": 80
+            },
+            {
+              "name": "_git",
+              "line": 84
+            },
+            {
+              "name": "snapshot_upstream",
+              "line": 88
+            },
+            {
+              "name": "original_modules",
+              "line": 126
+            },
+            {
+              "name": "OriginalTransportUncertain",
+              "line": 172
+            },
+            {
+              "name": "OriginalCodexTransport",
+              "line": 176
+            },
+            {
+              "name": "OriginalHarnessTransport",
+              "line": 422
+            },
+            {
+              "name": "_candidate_receipt",
+              "line": 460
+            },
+            {
+              "name": "run_upstream_campaign",
+              "line": 466
+            }
+          ],
+          "published_commits": [
+            "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+            "de38abbd6b73353e7758481addb869ea2ea0170b"
+          ],
+          "publication_evidence": "ci_de38abb"
         }
       ]
     },
@@ -8385,7 +8484,7 @@
       "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
       "uncommitted_patch_at_capture": true,
       "observed_at_utc": "2026-10-21T22:12:46.726866+00:00",
-      "scope": "Snapshot postérieur à DFD, avec définitions AST exactes. Présentation par cas/statuts et contexte inconnu testés par 206 tests du seul module ; pas de nouvelle suite complète, CI publiée ou exécution ROMEO de ces octets. Snapshot DFD préservé séparément.",
+      "scope": "Capture postérieure à DFD, avec définitions AST exactes et 206 tests locaux du module. Les octets 2078201b ont ensuite été publiés et validés par la CI exacte de38abb, avec deux skips documentés. Ancien snapshot DFD conservé ; aucune nouvelle mesure ROMEO déduite. Cette CI ne couvre pas le prompt de transport ee93e538 ajouté après ce commit.",
       "definitions": [
         {
           "name": "load",
@@ -8687,6 +8786,12 @@
           "publication_evidence": "ci_dfd93d0",
           "identity_evidence": "catalog_integrity_dfd93d0"
         }
+      ],
+      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "published_release_evidence": [
+        "published_report_metrics_de38abb",
+        "ci_de38abb",
+        "ci_de38abb_skipped_scope"
       ]
     },
     "source_current:scripts/gpu_final_suite_acceptance.py": {
@@ -10025,6 +10130,538 @@
       },
       "real_external_web_outage_authenticated": false,
       "scope": "Audit tardif d’une preuve historique au code b9bda60 : dossier a53a382… avec reference_kernels vide, recherche négative documentée et hypothèse originale, trois appels CLI réels puis proposition 018ba9… et mesure SEARCH 5b26…. Gardes actuelles rejouées en lecture seule sur les preuves existantes. Aucun nouveau modèle/GPU ni nouvelle attestation de transport des anciens prompts. Panne web externe réelle non prouvée ; branche de panne acquise seulement dans les contrôles techniques simulés."
+    },
+    "ci_de38abb": {
+      "path": "work/live/ci-de38abb.json",
+      "sha256": "0b3a1e37ec08e34c29da5540b1181c8e8050aa129b33f51869b23af93c4b150a",
+      "bytes": 1968,
+      "kind": "exact_sha_github_ci",
+      "headSha": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39686280407",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39686280407/job/119521035933"
+        }
+      ],
+      "scope": "CI terminée au SHA publié de38abb : 1 457 tests et 13 sous-tests passent, deux scopes sont sautés et détaillés séparément. Aucun modèle/GPU exécuté ou qualifié par cette preuve ; le nouveau prompt de transport ee93e538 est postérieur et non couvert par cette CI."
+    },
+    "ci_de38abb_skipped_scope": {
+      "path": "work/live/ci-de38abb-skipped-scope.json",
+      "sha256": "9d3fbebbb43c1b6a9bf4e9c998be9abe461f9f49b2a35b7d3f8cdfcde41259f6",
+      "bytes": 1071,
+      "kind": "exact_ci_skipped_scope_annotation",
+      "source_head": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "ci_receipt": {
+        "path": "work/live/ci-de38abb.json",
+        "sha256": "0b3a1e37ec08e34c29da5540b1181c8e8050aa129b33f51869b23af93c4b150a"
+      },
+      "ci_summary": {
+        "passed": 1457,
+        "skipped": 2,
+        "subtests_passed": 13,
+        "elapsed_seconds": 82.53
+      },
+      "skipped_scopes": [
+        {
+          "path": "tests/test_codex_research.py",
+          "reason": "Real campaign receipt is local integration evidence, not a checked-in fixture"
+        },
+        {
+          "path": "tests/test_native_read_isolation.py",
+          "reason": "Real CPU sandbox qualified on macOS only"
+        }
+      ],
+      "source_file_sha256": {
+        "tests/test_codex_research.py": "8e4095b15bcf46182efd5da8fb8d366ca580f10ccdee988e3de9b6598674cc59",
+        "tests/test_native_read_isolation.py": "1f7d160ea71fa4bf3e3aa79b4e33ddfa45789167dbbca147381d8497acf6ab1d"
+      },
+      "scope": "Deux skips CI explicites : reçu de campagne réel local absent du dépôt et isolation CPU native réservée à macOS. Les preuves historiques locales correspondantes restent séparées ; aucun nouveau succès de ces scopes n’est déduit."
+    },
+    "published_report_metrics_de38abb": {
+      "path": "work/live/report-metrics-de38abb-release.json",
+      "sha256": "9bd6d505f902978545d55a15945ac4bab217026c60f14b827aa3ebe5129f131f",
+      "bytes": 1654,
+      "kind": "published_report_and_metrics_source_identity",
+      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "origin_main_pushed_at_capture": true,
+      "working_tree_clean_at_capture": true,
+      "source_files_match_commit": {
+        "optimizer_agent/suite_orchestrator.py": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6",
+        "scripts/report_study_fr.py": "2078201b249ea707afbad9300d92c68d8b8aa2ca884d43936b90c6809865c5c1",
+        "tests/test_observed_metrics.py": "98088dbe1060df33872c491a8d4ca14a4728e18fb3dc2928177da6428c97b050",
+        "tests/test_study_report.py": "f4a8fa9f636278b2ec5222d19329fd7780b69942961113423a0acb86f58644ae",
+        "docs/SPEC_AUDIT.fr.md": "eaaea43e2713fd58ea871b7be92bef8dc69312be458beaedabbeaf0ca90e380d",
+        "docs/validation/requirement-evidence.json": "5bfe31c0f3a85a64de077f2fa3ddf1bec2d917c99d5e75a04ffc8a37251cf8e6"
+      },
+      "local_receipts": {
+        "work/live/report-per-case-v2-dfd93d0-local.json": "f0f170cad538cf83f88c29f251d1af8a580876c82383f262dc467cff710eb47c",
+        "work/live/observed-metrics-fix-acceptance.json": "db11ba03f54bf105449a8082fb19589ac516e6704211c422bd25c0ad4dec46bd",
+        "work/live/observed-metrics-historical-derived-dfd93d0.json": "daac4e85fb5f438f0e9ce9ddbff2b4053e35afe9c54810d979c300454cee8fe4"
+      },
+      "ci_status_at_capture": "not_yet_observed",
+      "subsequent_exact_ci_evidence": "ci_de38abb",
+      "running_study_controller_head_at_capture": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "scope": "Publication des rapports et métriques au de38abb, avec sources identiques au commit. La CI était non observée à la capture puis a réussi dans son autorité séparée. Le contrôleur de campagne DFD conserve ses anciens octets ; le nouveau prompt ee93e538 est seulement testé localement à ce stade."
+    },
+    "original_convolution2718_774527_dfd_terminal": {
+      "path": "work/live/section16-dfd93d0-progress-774527.json",
+      "sha256": "4959bb7214b959e1b554b39ae1d0f5a96e65acf83407ac0f385fe050224d89b7",
+      "bytes": 31426,
+      "kind": "actual_original_generation_method_failure_with_retained_artifact",
+      "observed_at_utc": "2026-10-21T22:33:07.376569+00:00",
+      "task_id": "quality-20261021-v2.convolution.2718.true_upstream",
+      "source_epoch": {
+        "HEAD_at_dispatch": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+        "controller_parent": {
+          "epoch_id": "000003-2a38481761d04d259639e78185282151",
+          "path": "results/quality-study-v2/dispatch-attestations/controller/000003-2a38481761d04d259639e78185282151.json",
+          "sha256": "cb86cdfe64913114969e7ae1f0c428c31e774fa68318151e0b96188030157ae8",
+          "original_study_relative_path": "dispatch-attestations/controller/000003-2a38481761d04d259639e78185282151.json",
+          "path_base": "repository",
+          "normalization_scope": "Référence normalisée dans cette vue seulement ; le reçu original et son pin sont conservés."
+        },
+        "dirty_at_dispatch": false,
+        "encoding": "raw_file_bytes",
+        "epoch_id": "000001-4ebcb3c266a84a1ca4b97803e5c72adf",
+        "path": "results/quality-study-v2/dispatch-attestations/tasks/e09cbcdb5a0df0428003ada2e2f6a170f57079640e7160163c770b47013e2241/000001-4ebcb3c266a84a1ca4b97803e5c72adf.json",
+        "python_files_verified": 73,
+        "scope": "observed_on_disk_source_and_module_paths_before_model_ssh_slurm",
+        "sha256": "6266945dedf02ce8f20c408aa4e59f550a98ca7eec0b7d3307155248c27dab1e",
+        "source_identity_hash": "4a4888066aea21c1f28594bef2cbe4824d0a303c62ae397e85aa0802c0af635d",
+        "task_binding": {
+          "attempt": 0,
+          "kind": "generation",
+          "payload_sha256": "ee064b482f070ea39944019ded814a80c4c0e822449a48d175b302e7e45e4e2c",
+          "session": "suite-gen-b1cf3746bb9cb727118c942fac9ec456",
+          "task_id": "quality-20261021-v2.convolution.2718.true_upstream"
+        }
+      },
+      "worker_terminal": {
+        "elapsed": "00:20:14",
+        "exit_code": "0:0",
+        "job_id": "774527",
+        "nodes": "romeo-a031",
+        "state": "COMPLETED",
+        "terminal": true
+      },
+      "result": {
+        "encoding": "raw_file_bytes",
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.true_upstream/result.json",
+        "sha256": "f1ba1a069182a15ebd8e7e0bbcf4c3accf3fa4eb2d3b93331d40fea4129898af"
+      },
+      "generation_complete": true,
+      "execution_complete": true,
+      "method_status": "failed",
+      "method_error": "ValueError: Final chat response cannot contain unexecuted tool calls",
+      "candidate_fallback": {
+        "reason": "method_failed",
+        "retained": true,
+        "selected_iteration": 2,
+        "selected_origin": "original_generated_proposal"
+      },
+      "candidate": {
+        "artifact_hash": "655677582272cf819bd87a369c27d4cd0835e6bd5ca42e86086801828feb9652",
+        "candidate_id": "upstream-original-2",
+        "kernel": "convolution",
+        "launch_rule": {
+          "kind": "fixed_shape_table",
+          "table": {
+            "1": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "128": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                4,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "17": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "256": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                8,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "512": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                16,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "63": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                2,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "64": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                2,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            }
+          },
+          "version": 1
+        },
+        "parameters": {},
+        "source_hash": "81de979f14c06ceb7eb64e2bfc3bd6283f5b9a954a3a7e827ae7ee29350488f9",
+        "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.true_upstream/generation/frozen-original.cu"
+      },
+      "search_validation": {
+        "artifact_hash": "655677582272cf819bd87a369c27d4cd0835e6bd5ca42e86086801828feb9652",
+        "case_count": 14,
+        "contract_hash": "a900f977d2849bfa2e0e5e31c51a45c162e3926999c4f4c70a66ef55335c95dc",
+        "evaluation_id": "a0e446a344f84f0484c845c09cea5806",
+        "evidence": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.true_upstream/generation/frozen-search-validation.json",
+          "sha256": "fd5645ae5a769ae7fd9395db6b6f8e374c728688d0ba811a7db1cbffa90e8dd2"
+        },
+        "ok": true,
+        "status": "validated",
+        "suite": "search"
+      },
+      "original_upstream": {
+        "adapter_source_hashes_verified_against_frozen_dfd": {
+          "codex_backend.py": "0b554761d84fa6b0915079b2551655864d10b73632a3dc195fbdbb7391f906ca",
+          "frozen_launch.py": "8498e6e1367cda0bfabe83354bef00c273b048dbb68686cef648fa6795e49718",
+          "gain_observer.py": "06c16293570c87c7b5b01807f9ffa36b4a65aa591db4c3d548366c1fd0016b9f",
+          "upstream_original.py": "52f34c99025b65dab8e9cb81f51ef544d428e185f9c718c34abbe637c4127085"
+        },
+        "commit": "1e9464da54dfc651337a97c3643bfeefec712bc1",
+        "source_files_verified": 16,
+        "source_identity": "736139895792275c9dd6cfe4eb9fb4f45b64367b71d0d7a9165852c5a301759a"
+      },
+      "usage": {
+        "distinct_call_ids": 11,
+        "statuses": {
+          "completed": 10,
+          "failed": 1
+        },
+        "known_tokens_input_plus_output": 394168,
+        "known_usage_sum": {
+          "cached_input_tokens": 118400,
+          "input_tokens": 328746,
+          "output_tokens": 65422
+        },
+        "usage_complete": false,
+        "unknown_usage_scope": "One explicitly failed CLI receipt has usage=null; 394168 is the recorded known-token subtotal, not a fabricated complete total or zero for the failed call"
+      },
+      "scope": "Complément daté aux 20 résultats antérieurs : 21 générations terminées sur 144 et une finale commune sur 18. Le job original 774527 termine COMPLETED 0:0 mais la méthode reste failed : réponse finale mêlée à un appel outil non exécuté. L’artefact de la proposition 2 est conservé et valide sur SEARCH ; aucune finale commune ni gain final indépendant acquis. 394 168 tokens est un sous-total connu incomplet, avec une consommation CLI échouée inconnue. Le natif convolution 3141, non encore audité à cette date, n’était pas ajouté au décompte."
+    },
+    "local_upstream_transport_prompt_v2_de38abb": {
+      "path": "work/live/upstream-transport-prompt-v2-acceptance.json",
+      "sha256": "f01de5951907fcec97da616a83fff6f87a1412abe781f149254b1a9f91e401fb",
+      "bytes": 7387,
+      "kind": "focused_local_original_transport_prompt_regressions",
+      "git_base": "de38abbd6b73353e7758481addb869ea2ea0170b",
+      "tests_passed": 41,
+      "junit": {
+        "path": "work/live/upstream-transport-prompt-v2-local-tests.xml",
+        "sha256": "3a42599224240b671c478fe4aef37906b4f0814a8a5926c5e7e7fc5c8c3887ef"
+      },
+      "source_files_after": {
+        "optimizer_agent/upstream_original.py": "ee93e53897a2c131c58ee6a2c66bfd2de6c964d44fc2de606d998ab8599024c5",
+        "tests/test_upstream_original.py": "fe31e6d33a0491f55346220e8ac1dc8c47572ed9783b4418624cdb1ab36f92a5"
+      },
+      "source_files_unchanged_during_tests": true,
+      "previous_acceptance": {
+        "path": "work/live/upstream-transport-prompt-acceptance.json",
+        "sha256": "aacc35a136d2ffd8775642657d50906544d5226f7c7d10bcfe28798bfbf0db31",
+        "source_files": {
+          "optimizer_agent/upstream_original.py": "3762dbe73eb8f11356558e67c5aa6c655506d126e58e48352c41edf6a2a40a22",
+          "tests/test_upstream_original.py": "d48e161af5079b2eac2c09f27f8fb93b91085a8f15c3c18715db205035bf093b"
+        },
+        "scope": "Earlier 41-test state retained; JSON instruction was not explicitly scoped to final mode."
+      },
+      "chat_schema_ast_unchanged": true,
+      "production_ast_except_prompt_unchanged": true,
+      "historical_failed_call_bytes_unchanged": true,
+      "scope": "41 tests CPU locaux avec backend simulé sur le seul prompt de transport : final exige tool_calls vide, tool_calls exige une liste non vide ; JSON unique demandé seulement pour le texte final, texte intermédiaire vide autorisé. Schéma, gardes, parseurs, retries, politiques et 16 fichiers originaux inchangés. Le reçu v1 reste conservé ; aucun résultat historique n’est réinterprété et aucune conformité future du modèle n’est acquise."
+    },
+    "native_convolution3141_774528_dfd_terminal": {
+      "path": "work/live/section16-dfd93d0-native-774528.json",
+      "sha256": "b07544f3a8e8b53be4790f4a975655d24a6225d39d530ec4ad4545a98c26ee2d",
+      "bytes": 17763,
+      "kind": "actual_single_prompt_native_generation_with_untested_export",
+      "observed_at_utc": "2026-10-21T22:43:57.321702+00:00",
+      "source_HEAD": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "task_id": "quality-20261021-v2.convolution.3141.native_codex_vanilla",
+      "generation_status": {
+        "elapsed_seconds": 1645.802237033844,
+        "execution_complete": true,
+        "generation_complete": true,
+        "method_status": "completed",
+        "status": "generation_complete"
+      },
+      "terminal": {
+        "json_pointer": "/worker_terminal",
+        "scope": "Native service correctly returned the borrowed worker without closing it. The outer suite later closed its owned job and recorded Slurm COMPLETED0:0. No fresh scheduler query was made.",
+        "service_borrowed_worker_receipt": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/worker-terminal.json",
+          "sha256": "645e423e01793b502a15d3463a1ac610f81d197e254ae708650dbd7e5a64eab1"
+        },
+        "service_borrowed_worker_state": {
+          "job_id": "774528",
+          "ownership": "borrowed",
+          "service_closed": true,
+          "state": "BORROWED_WORKER_PRESERVED",
+          "terminal": false
+        },
+        "slurm_receipt": {
+          "elapsed": "00:27:43",
+          "exit_code": "0:0",
+          "job_id": "774528",
+          "nodes": "romeo-a031",
+          "state": "COMPLETED",
+          "terminal": true
+        },
+        "source": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/result.json",
+          "sha256": "ba069ad2f457a672fbe8ea83d19d2998450035a6a4add68b0dd57640094319e1"
+        }
+      },
+      "result": {
+        "encoding": "raw_file_bytes",
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/result.json",
+        "sha256": "ba069ad2f457a672fbe8ea83d19d2998450035a6a4add68b0dd57640094319e1"
+      },
+      "exported_candidate": {
+        "artifact_hash": "5f2b43943c60534b673e45d966de6cfb3faa97d5cdf60e8adb5eeb2ce927edad",
+        "candidate_id": "codex-vanilla",
+        "kernel": "convolution",
+        "launch_rule": {
+          "block": [
+            32,
+            1,
+            1
+          ],
+          "elements_key": "n",
+          "grid": [
+            1,
+            1,
+            1
+          ],
+          "kind": "elementwise",
+          "shared_memory_bytes": 0,
+          "tile_x": 32,
+          "tile_y": null,
+          "version": 1
+        },
+        "parameters": {},
+        "source_hash": "e04ec209e6bdc10466ea85ce653ee21872f1cf6b1ae0a68e9c33abf8d808bb92",
+        "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/kernel.cu"
+      },
+      "artifact_hash_recomputed": true,
+      "native_CLI": {
+        "actual_models_emitted": [],
+        "codex_executable_sha256_recorded": "1afb28c01d7d49e892bd75f11076b10f1451e34e0ee308a95e5ab7f69f9c84fe",
+        "codex_version_recorded": "codex-cli 0.163.0-alpha.10.2",
+        "completed_turns": 1,
+        "cost_scope": "Provider reported token usage is available; monetary cost and emitted provider model identity are unavailable. Cached tokens are a subset of input, not added again.",
+        "cost_usd": null,
+        "effort_requested": "max",
+        "ended_at": 1792621996.786787,
+        "model_call_unit": "One native Codex invocation/ordinary optimization prompt with shell/tool activity; not one call per service request",
+        "model_identity_evidence": "requested CLI model; provider did not emit model identity",
+        "model_requested": "gpt-6-luna",
+        "raw_event_stream": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/codex.jsonl",
+          "sha256": "dedd9bb14df85b0984981a9d5e5ad37cde19192bf909f47d29f3b0c44e596734"
+        },
+        "read_isolation_ok": true,
+        "receipt": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/receipt.json",
+          "sha256": "c1e288eda61f165f0350f06e68464807507f2199f9b7a14006293b8ed7351c1f"
+        },
+        "returncode": 0,
+        "single_completed_turn": true,
+        "started_at": 1792620350.98455,
+        "total_input_plus_output_tokens": 3713227,
+        "usage_events_match_raw_stream": true,
+        "usage_sum": {
+          "cached_input_tokens": 3607936,
+          "input_tokens": 3681395,
+          "output_tokens": 31832,
+          "reasoning_output_tokens": 20166
+        }
+      },
+      "SEARCH_scope": {
+        "exported_exact_artifact_SEARCH_validation_observed": false,
+        "recorded_service_responses": [
+          {
+            "artifact_hash": "cd65b83ea64ce5aeddd39200de5521e1efea833628aeac4be84b432effd3e624",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "16471647c77a4a75a9f7ba5c8982a3cc",
+            "ok": true,
+            "operation": "validate",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/02bf41915e8f4740a72e3d476137625e/response.json",
+            "request_id": "02bf41915e8f4740a72e3d476137625e",
+            "sha256": "e8468abd28489f07a604b9abacc52193492fc31c318c0ca358727c84cb046115",
+            "source_sha256": "a5ff4de8dd539bac20d885be0412257ecce9ee9ba2964c79a5b15a5bdcd8a391",
+            "status": "validated",
+            "suite": "search"
+          },
+          {
+            "artifact_hash": "b68e007f69e808bc64d6ed6c9b332bdf81ca80b695216cecc30d6b512f46b339",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "03b2c08ce69e40cfa806a3af705264d1",
+            "ok": true,
+            "operation": "benchmark",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/2ce8c0c9cd3246ceba05203f70d6d9b4/response.json",
+            "request_id": "2ce8c0c9cd3246ceba05203f70d6d9b4",
+            "sha256": "d9ff51a6c7d520b650dd86cc54ad4a033f06524082568e009e3afd0aec49f226",
+            "source_sha256": "93c8f5c24af7212eacbf9a76ef7031754a4034c7af9f592456488d9c2b15e6b6",
+            "status": "measured",
+            "suite": null
+          },
+          {
+            "artifact_hash": "b68e007f69e808bc64d6ed6c9b332bdf81ca80b695216cecc30d6b512f46b339",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "7e5bc4bdcebd431cafb7b17f4b77848d",
+            "ok": true,
+            "operation": "validate",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/65144fd87c0d46acaf598d290d877b6a/response.json",
+            "request_id": "65144fd87c0d46acaf598d290d877b6a",
+            "sha256": "95c35e4038fae6f3b49fe44ca01b87b08086c90818d26e2ae39e18072fb1e80f",
+            "source_sha256": "93c8f5c24af7212eacbf9a76ef7031754a4034c7af9f592456488d9c2b15e6b6",
+            "status": "validated",
+            "suite": "search"
+          },
+          {
+            "artifact_hash": "14012b9b1c3b18d9e5717f481d8eade7f9034f9e08584d7ef203501e3e691075",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "a23c7742046a419395a369bdd033ef52",
+            "ok": true,
+            "operation": "benchmark",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/6a3d85fb41a343e5868bc7bb9d59940e/response.json",
+            "request_id": "6a3d85fb41a343e5868bc7bb9d59940e",
+            "sha256": "91d3fe02ff2112c6e8dfd0eb034eb888f7efcf85fd045a5fae9125c488bb645e",
+            "source_sha256": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+            "status": "measured",
+            "suite": null
+          },
+          {
+            "artifact_hash": "cb41dc898a452428612cfe65d530310b27e0b4585046447683f30db5146b1f41",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "c89326cd2a77482fa94036ed2319aca6",
+            "ok": true,
+            "operation": "validate",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/6f974f52f69349e787673179b0473d5b/response.json",
+            "request_id": "6f974f52f69349e787673179b0473d5b",
+            "sha256": "ce0d42f6b18783afe384f37bebee0934979c043b88f0640a4f64206d79b80215",
+            "source_sha256": "a5ff4de8dd539bac20d885be0412257ecce9ee9ba2964c79a5b15a5bdcd8a391",
+            "status": "validated",
+            "suite": "search"
+          },
+          {
+            "artifact_hash": "cd65b83ea64ce5aeddd39200de5521e1efea833628aeac4be84b432effd3e624",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "d1be76c17ef64b0fbc42bbf80145b39c",
+            "ok": true,
+            "operation": "benchmark",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/b606eb5dd20e4558a1bd8a732dad46bd/response.json",
+            "request_id": "b606eb5dd20e4558a1bd8a732dad46bd",
+            "sha256": "0fb3bf123119af2fdf9eee9b4f3107fa4d2fb28277b2aa2d3bcf05906991c0b1",
+            "source_sha256": "a5ff4de8dd539bac20d885be0412257ecce9ee9ba2964c79a5b15a5bdcd8a391",
+            "status": "measured",
+            "suite": null
+          },
+          {
+            "artifact_hash": "cb41dc898a452428612cfe65d530310b27e0b4585046447683f30db5146b1f41",
+            "encoding": "raw_file_bytes",
+            "evaluation_id": "f262a38b12e74de4948fe13cc88fa12c",
+            "ok": true,
+            "operation": "benchmark",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.native_codex_vanilla/generation/evidence/requests/d149fd664eeb4ecf8f96a7f3212210d2/response.json",
+            "request_id": "d149fd664eeb4ecf8f96a7f3212210d2",
+            "sha256": "f4b6a05e46684715574b81ba34390f64ae1aa66be9a08a271803f2531755a6db",
+            "source_sha256": "a5ff4de8dd539bac20d885be0412257ecce9ee9ba2964c79a5b15a5bdcd8a391",
+            "status": "measured",
+            "suite": null
+          }
+        ],
+        "responses_matching_exact_exported_artifact": [],
+        "responses_matching_exact_exported_source": [],
+        "scope": "The service validated/measured other frozen candidates. No evidence for the exported raw source/artifact is reused by semantic similarity or inferred from the source filename. No numerical failure is inferred for the untested export.",
+        "successful_benchmark_responses": 4,
+        "successful_validate_responses": 3,
+        "unique_artifacts_evaluated": 4
+      },
+      "FINAL_scope": {
+        "certification_status": "not_evaluated_on_independent_final_data",
+        "final_qualification_claimed": false,
+        "gain_claimed": false,
+        "generation_scores_excluded_from_suite_final": true,
+        "independent_final_evaluation_observed": false
+      },
+      "scope": "Observation du 21 octobre à 22:43:57 UTC : le natif convolution 3141, job 774528, termine sa génération avec méthode completed et Slurm COMPLETED 0:0. Un appel CLI, un prompt, un tour complété et 3 713 227 tokens observés. L’artefact exporté 5f2b4394… et sa source e04ec209… ne correspondent à aucun des quatre artefacts ni sept réponses SEARCH essayés : aucune validation SEARCH de cet artefact exact ni gain revendiqué. Sa qualification FINAL indépendante reste à acquérir. Ce reçu ajoute un résultat aux 21 antérieurs, sans les revalider ni inférer un état futur."
     }
   },
   "requirements": {
@@ -10129,9 +10766,11 @@
         "evidence": [
           "diagnostic_loop",
           "frozen_gemm",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
         "Étude §16 complète non acquise ; les chaînes modèle avec passages v2 sont acquises uniquement dans les scopes et versions cités, sans supériorité globale."
@@ -10281,7 +10920,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
         ]
       },
       "romeo_executed": {
@@ -10296,12 +10936,14 @@
           "common_final_convolution_1729_freeze",
           "section16_protocol_review_55",
           "common_final_convolution_1729_terminal",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Véritable original 773802 et première finale commune convolution 1729 (774017) acquis dans leurs scopes. Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale sur 18, sans gain certifié. Autres comparaisons à terminer."
+        "Véritable original 773802 et première finale commune convolution 1729 (774017) acquis dans leurs scopes. Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale sur 18, sans gain certifié. Autres comparaisons à terminer."
       ]
     },
     "SEC-3": {
@@ -10396,12 +11038,14 @@
           "study_v2_eleven_completed_generations",
           "section16_protocol_review_55",
           "common_final_convolution_1729_terminal",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Workflow sur six familles et reprise intégrale non qualifiés ; contrôle autonome 774520 hors cohortes."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Workflow sur six familles et reprise intégrale non qualifiés ; contrôle autonome 774520 hors cohortes."
       ]
     },
     "SEC-3.1": {
@@ -10491,12 +11135,14 @@
           "study_v2_eleven_completed_generations",
           "section16_protocol_review_55",
           "common_final_convolution_1729_terminal",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
       ]
     },
     "SEC-3.2": {
@@ -10747,7 +11393,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
         ]
       },
       "romeo_executed": {
@@ -10840,9 +11487,11 @@
           "native_read_isolation_cpu",
           "study_v2_eleven_completed_generations",
           "standalone_final_suite_dfd93d0_774520",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
         "Jeux SEARCH et FINAL distincts exécutés dans le contrôle autonome DFD 774520 ; finale commune convolution 1729 acquise pour ses artefacts exacts. Six familles et autres groupes finaux du §16 restent à qualifier."
@@ -12914,6 +13563,11 @@
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
           "local_observed_metrics_fix_dfd93d0"
+        ],
+        "published_release_evidence": [
+          "published_report_metrics_de38abb",
+          "ci_de38abb",
+          "ci_de38abb_skipped_scope"
         ]
       },
       "romeo_executed": {
@@ -13232,7 +13886,13 @@
           "local_research_cache_final_suite_release",
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
-          "local_observed_metrics_fix_dfd93d0"
+          "local_observed_metrics_fix_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
+        ],
+        "published_release_evidence": [
+          "published_report_metrics_de38abb",
+          "ci_de38abb",
+          "ci_de38abb_skipped_scope"
         ]
       },
       "romeo_executed": {
@@ -13254,12 +13914,14 @@
           "common_final_convolution_1729_terminal",
           "study_v2_fifteen_completed_generations_55_dispatch",
           "section16_protocol_review_55",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Permanent_only : deux configurations mesurées et un essai annulé avant mesure par la garde du parent exact."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Les anciens échecs et alias restent visibles."
       ],
       "offline_presentation_evidence": [
         "historical_observed_metrics_view_dfd93d0"
@@ -14813,6 +15475,11 @@
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
           "local_observed_metrics_fix_dfd93d0"
+        ],
+        "published_release_evidence": [
+          "published_report_metrics_de38abb",
+          "ci_de38abb",
+          "ci_de38abb_skipped_scope"
         ]
       },
       "romeo_executed": {
@@ -14902,7 +15569,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
         ]
       },
       "romeo_executed": {
@@ -14979,12 +15647,14 @@
           "study_v2_eleven_completed_generations",
           "section16_protocol_review_55",
           "common_final_convolution_1729_terminal",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18, après des pannes SSH/DNS historiques. Contrôle autonome 774520 terminé. La reprise intégrale et la disponibilité réseau présente ne se déduisent pas de ces reçus."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18, après des pannes SSH/DNS historiques. Contrôle autonome 774520 terminé. La reprise intégrale et la disponibilité réseau présente ne se déduisent pas de ces reçus."
       ]
     },
     "USER-PROFILE": {
@@ -15103,7 +15773,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
         ]
       },
       "romeo_executed": {
@@ -15118,12 +15789,14 @@
           "study_v2_eleven_completed_generations",
           "section16_protocol_review_55",
           "common_final_convolution_1729_terminal",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -15726,7 +16399,13 @@
           "local_research_cache_final_suite_release",
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
-          "local_observed_metrics_fix_dfd93d0"
+          "local_observed_metrics_fix_dfd93d0",
+          "local_upstream_transport_prompt_v2_de38abb"
+        ],
+        "published_release_evidence": [
+          "published_report_metrics_de38abb",
+          "ci_de38abb",
+          "ci_de38abb_skipped_scope"
         ]
       },
       "romeo_executed": {
@@ -15748,12 +16427,14 @@
           "common_final_convolution_1729_terminal",
           "study_v2_fifteen_completed_generations_55_dispatch",
           "section16_protocol_review_55",
-          "study_v2_twenty_completed_generations_55_drain"
+          "study_v2_twenty_completed_generations_55_drain",
+          "original_convolution2718_774527_dfd_terminal",
+          "native_convolution3141_774528_dfd_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
       },
       "remaining": [
-        "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Permanent_only : deux configurations mesurées et un essai annulé avant mesure par la garde du parent exact."
+        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Les anciens échecs et alias restent visibles."
       ],
       "derived_from": "SEC-16",
       "offline_presentation_evidence": [
@@ -16012,6 +16693,26 @@
         "ac03_negative_historical_readiness_dfd93d0"
       ],
       "scope": "Après revue, orchestrateur b00d927 et 63 tests ciblés. Ancien résultat et snapshot DFD conservés ; seule la liste dérivée des métriques inconnues est corrigée. Audit tardif AC-03 négatif historique ajouté, sans nouvelle panne externe, exécution modèle/GPU ou requalification des anciens prompts."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:44:20.652232+00:00",
+      "kind": "transport_prompt_v2_local_original_method_failure_and_de38_publication",
+      "evidence": [
+        "local_upstream_transport_prompt_v2_de38abb",
+        "original_convolution2718_774527_dfd_terminal",
+        "published_report_metrics_de38abb",
+        "ci_de38abb",
+        "ci_de38abb_skipped_scope"
+      ],
+      "scope": "Prompt seulement testé localement ; précédent et preuves historiques conservés. La méthode originale 774527 reste failed malgré son artefact retenu. 21 générations au constat daté, une finale commune ; le natif 3141 non audité n’est pas compté. Transition future du contrôleur après fins naturelles, aucun budget global."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:46:08.142712+00:00",
+      "kind": "native_774528_terminal_with_exact_export_not_seen_in_SEARCH",
+      "evidence": [
+        "native_convolution3141_774528_dfd_terminal"
+      ],
+      "scope": "Complément daté aux 21 résultats précédents : 22 générations sur 144, une finale commune sur 18. Artefact natif exporté distinct de tous les artefacts SEARCH essayés ; aucune validation, mesure ou qualification de cet export déduite. Aucun compteur futur extrapolé."
     }
   ]
 }
