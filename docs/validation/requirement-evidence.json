@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T17:14:41.635514+00:00",
+  "generated_at_utc": "2026-10-21T21:41:29.435576+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -81,7 +81,12 @@
         "hash_at_audit_read": "b1c65f8c7e759546f61f0a13a8967d73f98d3b5a402c3216c5d94fe6ffb3528d",
         "hash_at_finish": "2975ba5f0c5e412966c7afb2ea650ba733af2fc767d018886213198e408f8d35"
       }
-    ]
+    ],
+    "latest_incremental_source_inventory": {
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Historical initial checkout identity retained above; changed source bytes separately pinned in source_current entries. Latest coherent local suite and exact published CI are not inferred here."
+    }
   },
   "policy": {
     "global_qualification": false,
@@ -125,7 +130,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "eleven_generations_first_common_final_acquired_four_generations_active",
+      "state": "sixteen_generations_first_common_final_acquired_four_55_generations_active",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -136,9 +141,11 @@
         "study_v2_greedy_parent_first_proposal",
         "study_v2_eleven_completed_generations",
         "common_final_convolution_1729_freeze",
-        "common_final_convolution_1729_terminal"
+        "common_final_convolution_1729_terminal",
+        "study_v2_fifteen_completed_generations_55_dispatch",
+        "section16_protocol_review_55"
       ],
-      "remaining": "13/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Deux générations8dddfe8 encore actives;un échec de protocole réel est annoté sans modifier ses coûts/candidat. Achever les autres cohortes/ablations,dispersion,exports et reconstructions."
+      "remaining": "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -158,10 +165,10 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 140,
-    "latest_local_junit_entries": 1342,
-    "latest_local_testcase_nodes": 1329,
-    "study_v2_completed_generation_receipts": 13,
+    "evidence_entries": 154,
+    "latest_local_junit_entries": 1453,
+    "latest_local_testcase_nodes": 1440,
+    "study_v2_completed_generation_receipts": 16,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
@@ -6406,23 +6413,52 @@
     "source_current:optimizer_agent/compile_cache.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/compile_cache.py",
-      "sha256": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "46fdaebc2ed790d3c5841bedf522fa443164e9a67959b109d103335a85075fd5",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
       "definitions": [
         {
           "name": "content_hash",
           "line": 10
         },
         {
-          "name": "compilation_manifest",
+          "name": "validate_dependency_options",
           "line": 14
         },
         {
+          "name": "compilation_manifest",
+          "line": 23
+        },
+        {
           "name": "CompilationCache",
-          "line": 47
+          "line": 94
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/compile_cache.py",
+          "sha256": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "content_hash",
+              "line": 10
+            },
+            {
+              "name": "compilation_manifest",
+              "line": 14
+            },
+            {
+              "name": "CompilationCache",
+              "line": 47
+            }
+          ]
         }
       ]
     },
@@ -6916,11 +6952,11 @@
     "source_current:optimizer_agent/portable_export.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/portable_export.py",
-      "sha256": "43856ca30a7a539a88ba239595e4ce5522ea4a4e8dfd240b4a0bb9711f7b3f18",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "8333ca1b7b1c8da1c476da2a19035238e20b0b5a12f7dd0908c571efb9f56ae3",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
       "definitions": [
         {
           "name": "encoded",
@@ -7004,11 +7040,112 @@
         },
         {
           "name": "export_study",
-          "line": 534
+          "line": 535
         },
         {
           "name": "reconstruct_candidate",
-          "line": 692
+          "line": 693
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/portable_export.py",
+          "sha256": "43856ca30a7a539a88ba239595e4ce5522ea4a4e8dfd240b4a0bb9711f7b3f18",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "encoded",
+              "line": 39
+            },
+            {
+              "name": "digest",
+              "line": 43
+            },
+            {
+              "name": "file_hash",
+              "line": 47
+            },
+            {
+              "name": "_plain",
+              "line": 55
+            },
+            {
+              "name": "_safe_member",
+              "line": 75
+            },
+            {
+              "name": "sqlite_backup",
+              "line": 82
+            },
+            {
+              "name": "readable_database",
+              "line": 95
+            },
+            {
+              "name": "_git",
+              "line": 135
+            },
+            {
+              "name": "_Archive",
+              "line": 139
+            },
+            {
+              "name": "_source_snapshot",
+              "line": 157
+            },
+            {
+              "name": "_historical_adapter_archives",
+              "line": 200
+            },
+            {
+              "name": "_recorded_bridge_sources",
+              "line": 279
+            },
+            {
+              "name": "_walk",
+              "line": 323
+            },
+            {
+              "name": "_reference_file_kind",
+              "line": 333
+            },
+            {
+              "name": "_reference_metadata",
+              "line": 345
+            },
+            {
+              "name": "_candidate_records",
+              "line": 359
+            },
+            {
+              "name": "_source_path",
+              "line": 380
+            },
+            {
+              "name": "_context",
+              "line": 395
+            },
+            {
+              "name": "_include_options",
+              "line": 408
+            },
+            {
+              "name": "_portable_candidate",
+              "line": 433
+            },
+            {
+              "name": "export_study",
+              "line": 534
+            },
+            {
+              "name": "reconstruct_candidate",
+              "line": 692
+            }
+          ]
         }
       ]
     },
@@ -7144,131 +7281,284 @@
     "source_current:optimizer_agent/research_service.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/research_service.py",
-      "sha256": "e358973f44f481e36e3db2d5cd14217ed6fc002c7a19b594e09e671b1207dfbf",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "2cbd62dd21f477744a14cc6e4d6c3fe9739a415a7e6306cb2ab706a10609b4ff",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
       "definitions": [
         {
           "name": "ResearchBlocked",
-          "line": 34
+          "line": 35
         },
         {
           "name": "NeedsResearch",
-          "line": 38
+          "line": 39
         },
         {
           "name": "environment_field_semantics",
-          "line": 42
+          "line": 43
         },
         {
           "name": "_bounded_evidence_summary",
-          "line": 64
+          "line": 65
         },
         {
           "name": "diagnostic_research_context",
-          "line": 70
+          "line": 71
+        },
+        {
+          "name": "public_research_context",
+          "line": 97
+        },
+        {
+          "name": "_context_hash",
+          "line": 153
+        },
+        {
+          "name": "_prepare_context_directory",
+          "line": 157
+        },
+        {
+          "name": "_store_context_receipt",
+          "line": 173
+        },
+        {
+          "name": "generate_with_context_receipt",
+          "line": 187
         },
         {
           "name": "synthesis_schema",
-          "line": 133
+          "line": 267
         },
         {
           "name": "normalize_research_references",
-          "line": 150
-        },
-        {
-          "name": "ResearchConfig",
-          "line": 203
-        },
-        {
-          "name": "SourceRecord",
-          "line": 237
-        },
-        {
-          "name": "store_hashed_json",
-          "line": 258
-        },
-        {
-          "name": "read_hashed_json",
-          "line": 266
-        },
-        {
-          "name": "_passage",
-          "line": 276
-        },
-        {
-          "name": "render_passages",
           "line": 288
         },
         {
+          "name": "ResearchConfig",
+          "line": 341
+        },
+        {
+          "name": "SourceRecord",
+          "line": 375
+        },
+        {
+          "name": "store_hashed_json",
+          "line": 396
+        },
+        {
+          "name": "read_hashed_json",
+          "line": 404
+        },
+        {
+          "name": "_passage",
+          "line": 414
+        },
+        {
+          "name": "render_passages",
+          "line": 426
+        },
+        {
           "name": "_source_identity",
-          "line": 295
+          "line": 433
         },
         {
           "name": "_masked_cpp",
-          "line": 302
+          "line": 440
         },
         {
           "name": "_requested_ranges",
-          "line": 308
+          "line": 446
         },
         {
           "name": "_symbol_names",
-          "line": 324
+          "line": 462
         },
         {
           "name": "_merge_ranges",
-          "line": 333
+          "line": 471
         },
         {
           "name": "code_passages",
-          "line": 343
+          "line": 481
         },
         {
           "name": "_verify_source_passages",
-          "line": 394
+          "line": 532
         },
         {
           "name": "verify_source_passages",
-          "line": 427
+          "line": 565
         },
         {
           "name": "ResearchDossier",
-          "line": 435
+          "line": 573
         },
         {
           "name": "_TextParser",
-          "line": 594
+          "line": 732
         },
         {
           "name": "cuda_documentation_requests",
-          "line": 624
+          "line": 762
         },
         {
           "name": "cuda_toolchain_documentation_requests",
-          "line": 651
+          "line": 789
         },
         {
           "name": "observed_web_queries",
-          "line": 670
+          "line": 808
         },
         {
           "name": "observed_search_call_count",
-          "line": 674
+          "line": 812
         },
         {
           "name": "is_external_pmpp",
-          "line": 679
+          "line": 817
         },
         {
           "name": "reject_external_pmpp_actions",
-          "line": 685
+          "line": 823
         },
         {
           "name": "ResearchService",
-          "line": 701
+          "line": 839
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/research_service.py",
+          "sha256": "e358973f44f481e36e3db2d5cd14217ed6fc002c7a19b594e09e671b1207dfbf",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "ResearchBlocked",
+              "line": 34
+            },
+            {
+              "name": "NeedsResearch",
+              "line": 38
+            },
+            {
+              "name": "environment_field_semantics",
+              "line": 42
+            },
+            {
+              "name": "_bounded_evidence_summary",
+              "line": 64
+            },
+            {
+              "name": "diagnostic_research_context",
+              "line": 70
+            },
+            {
+              "name": "synthesis_schema",
+              "line": 133
+            },
+            {
+              "name": "normalize_research_references",
+              "line": 150
+            },
+            {
+              "name": "ResearchConfig",
+              "line": 203
+            },
+            {
+              "name": "SourceRecord",
+              "line": 237
+            },
+            {
+              "name": "store_hashed_json",
+              "line": 258
+            },
+            {
+              "name": "read_hashed_json",
+              "line": 266
+            },
+            {
+              "name": "_passage",
+              "line": 276
+            },
+            {
+              "name": "render_passages",
+              "line": 288
+            },
+            {
+              "name": "_source_identity",
+              "line": 295
+            },
+            {
+              "name": "_masked_cpp",
+              "line": 302
+            },
+            {
+              "name": "_requested_ranges",
+              "line": 308
+            },
+            {
+              "name": "_symbol_names",
+              "line": 324
+            },
+            {
+              "name": "_merge_ranges",
+              "line": 333
+            },
+            {
+              "name": "code_passages",
+              "line": 343
+            },
+            {
+              "name": "_verify_source_passages",
+              "line": 394
+            },
+            {
+              "name": "verify_source_passages",
+              "line": 427
+            },
+            {
+              "name": "ResearchDossier",
+              "line": 435
+            },
+            {
+              "name": "_TextParser",
+              "line": 594
+            },
+            {
+              "name": "cuda_documentation_requests",
+              "line": 624
+            },
+            {
+              "name": "cuda_toolchain_documentation_requests",
+              "line": 651
+            },
+            {
+              "name": "observed_web_queries",
+              "line": 670
+            },
+            {
+              "name": "observed_search_call_count",
+              "line": 674
+            },
+            {
+              "name": "is_external_pmpp",
+              "line": 679
+            },
+            {
+              "name": "reject_external_pmpp_actions",
+              "line": 685
+            },
+            {
+              "name": "ResearchService",
+              "line": 701
+            }
+          ]
         }
       ]
     },
@@ -7661,95 +7951,196 @@
     "source_current:scripts/run_research_refresh_acceptance.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/run_research_refresh_acceptance.py",
-      "sha256": "dab77aca0fdc5dbd1bb07baca039e18b775926c3f33d51f0d88040d76869a455",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "c77068972ba1d3b5d7d72b94c431b29fa102456e6c6097559b524f4bc4e4b816",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
       "definitions": [
         {
           "name": "sha",
-          "line": 50
+          "line": 53
         },
         {
           "name": "reference",
-          "line": 54
+          "line": 57
         },
         {
           "name": "inspect_bootstrap",
-          "line": 58
+          "line": 61
         },
         {
           "name": "archived_evaluator",
-          "line": 172
+          "line": 175
         },
         {
           "name": "DocumentaryRuntime",
-          "line": 218
+          "line": 221
         },
         {
           "name": "ArchivedPropertiesOnlyRunner",
-          "line": 287
+          "line": 290
         },
         {
           "name": "PromptControls",
-          "line": 310
+          "line": 313
         },
         {
           "name": "generate_control",
-          "line": 363
+          "line": 366
         },
         {
           "name": "exercise",
-          "line": 372
+          "line": 375
         },
         {
           "name": "_inspect_initial_resume_source",
-          "line": 469
+          "line": 472
         },
         {
           "name": "_resume_archive",
-          "line": 595
+          "line": 598
         },
         {
           "name": "_inspect_once_resumed_source",
-          "line": 627
+          "line": 630
+        },
+        {
+          "name": "_inspect_coverage_gap_source",
+          "line": 789
         },
         {
           "name": "inspect_resume_source",
-          "line": 785
+          "line": 967
         },
         {
           "name": "validate_resume_runtime",
-          "line": 796
+          "line": 980
         },
         {
           "name": "resume_hardware_context",
-          "line": 857
+          "line": 1041
         },
         {
           "name": "resume_runtime_context",
-          "line": 864
+          "line": 1048
         },
         {
           "name": "prepare",
-          "line": 884
+          "line": 1068
         },
         {
           "name": "run_acceptance",
-          "line": 905
+          "line": 1089
         },
         {
           "name": "prepare_resumption",
-          "line": 970
+          "line": 1154
         },
         {
           "name": "run_resumption_acceptance",
-          "line": 997
+          "line": 1185
         },
         {
           "name": "main",
-          "line": 1136
+          "line": 1343
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/run_research_refresh_acceptance.py",
+          "sha256": "dab77aca0fdc5dbd1bb07baca039e18b775926c3f33d51f0d88040d76869a455",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "sha",
+              "line": 50
+            },
+            {
+              "name": "reference",
+              "line": 54
+            },
+            {
+              "name": "inspect_bootstrap",
+              "line": 58
+            },
+            {
+              "name": "archived_evaluator",
+              "line": 172
+            },
+            {
+              "name": "DocumentaryRuntime",
+              "line": 218
+            },
+            {
+              "name": "ArchivedPropertiesOnlyRunner",
+              "line": 287
+            },
+            {
+              "name": "PromptControls",
+              "line": 310
+            },
+            {
+              "name": "generate_control",
+              "line": 363
+            },
+            {
+              "name": "exercise",
+              "line": 372
+            },
+            {
+              "name": "_inspect_initial_resume_source",
+              "line": 469
+            },
+            {
+              "name": "_resume_archive",
+              "line": 595
+            },
+            {
+              "name": "_inspect_once_resumed_source",
+              "line": 627
+            },
+            {
+              "name": "inspect_resume_source",
+              "line": 785
+            },
+            {
+              "name": "validate_resume_runtime",
+              "line": 796
+            },
+            {
+              "name": "resume_hardware_context",
+              "line": 857
+            },
+            {
+              "name": "resume_runtime_context",
+              "line": 864
+            },
+            {
+              "name": "prepare",
+              "line": 884
+            },
+            {
+              "name": "run_acceptance",
+              "line": 905
+            },
+            {
+              "name": "prepare_resumption",
+              "line": 970
+            },
+            {
+              "name": "run_resumption_acceptance",
+              "line": 997
+            },
+            {
+              "name": "main",
+              "line": 1136
+            }
+          ]
         }
       ]
     },
@@ -7779,6 +8170,294 @@
       },
       "source_files_unchanged_during_tests": 183,
       "scope": "Coherent complete local suite;4 first-run failures preserved and corrected. Only these2documentaryfiles updated after testing;Python source/test/config bytes unchanged. New exact-SHA CI pending;no model/GPU/study completion inferred."
+    },
+    "study_v2_fifteen_completed_generations_55_dispatch": {
+      "path": "work/live/section16-fifteen-generations-and-55da43e-dispatch.json",
+      "sha256": "25b6ee073b51683edab3f8dd1d0f1c5a8477f6fc1438c1723163dadba9b50fc6",
+      "bytes": 31958,
+      "kind": "actual_generation_terminal_and_new_dispatch_audit",
+      "scope": "15/144 générations acquises,1/18 finale commune. Deux nouvelles générations774215/772379 authentifiées;4nouveauxACK48h/4UUID/source55propres. Livraisonexacteannexeprompt nonobservée;pasDB/RNG/inputs/SSH/GPU/modèle."
+    },
+    "model_autotuning_real_773803_773804": {
+      "path": "work/live/model-autotuning-observation-55da43e.json",
+      "sha256": "937edb4a77a03b1c34e71f06d42c4c2f0aa5dc354420384fb9f76514da9ab742",
+      "bytes": 33549,
+      "kind": "real_model_parameterized_tuning_observation",
+      "scope": "Deuxablations réelles :Luna→domaines3configurations→oracle/GPU→gagnantremesuré→unseultell. DSLréelledansno_research. Tousdeuxnot_improved,aucungainfinaldéduit;paspreuvefullstrictmulticonfig."
+    },
+    "ac02_second_resumption_incomplete": {
+      "path": "results/research-refresh-ac02-resumed-2-20261021/research-refresh-acceptance.json",
+      "sha256": "4ecf9ffda13f1bfa3136a0411b6465886cfceef528f6e9b1664a52426b73151d",
+      "bytes": 21797,
+      "kind": "actual_eleven_cli_research_refresh_resumption",
+      "scope": "11CLIau total,2nouveaux/2774696tokens,0GPU. Rechercheacceptéeevent22reliéeau bon diagnostic mais register_blocking absente des couvertures exactes. Garde AC02 refuse;anciens/bootstrapinchangés,aucunrenommagehistorique."
+    },
+    "ci_444e6ae": {
+      "path": "work/live/ci-444e6ae.json",
+      "sha256": "b6a9bef5e9b39012b01554757fd1b0e7490fec35837f866fa95f9a64214ec7b8",
+      "bytes": 2038,
+      "kind": "exact_sha_github_ci",
+      "scope": "CI39673789100 réussie au444e6aeccc1f38d3d89d819f283e469c65091486;pasqualificationdeschangementsultérieurs."
+    },
+    "ci_55da43e": {
+      "path": "work/live/ci-55da43e.json",
+      "sha256": "2d497998bfa3c83ccef69ba001a91e3cca809240252fc49e3cc46f75a100c2ef",
+      "bytes": 2038,
+      "kind": "exact_sha_github_ci",
+      "scope": "CI39674790817 réussie au55da43ebe2575c76c8e309dcd79cd9d19c1e82de;pasqualificationdeschangementsultérieurs."
+    },
+    "local_report_unknown_context_55": {
+      "path": "work/live/report-unproven-context-release-local.json",
+      "sha256": "26e921f93d72deb14b2a5201cf35ac31f005eba3521c5de0c23487e827df6ecb",
+      "bytes": 805,
+      "kind": "focused_local_report_regressions",
+      "scope": "171tests locaux du delta de rendu:contexte non prouvé reste inconnu,sansratio/IC;pasGPU/modèle/sourcefuturequalifié."
+    },
+    "ac02_eleven_call_prefix_audit": {
+      "path": "work/live/research-ac02-eleven-call-resume-audit.json",
+      "sha256": "d7130df0ae18a8ff9823f958a028ef50245ed3801e9347514962f07c96903b6d",
+      "bytes": 35523,
+      "kind": "immutable_eleven_call_prefix_audit",
+      "scope": "Seize contrôles publics vrais : préfixes7/9/11 et22événements conservés. Recherche acceptée, mais couverture exacte absente. État round4 dérivé ; pas de nouvelle exécution."
+    },
+    "ac02_eleven_call_readonly_preflight": {
+      "path": "work/live/research-ac02-eleven-call-preflight.json",
+      "sha256": "00bab7c8b82fe679ed73d148a7372b4b72b6faa5d1d41125aedf0f30af1dec0a",
+      "bytes": 4101,
+      "kind": "real_readonly_eleven_call_resume_preflight",
+      "scope": "Neuf contrôles vrais : trois archives et bootstrap inchangés, comparaison SQL opaque, onze appels et état accepté du round4. Aucun modèle, SSH ou GPU."
+    },
+    "ac02_accepted_dossier_coverage_gap": {
+      "path": "work/live/research-ac02-accepted-dossier-technique-gap.json",
+      "sha256": "dc73227c7ca56c19dc7bdeac91226f04045a03881f1ff035804c41a1ea17b634",
+      "bytes": 14077,
+      "kind": "real_accepted_dossier_semantic_guard_audit",
+      "scope": "Dossier728 accepté et diagnostic exact ; la proposition register_blocking reste refusée par la vraie garde. Anciennes autorités inchangées, aucune équivalence de prose inventée."
+    },
+    "section16_protocol_review_55": {
+      "path": "work/live/section16-protocol-review-55da43e.json",
+      "sha256": "1d4e49b9d9404de4bf4725f05817b31c8f8f545feb25053eb737304c2130e30d",
+      "bytes": 87143,
+      "kind": "independent_full_spec_section16_source_review",
+      "scope": "Spécification644lignes relue et25sources55 hashées. Seize générations terminées selon reçus publics, dont774444 ; une finale commune acquise. Le correctif cache en cours reste séparé de cette revue du55."
+    },
+    "report_eleven_call_predecessor_preflight": {
+      "path": "work/live/report-accepted-eleven-predecessor-preflight.json",
+      "sha256": "ef19174ec132bb0969d2a14699d235d7efba5af0609f5bccb21554365ad2acd6",
+      "bytes": 1129,
+      "kind": "real_public_report_lineage_preflight",
+      "scope": "Chaîne historique7/9/11 vérifiée ; nouvelle autorité absente et copie future non acquise. Aucun dossier ancien réécrit ou nouvelle acceptation déduite."
+    },
+    "source_current:scripts/report_study_fr.py": {
+      "kind": "current_implementation_source_snapshot",
+      "path": "scripts/report_study_fr.py",
+      "sha256": "fc99699d818e5f6c70a99f6d3fbe6862833a779e17721bbe6b477ddc4fc7cbd9",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+      "definitions": [
+        {
+          "name": "load",
+          "line": 87
+        },
+        {
+          "name": "fmt",
+          "line": 91
+        },
+        {
+          "name": "comparison_view",
+          "line": 95
+        },
+        {
+          "name": "direct_comparison_views",
+          "line": 114
+        },
+        {
+          "name": "direct_comparison_table",
+          "line": 120
+        },
+        {
+          "name": "table",
+          "line": 138
+        },
+        {
+          "name": "study_aggregate_table",
+          "line": 143
+        },
+        {
+          "name": "study_campaign_table",
+          "line": 156
+        },
+        {
+          "name": "audit_table",
+          "line": 171
+        },
+        {
+          "name": "checkout_source_identity",
+          "line": 178
+        },
+        {
+          "name": "ci_qualifies_checkout",
+          "line": 202
+        },
+        {
+          "name": "_mapping",
+          "line": 207
+        },
+        {
+          "name": "_records",
+          "line": 211
+        },
+        {
+          "name": "_hash",
+          "line": 215
+        },
+        {
+          "name": "_linked_receipt_verified",
+          "line": 219
+        },
+        {
+          "name": "_verified_json",
+          "line": 242
+        },
+        {
+          "name": "_required_checks",
+          "line": 253
+        },
+        {
+          "name": "_original_execution_control",
+          "line": 258
+        },
+        {
+          "name": "_common_freeze_control",
+          "line": 332
+        },
+        {
+          "name": "_standalone_final_control",
+          "line": 393
+        },
+        {
+          "name": "_accepted_eleven_source_checks",
+          "line": 412
+        },
+        {
+          "name": "_research_refresh_control",
+          "line": 527
+        },
+        {
+          "name": "_diagnostic_v2_control",
+          "line": 771
+        },
+        {
+          "name": "control_receipts",
+          "line": 817
+        },
+        {
+          "name": "execution_evidence_panel",
+          "line": 881
+        },
+        {
+          "name": "_receipt_snapshot",
+          "line": 942
+        },
+        {
+          "name": "_reported_tokens",
+          "line": 947
+        },
+        {
+          "name": "_elapsed_seconds",
+          "line": 968
+        },
+        {
+          "name": "gpu_lease_consumption",
+          "line": 986
+        },
+        {
+          "name": "project_consumption",
+          "line": 1040
+        },
+        {
+          "name": "frozen_pilot_summary",
+          "line": 1132
+        },
+        {
+          "name": "plot_frozen_pilot",
+          "line": 1205
+        },
+        {
+          "name": "frozen_pilot_panel",
+          "line": 1261
+        },
+        {
+          "name": "plot",
+          "line": 1294
+        },
+        {
+          "name": "main",
+          "line": 1328
+        }
+      ]
+    },
+    "source_current:scripts/gpu_final_suite_acceptance.py": {
+      "kind": "current_implementation_source_snapshot",
+      "path": "scripts/gpu_final_suite_acceptance.py",
+      "sha256": "0ea69edad89d6bb44da966644f190dcaf8cf4240a044928c20de0ce3e38afef2",
+      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+      "definitions": [
+        {
+          "name": "source_provenance",
+          "line": 31
+        },
+        {
+          "name": "FinalReceiptRunner",
+          "line": 38
+        },
+        {
+          "name": "prepare",
+          "line": 56
+        },
+        {
+          "name": "check_final",
+          "line": 92
+        },
+        {
+          "name": "run_acceptance",
+          "line": 141
+        },
+        {
+          "name": "main",
+          "line": 190
+        }
+      ]
+    },
+    "local_research_cache_final_suite_release": {
+      "kind": "complete_local_cpu_service_fixture_suite",
+      "path": "work/live/research-cache-final-suite-release-local.json",
+      "sha256": "8b00b2935bda72803abcda473a518f7dd1ed684dbe4d2111c2538d6f1ab3ecf4",
+      "bytes": 2544,
+      "pytest_passed": 1440,
+      "subtests_passed": 13,
+      "junit": {
+        "path": "work/live/research-cache-final-suite-release-v2-tests.xml",
+        "sha256": "28ec054372528f2a9f4e13f3ac2d55a23fd0eab6365ba33e4b552f92f533757d",
+        "bytes": 226978,
+        "tests": 1453,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_elements": 1440
+      },
+      "source_before": {
+        "path": "work/live/research-cache-final-suite-release-v2-source-before.json",
+        "sha256": "5bf5ff5b3bbbff14207f6fd2bfba5a4aedf022782b01be6b230910cf07f1fda0",
+        "bytes": 20677
+      },
+      "source_files_unchanged_during_tests": 187,
+      "scope": "Complete coherent local suite:1440tests+13subtests. Two first-run fixture failures preserved and corrected without weakening research guards. Only SPEC_AUDIT and this registry updated after testing; executable/test/config bytes unchanged. Publication and new exact-SHA CI pending; no new model/GPU execution inferred."
     }
   },
   "requirements": {
@@ -7871,7 +8550,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -7927,7 +8607,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8028,7 +8709,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8124,7 +8806,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8213,7 +8896,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8300,7 +8984,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8359,7 +9044,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8416,7 +9102,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8473,7 +9160,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8551,7 +9239,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8611,7 +9300,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8673,7 +9363,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8747,7 +9438,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8815,7 +9507,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8877,7 +9570,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -8935,7 +9629,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9006,7 +9701,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9071,7 +9767,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9148,7 +9845,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9226,7 +9924,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9236,9 +9935,10 @@
         "evidence": [
           "autotuning",
           "diagnostic_loop",
-          "tuning_constraints_773755"
+          "tuning_constraints_773755",
+          "model_autotuning_real_773803_773804"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16. Chaînemodèle→autotuningréel→remesure→unseultell authentifiée dans2ablations773803/773804;aucungaincertifié/fullstrictmulticonfigdéduit."
       },
       "remaining": [
         "DSL, macro source et couplage de lancement acquis sur contrôle statique 773755 ; exploration de variantes par une proposition modèle réelle et autres DSL/domaines non généralisés."
@@ -9283,7 +9983,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9340,7 +10041,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9398,7 +10100,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9465,7 +10168,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9506,7 +10210,8 @@
         "current_source_evidence": [
           "source_current:optimizer_agent/evaluation.py",
           "source_current:optimizer_agent/benchmark_workloads.py",
-          "source_current:optimizer_agent/workload_semantics.py"
+          "source_current:optimizer_agent/workload_semantics.py",
+          "source_current:scripts/gpu_final_suite_acceptance.py"
         ]
       },
       "local_tested": {
@@ -9525,7 +10230,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9584,7 +10290,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9594,9 +10301,10 @@
         "evidence": [
           "autotuning",
           "contracts_cache_reconstruction",
-          "tuning_constraints_773755"
+          "tuning_constraints_773755",
+          "model_autotuning_real_773803_773804"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16. Chaînemodèle→autotuningréel→remesure→unseultell authentifiée dans2ablations773803/773804;aucungaincertifié/fullstrictmulticonfigdéduit."
       },
       "remaining": [
         "Contrôle statique DSL/source_macro réel acquis au 773755 :12 filtré,8/16 mesurés, gagnant16 remesuré. Aucune campagne modèle ou supériorité générale déduite ; plafonds globaux toujours retirés par demande humaine."
@@ -9650,7 +10358,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9710,7 +10419,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9771,7 +10481,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9827,7 +10538,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -9907,7 +10619,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10000,7 +10713,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10092,7 +10806,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10168,7 +10883,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10236,7 +10952,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10307,7 +11024,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10386,7 +11104,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10441,7 +11160,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10494,7 +11214,8 @@
           "source_current:optimizer_agent/gain_observer.py",
           "source_current:optimizer_agent/native_read_isolation.py",
           "source_current:scripts/render_search_tree.py",
-          "source_current:optimizer_agent/dispatch_attestation.py"
+          "source_current:optimizer_agent/dispatch_attestation.py",
+          "source_current:scripts/report_study_fr.py"
         ]
       },
       "local_tested": {
@@ -10537,7 +11258,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10658,7 +11380,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10763,7 +11486,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10845,7 +11569,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -10864,12 +11589,14 @@
           "true_original_first_generation_773802",
           "study_v2_eleven_completed_generations",
           "common_final_convolution_1729_freeze",
-          "common_final_convolution_1729_terminal"
+          "common_final_convolution_1729_terminal",
+          "study_v2_fifteen_completed_generations_55_dispatch",
+          "section16_protocol_review_55"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Actualisation datée:15générations/1finalecommune authentifiées dans le reçu55;gaincertifiéabsent;aucune extrapolation aux autrescohortes. Le reçu indépendant section16_protocol_review_55 authentifie ensuite une16e génération native convolution2718, job774444, sans finalecommune supplémentaire."
       },
       "remaining": [
-        "13/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Deux générations8dddfe8 encore actives;un échec de protocole réel est annoté sans modifier ses coûts/candidat. Achever les autres cohortes/ablations,dispersion,exports et reconstructions."
+        "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
       ]
     },
     "SEC-17": {
@@ -10931,7 +11658,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11004,7 +11732,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11069,7 +11798,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11127,7 +11857,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11196,7 +11927,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11206,12 +11938,13 @@
         "evidence": [
           "diagnostic_loop",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "ac02_second_resumption_incomplete"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Séquence initiale7CLI +2reprise bloqués +2nouveauxCLI recherche/synthèse. Nouveau dossier accepté et diagnostic lié, mais techniqueexacte register_blocking noncouverte. Refusjustifié avantnouvelleproposition,0GPU;pasAC02complet."
       },
       "remaining": [
-        "Séquence documentaireinitiale7CLI puis reprise2CLI restent incomplete,0GPU nouveau. Refus couvert par les gardes conservé. Annexe puremétadonnées authentifiée;nouvelle reprise avec ce contexte et proposition couverte encore non acquise."
+        "Conserver11appels et dossieraccepté;complémentciblé réellementétayé avec identifiantstechniques exacts,puispropositionnouvellementcouverte. Aucun ancien dossier relabelé ou gardecontournée."
       ],
       "expected_result": "Recherche effective pour la famille, réutilisation autorisée pour l’ajustement ; proposition non couverte bloquée et renvoyée à la recherche."
     },
@@ -11256,7 +11989,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11312,7 +12046,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11369,7 +12104,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11427,7 +12163,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11493,7 +12230,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11548,7 +12286,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11606,7 +12345,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11663,7 +12403,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11731,7 +12472,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11788,7 +12530,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11798,9 +12541,10 @@
         "evidence": [
           "autotuning",
           "contracts_cache_reconstruction",
-          "tuning_constraints_773755"
+          "tuning_constraints_773755",
+          "model_autotuning_real_773803_773804"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16. Chaînemodèle→autotuningréel→remesure→unseultell authentifiée dans2ablations773803/773804;aucungaincertifié/fullstrictmulticonfigdéduit."
       },
       "remaining": [
         "Contrôle statique 773755 acquis : configuration invalide au regard du DSL rejetée avant CUDA, deux configurations admissibles mesurées, gagnant remesuré. Portée limitée au domaine et au contrat cités."
@@ -11849,7 +12593,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11911,7 +12656,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -11971,7 +12717,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12040,7 +12787,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12109,7 +12857,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12204,7 +12953,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12254,7 +13004,8 @@
           "source_current:optimizer_agent/suite_report.py",
           "source_current:optimizer_agent/upstream_original.py",
           "source_current:optimizer_agent/gain_observer.py",
-          "source_current:optimizer_agent/native_read_isolation.py"
+          "source_current:optimizer_agent/native_read_isolation.py",
+          "source_current:scripts/gpu_final_suite_acceptance.py"
         ]
       },
       "local_tested": {
@@ -12282,7 +13033,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12321,7 +13073,8 @@
         "current_source_evidence": [
           "source_current:optimizer_agent/portable_export.py",
           "source_current:optimizer_agent/optimization_history.py",
-          "source_current:optimizer_agent/suite_report.py"
+          "source_current:optimizer_agent/suite_report.py",
+          "source_current:scripts/report_study_fr.py"
         ]
       },
       "local_tested": {
@@ -12354,7 +13107,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12442,7 +13196,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12504,7 +13259,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12560,7 +13316,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12634,7 +13391,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12694,7 +13452,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12755,7 +13514,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12825,7 +13585,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12889,7 +13650,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -12948,7 +13710,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -13006,7 +13769,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -13073,7 +13837,8 @@
         },
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -13143,7 +13908,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -13223,7 +13989,8 @@
           }
         },
         "current_release_evidence": [
-          "local_protocol_runtime_release"
+          "local_protocol_runtime_release",
+          "local_research_cache_final_suite_release"
         ]
       },
       "romeo_executed": {
@@ -13242,12 +14009,14 @@
           "true_original_first_generation_773802",
           "study_v2_eleven_completed_generations",
           "common_final_convolution_1729_freeze",
-          "common_final_convolution_1729_terminal"
+          "common_final_convolution_1729_terminal",
+          "study_v2_fifteen_completed_generations_55_dispatch",
+          "section16_protocol_review_55"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Actualisation datée:15générations/1finalecommune authentifiées dans le reçu55;gaincertifiéabsent;aucune extrapolation aux autrescohortes. Le reçu indépendant section16_protocol_review_55 authentifie ensuite une16e génération native convolution2718, job774444, sans finalecommune supplémentaire."
       },
       "remaining": [
-        "13/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Deux générations8dddfe8 encore actives;un échec de protocole réel est annoté sans modifier ses coûts/candidat. Achever les autres cohortes/ablations,dispersion,exports et reconstructions."
+        "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
       ],
       "derived_from": "SEC-16"
     }
@@ -13274,6 +14043,13 @@
       "AC-18",
       "AC-19",
       "AC-20",
+      "ARCH-01",
+      "EVAL-01",
+      "EXEC-01",
+      "PMPP-01",
+      "QUALITY-01",
+      "RES-01",
+      "RES-02",
       "SEC-1",
       "SEC-1.1",
       "SEC-10",
@@ -13319,12 +14095,16 @@
       "SEC-9.1",
       "SEC-9.2",
       "SEC-9.3",
+      "STATE-01",
+      "TREE-01",
+      "TUNE-01",
       "USER-HPC",
       "USER-LOCAL",
       "USER-PROFILE"
     ],
     "all_primary_sections_present": true,
-    "all_ac01_ac20_present": true
+    "all_ac01_ac20_present": true,
+    "all_mandatory_decisions_present": true
   },
   "audit_events": [
     {
@@ -13436,6 +14216,21 @@
       "observed_at_utc": "2026-10-21T20:41:17.409534+00:00",
       "kind": "current_source_inventory_and_thirteen_completed_generations",
       "scope": "Historical source entries and qualification limits retained; new current_source entries have independent byte identities. Main8dddfe8 has two active tasks; no new release yet."
+    },
+    {
+      "observed_at_utc": "2026-10-21T21:18:06.809525+00:00",
+      "kind": "fifteen_generations_actual_model_tuning_and_eleven_call_ac02_gap",
+      "scope": "Read-only existing public evidence;CI444/55 and focused renderer receipt retained separately. Future dirty source work not qualified by these historical receipts."
+    },
+    {
+      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+      "kind": "prospective_research_identity_receipts_cache_dependency_guards_and_strict_eleven_call_resume",
+      "scope": "Code implementation and public predecessor preflight acquired; no newly accepted AC02 dossier or standalone FINAL GPU execution yet. Full coherent local suite and publication pending."
+    },
+    {
+      "observed_at_utc": "2026-10-21T21:50:29.831158+00:00",
+      "kind": "coherent_complete_local_suite_1440_plus_13",
+      "scope": "187trackedfilesunchanged,firstfailedXMLpreserved,onlytwoauditdocumentsupdatedaftertesting;newpublicationCI/ROMEOchecksnotinferred."
     }
   ]
 }

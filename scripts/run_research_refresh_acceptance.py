@@ -5,6 +5,9 @@ A completed campaign supplies an unchanged, authenticated historical baseline
 and hardware identity. Nothing is compiled, evaluated, integrated or finalized.
 The control asks for an uncovered technique BEFORE the model call; it never
 edits a returned payload or a dossier to obtain the expected refusal/refresh.
+An explicitly pinned resume may continue the observed research refusals or the
+accepted round4 dossier's exact-name coverage gap, using a new complementary
+research request rather than inventing a prior research failure.
 """
 from __future__ import annotations
 
@@ -32,7 +35,7 @@ from optimizer_agent.campaign import (CampaignRuntime, RecordedCodex, WorkloadSu
 from optimizer_agent.campaign_config import CampaignConfig
 from optimizer_agent.codex_backend import CandidateGenerator, CodexBackend, CodexConfig, Proposal, default_codex_executable
 from optimizer_agent.experiment_store import ExperimentStore
-from optimizer_agent.research_service import ResearchConfig, ResearchDossier, ResearchService, NeedsResearch
+from optimizer_agent.research_service import ResearchConfig, ResearchDossier, ResearchService, NeedsResearch, ResearchBlocked
 from optimizer_agent.diagnostics import verify_diagnostic
 from optimizer_agent.search_policy import SearchPolicy
 from use_harness import BufferArgument
@@ -636,6 +639,7 @@ def _inspect_once_resumed_source(directory, *, receipt_sha256, manifest_sha256):
             or receipt.get("status") != "incomplete" or receipt.get("ok") is not False
             or not str(receipt.get("error", "")).startswith("Actual resumed targeted research blocked: ")
             or receipt.get("new_gpu_requests_attempted") != 0 or receipt.get("new_gpu_requests") != 0
+            or receipt.get("hardware_currently_observed") is not False
             or receipt.get("resume_source_unchanged") is not True
             or receipt.get("bootstrap_files_unchanged") is not True or receipt.get("checks")):
         raise ValueError("Resume supports only the completed first-resumption research refusal")
@@ -782,14 +786,194 @@ def _inspect_once_resumed_source(directory, *, receipt_sha256, manifest_sha256):
         "controls_directory":"acceptance-controls-resume-2"}
 
 
+def _inspect_coverage_gap_source(directory, *, receipt_sha256, manifest_sha256):
+    """Authenticate the observed 9+2 calls ending in accepted, insufficient coverage.
+
+    Research succeeded at round4. The helper then refused its separate exact-name
+    control, before any proposal. A new complementary request is therefore an
+    explicit new phase, not a reconstructed research_blocked event.
+    """
+    directory, receipt, manifest, hashes = _resume_archive(directory, receipt_sha256, manifest_sha256)
+    if (receipt.get("kind") != "documentary_research_refresh_resumption_acceptance"
+            or receipt.get("status") != "incomplete" or receipt.get("ok") is not False
+            or receipt.get("error") != "Actual resumed dossier does not cover the exact blocked technique/diagnostic"
+            or receipt.get("new_gpu_requests_attempted") != 0 or receipt.get("new_gpu_requests") != 0
+            or receipt.get("hardware_currently_observed") is not False
+            or receipt.get("resume_source_unchanged") is not True
+            or receipt.get("bootstrap_files_unchanged") is not True or receipt.get("checks")):
+        raise ValueError("Resume supports only the observed accepted round4 dossier coverage gap")
+    intent, chain = read_json(directory / "run-intent.json"), receipt.get("resumption", {})
+    repository = next((p for p in (directory, *directory.parents) if (p / ".git").exists()), REPO).resolve()
+    if (not isinstance(chain, dict) or intent.get("kind") != "before_documentary_resumption"
+            or intent.get("run_id") != receipt.get("run_id") or intent.get("resumption") != chain
+            or not intent.get("source_provenance") or intent["source_provenance"] != receipt.get("source_provenance")
+            or intent.get("new_gpu_requests") != 0 or chain.get("evidence_repository") != str(repository)
+            or chain.get("inherited_completed_model_calls") != 9
+            or chain.get("controls_directory") != "acceptance-controls-resume-2"
+            or chain.get("research_round_derivation") != {
+                "initial_anchor_round":2, "completed_failed_round":3, "next_fresh_round":4}
+            or chain.get("no_initial_proposal_or_diagnostic_replay") is not True):
+        raise ValueError("Round4 resumption intent, provenance or phase differs")
+    relative = chain.get("source_directory")
+    if not isinstance(relative, str) or Path(relative).is_absolute() or ".." in Path(relative).parts:
+        raise ValueError("Nine-call source must be relative to the evidence checkout")
+    previous = repository / relative
+    if (previous == directory or previous.is_relative_to(directory) or directory.is_relative_to(previous)
+            or any(p.is_symlink() for p in (previous, *previous.parents))):
+        raise ValueError("Round4 source and all its ancestors must be separate immutable archives")
+    def pinned(name, role):
+        ref = chain.get(role)
+        if (not isinstance(ref, dict) or set(ref) != {"path", "sha256", "path_base"}
+                or ref.get("path") != str(Path(relative) / name) or ref.get("path_base") != "repository"):
+            raise ValueError("Nine-call source reference has an unsafe or ambiguous role")
+        return ref["sha256"]
+    prior = _inspect_once_resumed_source(previous, receipt_sha256=pinned(RECEIPT, "source_receipt"),
+        manifest_sha256=pinned("proof-sha256.json", "source_proof_manifest"))
+    if (receipt.get("historical_bootstrap") != prior["receipt"]["historical_bootstrap"]
+            or intent.get("internal_campaign_run_id") != prior["origin"]["config"].run_id
+            or receipt.get("inherited_model_calls") != prior["calls"]):
+        raise ValueError("Round4 resumption changed its bootstrap or exact nine-call prefix")
+    for old, copied in ((RECEIPT,"previous-receipt.json"), ("proof-sha256.json","previous-proof.json"),
+            ("events.json","previous-events.json"), ("campaign/acceptance-evidence/initial-dossier.json","previous-dossier.json")):
+        if hashes.get("source-evidence/"+copied) != prior["source_hashes"][old]:
+            raise ValueError("Round4 resumption copied source evidence differs")
+    trial_id = prior["state"]["trial_id"]
+    dossier_name = "campaign/trials/" + trial_id + "/dossier.json"
+    for name, expected in prior["source_hashes"].items():
+        if (name.startswith("campaign/") and name not in ("campaign/experiments.sqlite", dossier_name)
+                and hashes.get(name) != expected):
+            raise ValueError("Round4 resumption changed inherited campaign evidence: " + name)
+    events = read_json(directory / "events.json")
+    if (not isinstance(events, list) or len(events) != 22 or events[:19] != prior["events"]
+            or [row.get("kind") for row in events[19:]] != ["model", "model", "research"]
+            or events[-1].get("payload", {}).get("trial_id") != trial_id
+            or events[-1]["payload"].get("diagnostic_id") != prior["state"]["diagnostic_id"]
+            or events[-1]["payload"].get("targeted_refresh") is not True):
+        raise ValueError("Round4 requires the exact19 prefix and two-call accepted research suffix")
+    db_path = directory / "campaign/experiments.sqlite"
+    if any(db_path.with_name(db_path.name+suffix).exists() for suffix in ("-wal", "-shm")):
+        raise ValueError("Resume requires a settled archived SQLite database")
+    with closing(sqlite3.connect(db_path.as_uri()+"?mode=ro&immutable=1", uri=True)) as db:
+        db.row_factory = sqlite3.Row
+        db.execute("ATTACH DATABASE ? AS prior", ((previous / "campaign/experiments.sqlite").as_uri()+"?mode=ro&immutable=1",))
+        opaque_equal = all(not db.execute(
+            "SELECT EXISTS(SELECT * FROM main."+table+" EXCEPT SELECT * FROM prior."+table+
+            ") OR EXISTS(SELECT * FROM prior."+table+" EXCEPT SELECT * FROM main."+table+")").fetchone()[0]
+            for table in ("campaigns", "trials", "candidates", "candidate_status", "attempts"))
+        db_events = [dict(row, payload=json.loads(row["payload"])) for row in db.execute("SELECT * FROM events ORDER BY event_id")]
+        forbidden = sum(db.execute("SELECT count(*) FROM "+table).fetchone()[0]
+            for table in ("evaluations", "reward_claims", "integration_events"))
+        uncertain = any(json.loads(row[0]).get("model_calls", 0)
+            for row in db.execute("SELECT amount FROM reservations WHERE actual IS NULL"))
+        ledger = ExperimentStore._budget(None, db, prior["origin"]["config"].run_id)
+    if not opaque_equal or db_events != events or forbidden or uncertain or ledger != receipt.get("ledger_usage"):
+        raise ValueError("Round4 SQL/events/pending-trial state differs or is uncertain")
+    calls = receipt.get("model_calls")
+    invocations = read_json(directory / "campaign/acceptance-controls-resume-2/invocations.json")
+    if (not isinstance(calls, list) or len(calls) != 2 or not isinstance(invocations, list) or len(invocations) != 2
+            or any(not isinstance(row, dict) for row in calls+invocations)
+            or [row.get("purpose") for row in invocations] != ["research", "proposal"]
+            or any(row.get("stage") != "research_service" or row.get("kernel_proposal") is not False
+                or row.get("status") != "completed" for row in invocations)):
+        raise ValueError("Round4 requires two completed search/synthesis calls and no proposal call")
+    all_calls = prior["calls"]+calls
+    ids = [row.get("call_id") for row in all_calls]
+    if (any(not isinstance(v,str) or len(v)!=32 or any(c not in "0123456789abcdef" for c in v) for v in ids)
+            or len(set(ids)) != 11 or [row.get("call_id") for row in invocations] != ids[9:]
+            or [row["payload"].get("call_id") for row in events if row["kind"] == "model"] != ids
+            or {path.stem for path in (directory / "campaign/model").glob("*.json")} != set(ids)):
+        raise ValueError("Round4 CLI identities are duplicated, missing or ambiguous")
+    traces = list(prior["traces"])
+    for event, call, invocation in zip(events[19:21], calls, invocations):
+        trace = read_json(directory / "campaign/model" / (call["call_id"]+".json"))
+        if (trace.get("call_id") != call["call_id"] or trace.get("status") != "completed" or trace.get("returncode") != 0
+                or trace.get("purpose") != invocation["purpose"] or trace.get("usage") != call.get("usage")
+                or trace.get("model") != "gpt-6-luna" or trace.get("reasoning_effort") != "max"
+                or digest(trace.get("payload")) != invocation.get("returned_payload_sha256")
+                or event["payload"].get("usage") != call["usage"]
+                or event["payload"].get("purpose") != invocation["purpose"]
+                or event["payload"].get("elapsed_seconds") != call.get("elapsed_seconds")):
+            raise ValueError("Round4 completed CLI payload/usage/event identity differs")
+        traces.append(trace)
+    allowed = {"campaign/acceptance-controls-resume-2/invocations.json", "campaign/runtime-evidence-context.json",
+               *("campaign/model/"+call["call_id"]+".json" for call in calls)}
+    if any(name.startswith("campaign/") and name not in allowed
+            and not (name.startswith("campaign/research/") and Path(name).suffix in (".json", ".txt"))
+            for name in set(hashes)-set(prior["source_hashes"])):
+        raise ValueError("Round4 resumption added a non-research campaign artifact")
+    entry = read_json(directory / "resume-state.json")
+    if (entry.get("phase") != "targeted_research_blocked_reconstructed" or entry.get("state") != prior["state"]
+            or entry.get("source_receipt") != chain["source_receipt"]
+            or entry.get("source_events_sha256") != prior["source_hashes"]["events.json"]
+            or entry.get("derivation") != chain.get("state_derivation")):
+        raise ValueError("Round4 entry is not the exact reconstructed failed round3 state")
+    if (read_json(directory / "campaign/hardware-evidence-context.json") != resume_hardware_context(prior["origin"])
+            or read_json(directory / "campaign/runtime-evidence-context.json") != resume_runtime_context(prior["origin"])
+            or receipt.get("runtime_evidence_context") != {
+                "path":"campaign/runtime-evidence-context.json", "sha256":hashes["campaign/runtime-evidence-context.json"]}):
+        raise ValueError("Round4 historical hardware/runtime annex differs from its pinned archive")
+    inherited, current = prior["receipt"]["ledger_usage"]["spent"], receipt["ledger_usage"]["spent"]
+    delta = {key:current.get(key,0)-inherited.get(key,0) for key in set(current)|set(inherited)}
+    tokens = sum(call["usage"].get("input_tokens",0)+call["usage"].get("output_tokens",0) for call in calls)
+    if (current.get("model_calls") != 11 or delta.get("model_calls") != 2 or delta.get("model_tokens") != tokens
+            or delta != receipt.get("new_usage_delta")):
+        raise ValueError("Round4 combined ledger does not preserve exactly nine plus two calls")
+    dossier_data = read_json(directory / dossier_name)
+    dossier = ResearchDossier.from_dict(dossier_data)
+    if (len(dossier.research_id) != 32 or any(c not in "0123456789abcdef" for c in dossier.research_id)):
+        raise ValueError("Round4 admitted research identity is unsafe")
+    dossier.research_ready(prior["origin"]["contract"]["contract_hash"], prior["intent"]["family"],
+        digest(device_identity(prior["origin"]["properties"])))
+    if (dossier.research_id != events[-1]["payload"].get("research_id")
+            or dossier.research_id == prior["initial_dossier"]["research_id"]
+            or dossier.call_ids != ids[9:] or dossier.diagnostic_ids != [prior["state"]["diagnostic_id"]]
+            or prior["technique"] in dossier.covered_techniques
+            or read_json(directory / "campaign/research" / (dossier.research_id+".json")) != dossier_data):
+        raise ValueError("Round4 admitted dossier identity, diagnostic or exact coverage gap differs")
+    fields = ("covered_techniques", "reference_kernels", "launch_requirements", "dependencies", "applicability_checks",
+        "incompatible_conditions", "missing_evidence", "pmpp_topics", "hypotheses", "expected_effects",
+        "validation_metrics", "negative_search", "original_hypothesis")
+    if (any(traces[-1]["payload"].get(key) != dossier_data.get(key) for key in fields)
+            or dossier.usage != {"input_tokens":sum(call["usage"].get("input_tokens",0) for call in calls),
+                "output_tokens":sum(call["usage"].get("output_tokens",0) for call in calls), "cost_usd":None}):
+        raise ValueError("Round4 admitted dossier differs from its actual synthesis payload")
+    rejected = Proposal.from_payload(prior["traces"][4]["payload"], parent_id="baseline",
+        source_parent_id=prior["candidate_ids"][1], contract_hash=prior["origin"]["contract"]["contract_hash"],
+        family=prior["intent"]["family"])
+    try:
+        dossier.validate_proposal(rejected)
+    except NeedsResearch as error:
+        if "uncovered technique" not in str(error):
+            raise ValueError("Round4 blocked payload now fails a different admission guard") from error
+    else:
+        raise ValueError("Round4 dossier admits the old technique; complementary research is not justified")
+    post_state = dict(prior["state"], research_round=4, research_ready=True,
+        needs_research=False, research_refresh_required=False, error=None)
+    request = {"kind":"explicit_complementary_coverage_refresh", "accepted_research_id":dossier.research_id,
+        "accepted_dossier":{"path":dossier_name, "sha256":hashes[dossier_name]},
+        "missing_techniques":[prior["technique"]], "diagnostic_id":prior["state"]["diagnostic_id"],
+        "source_helper_error":receipt["error"], "prior_research_succeeded":True,
+        "semantic_equivalence_is_not_exact_coverage":True}
+    return {**prior, "directory":directory, "receipt":receipt, "manifest":manifest, "source_hashes":hashes,
+        "events":events, "calls":all_calls, "traces":traces, "state":post_state,
+        "ancestor_archives":[{"directory":prior["directory"], "source_hashes":prior["source_hashes"]},
+                             *prior["ancestor_archives"]],
+        "research_round_derivation":{"initial_anchor_round":2, "completed_failed_round":3,
+            "completed_accepted_round":4, "next_fresh_round":5},
+        "controls_directory":"acceptance-controls-resume-3", "coverage_refresh":request,
+        "resume_entry_phase":"accepted_research_coverage_gap_reconstructed"}
+
+
 def inspect_resume_source(directory, *, receipt_sha256, manifest_sha256):
-    """Only the observed original7 or its first9-call refusal is resumable."""
+    """Only the observed7/9 refusals or the exact accepted11-call gap are resumable."""
     try:
         directory, receipt, _, _ = _resume_archive(directory, receipt_sha256, manifest_sha256)
         if receipt.get("kind") == "documentary_research_refresh_acceptance":
             return _inspect_initial_resume_source(directory, receipt_sha256=receipt_sha256, manifest_sha256=manifest_sha256)
+        if receipt.get("error") == "Actual resumed dossier does not cover the exact blocked technique/diagnostic":
+            return _inspect_coverage_gap_source(directory, receipt_sha256=receipt_sha256, manifest_sha256=manifest_sha256)
         return _inspect_once_resumed_source(directory, receipt_sha256=receipt_sha256, manifest_sha256=manifest_sha256)
-    except (KeyError, TypeError, IndexError, AttributeError, OSError) as error:
+    except (KeyError, TypeError, IndexError, AttributeError, OSError, ResearchBlocked) as error:
         raise ValueError("Malformed or unavailable resume evidence") from error
 
 
@@ -984,11 +1168,15 @@ def prepare_resumption(directory, run_id, source, *, receipt_sha256, manifest_sh
         "run_id":run_id, "submitted":False, "model_invoked":False, "new_gpu_requests":0,
         "source_directory":str(source), "source_receipt_sha256":receipt_sha256,
         "source_proof_manifest_sha256":manifest_sha256,
-        "state_derivation":"Only the observed targeted-research refusal; reconstructed from pinned SQL/events/CLI/diagnostic artifacts, not an old serialized checkpoint",
+        "state_derivation":"Accepted round4 reconstructed from exact research event22 and completed CLI suffix; a new explicit complementary request starts round5" if prepared.get("coverage_refresh")
+            else "Only the observed targeted-research refusal; reconstructed from pinned SQL/events/CLI/diagnostic artifacts, not an old serialized checkpoint",
         "research_round_derivation":prepared.get("research_round_derivation", {
             "initial_anchor_round":2, "completed_failed_round":2, "next_fresh_round":3}),
         "inherited_completed_model_calls":len(prepared["calls"]),
-        "resume_phases":["fresh normal targeted research with authenticated historical hardware annex", "new covered proposal"],
+        "resume_phase":"complementary_coverage_refresh" if prepared.get("coverage_refresh") else "targeted_research_retry",
+        "coverage_refresh":prepared.get("coverage_refresh"),
+        "resume_phases":["explicit complementary coverage request after accepted round4 research" if prepared.get("coverage_refresh")
+            else "fresh normal targeted research with authenticated historical hardware annex", "new covered proposal"],
         "prohibited_replays":["initialize", "select", "initial research", "first three proposals", "diagnose"],
         "scope":"Documentary acceptance; no new GPU request, measurement, integration, finalization or section16 claim"})
     return prepared
@@ -1018,6 +1206,9 @@ def run_resumption_acceptance(directory, run_id, source, *, receipt_sha256, mani
             "initial_anchor_round":2, "completed_failed_round":2, "next_fresh_round":3}),
         "controls_directory":prepared.get("controls_directory", "acceptance-controls-resume"),
         "no_initial_proposal_or_diagnostic_replay":True}
+    if prepared.get("coverage_refresh"):
+        resumption.update(phase="complementary_coverage_refresh", coverage_refresh=prepared["coverage_refresh"],
+            state_derivation="Exact19event source plus two completed CLI calls and accepted research event22 reconstruct successful round4; a separate explicit missing-technique request starts round5, with no old phase replay or invented research refusal")
     intent = {"schema_version":1, "kind":"before_documentary_resumption", "run_id":run_id,
         "internal_campaign_run_id":config.run_id, "resumption":resumption, "new_gpu_requests":0,
         "source_provenance":controller_provenance(REPO, __file__, source / "campaign/config.json")}
@@ -1035,8 +1226,11 @@ def run_resumption_acceptance(directory, run_id, source, *, receipt_sha256, mani
                 ("events.json","previous-events.json"), ("campaign/acceptance-evidence/initial-dossier.json","previous-dossier.json")):
             target = directory / "source-evidence" / new_name
             target.parent.mkdir(exist_ok=True); shutil.copyfile(source / old_name, target)
+        if prepared.get("coverage_refresh"):
+            shutil.copyfile(source / prepared["coverage_refresh"]["accepted_dossier"]["path"],
+                directory / "source-evidence/previous-accepted-dossier.json")
         state = dict(prepared["state"])
-        write_json(directory / "resume-state.json", {"phase":"targeted_research_blocked_reconstructed", "state":state,
+        write_json(directory / "resume-state.json", {"phase":prepared.get("resume_entry_phase", "targeted_research_blocked_reconstructed"), "state":state,
             "derivation":resumption["state_derivation"], "source_receipt":resumption["source_receipt"],
             "source_events_sha256":prepared["source_hashes"]["events.json"]})
         campaign_dir = directory / "campaign"
@@ -1058,13 +1252,26 @@ def run_resumption_acceptance(directory, run_id, source, *, receipt_sha256, mani
         receipt["runtime_evidence_context"] = reference(campaign_dir / "runtime-evidence-context.json", directory)
         if before_environment != (digest(runtime.environment), runtime.contract_hash):
             raise ValueError("Historical hardware annex changed the immutable contract/environment")
+        if prepared.get("coverage_refresh"):
+            post_research_state = dict(state)
+            # This is a declared new request after successful research, not a
+            # fabricated failure or an alteration of the inherited diagnostic.
+            state.update(needs_research=True, research_refresh_required=True)
+            request = {**prepared["coverage_refresh"], "phase":"complementary_coverage_refresh",
+                "source_receipt":resumption["source_receipt"], "post_research_state":post_research_state,
+                "requested_state":dict(state), "next_fresh_round":5,
+                "instruction":"Research the exact missing identifier only if actually read evidence supports it; retain negative findings and alternatives when unsupported. Never relabel the accepted dossier or infer coverage from prose."}
+            write_json(directory / "coverage-refresh-request.json", request)
+            runtime.workload_description["documentary_coverage_refresh_control"] = request
+            receipt["coverage_refresh_request"] = reference(directory / "coverage-refresh-request.json", directory)
         state.update(runtime.research(state))
         if not state.get("research_ready"):
             raise RuntimeError("Actual resumed targeted research blocked: " + str(state.get("error")))
         dossier_path = runtime.trial_dir(state) / "dossier.json"
         renewed = ResearchDossier.from_dict(read_json(dossier_path))
         diagnostic, technique = validated["diagnostic"], prepared["technique"]
-        if (renewed.research_id == validated["initial"].research_id
+        if (renewed.research_id in {validated["initial"].research_id,
+                    prepared.get("coverage_refresh", {}).get("accepted_research_id")}
                 or diagnostic["diagnostic_id"] not in renewed.diagnostic_ids or technique not in renewed.covered_techniques):
             raise RuntimeError("Actual resumed dossier does not cover the exact blocked technique/diagnostic")
         final = generate_control(runtime, controls, state, "newly-covered-proposal",
@@ -1142,7 +1349,7 @@ def main(argv=None):
     parser.add_argument("--run-id", default="research-refresh-" + uuid.uuid4().hex[:12])
     parser.add_argument("--bootstrap-campaign", type=Path)
     parser.add_argument("--bootstrap-result-sha256")
-    parser.add_argument("--resume-from", type=Path, help="Explicitly resume only an authenticated targeted-research refusal into a new directory")
+    parser.add_argument("--resume-from", type=Path, help="Resume an authenticated observed research refusal or accepted round4 exact-coverage gap into a new directory")
     parser.add_argument("--resume-receipt-sha256")
     parser.add_argument("--resume-proof-manifest-sha256")
     parser.add_argument("--family", choices=("tiling", "coalescing", "work_per_thread"))

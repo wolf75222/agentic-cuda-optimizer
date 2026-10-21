@@ -279,6 +279,86 @@ def test_include_path_is_rebased_with_original_option_hash_retained(study,repo,t
     assert rebuilt.artifact_hash == candidate.artifact_hash
 
 
+@pytest.mark.parametrize("prefix", ["-I", "--include-path="])
+def test_angle_header_without_explicit_dependencies_is_portable_after_original_is_removed(study,repo,tmp_path,prefix):
+    root,candidate,db = study
+    group = root/"final-groups/scan-seed-1"
+    include = root/"local-headers"
+    include.mkdir()
+    header = include/"gain.cuh"
+    (candidate.source.parent/"gain.cuh").rename(header)
+    candidate.source.write_text(candidate.source.read_text().replace('#include "gain.cuh"', '#include <gain.cuh>'))
+    changed = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule,candidate.parameters)
+    receipt = json.loads((group/"frozen-candidates.json").read_text())
+    receipt["agent"].update(source_hash=changed._source_hash,artifact_hash=changed.artifact_hash)
+    write(group/"frozen-candidates.json",receipt)
+    path = group/"request-receipts/real-request.json"
+    document = json.loads(path.read_text())
+    document["request"].update(dependencies=[],compiler_options=[prefix+str(include)])
+    write(path,document)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    row = manifest["candidates"][0]
+    assert manifest["status"] == "complete" and any(name.endswith("gain.cuh") for name in row["source_files"])
+    original_header = header.read_bytes()
+    header.unlink()
+    rebuilt,requests,_ = reconstruct_candidate(tmp_path/"output/study-evidence.zip",row["id"],tmp_path/"restored")
+    rebased = Path(requests[0].compiler_options[0].removeprefix(prefix))
+    assert rebased.is_relative_to(tmp_path/"restored") and (rebased/"gain.cuh").read_bytes() == original_header
+    assert requests[0].dependencies == [] and rebuilt.artifact_hash == changed.artifact_hash
+
+
+@pytest.mark.parametrize("option", ["--pre-include=forced.h", "-include"])
+def test_unsupported_forced_include_cannot_create_a_reconstructable_export(study,repo,tmp_path,option):
+    root,candidate,db = study
+    path = root/"final-groups/scan-seed-1/request-receipts/real-request.json"
+    document = json.loads(path.read_text())
+    document["request"]["compiler_options"].append(option)
+    if option == "-include":
+        document["request"]["compiler_options"].append("forced.h")
+    write(path,document)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial" and manifest["candidates"] == []
+    assert any("Forced-include compiler options are unsupported" in row["error"] for row in manifest["errors"])
+
+
+@pytest.mark.parametrize("options", [["-Iheaders"], ["-I", "headers"],
+                                      ["--include-path=headers"], ["--include-path", "headers"]])
+def test_relative_include_without_pinned_compilation_cwd_cannot_be_exported(study,repo,tmp_path,monkeypatch,options):
+    root,candidate,db = study
+    include = tmp_path/"headers"
+    include.mkdir()
+    (candidate.source.parent/"gain.cuh").rename(include/"gain.cuh")
+    candidate.source.write_text(candidate.source.read_text().replace('#include "gain.cuh"', '#include <gain.cuh>'))
+    changed = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule,candidate.parameters)
+    group = root/"final-groups/scan-seed-1"
+    receipt = json.loads((group/"frozen-candidates.json").read_text())
+    receipt["agent"].update(source_hash=changed._source_hash,artifact_hash=changed.artifact_hash)
+    write(group/"frozen-candidates.json",receipt)
+    path = group/"request-receipts/real-request.json"
+    document = json.loads(path.read_text())
+    document["request"].update(dependencies=[],compiler_options=options)
+    write(path,document)
+    monkeypatch.chdir(tmp_path)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial" and manifest["candidates"] == []
+    assert any("Relative compiler include paths require an authenticated compilation working directory" in row["error"]
+               for row in manifest["errors"])
+
+
+def test_macro_include_cannot_create_a_reconstructable_export(study,repo,tmp_path):
+    root,candidate,db = study
+    candidate.source.write_text(candidate.source.read_text().replace('#include "gain.cuh"',
+        '#define HEADER "gain.cuh"\n#include HEADER'))
+    changed = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule,candidate.parameters)
+    group = root/"final-groups/scan-seed-1"
+    receipt = json.loads((group/"frozen-candidates.json").read_text())
+    receipt["agent"].update(source_hash=changed._source_hash,artifact_hash=changed.artifact_hash)
+    write(group/"frozen-candidates.json",receipt)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial" and manifest["candidates"] == []
+    assert any("Nonliteral or unsupported include directive" in row["error"] for row in manifest["errors"])
+
+
 def test_actual_original_commit_snapshot_and_current_bridge_are_archived(study,tmp_path):
     from optimizer_agent.portable_export import REPO,UPSTREAM_COMMIT
     root,candidate,db = study

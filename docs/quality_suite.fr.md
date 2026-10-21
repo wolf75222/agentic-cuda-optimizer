@@ -21,6 +21,14 @@ Les unités de coût restent donc distinctes : sources candidates, trials, répa
 
 Toutes les méthodes reçoivent le même domaine fixe : tailles de recherche complétées par 1, 17 et 63. L’original conserve son tableau exact de lancements par taille. Aucun extrapolateur n’est ajouté à son algorithme. Chaque famille et graine dispose d’une graine finale privée engagée par SHA-256 avant la génération. Seule son empreinte est publiée avant la fermeture des générateurs. Les données finales sont créées après le gel des sources de toutes les méthodes, sur ces mêmes tailles avec de nouvelles entrées, conformément à la section 4.3.
 
+L’étude `quality-20261021-v2` utilise les tailles 1, 17, 63, 64, 128, 256 et 512.
+Le GEMM porte sur des matrices carrées `n × n` ; les autres opérations conservent
+leur contrat à un paramètre `n`, dont la normalisation RMS. Les entrées sont
+synthétiques et reproductibles. Les résultats décrivent ces domaines et les
+latences kernel mesurées par CUDA Events ; ils ne qualifient pas d’autres formes
+ou des charges de production plus grandes. Les contrôles fonctionnels séparés
+restent hors des cohortes comparatives.
+
 Un groupe final ouvre une nouvelle allocation et y évalue le noyau naïf et tous les artefacts figés. L’oracle CPU est indépendant. Tous les candidats passent d’abord la correction et les quatre outils Compute Sanitizer sur tous les cas finaux ; seules les sorties qualifiées sont chronométrées. Les confirmations AB/BA et leur bootstrap suivent les paramètres préengagés. Les comparaisons directes `full` contre l’original, Codex vanilla et chaque ablation sont également fixées avant génération. Les résultats intermédiaires de chaque génération sont conservés mais exclus des gains finaux section 16. Les temps bruts d’allocations différentes ne sont pas mélangés.
 
 Les nouvelles invocations partagent une seule qualification entre les copies exactes d’un artefact dans ce même groupe, contrat, environnement, suite, entrées et contexte de compilation. Chaque alias revérifie ses sources, paramètres, lancement, entrées et identité matérielle puis référence les octets du reçu original par SHA-256, avec une empreinte JSON normalisée distincte ; il ne reçoit ni nouvel identifiant d’évaluation ni coût d’exécution inventé. Un refus ou une qualification incomplète restent des refus ou des inconnus pour tous leurs alias. Hors de ce groupe, la qualification conserve son fonctionnement frais. Une comparaison entre artefacts identiques produit `exact_artifact_identity`, sans chronométrage apparié ni intervalle : elle ne transforme pas le bruit en gain. La réutilisation exige une identité complète GPU/compilateur/harness et un source sans préprocesseur ni options de compilation ; sinon les qualifications restent fraîches et l’identité d’exécution reste inconnue (`artifact_identity_context_unproven`), sans gain dérivé de 1. Les comparaisons entre artefacts différents exigent des identifiants candidats distincts pour préserver les deux côtés de la preuve brute. Les anciens reçus et groupes déjà engagés ne sont pas réécrits.
@@ -69,6 +77,29 @@ La matrice des exigences ne déduit pas une exécution GPU de la présence d’u
 ```json
 {"AC-08":{"implemented":{"ok":true,"scope":"Gardes de correction","evidence":["optimizer_agent/evaluation.py"]},"local_tested":{"ok":true,"scope":"Scénarios nommés dans le reçu pytest","evidence":["receipts/tests.json"]},"romeo_executed":{"ok":false,"scope":"Essai GPU encore en attente","evidence":[]}}}
 ```
+
+Le contrôle autonome `gpu_final_suite_acceptance.py` vérifie le chemin
+`Evaluator.finalize()` lorsque SEARCH et FINAL ont des tailles différentes.
+Il utilise deux lancements du même GEMM naïf, un oracle indépendant, les quatre
+sanitizers et des confirmations AB/BA sur les entrées finales. Ses requêtes
+effectives, paramètres et fichiers d’entrée sont confrontés aux reçus finaux.
+Ses mesures restent hors des cohortes et ne démontrent aucun gain d’optimiseur.
+
+```bash
+# Préparer le plan localement, sans SSH, GPU ou modèle.
+.venv/bin/python scripts/gpu_final_suite_acceptance.py \
+  --output results/final-suite-control --run-id final-suite-control
+# Exécuter ce contrôle dans sa propre allocation ROMEO.
+.venv/bin/python scripts/gpu_final_suite_acceptance.py --run \
+  --output results/final-suite-control --run-id final-suite-control \
+  --execution-config configs/romeo.json
+```
+
+Une intention d’allocation existante interdit une deuxième soumission depuis
+la même sortie. Après interruption, conserver cette sortie et réconcilier la
+session enregistrée avant toute autre action. La présence du plan ou de ses
+tests CPU ne constitue pas une preuve d’exécution ROMEO ; celle-ci exige le
+reçu `final-suite-acceptance.json`, ses requêtes natives et le terminal Slurm.
 
 Chaque phase reste indépendante. Un protocole préparé ou un test simulé ne prouve ni un gain GPU, ni la fin des 144 campagnes avec ablation gloutonne.
 

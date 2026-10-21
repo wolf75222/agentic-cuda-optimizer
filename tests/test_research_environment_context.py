@@ -117,14 +117,16 @@ def test_annotation_never_certifies_missing_compatibility_or_overrides_false_con
         assert "Required driver compatibility documentation" in str(caught.value)
     if failed:
         assert "Required driver/API compatibility is documented" in str(caught.value)
-    dossier_path = next(path for path in (tmp_path / "research").glob("*.json")
-                        if not any(part in path.stem for part in ("-blocked", "-supplied-content", "-web-events")))
+    [blocked_path] = (tmp_path / "research").glob("*-blocked.json")
+    blocked = json.loads(blocked_path.read_text())
+    assert blocked_path.name == f"{blocked['research_id']}-blocked.json"
+    dossier_path = blocked_path.with_name(f"{blocked['research_id']}.json")
     saved = json.loads(dossier_path.read_text())
+    assert saved["research_id"] == blocked["research_id"]
     assert saved["missing_evidence"] == backend.payloads[1]["missing_evidence"]
     assert saved["applicability_checks"] == backend.payloads[1]["applicability_checks"]
     assert saved["environment_fingerprint"] == "immutable-environment"
     assert "environment_field_semantics" not in saved
-    blocked = json.loads(next((tmp_path / "research").glob("*-blocked.json")).read_text())
     assert blocked["retrieval_status"] == "research_blocked" and blocked["error"] in str(caught.value)
 
 

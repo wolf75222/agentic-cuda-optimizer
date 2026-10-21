@@ -394,14 +394,15 @@ def failed_resumption_fixture(tmp_path,monkeypatch):
     schema = {"type":"object","additionalProperties":False,
               "properties":{"explicit_cpu_fixture":{"type":"boolean"}},"required":["explicit_cpu_fixture"]}
     def research(service,workload,parent,action,evidence):
-        service.backend.generate_json("Explicit CPU fixture search, no network",schema,purpose="research")
-        service.backend.generate_json("Explicit CPU fixture synthesis, no sources claimed live",schema,purpose="proposal")
         diagnostic = evidence.get("diagnostic")
         if diagnostic and control["block_targeted"]:
+            service.backend.generate_json("Explicit CPU fixture search, no network",schema,purpose="research")
+            service.backend.generate_json("Explicit CPU fixture synthesis, no sources claimed live",schema,purpose="proposal")
             campaign.write_json(service.directory/"fixture-targeted-blocked.json",{
                 "retrieval_status":"blocked","error":"Explicit CPU fixture missing compatibility evidence"})
             raise ResearchBlocked("Explicit CPU fixture missing compatibility evidence")
-        target = service.directory/("fixture-initial" if not diagnostic else "fixture-renewed")
+        target = service.directory/("fixture-initial" if not diagnostic else
+            "fixture-renewed-"+str(len(control["prompts"])) if control.get("record_admitted_research") else "fixture-renewed")
         target.mkdir(parents=True)
         dossier = research_fixtures.ResearchTests().make_dossier(target)
         dossier.research_id = target.name
@@ -410,7 +411,21 @@ def failed_resumption_fixture(tmp_path,monkeypatch):
         dossier.strategy_family = action["strategy_family"]
         if diagnostic:
             dossier.diagnostic_ids = [diagnostic["diagnostic_id"]]
-            dossier.covered_techniques.append("register_blocking")
+            dossier.covered_techniques.append("Optional register reuse in explanatory prose" if control.get("omit_exact_technique") else "register_blocking")
+        search=service.backend.generate_json("Explicit CPU fixture search, no network",schema,purpose="research")
+        if control.get("record_admitted_research"):
+            dossier.research_id=campaign.digest(str(target))[:32]
+            control["next_synthesis_payload"]={key:dossier.to_dict()[key] for key in (
+                "covered_techniques","reference_kernels","launch_requirements","dependencies","applicability_checks",
+                "incompatible_conditions","missing_evidence","pmpp_topics","hypotheses","expected_effects",
+                "validation_metrics","negative_search","original_hypothesis")}
+        from optimizer_agent.research_service import synthesis_schema
+        synthesis=service.backend.generate_json("Explicit CPU fixture synthesis, no sources claimed live",
+            synthesis_schema(dossier.sources) if control.get("record_admitted_research") else schema,purpose="proposal")
+        if control.get("record_admitted_research"):
+            dossier.call_ids=[search.call_id,synthesis.call_id]
+            dossier.usage={"input_tokens":4,"output_tokens":6,"cost_usd":None}
+            campaign.write_json(service.directory/(dossier.research_id+".json"),dossier.to_dict())
         return dossier
     def popen(command,**options):
         current_schema = campaign.read_json(Path(command[command.index("--output-schema")+1]))
@@ -433,7 +448,7 @@ def failed_resumption_fixture(tmp_path,monkeypatch):
                         source=context["effective_source_parent"]["source"]+f"\n// explicit CPU fixture variation{len(control['prompts'])}\n",
                         kernel=context["contract"]["operation"],techniques=techniques,
                         references=list(current_schema["properties"]["references"]["items"]["enum"]))
-                else:payload={"explicit_cpu_fixture":True}
+                else:payload=control.pop("next_synthesis_payload",{"explicit_cpu_fixture":True})
                 control["prompts"].append(prompt)
                 return "\n".join(json.dumps(row) for row in [
                     {"type":"item.completed","item":{"type":"agent_message","text":json.dumps(payload)}},
@@ -691,3 +706,138 @@ def test_second_resumption_output_cannot_mutate_any_immutable_archive_before_rej
     assert not output.exists() and len(control["prompts"])==9
     for archive,hashes in snapshots.items():
         assert hashes=={str(f.relative_to(archive)):acceptance.sha(f) for f in archive.rglob("*") if f.is_file()}
+
+
+def accepted_coverage_gap_fixture(tmp_path,monkeypatch):
+    initial,source9,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    control.update(block_targeted=False,record_admitted_research=True,omit_exact_technique=True)
+    source11=tmp_path/"accepted-gap"
+    result=acceptance.run_resumption_acceptance(source11,"explicit-cpu-accepted-gap",source9,
+        **resume_pins(source9),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["error"]=="Actual resumed dossier does not cover the exact blocked technique/diagnostic"
+    assert len(result["model_calls"])==2 and len(control["prompts"])==11
+    assert [e["kind"] for e in campaign.read_json(source11/"events.json")][-3:]==["model","model","research"]
+    return initial,source9,source11,control
+
+
+def test_third_resumption_preserves_accepted_round4_then_explicitly_refreshes_round5(tmp_path,monkeypatch):
+    initial,source9,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    snapshots={p:{str(f.relative_to(p)):acceptance.sha(f) for f in p.rglob("*") if f.is_file()}
+        for p in (initial,source9,source11)}
+    prepared=acceptance.inspect_resume_source(source11,**resume_pins(source11))
+    assert len(prepared["calls"])==11 and len(prepared["ancestor_archives"])==2
+    assert prepared["state"]["research_round"]==4 and prepared["state"]["research_ready"] is True
+    assert prepared["state"]["needs_research"] is False and prepared["state"]["error"] is None
+    assert prepared["research_round_derivation"]=={
+        "initial_anchor_round":2,"completed_failed_round":3,"completed_accepted_round":4,"next_fresh_round":5}
+    accepted=prepared["coverage_refresh"]["accepted_dossier"]
+    assert "register_blocking" not in campaign.read_json(source11/accepted["path"])["covered_techniques"]
+    control["omit_exact_technique"]=False
+    output=tmp_path/"third-resumed"
+    result=acceptance.run_resumption_acceptance(output,"explicit-cpu-complement",source11,
+        **resume_pins(source11),executable="explicit-fixture-never-executed")
+    assert result["ok"] is True,result.get("error")
+    assert all(result["checks"].values()) and len(result["checks"])==17
+    assert len(result["inherited_model_calls"])==11 and len(result["model_calls"])==3
+    assert result["ledger_usage"]["spent"]["model_calls"]==14 and result["new_usage_delta"]=={"model_tokens":15,"model_calls":3}
+    assert result["resumption"]["phase"]=="complementary_coverage_refresh"
+    assert result["resumption"]["controls_directory"]=="acceptance-controls-resume-3"
+    assert len(control["prompts"])==14 and result["new_gpu_requests_attempted"]==0
+    entry=campaign.read_json(output/"resume-state.json")
+    assert entry["phase"]=="accepted_research_coverage_gap_reconstructed" and entry["state"]==prepared["state"]
+    request=campaign.read_json(output/"coverage-refresh-request.json")
+    assert request["post_research_state"]==entry["state"] and request["prior_research_succeeded"] is True
+    assert request["requested_state"]==dict(entry["state"],needs_research=True,research_refresh_required=True)
+    assert request["next_fresh_round"]==5 and request["missing_techniques"]==["register_blocking"]
+    assert request["diagnostic_id"]==entry["state"]["diagnostic_id"] and request["requested_state"]["error"] is None
+    assert acceptance.sha(output/"source-evidence/previous-accepted-dossier.json")==accepted["sha256"]
+    assert (output/"campaign/trials"/entry["state"]["trial_id"]/"proposal-2-5.json").is_file()
+    assert result["renewed_research_id"]!=prepared["coverage_refresh"]["accepted_research_id"]
+    events=campaign.read_json(output/"events.json")
+    assert events[:22]==prepared["events"] and [e["kind"] for e in events[22:]]==["model","model","research","model","generation"]
+    for archive,hashes in snapshots.items():
+        assert hashes=={str(f.relative_to(archive)):acceptance.sha(f) for f in archive.rglob("*") if f.is_file()}
+    with pytest.raises(ValueError):acceptance.inspect_resume_source(output,**resume_pins(output))
+
+
+@pytest.mark.parametrize("research_blocked",[False,True])
+def test_complementary_refresh_remains_incomplete_when_fresh_evidence_still_missing(tmp_path,monkeypatch,research_blocked):
+    _,_,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    control["block_targeted"]=research_blocked
+    result=acceptance.run_resumption_acceptance(tmp_path/"third-incomplete","explicit-cpu-negative-complement",source11,
+        **resume_pins(source11),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["status"]=="incomplete" and "checks" not in result
+    assert len(result["inherited_model_calls"])==11 and len(result["model_calls"])==2
+    assert len(control["prompts"])==13 and result["new_gpu_requests_attempted"]==0
+    assert result["error"].startswith("Actual resumed targeted research blocked:" if research_blocked else "Actual resumed dossier does not cover")
+    assert sum(e["kind"]=="generation" for e in campaign.read_json(tmp_path/"third-incomplete/events.json"))==2
+
+
+def test_third_resumption_plan_uses_accepted_state_and_calls_no_backend(tmp_path,monkeypatch):
+    _,_,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    def forbidden(*args,**kwargs):raise AssertionError("Plan must not construct a backend")
+    monkeypatch.setattr(acceptance,"CodexBackend",forbidden)
+    prepared=acceptance.prepare_resumption(tmp_path/"third-plan","explicit-cpu-complement-plan",source11,**resume_pins(source11))
+    plan=campaign.read_json(tmp_path/"third-plan/plan.json")
+    assert plan["resume_phase"]=="complementary_coverage_refresh" and plan["inherited_completed_model_calls"]==11
+    assert plan["coverage_refresh"]==prepared["coverage_refresh"] and plan["research_round_derivation"]["next_fresh_round"]==5
+    assert plan["model_invoked"] is False and plan["new_gpu_requests"]==0
+    assert not (tmp_path/"third-plan/run-intent.json").exists() and len(control["prompts"])==11
+
+
+@pytest.mark.parametrize("defect",["ancestor_pin","prefix","old_call","new_call","usage_delta","payload","phase",
+    "event_suffix","accepted_id","diagnostic","covered_exact","applicability","source_passage","extra_candidate","policy_snapshot","entry_round"])
+def test_third_resumption_rejects_changed_prefix_usage_phase_or_dossier_before_new_call(tmp_path,monkeypatch,defect):
+    _,_,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    receipt=campaign.read_json(source11/acceptance.RECEIPT);intent=campaign.read_json(source11/"run-intent.json")
+    if defect=="ancestor_pin":receipt["resumption"]["source_proof_manifest"]["sha256"]="0"*64
+    elif defect=="old_call":receipt["inherited_model_calls"][0]["usage"]["input_tokens"]+=1
+    elif defect=="new_call":receipt["model_calls"][0]["usage"]["input_tokens"]+=1
+    elif defect=="usage_delta":receipt["new_usage_delta"]["model_tokens"]+=1
+    elif defect=="phase":receipt["resumption"]["research_round_derivation"]["next_fresh_round"]=5
+    elif defect in ("prefix","event_suffix"):
+        p=source11/"events.json";data=campaign.read_json(p);data[0 if defect=="prefix" else -1]["kind"]="research_blocked";campaign.write_json(p,data)
+    elif defect=="payload":
+        p=source11/"campaign/model"/(receipt["model_calls"][-1]["call_id"]+".json")
+        data=campaign.read_json(p);data["payload"]["covered_techniques"].append("register_blocking");campaign.write_json(p,data)
+    elif defect in ("accepted_id","diagnostic","covered_exact","applicability","source_passage"):
+        p=next((source11/"campaign/trials").glob("*/dossier.json"));data=campaign.read_json(p)
+        if defect=="accepted_id":data["research_id"]="../unmanifested"
+        elif defect=="diagnostic":data["diagnostic_ids"]=["different-diagnostic"]
+        elif defect=="covered_exact":data["covered_techniques"].append("register_blocking")
+        elif defect=="applicability":data["applicability_checks"][0]["satisfied"]=False
+        else:data["sources"][0]["passages"][0]["text_sha256"]="0"*64
+        campaign.write_json(p,data)
+    elif defect=="extra_candidate":campaign.write_json(source11/"campaign/trials/extra/proposal-2-4.json",{})
+    elif defect=="entry_round":
+        p=source11/"resume-state.json";data=campaign.read_json(p);data["state"]["research_round"]=4;campaign.write_json(p,data)
+    else:
+        with acceptance.sqlite3.connect(source11/"campaign/experiments.sqlite") as db:
+            db.execute("UPDATE campaigns SET tree_version=tree_version+1")
+    intent["resumption"]=receipt["resumption"]
+    campaign.write_json(source11/acceptance.RECEIPT,receipt);campaign.write_json(source11/"run-intent.json",intent)
+    rewrite_fixture_manifest(source11)
+    with pytest.raises(ValueError):
+        acceptance.run_resumption_acceptance(tmp_path/"third-refused","explicit-cpu-refused-complement",source11,
+            **resume_pins(source11),executable="explicit-fixture-never-executed")
+    assert len(control["prompts"])==11 and not (tmp_path/"third-refused/run-intent.json").exists()
+
+
+@pytest.mark.parametrize("target",["initial","nine","eleven","bootstrap"])
+def test_third_resumption_rejects_destination_inside_any_ancestor_before_writes(tmp_path,monkeypatch,target):
+    initial,source9,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    archives={"initial":initial,"nine":source9,"eleven":source11,"bootstrap":tmp_path/"bootstrap"}
+    output=archives[target]/"must-not-exist"
+    with pytest.raises(ValueError,match="immutable"):
+        acceptance.run_resumption_acceptance(output,"explicit-cpu-destination-refused",source11,**resume_pins(source11))
+    assert not output.exists() and len(control["prompts"])==11
+
+
+@pytest.mark.parametrize("target",["initial","nine","eleven"])
+def test_third_resumption_source_inventory_drift_during_new_calls_revokes_success(tmp_path,monkeypatch,target):
+    initial,source9,source11,control=accepted_coverage_gap_fixture(tmp_path,monkeypatch)
+    control.update(omit_exact_technique=False,inject_source_artifact={"initial":initial,"nine":source9,"eleven":source11}[target]/"unexpected")
+    result=acceptance.run_resumption_acceptance(tmp_path/"third-drift","explicit-cpu-drift",source11,
+        **resume_pins(source11),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["resume_source_unchanged"] is False
+    assert result["checks"]["resume_source_unchanged"] is False and result["new_gpu_requests_attempted"]==0

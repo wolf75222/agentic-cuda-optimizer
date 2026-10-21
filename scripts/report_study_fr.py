@@ -34,6 +34,12 @@ COMMON_FINAL_FREEZE = "work/live/common-final-convolution-1729-freeze-audit.json
 RESEARCH_REFRESH = "results/research-refresh-ac02-20261021/research-refresh-acceptance.json"
 RESEARCH_REFRESH_RESUMED = "results/research-refresh-ac02-resumed-20261021/research-refresh-acceptance.json"
 RESEARCH_REFRESH_RESUMED_2 = "results/research-refresh-ac02-resumed-2-20261021/research-refresh-acceptance.json"
+RESEARCH_REFRESH_RESUMED_3 = "results/research-refresh-ac02-resumed-3-20261021/research-refresh-acceptance.json"
+STANDALONE_FINAL_SUITE = "results/final-suite-acceptance-20261021/final-suite-acceptance.json"
+FINAL_SUITE_CHECKS = ("search_oracle_passed", "distinct_artifacts", "final_oracles_passed", "two_disjoint_final_cases",
+    "confirmation_explicitly_final", "fresh_final_shapes_only", "final_input_buffers_used", "exact_fixed_pairs",
+    "alternating_AB_BA", "all_four_sanitizers_on_final_cases", "sanitizer_requests_use_exact_final_inputs",
+    "finalization_completed", "exposed_holdout_not_reused", "final_authorization_revoked")
 FIRST_GROUP = "quality-20261021-v2.convolution.1729"
 ORIGINAL_CAMPAIGN = "results/quality-study-v2/campaigns/" + FIRST_GROUP + ".true_upstream"
 FINAL_DIRECTORY = "results/quality-study-v2/final-groups/" + FIRST_GROUP
@@ -60,6 +66,8 @@ PROOF_PATHS = (
     ("AC-02 — renouvellement documentaire réel", RESEARCH_REFRESH),
     ("AC-02 — reprise documentaire isolée", RESEARCH_REFRESH_RESUMED),
     ("AC-02 — deuxième reprise documentaire isolée", RESEARCH_REFRESH_RESUMED_2),
+    ("AC-02 — complément documentaire après recherche acceptée", RESEARCH_REFRESH_RESUMED_3),
+    ("Finalisation autonome : mesures sur les cas FINAL distincts", STANDALONE_FINAL_SUITE),
     ("Autotuning réel", "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json"),
     ("Précision, cache et reconstruction", "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json"),
     ("Diagnostic et nouvelle recherche", "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json"),
@@ -382,7 +390,141 @@ def _common_freeze_control(repo, value):
                  "Preuves absentes, partielles ou non authentifiées ; aucun gel, worker ou résultat final qualifié déduit."}
 
 
-def _research_refresh_control(repo, value, path, *, resumed=False):
+def _standalone_final_control(value):
+    result, terminal, provenance = (_mapping(value.get(name)) for name in ("result","worker_terminal","source_provenance"))
+    checks = {"receipt_kind":value.get("schema_version")==1 and value.get("kind")=="standalone_distinct_final_suite_acceptance",
+        "executed_final_controls":value.get("ok") is True and value.get("status")=="final_suite_acceptance_passed" and
+            result.get("ok") is True and _required_checks(result,FINAL_SUITE_CHECKS),
+        "owned_clean_terminal":str(value.get("job_id","")).isdigit() and terminal.get("terminal") is True and
+            terminal.get("state")=="COMPLETED" and terminal.get("exit_code")=="0:0" and str(terminal.get("job_id"))==str(value.get("job_id")),
+        "executed_sources_preserved":_hash(provenance.get("HEAD"),40) and value.get("sources_unchanged") is True and
+            bool(_mapping(provenance.get("sources"))) and all(_hash(item) for item in _mapping(provenance.get("sources")).values()),
+        "no_model_calls":value.get("model_calls")==value.get("model_tokens")==0}
+    verified=all(checks.values())
+    return {"ok":verified if value else None,"authentication_checks":checks,"final_qualified":False,
+        "new_gpu_execution":verified,"status":"Chemin FINAL autonome exécuté et contrôlé — hors cohortes qualité" if verified else
+            "Contrôle FINAL autonome incomplet ou non authentifié" if value else "en attente — aucune exécution du contrôle FINAL autonome",
+        "scope":"Contrôle fonctionnel GPU déclaré : cas FINAL distincts, oracles, paires fraîches, quatre sanitizers et refus de réutilisation. "
+            "Les checks du résultat, les sources et le terminal Slurm sont distincts du plan. Aucun gain de l’optimiseur ni qualification §16 déduit."
+            if verified else "Plan ou contrôle autonome sans résultat qualifié ; aucune mesure GPU, finalisation réussie ou qualification §16 déduite."}
+
+
+def _accepted_eleven_source_checks(repo, value, original, old_files, linked, files, resumption, diagnostic_id, technique):
+    """Authenticate the fixed7→9→11 documentary chain; never qualify old11."""
+    chain = _mapping(original.get("resumption"))
+    if (type(chain.get("inherited_completed_model_calls")) is not int or
+            chain.get("inherited_completed_model_calls") != 9 or
+            _mapping(chain.get("source_receipt")).get("path") != RESEARCH_REFRESH_RESUMED):
+        # Explicitly bound the only supported lower edge before calling its
+        # validator; malformed/cyclic authorities must never recurse.
+        return {"strict_seven_nine_eleven_accepted_lineage":False}
+    root = repo/Path(RESEARCH_REFRESH_RESUMED_2).parent
+    def source_json(name, expected_type=dict):
+        return _verified_json(root, {"path":name,"sha256":old_files.get(name)}, exact=name,
+                              expected_type=expected_type)
+    # This call inspects the lower9-call lineage only. The old11 authority
+    # remains incomplete: its acceptance-success and exact-coverage checks are
+    # false and are deliberately not converted into success here.
+    lower = _research_refresh_control(repo, original, root/"research-refresh-acceptance.json",
+        resumed=True, lineage_diagnostic_id=diagnostic_id)["authentication_checks"]
+    lower_names = ("original_incomplete_authority_preserved", "completed_call_prefix_inherited_without_repetition",
+        "copied_prefix_json_links_preserved", "strict_seven_to_nine_source_chain",
+        "source_nine_exact_failed_round_events_and_calls", "source_nine_method_dossier_refusal_linked",
+        "source_nine_ancestor_copies_and_trace_hashes", "source_nine_declared_ledger_delta",
+        "run_intent_identity", "proof_manifest_json_subset", "historical_bootstrap_preserved",
+        "no_new_gpu_or_current_hardware_claim")
+    events = source_json("events.json",list) or []
+    prior = _verified_json(repo,chain.get("source_receipt"),exact=RESEARCH_REFRESH_RESUMED) or {}
+    prior_proof = _verified_json(repo,chain.get("source_proof_manifest"),
+        exact=str(Path(RESEARCH_REFRESH_RESUMED).parent/"proof-sha256.json")) or {}
+    prior_files = _mapping(prior_proof.get("files"))
+    prefix = _verified_json(repo/Path(RESEARCH_REFRESH_RESUMED).parent,
+        {"path":"events.json","sha256":prior_files.get("events.json")},exact="events.json",expected_type=list) or []
+    calls = _records(original.get("model_calls"))
+    invocations = source_json("campaign/acceptance-controls-resume-2/invocations.json",list) or []
+    traces = [source_json("campaign/model/"+call["call_id"]+".json") or {} for call in calls if _hash(call.get("call_id"),32)]
+    suffix = bool(len(calls)==len(invocations)==len(traces)==2 and
+        [row.get("purpose") for row in invocations]==["research","proposal"] and all(
+        invocation.get("stage")=="research_service" and invocation.get("kernel_proposal") is False and
+        invocation.get("status")=="completed" and invocation.get("call_id")==call.get("call_id")==trace.get("call_id") and
+        trace.get("status")=="completed" and trace.get("returncode")==0 and trace.get("model")=="gpt-6-luna" and
+        trace.get("reasoning_effort")=="max" and trace.get("usage")==call.get("usage") and
+        trace.get("purpose")==invocation.get("purpose") and
+        hashlib.sha256(json.dumps(trace.get("payload"),sort_keys=True,default=str,allow_nan=False).encode()).hexdigest()
+            ==invocation.get("returned_payload_sha256") for call,invocation,trace in zip(calls,invocations,traces)))
+    event = _mapping(events[-1].get("payload")) if events else {}
+    research_id = event.get("research_id")
+    dossiers = [name for name in old_files if isinstance(name,str) and
+                re.fullmatch(r"campaign/trials/[A-Za-z0-9_-]+/dossier\.json",name)]
+    accepted = source_json(dossiers[0]) or {} if len(dossiers)==1 else {}
+    body = source_json("campaign/research/"+research_id+".json") if _hash(research_id,32) else None
+    entry = source_json("resume-state.json") or {}
+    old_entry = _mapping(entry.get("state"))
+    initial = source_json("campaign/acceptance-evidence/initial-dossier.json") or {}
+    synthesis_payload = _mapping(traces[-1].get("payload")) if traces else {}
+    synthesis_fields = ("covered_techniques", "reference_kernels", "launch_requirements", "dependencies",
+        "applicability_checks", "incompatible_conditions", "missing_evidence", "pmpp_topics", "hypotheses",
+        "expected_effects", "validation_metrics", "negative_search", "original_hypothesis")
+    post = dict(old_entry,research_round=4,research_ready=True,needs_research=False,research_refresh_required=False,error=None)
+    requested = dict(post,needs_research=True,research_refresh_required=True)
+    request = linked.get("coverage-refresh-request.json") or {}
+    coverage = _mapping(resumption.get("coverage_refresh"))
+    wanted_coverage = {"kind":"explicit_complementary_coverage_refresh","accepted_research_id":research_id,
+        "accepted_dossier":{"path":dossiers[0],"sha256":old_files.get(dossiers[0])} if len(dossiers)==1 else {},
+        "missing_techniques":[technique],"diagnostic_id":diagnostic_id,"source_helper_error":original.get("error"),
+        "prior_research_succeeded":True,"semantic_equivalence_is_not_exact_coverage":True}
+    spent = _mapping(_mapping(original.get("ledger_usage")).get("spent"))
+    prior_spent = _mapping(_mapping(prior.get("ledger_usage")).get("spent"))
+    delta = _mapping(original.get("new_usage_delta"))
+    return {
+        "strict_seven_nine_eleven_accepted_lineage":all(lower.get(name) is True for name in lower_names),
+        "source_eleven_accepted_research_events_calls":bool(len(prefix)==19 and len(events)==22 and events[:19]==prefix and
+            [row.get("kind") for row in events[19:]]==["model","model","research"] and suffix and
+            original.get("error")=="Actual resumed dossier does not cover the exact blocked technique/diagnostic" and
+            original.get("resume_source_unchanged") is True and original.get("bootstrap_files_unchanged") is True and
+            original.get("new_gpu_requests")==original.get("new_gpu_requests_attempted")==0 and
+            original.get("hardware_currently_observed") is False and not original.get("checks") and
+            event.get("diagnostic_id")==diagnostic_id and event.get("targeted_refresh") is True and
+            bool(old_entry.get("trial_id")) and event.get("trial_id")==old_entry.get("trial_id") and
+            all(_mapping(row.get("payload")).get("call_id")==call.get("call_id") and
+                _mapping(row.get("payload")).get("usage")==call.get("usage") and
+                _mapping(row.get("payload")).get("purpose")==invocation.get("purpose")
+                for row,call,invocation in zip(events[19:21],calls,invocations))),
+        "accepted_dossier_preserved_without_relabel":bool(len(dossiers)==1 and accepted==body and
+            accepted.get("research_id")==research_id and accepted.get("receipt_version")==2 and
+            research_id != initial.get("research_id") and
+            accepted.get("retrieval_status")=="retrieved" and not accepted.get("missing_evidence") and
+            bool(accepted.get("applicability_checks")) and all(row.get("satisfied") is True for row in _records(accepted.get("applicability_checks"))) and
+            diagnostic_id in accepted.get("diagnostic_ids",[]) and technique not in accepted.get("covered_techniques",[]) and
+            accepted.get("call_ids")==[call.get("call_id") for call in calls] and
+            files.get("source-evidence/previous-accepted-dossier.json")==old_files.get(dossiers[0]) and
+            linked.get("source-evidence/previous-accepted-dossier.json")==accepted and
+            value.get("renewed_research_id")!=research_id),
+        "accepted_dossier_matches_exact_synthesis":bool(all(key in accepted and key in synthesis_payload and
+            accepted[key]==synthesis_payload[key] for key in synthesis_fields) and accepted.get("usage")=={
+                "input_tokens":sum(_mapping(call.get("usage")).get("input_tokens",0) for call in calls),
+                "output_tokens":sum(_mapping(call.get("usage")).get("output_tokens",0) for call in calls),"cost_usd":None}),
+        "complementary_refresh_explicit_round4_to5":bool(resumption.get("evidence_repository")==str(repo.resolve()) and
+            _mapping(linked.get("run-intent.json")).get("resumption")==resumption and
+            resumption.get("phase")=="complementary_coverage_refresh" and
+            resumption.get("controls_directory")=="acceptance-controls-resume-3" and coverage==wanted_coverage and
+            resumption.get("research_round_derivation")=={"initial_anchor_round":2,"completed_failed_round":3,"completed_accepted_round":4,"next_fresh_round":5} and
+            value.get("coverage_refresh_request")=={"path":"coverage-refresh-request.json","sha256":files.get("coverage-refresh-request.json")} and
+            all(request.get(key)==item for key,item in wanted_coverage.items()) and
+            request.get("phase")=="complementary_coverage_refresh" and request.get("next_fresh_round")==5 and
+            request.get("source_receipt")==resumption.get("source_receipt") and
+            request.get("post_research_state")==post and request.get("requested_state")==requested and
+            _mapping(linked.get("resume-state.json")).get("phase")=="accepted_research_coverage_gap_reconstructed" and
+            _mapping(linked.get("resume-state.json")).get("state")==post and
+            _mapping(linked.get("resume-state.json")).get("source_events_sha256")==old_files.get("events.json")),
+        "source_eleven_declared_ledger_delta":bool(spent.get("model_calls")==11 and prior_spent.get("model_calls")==9 and
+            delta.get("model_calls")==2 and delta.get("model_tokens")==sum(
+                _mapping(call.get("usage")).get("input_tokens",0)+_mapping(call.get("usage")).get("output_tokens",0) for call in calls) and
+            delta=={key:spent.get(key,0)-prior_spent.get(key,0) for key in set(spent)|set(prior_spent)}),
+    }
+
+
+def _research_refresh_control(repo, value, path, *, resumed=False, lineage_diagnostic_id=None):
     """Authenticate explicit documentary proof files, without reading a database."""
     root = path.parent
     proof = _verified_json(root, value.get("proof_manifest"), exact="proof-sha256.json") or {}
@@ -396,15 +538,18 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
     inherited_calls = _records(value.get("inherited_model_calls")) if resumed else []
     resumption = _mapping(value.get("resumption")) if resumed else {}
     inherited_count = resumption.get("inherited_completed_model_calls")
-    controls_directory = "acceptance-controls-resume-2" if inherited_count == 9 else "acceptance-controls-resume"
+    controls_directory = {9:"acceptance-controls-resume-2",11:"acceptance-controls-resume-3"}.get(
+        inherited_count,"acceptance-controls-resume")
     calls = inherited_calls + new_calls
     if resumed:
         required += ["resume-state.json", "campaign/"+controls_directory+"/invocations.json",
                      "campaign/hardware-evidence-context.json",
                      "source-evidence/previous-receipt.json", "source-evidence/previous-proof.json",
                      "source-evidence/previous-events.json", "source-evidence/previous-dossier.json"]
-        if inherited_count == 9:
+        if inherited_count in (9,11):
             required += ["campaign/runtime-evidence-context.json"]
+        if inherited_count == 11:
+            required += ["coverage-refresh-request.json", "source-evidence/previous-accepted-dossier.json"]
     valid_call_ids = bool(calls) and all(_hash(call.get("call_id"), 32) for call in calls)
     required += ["campaign/model/"+call["call_id"]+".json" for call in calls if
                  _hash(call.get("call_id"), 32)]
@@ -418,7 +563,7 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
     renewed_dossier = linked.get(renewed[0]) or {} if len(renewed) == 1 else {}
     refusal = linked.get("campaign/acceptance-evidence/blocked-refusal.json") or {}
     intent = linked.get("run-intent.json") or {}
-    technique, diagnostic_id = value.get("uncovered_technique"), value.get("diagnostic_id")
+    technique, diagnostic_id = value.get("uncovered_technique"), value.get("diagnostic_id") or lineage_diagnostic_id
     checks = {
         "receipt_kind": value.get("schema_version") == 1 and value.get("kind") == (
             "documentary_research_refresh_resumption_acceptance" if resumed else "documentary_research_refresh_acceptance"),
@@ -451,8 +596,10 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
             _required_checks(refusal, ("needs_research_returned", "exact_semantic_guard_reason", "model_actually_declared_control_technique",
                 "no_new_generation_event", "no_new_candidate_or_source_change", "no_accepted_proposal_file"))),
     }
+    if path == repo/RESEARCH_REFRESH_RESUMED_3:
+        checks["third_authority_requires_eleven_call_source"] = inherited_count == 11
     if resumed:
-        source_path = RESEARCH_REFRESH_RESUMED if inherited_count == 9 else RESEARCH_REFRESH
+        source_path = {9:RESEARCH_REFRESH_RESUMED,11:RESEARCH_REFRESH_RESUMED_2}.get(inherited_count,RESEARCH_REFRESH)
         original = _verified_json(repo, resumption.get("source_receipt"), exact=source_path) or {}
         old_proof = _verified_json(repo, resumption.get("source_proof_manifest"), exact=str(Path(source_path).parent/"proof-sha256.json")) or {}
         old_files = _mapping(old_proof.get("files"))
@@ -461,8 +608,8 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
         checks.update({
             "resumption_required_checks": _required_checks(value, REFRESH_RESUMPTION_CHECKS),
             "original_incomplete_authority_preserved": bool(
-                type(inherited_count) is int and inherited_count in (7, 9) and original.get("kind") == ("documentary_research_refresh_resumption_acceptance"
-                    if inherited_count == 9 else "documentary_research_refresh_acceptance") and original.get("ok") is False and
+                type(inherited_count) is int and inherited_count in (7, 9, 11) and original.get("kind") == ("documentary_research_refresh_resumption_acceptance"
+                    if inherited_count in (9,11) else "documentary_research_refresh_acceptance") and original.get("ok") is False and
                 original.get("status") == "incomplete" and resumption.get("source_directory") == str(Path(source_path).parent) and
                 _mapping(resumption.get("source_receipt")).get("path_base") == "repository" and
                 _mapping(resumption.get("source_proof_manifest")).get("path_base") == "repository" and
@@ -471,9 +618,9 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
                 files.get("source-evidence/previous-receipt.json") == _mapping(resumption.get("source_receipt")).get("sha256") and
                 files.get("source-evidence/previous-proof.json") == _mapping(resumption.get("source_proof_manifest")).get("sha256")),
             "completed_call_prefix_inherited_without_repetition": bool(
-                inherited_count in (7, 9) and inherited_calls == (
+                inherited_count in (7, 9, 11) and inherited_calls == (
                     _records(original.get("inherited_model_calls"))+_records(original.get("model_calls"))
-                    if inherited_count == 9 else original.get("model_calls")) and
+                    if inherited_count in (9,11) else original.get("model_calls")) and
                 len(old_ids) == len(set(old_ids)) == inherited_count and bool(new_ids) and len(new_ids) == len(set(new_ids)) and
                 set(old_ids).isdisjoint(new_ids) and resumption.get("no_initial_proposal_or_diagnostic_replay") is True and
                 all(_hash(call_id, 32) and files.get("campaign/model/"+call_id+".json") ==
@@ -483,7 +630,8 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
                     "campaign/acceptance-evidence/initial-dossier.json", "campaign/acceptance-evidence/blocked-refusal.json",
                     "campaign/acceptance-controls/invocations.json")) and
                 files.get("source-evidence/previous-events.json") == old_files.get("events.json") and
-                files.get("source-evidence/previous-dossier.json") == old_files.get(old_dossiers[0])),
+                files.get("source-evidence/previous-dossier.json") == old_files.get(
+                    initial_name if inherited_count == 11 else old_dossiers[0])),
             "final_call_new_and_initial_controls_inherited": bool(all(_hash(call_id, 32) for call_id in call_ids) and
                 set(call_ids[:3]).issubset(old_ids) and call_ids[3] in new_ids),
         })
@@ -590,6 +738,9 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
                         sum(_mapping(call.get("usage")).get("input_tokens",0)+_mapping(call.get("usage")).get("output_tokens",0) for call in prior_calls) and
                     prior_delta == {key:prior_spent.get(key,0)-anchor_spent.get(key,0) for key in set(prior_spent)|set(anchor_spent)}),
             })
+        if inherited_count == 11:
+            checks.update(_accepted_eleven_source_checks(repo,value,original,old_files,linked,files,
+                resumption,diagnostic_id,technique))
     verified = all(checks.values())
     pending = (root/"run-intent.json").is_file()
     return {"ok": verified if value else None, "authentication_checks": checks,
@@ -692,6 +843,8 @@ def control_receipts(repo):
             RESEARCH_REFRESH: lambda: _research_refresh_control(repo, value, path),
             RESEARCH_REFRESH_RESUMED: lambda: _research_refresh_control(repo, value, path, resumed=True),
             RESEARCH_REFRESH_RESUMED_2: lambda: _research_refresh_control(repo, value, path, resumed=True),
+            RESEARCH_REFRESH_RESUMED_3: lambda: _research_refresh_control(repo, value, path, resumed=True),
+            STANDALONE_FINAL_SUITE: lambda: _standalone_final_control(value),
             DIAGNOSTIC_V2_AUDIT: lambda: _diagnostic_v2_control(repo, value)}
         if relative in authenticators:
             try:
@@ -773,6 +926,16 @@ def execution_evidence_panel(receipts):
     else:
         html += "Aucune réussite de cette deuxième reprise n’est déduite ; les deux autorités précédentes gardent leur statut. "
     html += "Contrôle documentaire sans nouveau GPU ni qualification de performance.</p>"
+    resumed3 = by_path.get(RESEARCH_REFRESH_RESUMED_3, {})
+    html += "<p>Autorité séparée du complément après recherche acceptée : "+escape(resumed3.get("status", "résultat encore inconnu"))+". "
+    if resumed3.get("ok") is True:
+        html += (f"{fmt(resumed3.get('inherited_model_call_count'))} appels hérités ; recherche acceptée au round 4 conservée, "
+                 "complément explicite au round 5 puis proposition effectivement admise. "
+                 "Le dossier précédent sans couverture exacte et les trois autorités incomplètes restent inchangés. ")
+    else:
+        html += ("Aucun succès de ce complément n’est acquis. Une recherche peut soutenir une alternative sans couvrir le nom exact demandé ; "
+                 "son acceptation ne termine pas ce contrôle AC-02. ")
+    html += "Aucun nouveau GPU ni résultat de performance §16 n’en est déduit.</p>"
     return html
 
 

@@ -423,7 +423,7 @@ def _include_options(options,base):
         if value is not None:
             directory = Path(value)
             if not directory.is_absolute():
-                directory = base/directory
+                raise ValueError("Relative compiler include paths require an authenticated compilation working directory")
             result.append({"index":index,"prefix":prefix,"directory":directory.resolve()})
     if previous is not None:
         raise ValueError("Compiler include-path option has no argument")
@@ -465,7 +465,9 @@ def _portable_candidate(writer,study,path,name,receipt,documents,requests):
     source_files = {source}
     dependency_paths = set()
     include_directories = set()
+    from .compile_cache import compilation_manifest, validate_dependency_options
     for location,request,original in related:
+        validate_dependency_options(request.get("compiler_options",[]))
         include_directories.update(row["directory"] for row in _include_options(request.get("compiler_options",[]),original.parent))
         for value in request.get("dependencies",[]):
             dependency = Path(value)
@@ -474,9 +476,8 @@ def _portable_candidate(writer,study,path,name,receipt,documents,requests):
             if not dependency.is_file():
                 raise ValueError("Declared compilation dependency is unavailable: "+str(dependency))
             dependency_paths.add(dependency.resolve())
-    # Reuse the compilation identity's quoted-include discovery. Toolkit angle
-    # includes are represented by the immutable toolchain/environment metadata.
-    from .compile_cache import compilation_manifest
+    # Reuse local quoted/angle discovery. Unresolved toolkit angle includes
+    # remain represented by the immutable toolchain/environment metadata.
     compilation = compilation_manifest(source,dependencies=dependency_paths,
         options=["--include-path="+str(path) for path in sorted(include_directories)],architecture="archive",
         toolchain={"scope":"dependency discovery only; actual options retained per request"})

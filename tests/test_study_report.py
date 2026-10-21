@@ -18,7 +18,8 @@ from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RE
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
 from scripts.report_study_fr import ORIGINAL_CAMPAIGN, FINAL_DIRECTORY, FIRST_GROUP
 from scripts.report_study_fr import comparison_view, direct_comparison_views, direct_comparison_table, plot
-from scripts.report_study_fr import RESEARCH_REFRESH_RESUMED, RESEARCH_REFRESH_RESUMED_2, REFRESH_RESUMPTION_CHECKS
+from scripts.report_study_fr import (RESEARCH_REFRESH_RESUMED, RESEARCH_REFRESH_RESUMED_2,
+    RESEARCH_REFRESH_RESUMED_3, REFRESH_RESUMPTION_CHECKS, STANDALONE_FINAL_SUITE, FINAL_SUITE_CHECKS)
 from optimizer_agent.suite_report import write_report, method_outcome_cells
 
 
@@ -1201,6 +1202,202 @@ def _repin_second_resume(root, previous, new):
         shutil.copy2(p/source,n/"source-evidence"/target)
     save(n/"run-intent.json",{"run_id":new["run_id"],"source_provenance":new["source_provenance"],"new_gpu_requests":0,"resumption":new["resumption"]})
     _documentary_proof(n,new)
+
+
+def third_resumed_documentary_fixture(root):
+    """Invented public11-call accepted alternative, then fresh exact coverage."""
+    anchor,previous,accepted_authority=twice_resumed_documentary_fixture(root)
+    old=root/Path(RESEARCH_REFRESH_RESUMED_2).parent
+    target=root/Path(RESEARCH_REFRESH_RESUMED_3).parent
+    accepted_authority["model_calls"]=accepted_authority["model_calls"][:2]
+    (old/"campaign/model"/(format(12,"032x")+".json")).unlink()
+    invocations=[]
+    for call,purpose in zip(accepted_authority["model_calls"],("research","proposal")):
+        trace=json.loads((old/"campaign/model"/(call["call_id"]+".json")).read_text())
+        invocations.append(dict(call_id=call["call_id"],purpose=purpose,stage="research_service",
+            kernel_proposal=False,status="completed",returned_payload_sha256=hashlib.sha256(
+                json.dumps(trace["payload"],sort_keys=True).encode()).hexdigest()))
+    save(old/"campaign/acceptance-controls-resume-2/invocations.json",invocations)
+    research_id="b"*32
+    accepted={"research_id":research_id,"receipt_version":2,"retrieval_status":"retrieved",
+        "covered_techniques":["supported alternative"],"diagnostic_ids":["diag-fixture"],"missing_evidence":[],
+        "applicability_checks":[{"satisfied":True}],"call_ids":[c["call_id"] for c in accepted_authority["model_calls"]],
+        "reference_kernels":["fixture-code"],"launch_requirements":["future oracle"],"dependencies":[],
+        "incompatible_conditions":["requested transformation not established"],"pmpp_topics":["tiling"],
+        "hypotheses":[{"documented_fact":"explicit CPU fixture","observed_code_property":"alternative",
+            "expected_effect_to_measure":"future timing","source_ids":["fixture-code"]}],
+        "expected_effects":["unmeasured"],"validation_metrics":["independent oracle"],
+        "negative_search":["requested technique unsupported in fixture"],"original_hypothesis":"alternative",
+        "usage":{"input_tokens":sum(c["usage"]["input_tokens"] for c in accepted_authority["model_calls"]),
+            "output_tokens":sum(c["usage"]["output_tokens"] for c in accepted_authority["model_calls"]),"cost_usd":None}}
+    fields=("covered_techniques","reference_kernels","launch_requirements","dependencies","applicability_checks",
+        "incompatible_conditions","missing_evidence","pmpp_topics","hypotheses","expected_effects",
+        "validation_metrics","negative_search","original_hypothesis")
+    synthesis_path=old/"campaign/model"/(accepted_authority["model_calls"][1]["call_id"]+".json")
+    trace=json.loads(synthesis_path.read_text());trace["payload"]={key:accepted[key] for key in fields};save(synthesis_path,trace)
+    invocations[1]["returned_payload_sha256"]=hashlib.sha256(json.dumps(trace["payload"],sort_keys=True).encode()).hexdigest()
+    save(old/"campaign/acceptance-controls-resume-2/invocations.json",invocations)
+    dossier_name="campaign/trials/fixture-trial/dossier.json"
+    save(old/dossier_name,accepted);save(old/("campaign/research/"+research_id+".json"),accepted)
+    events=json.loads((old/"events.json").read_text())
+    events += [dict(event_id=index,kind="model",payload=dict(call,purpose=invocation["purpose"]))
+        for index,call,invocation in zip((20,21),accepted_authority["model_calls"],invocations)]
+    events.append({"event_id":22,"kind":"research","payload":{"research_id":research_id,
+        "diagnostic_id":"diag-fixture","targeted_refresh":True,"trial_id":"fixture-trial"}})
+    save(old/"events.json",events)
+    state={"repair":2,"research_round":3,"research_ready":False,"needs_research":True,
+        "research_refresh_required":True,"error":"prior blocked research","trial_id":"fixture-trial"}
+    save(old/"resume-state.json",{"state":state})
+    tokens=sum(c["usage"]["input_tokens"]+c["usage"]["output_tokens"] for c in accepted_authority["model_calls"])
+    prior_tokens=previous["ledger_usage"]["spent"]["model_tokens"]
+    accepted_authority.update(ok=False,status="incomplete",checks={},
+        error="Actual resumed dossier does not cover the exact blocked technique/diagnostic",
+        ledger_usage={"spent":{"model_calls":11,"model_tokens":prior_tokens+tokens}},
+        new_usage_delta={"model_calls":2,"model_tokens":tokens})
+    for key in ("initial_call_id","compatible_call_id","blocked_call_id","final_call_id","initial_research_id",
+                "renewed_research_id","diagnostic_id","uncovered_technique"):
+        accepted_authority.pop(key,None)
+    _documentary_proof(old,accepted_authority)
+    shutil.copytree(old,target)
+    new=deepcopy(accepted_authority)
+    new.update(run_id="fixture-third-resume",ok=True,status="documentary_research_refresh_resumption_acceptance_passed",
+        checks={name:True for name in REFRESH_CHECKS+REFRESH_RESUMPTION_CHECKS},
+        inherited_model_calls=accepted_authority["inherited_model_calls"]+accepted_authority["model_calls"],model_calls=[],
+        source_provenance={"HEAD":"e"*40},initial_research_id="initial",renewed_research_id="c"*32,
+        diagnostic_id="diag-fixture",uncovered_technique="warp_shuffle",
+        initial_call_id=anchor["model_calls"][2]["call_id"],compatible_call_id=anchor["model_calls"][3]["call_id"],
+        blocked_call_id=anchor["model_calls"][4]["call_id"],final_call_id=format(14,"032x"))
+    for index in (12,13,14):
+        call={"call_id":format(index,"032x"),"usage":{"input_tokens":100,"output_tokens":1}}
+        new["model_calls"].append(call)
+        linked_report_fixture(target,"campaign/model/"+call["call_id"]+".json",dict(call,status="completed",model="gpt-6-luna",reasoning_effort="max"))
+    post=dict(state,research_round=4,research_ready=True,needs_research=False,research_refresh_required=False,error=None)
+    coverage={"kind":"explicit_complementary_coverage_refresh","accepted_research_id":research_id,
+        "accepted_dossier":{"path":dossier_name,"sha256":hashlib.sha256((old/dossier_name).read_bytes()).hexdigest()},
+        "missing_techniques":["warp_shuffle"],"diagnostic_id":"diag-fixture",
+        "source_helper_error":accepted_authority["error"],"prior_research_succeeded":True,
+        "semantic_equivalence_is_not_exact_coverage":True}
+    new["resumption"].update(source_directory=str(Path(RESEARCH_REFRESH_RESUMED_2).parent),
+        source_receipt={"path":RESEARCH_REFRESH_RESUMED_2,"sha256":hashlib.sha256((old/"research-refresh-acceptance.json").read_bytes()).hexdigest(),"path_base":"repository"},
+        source_proof_manifest={"path":str(Path(RESEARCH_REFRESH_RESUMED_2).parent/"proof-sha256.json"),
+            "sha256":hashlib.sha256((old/"proof-sha256.json").read_bytes()).hexdigest(),"path_base":"repository"},
+        inherited_completed_model_calls=11,phase="complementary_coverage_refresh",coverage_refresh=coverage,
+        controls_directory="acceptance-controls-resume-3",research_round_derivation={"initial_anchor_round":2,
+            "completed_failed_round":3,"completed_accepted_round":4,"next_fresh_round":5})
+    save(target/"run-intent.json",{"run_id":new["run_id"],"source_provenance":new["source_provenance"],
+        "new_gpu_requests":0,"resumption":new["resumption"]})
+    save(target/"resume-state.json",{"phase":"accepted_research_coverage_gap_reconstructed","state":post,
+        "source_events_sha256":hashlib.sha256((old/"events.json").read_bytes()).hexdigest()})
+    request=dict(coverage,phase="complementary_coverage_refresh",source_receipt=new["resumption"]["source_receipt"],
+        post_research_state=post,requested_state=dict(post,needs_research=True,research_refresh_required=True),next_fresh_round=5)
+    new["coverage_refresh_request"]=linked_report_fixture(target,"coverage-refresh-request.json",request)
+    for name,source in (("previous-receipt.json","research-refresh-acceptance.json"),("previous-proof.json","proof-sha256.json"),
+        ("previous-events.json","events.json"),("previous-dossier.json","campaign/acceptance-evidence/initial-dossier.json"),
+        ("previous-accepted-dossier.json",dossier_name)):
+        shutil.copy2(old/source,target/"source-evidence"/name)
+    new["initial_dossier_sha256"]=hashlib.sha256((target/"campaign/acceptance-evidence/initial-dossier.json").read_bytes()).hexdigest()
+    new["renewed_dossier_sha256"]=linked_report_fixture(target,dossier_name,{"research_id":"c"*32,
+        "receipt_version":2,"covered_techniques":["warp_shuffle"],"diagnostic_ids":["diag-fixture"]})["sha256"]
+    save(target/"campaign/acceptance-controls-resume-3/invocations.json",[])
+    _documentary_proof(target,new)
+    return accepted_authority,new
+
+
+def test_third_resume_accepted_research_lineage_keeps_all_prior_incomplete_authorities_separate(tmp_path):
+    old,new=third_resumed_documentary_fixture(tmp_path)
+    rows=control_receipts(tmp_path);row=next(r for r in rows if r["path"]==RESEARCH_REFRESH_RESUMED_3)
+    assert row["ok"] is True,{k:v for k,v in row.get("authentication_checks",{}).items() if not v}
+    assert row["inherited_model_call_count"]==11 and row["observed_new_model_call_count"]==3
+    assert all(next(r for r in rows if r["path"]==name)["ok"] is False for name in (
+        RESEARCH_REFRESH,RESEARCH_REFRESH_RESUMED,RESEARCH_REFRESH_RESUMED_2))
+    assert json.loads((tmp_path/RESEARCH_REFRESH_RESUMED_2).read_text())["ok"] is False
+    assert "recherche acceptée au round 4 conservée" in execution_evidence_panel(rows)
+
+
+@pytest.mark.parametrize("fault",["accepted_relabel","accepted_event","old_call_usage","source_pin","round5",
+    "force_requested_state","accepted_copy","ledger","wrong_parent_count","cyclic_source","synthesis_mismatch"])
+def test_third_resume_rejects_tampered_accepted_lineage_or_explicit_refresh(tmp_path,fault):
+    old,new=third_resumed_documentary_fixture(tmp_path)
+    target=tmp_path/Path(RESEARCH_REFRESH_RESUMED_3).parent
+    if fault=="round5":new["resumption"]["research_round_derivation"]["next_fresh_round"]=4
+    elif fault=="source_pin":new["resumption"]["source_receipt"]["sha256"]="0"*64
+    elif fault=="wrong_parent_count":new["resumption"]["inherited_completed_model_calls"]=9
+    elif fault=="old_call_usage":new["inherited_model_calls"][-1]["usage"]["input_tokens"]+=1
+    elif fault=="force_requested_state":
+        path=target/"coverage-refresh-request.json";request=json.loads(path.read_text());request["requested_state"]["research_round"]=5
+        new["coverage_refresh_request"]=linked_report_fixture(target,"coverage-refresh-request.json",request)
+    elif fault=="accepted_copy":save(target/"source-evidence/previous-accepted-dossier.json",{})
+    elif fault=="ledger":old["new_usage_delta"]["model_calls"]=3
+    elif fault=="cyclic_source":
+        old["resumption"]["inherited_completed_model_calls"]=11
+        old["resumption"]["source_receipt"]["path"]=RESEARCH_REFRESH_RESUMED_2
+    elif fault=="synthesis_mismatch":
+        original=tmp_path/Path(RESEARCH_REFRESH_RESUMED_2).parent
+        path=original/"campaign/trials/fixture-trial/dossier.json";dossier=json.loads(path.read_text())
+        dossier["covered_techniques"].append("altered alternative");save(path,dossier)
+        save(original/("campaign/research/"+dossier["research_id"]+".json"),dossier)
+        shutil.copy2(path,target/"source-evidence/previous-accepted-dossier.json")
+        new["resumption"]["coverage_refresh"]["accepted_dossier"]["sha256"]=hashlib.sha256(path.read_bytes()).hexdigest()
+        request=json.loads((target/"coverage-refresh-request.json").read_text())
+        request["accepted_dossier"]=new["resumption"]["coverage_refresh"]["accepted_dossier"]
+        new["coverage_refresh_request"]=linked_report_fixture(target,"coverage-refresh-request.json",request)
+    else:
+        original=tmp_path/Path(RESEARCH_REFRESH_RESUMED_2).parent
+        if fault=="accepted_relabel":
+            path=original/"campaign/trials/fixture-trial/dossier.json";dossier=json.loads(path.read_text())
+            dossier["covered_techniques"].append("warp_shuffle");save(path,dossier)
+        else:
+            path=original/"events.json";events=json.loads(path.read_text());events[-1]["kind"]="research_blocked";save(path,events)
+    # Re-pin fixture authority metadata so shape/phase checks, not a stale
+    # outer receipt alone, must reject these invented negative cases.
+    original=tmp_path/Path(RESEARCH_REFRESH_RESUMED_2).parent
+    _documentary_proof(original,old)
+    new["resumption"]["source_proof_manifest"]["sha256"]=hashlib.sha256((original/"proof-sha256.json").read_bytes()).hexdigest()
+    if fault!="source_pin":new["resumption"]["source_receipt"]["sha256"]=hashlib.sha256((original/"research-refresh-acceptance.json").read_bytes()).hexdigest()
+    for name in ("research-refresh-acceptance.json","proof-sha256.json"):
+        shutil.copy2(original/name,target/"source-evidence"/({"research-refresh-acceptance.json":"previous-receipt.json","proof-sha256.json":"previous-proof.json"}[name]))
+    save(target/"run-intent.json",{"run_id":new["run_id"],"source_provenance":new["source_provenance"],
+        "new_gpu_requests":0,"resumption":new["resumption"]})
+    _documentary_proof(target,new)
+    row=next(r for r in control_receipts(tmp_path) if r["path"]==RESEARCH_REFRESH_RESUMED_3)
+    assert row["ok"] is False
+    if fault=="synthesis_mismatch":assert row["authentication_checks"]["accepted_dossier_matches_exact_synthesis"] is False
+
+
+def test_third_resume_absent_is_unknown_and_does_not_complete_old_accepted_research(tmp_path):
+    third_resumed_documentary_fixture(tmp_path)
+    shutil.rmtree(tmp_path/Path(RESEARCH_REFRESH_RESUMED_3).parent)
+    rows=control_receipts(tmp_path)
+    assert next(r for r in rows if r["path"]==RESEARCH_REFRESH_RESUMED_3)["ok"] is None
+    assert next(r for r in rows if r["path"]==RESEARCH_REFRESH_RESUMED_2)["ok"] is False
+    assert "Aucun succès de ce complément n’est acquis" in execution_evidence_panel(rows)
+
+
+def test_standalone_final_control_absent_or_plan_cannot_prove_execution(tmp_path):
+    row=next(r for r in control_receipts(tmp_path) if r["path"]==STANDALONE_FINAL_SUITE)
+    assert row["ok"] is None and row["new_gpu_execution"] is False
+    save(tmp_path/STANDALONE_FINAL_SUITE,{"schema_version":1,"kind":"standalone_distinct_final_suite_acceptance",
+        "submitted":False,"model_calls":0,"model_tokens":0})
+    row=next(r for r in control_receipts(tmp_path) if r["path"]==STANDALONE_FINAL_SUITE)
+    assert row["ok"] is False and row["new_gpu_execution"] is False
+
+
+@pytest.mark.parametrize("fault",[None,"missing_check","failed_terminal","different_job","model_call","sources_changed"])
+def test_standalone_final_control_requires_result_checks_owned_terminal_and_sources(tmp_path,fault):
+    value={"schema_version":1,"kind":"standalone_distinct_final_suite_acceptance","ok":True,
+        "status":"final_suite_acceptance_passed","job_id":"123","model_calls":0,"model_tokens":0,
+        "sources_unchanged":True,"source_provenance":{"HEAD":"a"*40,"sources":{"fixture.py":"b"*64}},
+        "worker_terminal":{"job_id":"123","terminal":True,"state":"COMPLETED","exit_code":"0:0"},
+        "result":{"ok":True,"checks":{name:True for name in FINAL_SUITE_CHECKS}}}
+    if fault=="missing_check":value["result"]["checks"].pop("final_input_buffers_used")
+    elif fault=="failed_terminal":value["worker_terminal"]["state"]="FAILED"
+    elif fault=="different_job":value["worker_terminal"]["job_id"]="456"
+    elif fault=="model_call":value["model_calls"]=1
+    elif fault=="sources_changed":value["sources_unchanged"]=False
+    save(tmp_path/STANDALONE_FINAL_SUITE,value)
+    row=next(r for r in control_receipts(tmp_path) if r["path"]==STANDALONE_FINAL_SUITE)
+    assert row["ok"] is (fault is None) and row["new_gpu_execution"] is (fault is None)
+    assert row["final_qualified"] is False
 
 
 def test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain(tmp_path):
