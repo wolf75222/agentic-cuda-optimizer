@@ -285,3 +285,30 @@ def test_tuning_explicit_source_and_launch_bindings(tmp_path):
     assert concrete.parameters == {"TILE":32}
     with pytest.raises(ValueError,match="one existing"):
         tuner.materialize(dict(template,source="__global__ void k() {}"),{"TILE":32})
+
+
+@pytest.mark.parametrize("timeout_mode,expected_count", [("absent",3),("none",3),("explicit",1)])
+def test_tuning_has_no_implicit_cumulative_elapsed_time_gate(monkeypatch,tmp_path,timeout_mode,expected_count):
+    from optimizer_agent import autotuning
+    clock = {"seconds":0.0}
+    monkeypatch.setattr(autotuning.time,"monotonic",lambda:clock["seconds"])
+    class Evaluator:
+        measurements = 0
+        def validate(self,candidate,suite):
+            clock["seconds"] += 600.0  # Each configuration takes longer than the old implicit five-minute cap.
+            return {"ok":True}
+        def benchmark(self,candidate):
+            self.measurements += 1
+            return {"evaluation_id":f"fresh-{self.measurements}","cases":{"a":{"latency_ms":1.0}}}
+    def materialize(template,parameters):
+        return {"candidate_id":str(parameters["block"]),"parameters":parameters,
+                "launch_rule":{"block":[parameters["block"],1,1]}}
+    tuner = Autotuner(Evaluator(),materialize=materialize,work_directory=tmp_path)
+    controls = {"configurations":3,"compilations":3}
+    if timeout_mode != "absent":
+        controls["wall_seconds"] = 300 if timeout_mode == "explicit" else None
+    result = tuner.search({}, {"block":[32,64,128]},controls)
+    assert len(result.configurations) == expected_count
+    assert clock["seconds"] >= 600
+    assert result.termination_reason == ("wall_budget" if timeout_mode == "explicit" else "domain_exhausted")
+    assert result.remeasurement["evaluation_id"] != result.evaluation["evaluation_id"]

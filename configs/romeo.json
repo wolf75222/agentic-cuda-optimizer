@@ -3,12 +3,12 @@
   "host": "romeo",
   "remote_root": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021",
   "account": "r250127",
-  "partition": "instant",
+  "partition": "short",
   "gres": "gpu:h100:1",
   "constraint": "armgpu",
   "cpus": 4,
   "memory": "8G",
-  "walltime": "01:00:00",
+  "walltime": "24:00:00",
   "modules": [
     "cuda/12.6"
   ],

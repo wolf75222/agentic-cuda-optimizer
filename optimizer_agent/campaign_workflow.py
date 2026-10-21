@@ -24,6 +24,8 @@ class CampaignState(TypedDict, total=False):
     termination_reason: str | None
     certification_status: str | None
     finished: bool
+    diagnostic_id: str | None
+    research_refresh_required: bool
 
 
 class Runtime(Protocol):
@@ -73,6 +75,7 @@ def build_campaign_graph(runtime: Runtime, checkpointer: Any):
     graph.add_node("experiment", build_experiment_graph(runtime))
     graph.add_node("integrate", runtime.integrate)
     graph.add_node("diagnose", runtime.diagnose)
+    graph.add_node("diagnose_research", runtime.diagnose)
     graph.add_node("finalize", runtime.finalize)
     graph.add_edge(START, "initialize")
 
@@ -91,7 +94,7 @@ def build_campaign_graph(runtime: Runtime, checkpointer: Any):
         # One additional dossier can cover a newly declared technique. Failure
         # to support a second proposal suspends this trial instead of spinning.
         if state.get("needs_research") and state.get("research_round", 0) < 2:
-            return "research"
+            return "diagnose_research"
         return "integrate"
 
     def diagnosed(state):
@@ -100,7 +103,8 @@ def build_campaign_graph(runtime: Runtime, checkpointer: Any):
     graph.add_conditional_edges("initialize", initialized, {"end": END, "finalize": "finalize", "select": "select"})
     graph.add_conditional_edges("select", selected, {"finalize": "finalize", "research": "research"})
     graph.add_conditional_edges("research", researched, {"experiment": "experiment", "integrate": "integrate"})
-    graph.add_conditional_edges("experiment", experimented, {"research": "research", "integrate": "integrate"})
+    graph.add_conditional_edges("experiment", experimented, {"diagnose_research": "diagnose_research", "integrate": "integrate"})
+    graph.add_edge("diagnose_research", "research")
     graph.add_edge("integrate", "diagnose")
     graph.add_conditional_edges("diagnose", diagnosed, {"finalize": "finalize", "select": "select"})
     graph.add_edge("finalize", END)

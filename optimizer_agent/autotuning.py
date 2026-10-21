@@ -159,13 +159,16 @@ class Autotuner:
             budget = {"configurations":budget}
         count_limit = int(budget.get("configurations",budget.get("local_configurations",0)))
         compilation_limit = int(budget.get("compilations",count_limit))
-        timeout = float(budget.get("wall_seconds",300))
-        if count_limit < 0 or compilation_limit < 0 or timeout <= 0:
-            raise ValueError("Autotuning budgets must be nonnegative with a positive timeout")
+        timeout = budget.get("wall_seconds")
+        if timeout is not None:
+            timeout = float(timeout)
+        if (count_limit < 0 or compilation_limit < 0 or
+                (timeout is not None and (not math.isfinite(timeout) or timeout <= 0))):
+            raise ValueError("Autotuning counts must be nonnegative; an explicit timeout must be finite and positive")
         if not parameter_space or any(not values for values in parameter_space.values()):
             raise ValueError("Parameter domains must be nonempty")
         limits = hardware_limits or {}
-        start = time.monotonic()
+        start = time.monotonic() if timeout is not None else None
         observations,candidates = [],{}
         best,best_measurement,best_score = None,None,float("inf")
         compiled = 0
@@ -177,7 +180,7 @@ class Autotuner:
             if len(observations) >= count_limit:
                 termination = "configuration_budget"
                 break
-            if time.monotonic()-start >= timeout:
+            if timeout is not None and time.monotonic()-start >= timeout:
                 termination = "wall_budget"
                 break
             parameters = dict(zip(parameter_space,values))

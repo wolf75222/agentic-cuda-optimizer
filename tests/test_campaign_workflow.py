@@ -81,3 +81,32 @@ def test_config_stable_safe_identifiers():
         CampaignConfig(run_id="../escape")
     with pytest.raises(ValueError, match="positive integer"):
         CampaignConfig(max_trials=0)
+
+
+def test_uncovered_proposal_is_diagnosed_before_current_trial_targeted_research(tmp_path):
+    class UnsupportedTechnique(FakeRuntime):
+        max_repairs = 0
+        def select(self, state):
+            if state["trials_done"]:
+                return {"termination_reason":"done"}
+            return {"trial_id":"one", "research_round":0, "repair":0, "error":None}
+        def generate(self, state):
+            self.calls.append("generate")
+            if self.calls.count("generate") == 1:
+                return {"needs_research":True,"error":"uncovered technique","valid":False}
+            assert state["diagnostic_id"] == "fixture-diagnostic"
+            return {"candidate_id":"candidate","needs_research":False,"error":None}
+        def diagnose(self, state):
+            if state.get("needs_research"):
+                self.calls.append("diagnose_research")
+                return {"diagnostic_id":"fixture-diagnostic", "research_refresh_required":True}
+            return {}
+        def evaluate(self, state):
+            self.calls.append("evaluate")
+            return {"valid":True,"retryable":False}
+    runtime = UnsupportedTechnique()
+    with SqliteSaver.from_conn_string(str(tmp_path/"targeted.sqlite")) as checkpoints:
+        graph = build_campaign_graph(runtime, checkpoints)
+        final = graph.invoke({"run_id":"targeted"},{"configurable":{"thread_id":"targeted"},"recursion_limit":50})
+    assert final["finished"] and final["trials_done"] == 1
+    assert runtime.calls == ["research","generate","diagnose_research","research","generate","evaluate","integrate"]

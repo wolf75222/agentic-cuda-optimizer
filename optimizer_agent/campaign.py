@@ -35,6 +35,7 @@ from .treequest_eligibility import NoEligibleActions
 from .research_service import ResearchService, ResearchConfig, ResearchDossier, ResearchBlocked
 from .autotuning import Autotuner
 from .pmpp_guidance import PMPP_GUIDANCE
+from .diagnostics import build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary
 from benchmark_workloads import WorkloadSuite
 from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
 from execution_backend import SlurmBackend, SlurmConfig
@@ -88,10 +89,18 @@ class RecordedCodex:
 
 
 class CampaignRuntime:
-    def __init__(self, config, runner, directory, *, model_backend=None):
+    def __init__(self, config, runner, directory, *, model_backend=None, generation_only=False):
         bootstrap_started = time.monotonic()
         self.config, self.runner, self.directory = config, runner, Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
+        self.generation_only = bool(generation_only)
+        mode_path = self.directory / "execution-mode.json"
+        execution_mode = {"generation_only": self.generation_only}
+        if mode_path.exists() and read_json(mode_path) != execution_mode:
+            raise ValueError("Finalization policy changed at resume; use a new run_id")
+        if self.generation_only and (self.directory / "holdout-exposed.json").exists():
+            raise ValueError("Generation-only campaign cannot reuse an exposed final suite")
+        write_json(mode_path, execution_mode)
         self.max_repairs = config.max_repairs_per_trial
         config_path = self.directory / "config.json"
         if config_path.exists() and read_json(config_path) != json.loads(json.dumps(config.to_dict())):
@@ -217,6 +226,26 @@ class CampaignRuntime:
     def trial(self, state):
         return read_json(self.trial_dir(state) / "trial.json")
 
+    def diagnostic_context(self, state, trial=None):
+        trial = trial or self.trial(state)
+        diagnostic_id = state.get("diagnostic_id") or trial.get("diagnostic_id")
+        if not diagnostic_id:
+            return None
+        return verify_diagnostic(read_json(self.directory / "diagnostics" / (diagnostic_id + ".json")),
+            self.directory, contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash)
+
+    def generation_evidence(self, state, trial=None):
+        evidence = {"previous_error": state.get("error"),
+                    "diagnostic": self.diagnostic_context(state, trial)}
+        if state.get("candidate_id") and state.get("repair", 0) > 0:
+            path = self.trial_dir(state) / f'evaluation-{state["candidate_id"]}.json'
+            if path.exists():
+                receipt = read_json(path)
+                evidence["previous_evaluation"] = evaluation_summary(receipt)
+                evidence["previous_evaluation_reference"] = evidence_reference(path, self.directory,
+                    kind="evaluation", identity=receipt.get("evaluation_id"))
+        return evidence
+
     def initialize(self, state):
         self.store.event(self.config.run_id, "checkpoint", {"phase": "initialize", "resume": bool(state.get("initialized"))})
         return {"initialized": True, "trials_done": state.get("trials_done", 0), "error": None}
@@ -247,11 +276,16 @@ class CampaignRuntime:
         trial_path = directory / "trial.json"
         if not trial_path.exists():
             write_json(trial_path, {"trial_id": trial_id, "parent": trial.parent_state,
-                                  "action": str(trial.action), "selected_at": time.time()})
+                                  "action": str(trial.action), "selected_at": time.time(),
+                                  "diagnostic_id": state.get("diagnostic_id"),
+                                  "research_refresh_required": state.get("research_refresh_required", False)})
+        selected_trial = read_json(trial_path)
         self.store.event(self.config.run_id, "selection", read_json(trial_path))
         return {"trial_id": trial_id, "candidate_id": None, "repair": 0, "research_round": 0,
                 "research_ready": False, "needs_research": False, "valid": False,
-                "retryable": False, "error": None, "termination_reason": None}
+                "retryable": False, "error": None, "termination_reason": None,
+                "diagnostic_id": selected_trial.get("diagnostic_id"),
+                "research_refresh_required": selected_trial.get("research_refresh_required", False)}
 
     def research(self, state):
         trial = self.trial(state)
@@ -261,16 +295,28 @@ class CampaignRuntime:
             return {"research_ready": True, "research_round": round_number, "needs_research": False, "error": None}
         path = self.trial_dir(state) / "dossier.json"
         try:
-            if path.exists() and not state.get("needs_research"):
+            diagnostic = self.diagnostic_context(state, trial)
+            refresh = bool(state.get("needs_research") or state.get("research_refresh_required"))
+            if path.exists() and not refresh:
                 dossier = ResearchDossier.from_dict(read_json(path))
                 dossier.research_ready(self.contract_hash, trial["action"], self.environment_hash)
-            else:
+                if (diagnostic and diagnostic["requires_targeted_research"] and
+                        diagnostic["diagnostic_id"] not in dossier.diagnostic_ids):
+                    refresh = True
+            if not path.exists() or refresh:
                 dossier = self.research_service.prepare(self.workload_description, trial["parent"],
                     {"strategy_family": trial["action"]},
-                    {"environment_fingerprint": self.environment_hash, "diagnostic": state.get("error")})
+                    {"environment_fingerprint": self.environment_hash, "diagnostic": diagnostic,
+                     "previous_error": state.get("error")})
+                dossier.research_ready(self.contract_hash, trial["action"], self.environment_hash)
+                if (diagnostic and diagnostic["requires_targeted_research"] and
+                        diagnostic["diagnostic_id"] not in dossier.diagnostic_ids):
+                    raise ResearchBlocked("Targeted dossier does not identify its triggering diagnostic")
                 write_json(path, dossier.to_dict())
-            self.store.event(self.config.run_id, "research", {"trial_id": state["trial_id"], "research_id": dossier.research_id})
-            return {"research_ready": True, "research_round": round_number, "needs_research": False, "error": None}
+            self.store.event(self.config.run_id, "research", {"trial_id": state["trial_id"], "research_id": dossier.research_id,
+                "diagnostic_id": diagnostic["diagnostic_id"] if diagnostic else None, "targeted_refresh": refresh})
+            return {"research_ready": True, "research_round": round_number, "needs_research": False,
+                    "research_refresh_required": False, "error": None}
         except (ResearchBlocked, BudgetExceeded, RuntimeError, ValueError) as error:
             self.store.event(self.config.run_id, "research_blocked", {"trial_id": state["trial_id"], "error": str(error)})
             return {"research_ready": False, "research_round": round_number, "error": str(error)}
@@ -287,6 +333,10 @@ class CampaignRuntime:
             if not experimental and not (self.trial_dir(state) / "dossier.json").exists():
                 return {"needs_research": True, "error": "needs_research: missing durable dossier", "valid": False}
             dossier = None if experimental else ResearchDossier.from_dict(read_json(self.trial_dir(state) / "dossier.json"))
+            evidence = self.generation_evidence(state, trial)
+            if not experimental and evidence["diagnostic"] and evidence["diagnostic"]["requires_targeted_research"]:
+                if evidence["diagnostic"]["diagnostic_id"] not in dossier.diagnostic_ids:
+                    return {"needs_research": True, "error": "needs_research: diagnostic lacks an applicable targeted dossier", "valid": False}
             source_parent = (self.store.get_candidate_source(state["candidate_id"], self.config.run_id)
                              if state.get("repair", 0) > 0 and state.get("candidate_id") else trial["parent"])
             if path.exists():
@@ -311,7 +361,7 @@ class CampaignRuntime:
                     proposal = self.generator.propose_unresearched(trial["parent"], {"strategy_family": trial["action"]},
                         contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash,
                         experimental_mode="ablation_no_research", source_parent=source_parent,
-                        evidence={"previous_error": state.get("error")}, workload=self.workload_description)
+                        evidence=evidence, workload=self.workload_description)
                     data = asdict(proposal)
                 else:
                     proposal = self.generator.propose(trial["parent"], {"strategy_family": trial["action"]}, dossier,
@@ -319,7 +369,7 @@ class CampaignRuntime:
                         source_parent=source_parent,
                         include_pmpp=self.config.experimental_mode != "ablation_no_pmpp",
                         experimental_mode="ablation_no_pmpp" if self.config.experimental_mode == "ablation_no_pmpp" else None,
-                        evidence={"previous_error": state.get("error")}, workload=self.workload_description)
+                        evidence=evidence, workload=self.workload_description)
                     data = asdict(proposal)
                 write_json(path, data)
             # Validate the complete contract and covered techniques again on replay.
@@ -384,7 +434,7 @@ class CampaignRuntime:
 
                     tuner.materialize = archive_variant
                     tuned = tuner.search(proposal, space, {"configurations": self.config.max_configurations_per_trial,
-                        "compilations": self.config.max_configurations_per_trial, "wall_seconds": 300}, hardware_limits=self.properties)
+                        "compilations": self.config.max_configurations_per_trial}, hardware_limits=self.properties)
                     write_json(self.trial_dir(state) / "autotuning.json", {"configurations": [asdict(x) for x in tuned.configurations],
                         "termination_reason": tuned.termination_reason,
                         "winner": tuned.best_candidate.candidate_id if tuned.best_candidate else None})
@@ -471,10 +521,19 @@ class CampaignRuntime:
         return result
 
     def diagnose(self, state):
-        self.store.event(self.config.run_id, "diagnostic", {"trial_id": state["trial_id"], "valid": state.get("valid"),
-                         "error": state.get("error"), "pmpp_guidance": PMPP_GUIDANCE if self.config.experimental_mode != "ablation_no_pmpp" else None})
+        directory = self.trial_dir(state)
+        stage = "result" if (directory / "result.json").exists() else "proposal"
+        marker = directory / ("diagnostic-" + digest({"stage": stage,
+            "candidate_id": state.get("candidate_id"), "repair": state.get("repair", 0),
+            "research_round": state.get("research_round", 0), "error": state.get("error"),
+            "needs_research": state.get("needs_research", False)})[:24] + ".json")
+        if marker.exists():
+            diagnostic = verify_diagnostic(read_json(marker), self.directory,
+                contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash)
+            return {"diagnostic_id": diagnostic["diagnostic_id"],
+                    "research_refresh_required": diagnostic["requires_targeted_research"]}
         if self.config.profile and state.get("valid"):
-            path = self.trial_dir(state) / "profile.json"
+            path = directory / "profile.json"
             if not path.exists():
                 reservation = "profile-"+uuid.uuid4().hex
                 self.store.reserve(self.config.run_id, reservation, {}, purpose="profile")
@@ -482,19 +541,115 @@ class CampaignRuntime:
                 candidate = self.candidate(state["candidate_id"])
                 case = self.evaluator._suites["performance"][-1]
                 request = self.evaluator._request(candidate, case)
-                profile = self.profiler.profile("profile-"+uuid.uuid4().hex, request,
-                    question="Is the selected single-kernel strategy limited by occupancy, memory throughput or instruction execution?",
-                    metrics=["gpu__time_duration.sum", "sm__throughput.avg.pct_of_peak_sustained_elapsed", "dram__throughput.avg.pct_of_peak_sustained_elapsed"])
+                try:
+                    profile = self.profiler.profile("profile-"+uuid.uuid4().hex, request,
+                        question="Why did this strategy's measured case latencies and paired confirmation support or contradict its hypothesis: occupancy, memory throughput or instruction execution?",
+                        metrics=["gpu__time_duration.sum", "sm__throughput.avg.pct_of_peak_sustained_elapsed", "dram__throughput.avg.pct_of_peak_sustained_elapsed"])
+                except Exception as error:
+                    profile = {"ok": False, "error": str(error), "diagnostic_only": True,
+                               "ranking_eligible": False}
                 write_json(path, profile)
                 self.store.reconcile(self.config.run_id, reservation, {"gpu_seconds": time.monotonic()-started})
                 self.store.event(self.config.run_id, "profile", {"trial_id": state["trial_id"], "ok": profile.get("ok"), "diagnostic_only": True})
-        return {}
+        trial, references = self.trial(state), []
+        candidate = self.candidate(state["candidate_id"]) if state.get("candidate_id") else None
+        candidate_state = self.candidate_state(candidate) if candidate else None
+        if candidate:
+            references.append(evidence_reference(candidate.source, self.directory,
+                kind="candidate_source", identity=candidate.candidate_id))
+        references.append(evidence_reference(directory / "trial.json", self.directory,
+            kind="trial", identity=state["trial_id"]))
+
+        def receipt(path, kind, identity_key=None):
+            if not path.exists():
+                return None
+            value = read_json(path)
+            references.append(evidence_reference(path, self.directory, kind=kind,
+                identity=value.get(identity_key) if identity_key else None))
+            return value
+
+        proposal_path = directory / f'proposal-{state.get("repair", 0)}-{state.get("research_round", 0)}.json'
+        if not proposal_path.exists():
+            paths = sorted(directory.glob(f'proposal-{state.get("repair", 0)}-*.json'))
+            proposal_path = paths[-1] if paths else proposal_path
+        proposal = receipt(proposal_path, "proposal", "call_id")
+        if proposal is None and state.get("needs_research"):
+            calls = getattr(self.raw_backend, "calls", [])
+            if calls and isinstance(calls[-1].payload, dict) and "source" in calls[-1].payload:
+                proposal = {**calls[-1].payload, "call_id": calls[-1].call_id,
+                            "execution_status": "blocked_before_execution"}
+                trace_dir = getattr(getattr(self.raw_backend, "config", None), "trace_dir", None)
+                trace = Path(trace_dir) / (calls[-1].call_id + ".json") if trace_dir else None
+                if trace and trace.is_file():
+                    references.append(evidence_reference(trace, self.directory,
+                        kind="blocked_proposal_model_receipt", identity=calls[-1].call_id))
+        measurement = receipt(directory / f'evaluation-{state.get("candidate_id")}.json', "evaluation", "evaluation_id")
+        confirmation = receipt(directory / "confirmation.json", "confirmation", "evaluation_id")
+        profile = receipt(directory / "profile.json", "profile")
+        history = []
+        for result_path in (self.directory / "trials").glob("*/result.json"):
+            trial_path = result_path.parent / "trial.json"
+            if not trial_path.exists():
+                continue
+            result, recorded_trial = read_json(result_path), read_json(trial_path)
+            tell = result.get("tell") or {}
+            history.append({"trial_id": recorded_trial["trial_id"], "strategy_family": recorded_trial["action"],
+                "selected_at": recorded_trial["selected_at"], "valid": tell.get("valid"),
+                "evaluation_id": tell.get("evaluation_id"), "promoted": bool(result.get("promotion"))})
+            references.append(evidence_reference(result_path, self.directory,
+                kind="trial_result", identity=recorded_trial["trial_id"]))
+        history.sort(key=lambda result: result["selected_at"])
+        diagnostic = build_diagnostic(run_id=self.config.run_id, trial_id=state["trial_id"],
+            candidate_id=state.get("candidate_id"), strategy_family=trial["action"],
+            contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash,
+            stage=stage, error=state.get("error"), needs_research=state.get("needs_research", False),
+            proposal=proposal, measurement=measurement, confirmation=confirmation, profile=profile,
+            previous_results=history, evidence_references=references, candidate=candidate_state,
+            pmpp_guidance=PMPP_GUIDANCE if self.config.experimental_mode != "ablation_no_pmpp" else None)
+        path = self.directory / "diagnostics" / (diagnostic["diagnostic_id"] + ".json")
+        if path.exists() and read_json(path) != diagnostic:
+            raise ValueError("Immutable diagnostic identity collision")
+        if not path.exists():
+            write_json(path, diagnostic)
+        write_json(marker, diagnostic)
+        self.store.event(self.config.run_id, "diagnostic", {"trial_id": state["trial_id"],
+            "candidate_id": state.get("candidate_id"), "diagnostic_id": diagnostic["diagnostic_id"],
+            "triggers": diagnostic["triggers"], "requires_targeted_research": diagnostic["requires_targeted_research"]})
+        return {"diagnostic_id": diagnostic["diagnostic_id"],
+                "research_refresh_required": diagnostic["requires_targeted_research"]}
 
     def finalize(self, state):
         final_path = self.directory / "final.json"
         incumbent = self.store.incumbent(self.config.run_id)
         best = self.candidate(incumbent["candidate_id"] or "baseline")
         shutil.copyfile(best.source, self.directory / "best.cu")
+        if self.generation_only:
+            # The section-16 coordinator seals all methods before constructing
+            # their common independent final suite on one reserved GPU.
+            frozen = {"candidate_id": best.candidate_id, "kernel": best.kernel,
+                      "source": str((self.directory / "best.cu").resolve()),
+                      "source_hash": best._source_hash, "artifact_hash": best.artifact_hash,
+                      "launch_rule": asdict(best.launch_rule), "parameters": best.parameters,
+                      "certification_status": "generation_complete"}
+            write_json(self.directory / "best-launch.json", frozen)
+            write_json(self.directory / "candidate.json", frozen)
+            usage = self.store.budget_state(self.config.run_id)
+            manifest = {"run_id": self.config.run_id,
+                        "termination_reason": state.get("termination_reason") or "completed",
+                        "certification_status": "generation_complete", "generation_only": True,
+                        "config": self.config.to_dict(), "contract_hash": self.contract_hash,
+                        "environment": self.environment, "model": self.config.model,
+                        "reasoning_effort": self.config.reasoning_effort,
+                        "trials_done": state.get("trials_done", 0),
+                        "best_candidate_id": best.candidate_id, "artifact_hash": best.artifact_hash,
+                        "candidate": frozen, "baseline_latencies_ms": self.baseline_latencies,
+                        "usage": usage["spent"], "pending_usage": usage["reserved"],
+                        "global_resource_caps": None, "elapsed_seconds": time.time()-self.started_at,
+                        "experimental_mode": self.config.experimental_mode,
+                        "final": {"status": "deferred_common_final_evaluation", "ok": False}}
+            write_json(self.directory / "manifest.json", manifest)
+            write_json(self.directory / "events.json", self.store.events(self.config.run_id))
+            return {"finished": True, "certification_status": "generation_complete"}
         write_json(self.directory / "best-launch.json", {"candidate_id": best.candidate_id,
                    "artifact_hash": best.artifact_hash, "launch_rule": asdict(best.launch_rule), "parameters": best.parameters,
                    "certification_status": "finalization_incomplete"})
@@ -544,8 +699,9 @@ class CampaignRuntime:
         return {"finished": True, "certification_status": final["status"]}
 
 
-def run_on_runner(config, runner, directory, *, resume=False):
-    runtime = CampaignRuntime(config, runner, directory)
+def run_on_runner(config, runner, directory, *, resume=False, generation_only=False):
+    directory = Path(directory)
+    runtime = CampaignRuntime(config, runner, directory, generation_only=generation_only)
     with SqliteSaver.from_conn_string(str(directory / "langgraph.sqlite")) as checkpointer:
         graph = build_campaign_graph(runtime, checkpointer)
         graph_config = {"configurable": {"thread_id": config.run_id}, "recursion_limit": max(100, config.max_trials*40)}

@@ -21,6 +21,23 @@ ssh -o BatchMode=yes romeo hostname
 .venv/bin/python -m pytest -q
 ```
 
+The normal Codex baseline is also available as one native CLI prompt with shell
+tools and the owned ROMEO compilation/benchmark service:
+
+```sh
+# Plan only; no model call or Slurm job.
+.venv/bin/python scripts/run_codex_vanilla.py --config configs/gemm-comparison.json --output results/codex-native-demo
+# Run one Luna Max prompt with its tools; no LangGraph search policy.
+.venv/bin/python scripts/run_codex_vanilla.py --config configs/gemm-comparison.json --output results/codex-native-demo --run
+```
+
+This baseline retains existing execution policies and uses a writable isolated
+workspace. The parent service owns the oracle, workload and GPU evidence outside
+that workspace. There is no global token, tool-count or turn-time ceiling. Its
+frozen kernel still requires independent final evaluation. The campaign `compare`
+command is a distinct generation-only single-prompt baseline with shell tools
+disabled; the two protocols are identified separately in the results.
+
 No API key is needed for the primary CLI path when ChatGPT authentication works. A cached model list does not establish account access. The terminal CLI `0.143.0` rejected Luna, while the application’s bundled `0.163.0-alpha.10.2` was verified to run it. The backend selects `CODEX_CLI_PATH`, then an existing ChatGPT application binary on macOS, then `codex` on `PATH`. Override explicitly if needed:
 
 ```sh
@@ -44,7 +61,7 @@ Host romeo
     IdentitiesOnly yes
 ```
 
-Edit [configs/romeo.json](configs/romeo.json): account, partition, constraint, resource, walltime, module, private scratch root. The tested installation uses account `r250127`, partition `instant`, constraint `armgpu`, `gpu:h100:1`, and module `cuda/12.6`. These are installation-specific values.
+Edit [configs/romeo.json](configs/romeo.json): account, partition, constraint, resource, walltime, module, private scratch root. The tested installation uses account `r250127`, constraint `armgpu`, `gpu:h100:1`, and module `cuda/12.6`. The example requests `short` with a mandatory 24-hour Slurm walltime so model/research work has room to finish. Its ARM GPU resources and one-day limit were checked on the cluster. Acceptance jobs used `instant`, which imposes a one-hour scheduler limit; an ordinary user cannot extend that running lease. These are installation-specific values, and allocations close as soon as work finishes.
 
 The tested login node is x86_64; CUDA tools target the AArch64 GPU nodes. **Compilation runs inside Slurm**, with the node’s C++ compiler and NVRTC. The remote worker supports ROMEO Python 3.9 and requires no controller packages or CMake on the login node.
 
