@@ -27,6 +27,7 @@ from optimizer_agent.campaign import (
 from optimizer_agent.compile_cache import compilation_manifest
 from optimizer_agent.autotuning import Autotuner
 from scripts.gpu_autotuning_acceptance import ReceiptRunner
+from scripts.acceptance_intent import controller_provenance, persist_allocation_intent
 from use_harness import KernelRequest
 
 
@@ -279,6 +280,8 @@ def main(argv=None):
     parser.add_argument("--run", action="store_true")
     args = parser.parse_args(argv)
     directory = args.output.resolve()
+    if any((directory / name).exists() for name in ("allocation-intent.json", "allocation-receipt.json")):
+        raise ValueError("Use a fresh experiment directory; reconcile the recorded allocation intent/receipt")
     if not args.run:
         prepare(directory, args.run_id)
         print(json.dumps({"submitted": False, "plan": str(directory / "plan.json")}))
@@ -290,6 +293,9 @@ def main(argv=None):
     receipt = {"ok": False, "job_id": None,
         "controller_HEAD": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
         "dirty_state": subprocess.check_output(["git", "status", "--porcelain"], cwd=REPO, text=True).splitlines()}
+    receipt.update(session_id=backend.session_id, remote_dir=backend.remote_dir)
+    receipt["source_provenance"] = controller_provenance(REPO, __file__, args.execution_config)
+    receipt["allocation_intent"] = persist_allocation_intent(directory, backend, receipt["source_provenance"])
     try:
         receipt["job_id"] = backend.start()
         backend.wait_until_ready()

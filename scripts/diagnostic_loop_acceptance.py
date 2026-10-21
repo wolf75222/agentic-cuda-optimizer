@@ -21,6 +21,7 @@ import uuid
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
+from scripts.acceptance_intent import controller_provenance, persist_allocation_intent
 
 from optimizer_agent.campaign import (
     CampaignConfig, CampaignRuntime, Candidate, LaunchRule, SlurmBackend, SlurmConfig,
@@ -185,13 +186,16 @@ def verify_real_proposal(runtime,state,dossier):
 
 def run_acceptance(directory,run_id,execution_config,**protocol):
     directory = Path(directory).resolve()
-    if (directory/"worker/slurm-session.json").exists() or (directory/"diagnostic-loop-acceptance.json").exists():
+    if any((directory/name).exists() for name in ("allocation-intent.json","worker/slurm-session.json","diagnostic-loop-acceptance.json")):
         raise ValueError("Use a fresh acceptance directory; never reuse an existing allocation or overwrite evidence")
     config,slurm,plan = prepare(directory,run_id,execution_config,**protocol)
     session = "diagnostic-acceptance-"+uuid.uuid4().hex
     backend = SlurmBackend(slurm,REPO,directory/"worker",session_id=session)
     receipt = {"schema_version":1,"kind":plan["kind"],"run_id":run_id,"session_id":session,
         "job_id":None,"ok":False,"status":"incomplete","scope":plan["scope"],"global_resource_caps":None}
+    receipt["remote_dir"] = backend.remote_dir
+    receipt["source_provenance"] = controller_provenance(REPO, __file__, execution_config)
+    receipt["allocation_intent"] = persist_allocation_intent(directory, backend, receipt["source_provenance"])
     runtime,recording = None,None
     started = time.monotonic()
     try:
@@ -239,6 +243,8 @@ def main(argv=None):
     parser.add_argument("--execution-config",type=Path,default=REPO/"configs/romeo.json")
     args = parser.parse_args(argv)
     directory = (args.output or REPO/"results/diagnostic-loop-acceptance"/args.run_id).resolve()
+    if (directory/"allocation-intent.json").exists():
+        raise ValueError("Use a fresh acceptance directory; reconcile the recorded allocation intent")
     if args.run:
         receipt = run_acceptance(directory,args.run_id,args.execution_config)
         print(json.dumps({"ok":receipt["ok"],"status":receipt["status"],"job_id":receipt["job_id"],

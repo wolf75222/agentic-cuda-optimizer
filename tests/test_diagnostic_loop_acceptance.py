@@ -59,6 +59,8 @@ def test_startup_failure_preserves_incomplete_status_and_closes_only_own_session
     class Backend:
         def __init__(self,config,repo,directory,*,session_id):
             self.job_id = None
+            self.config, self.session_id = config, session_id
+            self.remote_dir = config.remote_root + "/sessions/" + session_id
             assert session_id.startswith("diagnostic-acceptance-")
         def start(self):
             self.job_id = "owned-job"

@@ -24,6 +24,7 @@ from optimizer_agent.campaign import (
 )
 from optimizer_agent.autotuning import Autotuner
 from optimizer_agent.experiment_store import ExperimentStore
+from scripts.acceptance_intent import controller_provenance, persist_allocation_intent
 
 
 def candidate_receipt(candidate):
@@ -102,7 +103,7 @@ class ReceiptRunner:
 
 def run_acceptance(directory, run_id, execution_config, *, benchmark_series=3, launches=10, search_timeout=None):
     directory = Path(directory).resolve()
-    if (directory / "autotuning-acceptance.json").exists() or (directory / "worker/slurm-session.json").exists():
+    if any((directory / name).exists() for name in ("allocation-intent.json", "autotuning-acceptance.json", "worker/slurm-session.json")):
         raise ValueError("Use a fresh experiment directory; existing GPU evidence/allocation is never overwritten or reused")
     directory.mkdir(parents=True, exist_ok=True)
     # A fresh random session cannot attach to or stop the protected main run.
@@ -113,6 +114,9 @@ def run_acceptance(directory, run_id, execution_config, *, benchmark_series=3, l
         "model_calls": 0, "model_tokens": 0,
         "scope": "Independent CPU oracle; three launch configurations; fresh baseline and selected-winner remeasurement",
         "certification_scope": "Functional AC-12 proof, separate from the optimizer/vanilla comparison and general quality studies"}
+    receipt["remote_dir"] = backend.remote_dir
+    receipt["source_provenance"] = controller_provenance(REPO, __file__, execution_config)
+    receipt["allocation_intent"] = persist_allocation_intent(directory, backend, receipt["source_provenance"])
     started, recording, store = time.monotonic(), None, None
     try:
         receipt["job_id"] = backend.start()
@@ -217,6 +221,8 @@ def main(argv=None):
                         help="Optional explicit phase timeout in seconds; default has no cumulative search-time limit")
     args = parser.parse_args(argv)
     directory = (args.output or REPO / "results/gpu-autotuning-acceptance" / args.run_id).resolve()
+    if (directory / "allocation-intent.json").exists():
+        raise ValueError("Use a fresh experiment directory; reconcile the recorded allocation intent")
     if args.run:
         result = run_acceptance(directory, args.run_id, args.execution_config,
             benchmark_series=args.benchmark_series, launches=args.launches, search_timeout=args.search_timeout)

@@ -6,6 +6,7 @@ submits, and inspects accounting. Candidate requests share a serialized worker.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import base64
 import hashlib
 import io
 import json
@@ -65,6 +66,7 @@ class SlurmConfig:
     startup_timeout: int = 600
     request_timeout: int = 300
     exclude: str = ""
+    transport_mode: str = "auto"
 
     def __post_init__(self):
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.@-]*", self.host):
@@ -90,6 +92,8 @@ class SlurmConfig:
             raise ValueError("Invalid node exclusion")
         if self.poll_seconds <= 0 or min(self.startup_timeout, self.request_timeout) <= 0:
             raise ValueError("Timeouts and polling interval must be positive")
+        if self.transport_mode not in ("auto", "legacy", "exchange"):
+            raise ValueError("transport_mode must be auto, legacy or exchange")
 
     @classmethod
     def load(cls, path: str | Path) -> "SlurmConfig":
@@ -174,6 +178,34 @@ finally:
                 raise BackendError(message)
             time.sleep(1)
 
+    def exchange(self, directory: str, payload: dict, *, wait_seconds: float, python: str = "python3") -> dict:
+        """Repeat only the same idempotent publication/collection after lost ACK.
+
+        The remote helper does not run CUDA or submit Slurm jobs. A published
+        envelope is never rewritten, and ``serve`` alone owns execution.
+        """
+        command = [python, f"{directory}/optimizer_agent/remote_worker.py", "exchange",
+                   "--directory", directory, "--wait-seconds", str(wait_seconds)]
+        data = json.dumps(payload).encode()
+        for attempt in range(3):
+            try:
+                process = self.run(command, data=data, timeout=wait_seconds + 40, check=False)
+            except subprocess.TimeoutExpired as error:
+                if attempt == 2:
+                    raise BackendError("Idempotent exchange timed out after 3 identical attempts; resume the same request ID") from error
+                time.sleep(1)
+                continue
+            if process.returncode == 0:
+                try:
+                    result = json.loads(process.stdout)
+                except ValueError as error:
+                    raise BackendError("Exchange returned malformed JSON; reconcile this same request ID") from error
+                result["ssh_attempts"] = attempt + 1
+                return result
+            if not transient_ssh_failure(process) or attempt == 2:
+                raise BackendError(process.stderr.decode(errors="replace")[-4000:])
+            time.sleep(1)
+
 
 class SlurmBackend:
     def __init__(self, config: SlurmConfig, repo_dir: str | Path, results_dir: str | Path,
@@ -187,6 +219,7 @@ class SlurmBackend:
         self.transport = transport or SSHTransport(config.host)
         self.job_id: str | None = None
         self.hardware: dict = {}
+        self.transport_capabilities: tuple[str, ...] = ()
         self._ready = False
 
     def _json(self, name: str, *, optional: bool = False):
@@ -212,7 +245,9 @@ class SlurmBackend:
         existing = self._json("snapshot.json", optional=True)
         if existing:
             if existing["sha256"] != snapshot:
-                raise BackendError("Worker source differs from this session; use a new session_id")
+                raise BackendError("Worker snapshot differs from controller sources; this session was not modified or resubmitted. "
+                                   "Resume with the original controller snapshot, or use a new session_id for a new allocation. "
+                                   "Historical artifacts remain collectible without staging.")
             return
         self.transport.run(["mkdir", "-p", self.remote_dir])
         self.transport.run(["tar", "-xzf", "-", "-C", self.remote_dir], data=buffer.getvalue())
@@ -316,6 +351,7 @@ class SlurmBackend:
                 if not ready.get("ok"):
                     raise BackendError(ready.get("error", "Worker startup failed"))
                 self.hardware = ready["hardware"]
+                self.transport_capabilities = tuple(ready.get("transport_capabilities", ()))
                 self._ready = True
                 (self.results_dir / "hardware.json").write_text(json.dumps(self.hardware, indent=2))
                 return ready
@@ -372,6 +408,7 @@ class RemoteHarnessRunner:
         self.executable = Path(backend.remote_dir) / "build/cuda_test_harness"
         self.hardware = backend.hardware
         self.environment = "romeo"
+        self._confirmed_blobs: set[str] = set()
 
     def get_device_properties(self, device: int = 0) -> dict:
         if device != 0:
@@ -386,6 +423,13 @@ class RemoteHarnessRunner:
             fingerprint.update(name.encode() + b"\0" + files[name])
         envelope = {"operation": operation, "request": request, "identity": identity,
                     "fingerprint": fingerprint.hexdigest()}
+        capable = "exchange_v1" in self.backend.transport_capabilities
+        mode = self.backend.config.transport_mode
+        if mode == "exchange" and not capable:
+            raise BackendError("Worker does not advertise exchange_v1; choose explicit legacy transport or start a new worker snapshot")
+        if capable and mode != "legacy":
+            return self._exchange_request(envelope, files)
+        started = time.monotonic()
         existing = self.backend._json(f"requests/{identity}/envelope.json", optional=True)
         if existing and existing["fingerprint"] != envelope["fingerprint"]:
             raise BackendError("Request ID reused for a different experiment; use a fresh attempt ID")
@@ -399,30 +443,88 @@ class RemoteHarnessRunner:
         while time.monotonic() < deadline:
             result = self.backend._json(f"requests/{identity}/response.json", optional=True)
             if result is not None:
-                directory = self.results_dir / ("run-" + identity)
-                directory.mkdir(parents=True, exist_ok=True)
                 artifact_path = f"{remote}/artifacts.tar.gz"
                 payload = self.backend.transport.read(artifact_path, optional=True)
-                if payload:
-                    with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
-                        for member in archive.getmembers():
-                            target = (directory / member.name).resolve()
-                            if not target.is_relative_to(directory.resolve()) or not member.isfile():
-                                raise BackendError("Unsafe artifact archive member")
-                            target.parent.mkdir(parents=True, exist_ok=True)
-                            target.write_bytes(archive.extractfile(member).read())
-                for output in result.get("outputs", []):
-                    output["remote_path"] = output["path"]
-                    output["path"] = str(directory / "outputs" / Path(output["path"]).name)
-                result["execution_environment"] = "romeo"
-                result["hardware_fingerprint"] = self.hardware
-                result["slurm_job_id"] = self.backend.job_id
-                (directory / "result.json").write_text(json.dumps(result, indent=2))
-                return result
+                result["transport_receipt"] = {"mode": "legacy", "reason": "explicit_legacy" if mode == "legacy" else "worker_capability_unavailable",
+                                               "controller_wall_seconds": time.monotonic() - started}
+                return self._collect(identity, result, payload)
             if time.monotonic() >= next_status_check:
                 self.backend.require_live_worker()
                 next_status_check = time.monotonic() + 10
             time.sleep(self.backend.config.poll_seconds)
+        raise BackendError("Remote request timed out; resume the same request ID to recover, do not remeasure silently")
+
+    def _collect(self, identity: str, result: dict, payload: bytes | None) -> dict:
+        directory = self.results_dir / ("run-" + identity)
+        directory.mkdir(parents=True, exist_ok=True)
+        if payload:
+            with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
+                for member in archive.getmembers():
+                    target = (directory / member.name).resolve()
+                    if not target.is_relative_to(directory.resolve()) or not member.isfile():
+                        raise BackendError("Unsafe artifact archive member")
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(archive.extractfile(member).read())
+        for output in result.get("outputs", []):
+            output["remote_path"] = output["path"]
+            output["path"] = str(directory / "outputs" / Path(output["path"]).name)
+        result["execution_environment"] = "romeo"
+        result.setdefault("hardware_fingerprint", self.hardware)
+        result["slurm_job_id"] = self.backend.job_id
+        (directory / "result.json").write_text(json.dumps(result, indent=2))
+        return result
+
+    def _exchange_request(self, envelope: dict, files: dict[str, bytes]) -> dict:
+        started = time.monotonic()
+        identity = envelope["identity"]
+        manifest = {name: {"sha256": hashlib.sha256(content).hexdigest(), "size": len(content)}
+                    for name, content in files.items()}
+        blobs = {manifest[name]["sha256"]: content for name, content in files.items()}
+        wanted = set(blobs) - self._confirmed_blobs
+        deadline = time.monotonic() + self.backend.config.request_timeout + 30
+        counters = {"mode": "exchange_v1", "ssh_roundtrips": 0, "blob_uploads": 0,
+                    "blob_upload_bytes": 0, "blob_cache_hits": 0}
+        while time.monotonic() < deadline:
+            payload = {"envelope": envelope, "files": manifest,
+                       "blobs": {digest: base64.b64encode(blobs[digest]).decode() for digest in wanted},
+                       "job_id": self.backend.job_id, "session_id": self.backend.session_id}
+            reply = self.backend.transport.exchange(self.backend.remote_dir, payload,
+                wait_seconds=min(30, max(0, deadline - time.monotonic())), python=self.backend.config.python)
+            counters["ssh_roundtrips"] += reply.get("ssh_attempts", 1)
+            for name in ("blob_uploads", "blob_upload_bytes", "blob_cache_hits"):
+                counters[name] += reply.get(name, 0)
+            code = reply.get("error_code")
+            if reply.get("ok") or code == "pending":
+                self._confirmed_blobs.update(blobs)
+                wanted = set()
+            if reply.get("ok"):
+                result = reply["response"]
+                if result.get("request_fingerprint") != envelope["fingerprint"]:
+                    raise BackendError("Exchange response belongs to a different request fingerprint")
+                try:
+                    archive = base64.b64decode(reply.get("artifacts_b64", ""), validate=True)
+                except (ValueError, TypeError) as error:
+                    raise BackendError("Exchange artifact is not valid base64") from error
+                if hashlib.sha256(archive).hexdigest() != reply.get("artifacts_sha256"):
+                    raise BackendError("Exchange artifact SHA256 mismatch")
+                counters["controller_wall_seconds"] = time.monotonic() - started
+                result["transport_receipt"] = counters
+                return self._collect(identity, result, archive)
+            if code == "missing_blobs":
+                missing = set(reply.get("missing_blobs", ()))
+                if not missing or not missing <= set(blobs):
+                    raise BackendError("Exchange requested unknown blob identities")
+                self._confirmed_blobs.difference_update(missing)
+                # The helper publishes nothing until *all* blobs are present.
+                # Retain uploads that accompanied a cache miss as well, rather
+                # than oscillating between an unstored new blob and the miss.
+                wanted = set(blobs) - self._confirmed_blobs
+                continue
+            if code == "pending":
+                continue
+            if code in ("quarantined", "terminal", "not_running"):
+                self.backend._ready = False
+            raise BackendError(f"Exchange {code or 'failed'}: {reply.get('error', reply)}; reconcile the same request ID")
         raise BackendError("Remote request timed out; resume the same request ID to recover, do not remeasure silently")
 
     def run(self, run_id, request) -> dict:

@@ -59,6 +59,8 @@ def test_helper_uses_real_tuner_api_fresh_winner_and_owned_terminal_receipt(tmp_
         hardware = {"device_properties": properties}
         def __init__(self, *args, **kwargs):
             self.job_id, self.closed, self.session_id = None, False, kwargs["session_id"]
+            self.config = args[0]
+            self.remote_dir = self.config.remote_root + "/sessions/" + self.session_id
             instances.append(self)
         def start(self):
             self.job_id = "900101"
