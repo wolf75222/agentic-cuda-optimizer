@@ -12,7 +12,8 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
     frozen_pilot_panel, plot_frozen_pilot, FROZEN_ROLES, FROZEN_PAIRS)
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
-from scripts.report_study_fr import study_aggregate_table, study_campaign_table, case_comparison_table
+from scripts.report_study_fr import (study_aggregate_table, study_campaign_table, case_comparison_table,
+    campaign_metric_views, campaign_metrics_panel)
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
@@ -1541,3 +1542,174 @@ def test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload(tmp_pa
     monkeypatch.setattr(Path, "read_bytes", checked)
     row = next(r for r in control_receipts(tmp_path) if r["path"] == ORIGINAL_EXECUTION)
     assert row["ok"] is False
+
+
+def metric_summary(mode="full", metrics=None, **fields):
+    return {"rows": [{"run_id": "fixture.<campaign>", "workload": "matmul", "seed": 17,
+        "mode": mode, "generation_method_status": "failed", "status": "pending_common_final",
+        "model_tokens": 999999, "model_calls": 99, "metrics": metrics, **fields}]}
+
+
+@pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])
+def test_metric_view_keeps_merged_method_values_and_raw_unknown_list(mode):
+    metrics = {"first_useful_gain_status": "observed", "time_to_first_useful_gain_seconds": 869.6877868175507,
+        "model_tokens_to_first_useful_gain": 145, "model_calls_to_first_useful_gain": 2,
+        "first_useful_gain_scope": "Recorded observer scope", "first_useful_gain_note": "No feedback",
+        "research_model_wall_seconds": 301.5568711250089,
+        "unknown_metrics": ["time_to_first_useful_gain_seconds", "research_seconds"],
+        "method_consumption": {"method_gpu_evaluation_wall_seconds": 53.174054876872106},
+        "observer_wall_seconds": 12.125, "combined_method_and_observer_gpu_wall_seconds": 65.3}
+    summary = metric_summary(mode, metrics, time_to_first_useful_gain_seconds=1,
+        time_to_independently_confirmed_final_gain_seconds=1234.567890123)
+    original = deepcopy(summary)
+    view = campaign_metric_views(summary)[0]
+    assert view["generation_method_status"] == "failed"
+    assert view["first_useful_search_gain"] == {"status": "observed", "seconds": 869.6877868175507,
+        "model_tokens": 145, "model_calls": 2, "scope": "Recorded observer scope", "note": "No feedback"}
+    assert view["independent_final_gain"]["seconds"] == 1234.567890123
+    costs = {cost["key"]: cost["value"] for cost in view["recorded_costs"]}
+    assert costs["method_consumption.method_gpu_evaluation_wall_seconds"] == 53.174054876872106
+    assert costs["combined_method_and_observer_gpu_wall_seconds"] == 65.3  # Preserve the recorded total, even if rounded.
+    assert view["raw_unknown_metrics"] == original["rows"][0]["metrics"]["unknown_metrics"]
+    assert view["view_annotations"] == [
+        {"declared_unknown": "time_to_first_useful_gain_seconds", "recorded_key": "time_to_first_useful_gain_seconds", "recorded_value": 869.6877868175507},
+        {"declared_unknown": "research_seconds", "recorded_key": "research_model_wall_seconds", "recorded_value": 301.5568711250089}]
+    html = campaign_metrics_panel([view])
+    assert "SEARCH" in html and "FINAL" in html and "budget égal" in html
+    assert "Annotation de vue seulement" in html and "research_seconds" in html
+    assert "fixture.&lt;campaign&gt;" in html and "<campaign>" not in html
+    assert summary == original
+
+
+@pytest.mark.parametrize("value", [None, 0, 0.0, 2.125])
+def test_metric_view_distinguishes_recorded_zero_from_unknown(value):
+    metrics = {"native_compile_stage_wall_seconds": value, "research_model_wall_seconds": value,
+        "compile_cache_hits": value, "observer_wall_seconds": value,
+        "unknown_metrics": ["research_seconds"]}
+    view = campaign_metric_views(metric_summary(metrics=metrics))[0]
+    costs = {cost["key"]: cost["value"] for cost in view["recorded_costs"]}
+    assert costs["native_compile_stage_wall_seconds"] == value
+    assert costs["compile_cache_misses"] is None
+    assert view["first_useful_search_gain"]["seconds"] is None
+    assert view["first_useful_search_gain"]["model_tokens"] is None
+    assert view["first_useful_search_gain"]["model_calls"] is None
+    assert bool(view["view_annotations"]) is (value is not None)
+    html = campaign_metrics_panel([view])
+    display = "inconnu" if value is None else str(value).removesuffix(".0")
+    assert "<td>Compilation native</td><td>" + display + "</td><td>s</td>" in html
+    assert "<td>Cache : absences</td><td>inconnu</td>" in html
+
+
+@pytest.mark.parametrize("status", ["no_promoted_gain", "no_confirmed_gain", "unknown_incident", "unknown_identity_context", "not_recorded_by_method"])
+def test_metric_view_never_infers_gain_or_milestone_usage_from_totals(status):
+    view = campaign_metric_views(metric_summary("native_codex_vanilla", {
+        "first_useful_gain_status": status, "first_valid_search_measurement_unix": 1234.5,
+        "method_consumption": {"model_calls": None, "model_tokens": None}},
+        time_to_independently_confirmed_final_gain_seconds=200))[0]
+    assert view["first_useful_search_gain"]["status"] == status
+    assert all(view["first_useful_search_gain"][key] is None for key in ("seconds", "model_tokens", "model_calls"))
+    assert view["independent_final_gain"]["seconds"] == 200
+    assert status in campaign_metrics_panel([view])
+
+
+def test_metric_view_does_not_fill_a_missing_research_metric_from_legacy_spelling():
+    summary = metric_summary(metrics={"research_seconds": 8, "unknown_metrics": ["research_seconds"]})
+    view = campaign_metric_views(summary)[0]
+    assert view["view_annotations"] == []
+    assert next(cost["value"] for cost in view["recorded_costs"] if cost["key"] == "research_model_wall_seconds") is None
+    assert summary["rows"][0]["metrics"] == {"research_seconds": 8, "unknown_metrics": ["research_seconds"]}
+
+
+@pytest.mark.parametrize("metrics", [None, [], {"unknown_metrics": "not a list", "first_useful_gain_status": {"bad": "type"}, "observer_wall_seconds": False}])
+def test_metric_panel_handles_absent_or_malformed_optional_metadata(metrics):
+    view = campaign_metric_views(metric_summary(metrics=metrics))[0]
+    html = campaign_metrics_panel([view])
+    assert "<td>Observateur indépendant</td><td>inconnu</td>" in html
+    assert view["view_annotations"] == []
+
+
+def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(tmp_path, monkeypatch):
+    import scripts.report_study_fr as renderer
+    import optimizer_agent.suite_orchestrator as orchestrator
+    import optimizer_agent.suite_report as suite_report
+    study = tmp_path/"fixture-study"
+    save(study/"plan.json", {"entries": [{"group_id": "fixture"}], "workloads": ["matmul"], "seeds": [17], "modes": ["full"]})
+    summary = method_outcome_summary()
+    summary["rows"][0]["metrics"] = {"first_useful_gain_status": "observed", "time_to_first_useful_gain_seconds": 3.125,
+        "research_model_wall_seconds": 8.25, "unknown_metrics": ["research_seconds"]}
+    raw = deepcopy(summary)
+    class FixtureSuite:
+        def __init__(self, plan, directory):
+            assert directory == study and plan["entries"] == [{"group_id": "fixture"}]
+        def status(self):
+            return {"fixture_only": True}
+    def fixture_report(directory, status, evidence):
+        assert directory == study and status == {"fixture_only": True}
+        return {"summary": deepcopy(summary), "method_outcome_policy": "Fixture method policy", "final_groups": {}}
+    monkeypatch.setattr(orchestrator, "SuiteOrchestrator", FixtureSuite)
+    monkeypatch.setattr(suite_report, "write_report", fixture_report)
+    monkeypatch.setattr(renderer, "project_consumption", lambda _: {"cli_call_receipts": 0, "input_tokens": 0,
+        "cached_input_tokens": 0, "output_tokens": 0, "unreported_call_usage": 0,
+        "observed_terminal_allocated_gpu_seconds": None, "observed_terminal_job_count": 0, "nonterminal_or_unreported_jobIDs": []})
+    monkeypatch.setattr(renderer, "plot", lambda *_: None)
+    pilot = {"receipt_verified": False, "validation_errors": ["Fixture only, no qualification"]}
+    monkeypatch.setattr(renderer, "frozen_pilot_summary", lambda _: pilot)
+    monkeypatch.setattr(renderer, "plot_frozen_pilot", lambda *_: None)
+    monkeypatch.setattr(renderer, "checkout_source_identity", lambda _: {"head": "fixture", "dirty": False, "tracked_changes": [], "untracked_files": []})
+    monkeypatch.setattr(renderer, "ci_qualifies_checkout", lambda *_: False)
+    monkeypatch.setattr(renderer, "control_receipts", lambda _: [])
+    monkeypatch.setattr(renderer, "audit_table", lambda _: "")
+    output = tmp_path/"report"
+    monkeypatch.setattr(renderer.sys, "argv", ["report_study_fr", "--study", str(study), "--output", str(output)])
+    renderer.main()
+    html = (output/"rapport-validation.html").read_text()
+    report = json.loads((output/"rapport-donnees.json").read_text())
+    assert html.index("Étude §16 : trois méthodes") < html.index(renderer.frozen_pilot_panel(pilot, None))
+    assert html.index(renderer.frozen_pilot_panel(pilot, None)) < html.index("Consommation, régressions et provenance")
+    assert "Jalons et coûts enregistrés par campagne" in html and "ratios ponctuels &lt; 1" in html
+    assert "il ne démontre pas une régression statistique" in html
+    assert report["summary"] == raw and summary == raw
+    assert report["campaign_metric_views"][0]["first_useful_search_gain"]["seconds"] == 3.125
+    assert report["campaign_metric_views"][0]["raw_unknown_metrics"] == ["research_seconds"]
+    assert report["independent_frozen_gemm_pilot"] == pilot
+
+
+@pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])
+def test_recorded_validity_view_preserves_method_overrides_without_deriving_fraction(mode):
+    metrics = {"candidate_configurations_with_recorded_validity": 3, "correct_candidates": 2,
+        "correct_candidate_fraction": .625, "configuration_observations": 9,
+        "configurations_filtered_before_compilation": 4, "configurations_independently_validated": 1,
+        "validation_evidence_basis": "Recorded independent <oracle> basis",
+        "method_consumption": {"usage_complete": False}}
+    summary = metric_summary(mode, metrics, configurations=999, correct_candidate_fraction=1)
+    raw = deepcopy(summary)
+    view = campaign_metric_views(summary)[0]
+    projected = {entry["key"]: entry["value"] for entry in view["recorded_quality"]}
+    assert projected == {key: metrics[key] for key in (
+        "candidate_configurations_with_recorded_validity", "correct_candidates", "correct_candidate_fraction",
+        "configuration_observations", "configurations_filtered_before_compilation", "configurations_independently_validated")}
+    assert projected["correct_candidate_fraction"] == .625  # No 2/3 recomputation or denominator chosen by the renderer.
+    assert view["validation_evidence_basis"] == "Recorded independent <oracle> basis"
+    assert view["method_callback_usage_complete"] is False
+    html = campaign_metrics_panel([view])
+    assert "<td>0.625</td><td>fraction de 0 à 1</td>" in html
+    assert "&lt;oracle&gt;" in html and "<oracle>" not in html
+    assert "ne qualifient pas automatiquement le dernier artefact exporté ni FINAL" in html
+    assert "Usage complet indiqué au dernier callback méthode de l’observateur : non" in html
+    assert "sous-totaux incomplets" in html and "aucun coût facturé en USD n’est déduit" in html
+    assert summary == raw
+
+
+@pytest.mark.parametrize("present,value", [(False, None), (True, None), (True, 0), (True, 0.0)])
+def test_recorded_validity_view_distinguishes_missing_null_and_explicit_zero(present, value):
+    keys = ("candidate_configurations_with_recorded_validity", "correct_candidates", "correct_candidate_fraction",
+            "configuration_observations", "configurations_filtered_before_compilation", "configurations_independently_validated")
+    metrics = dict.fromkeys(keys, value) if present else {}
+    view = campaign_metric_views(metric_summary(metrics=metrics))[0]
+    assert {entry["key"]: entry["value"] for entry in view["recorded_quality"]} == dict.fromkeys(keys, value)
+    assert view["validation_evidence_basis"] is None and view["method_callback_usage_complete"] is None
+    html = campaign_metrics_panel([view])
+    expected = "0" if value is not None else "inconnu"
+    assert "<td>Part correcte enregistrée</td><td>" + expected + "</td><td>fraction de 0 à 1</td>" in html
+    assert "Fondement de validation enregistré : non enregistré" in html
+    assert "Usage complet indiqué au dernier callback méthode de l’observateur : inconnu" in html

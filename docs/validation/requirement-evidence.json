@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T22:46:08.142712+00:00",
+  "generated_at_utc": "2026-10-21T23:50:21.603884+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -134,6 +134,39 @@
       "current_controller_source": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
       "future_prompt_source_evidence": "source_current:optimizer_agent/upstream_original.py",
       "scope": "Plan de transition annoncé par le primaire après la fin naturelle des quatre tâches conservées. Aucune interruption, application à chaud ou exécution de ce futur source déduite. Aucun plafond global de tokens, coût, appels modèle/outils ou durée cumulée."
+    },
+    "latest_renderer_snapshot_observation_v2": {
+      "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "focused_test_evidence": "local_campaign_metric_views_00a67a3",
+      "preview_evidence": "historical_campaign_metric_preview_00a67a3",
+      "scope": "Capture prospective après 00a ; l’ancien snapshot renderer et les observations DFD/de38/00a restent historiques. Aucun modèle/GPU/CI du futur SHA."
+    },
+    "latest_observed_ci_release": {
+      "published_commit": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "ci_evidence": "ci_00a67a3",
+      "scope": "CI exacte du code publié avant ce nouveau renderer ; nombre de tests inconnu depuis ce reçu seul."
+    },
+    "controller_source_transition_observation": {
+      "source_HEAD": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "evidence": "dispatch_00a67a3_first_epochs",
+      "state": "running_at_observation",
+      "scope": "Transition après fin naturelle des tâches précédentes ; aucune nouvelle génération terminée déduite des dispatchs et aucun budget global."
+    },
+    "latest_renderer_snapshot_observation_v3": {
+      "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "focused_test_evidence": "local_campaign_metric_validity_view_00a67a3",
+      "historical_223_evidence": "prior_campaign_metric_view_223_exact_history",
+      "scope": "230 tests locaux sur la vue enrichie ; 223 antérieurs conservés exactement. L’aperçu visuel précédent porte sur 29371d3c, pas sur ce nouveau source. Aucune CI du futur SHA déduite."
+    },
+    "latest_renderer_snapshot_observation_v4": {
+      "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "tested_source_sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+      "focused_test_evidence": "local_campaign_metric_validity_view_00a67a3",
+      "post_test_editorial_evidence": "campaign_metric_validity_editorial_post230",
+      "scope": "Dernier état après deux changements éditoriaux autorisés ; aucun nouveau lot local, prochain SHA CI à vérifier. Nombre de générations toujours au minimum daté de 27, une finale."
     }
   },
   "policy": {
@@ -180,7 +213,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "twenty_two_generation_results_one_common_final_unqualified_native_export",
+      "state": "at_least_twenty_seven_generation_results_one_common_final_unqualified_native_export",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -196,9 +229,13 @@
         "section16_protocol_review_55",
         "study_v2_twenty_completed_generations_55_drain",
         "original_convolution2718_774527_dfd_terminal",
-        "native_convolution3141_774528_dfd_terminal"
+        "native_convolution3141_774528_dfd_terminal",
+        "study_v2_dfd_full_greedy_774525_774526",
+        "study_v2_dfd_noauto_nopmpp_774556_774563",
+        "dispatch_00a67a3_first_epochs",
+        "original_convolution3141_774657_00a_terminal"
       ],
-      "remaining": "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Dispersion, exports et reconstructions restent à terminer."
+      "remaining": "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -218,17 +255,21 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 170,
+    "evidence_entries": 187,
     "latest_local_junit_entries": 1453,
     "latest_local_testcase_nodes": 1440,
-    "study_v2_completed_generation_receipts": 22,
+    "study_v2_completed_generation_receipts": 27,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
     "latest_local_subtests": 13,
     "latest_ci_tests_passed": 1457,
     "latest_ci_subtests_passed": 13,
-    "latest_ci_tests_skipped": 2
+    "latest_ci_tests_skipped": 2,
+    "study_v2_generation_observation_at_utc": "2026-10-21T23:38:52.667936+00:00",
+    "latest_focused_report_tests_passed": 230,
+    "latest_ci_test_count_evidence": "ci_de38abb",
+    "study_v2_generation_count_scope": "Lower bound of authenticated terminal receipts; not an exhaustive live scheduler/controller inventory."
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -8480,11 +8521,12 @@
     "source_current:scripts/report_study_fr.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/report_study_fr.py",
-      "sha256": "2078201b249ea707afbad9300d92c68d8b8aa2ca884d43936b90c6809865c5c1",
-      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "sha256": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
+      "bytes": 130070,
+      "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T22:12:46.726866+00:00",
-      "scope": "Capture postérieure à DFD, avec définitions AST exactes et 206 tests locaux du module. Les octets 2078201b ont ensuite été publiés et validés par la CI exacte de38abb, avec deux skips documentés. Ancien snapshot DFD conservé ; aucune nouvelle mesure ROMEO déduite. Cette CI ne couvre pas le prompt de transport ee93e538 ajouté après ce commit.",
+      "observed_at_utc": "2026-10-21T23:50:21.603884+00:00",
+      "scope": "Source après deux seuls changements éditoriaux sur le périmètre des compteurs. Logique, schéma numérique et AST hors ces deux chaînes identiques au source 5cb7304a testé par 230 cas. Les sources/tests/reçus à 223 et 230 tests sont conservés exactement ; aucun test local de d1d97584 ni CI du futur SHA inféré.",
       "definitions": [
         {
           "name": "load",
@@ -8519,116 +8561,124 @@
           "line": 156
         },
         {
-          "name": "case_comparison_table",
+          "name": "campaign_metric_views",
           "line": 171
         },
         {
+          "name": "campaign_metrics_panel",
+          "line": 236
+        },
+        {
+          "name": "case_comparison_table",
+          "line": 282
+        },
+        {
           "name": "audit_table",
-          "line": 217
+          "line": 328
         },
         {
           "name": "checkout_source_identity",
-          "line": 224
+          "line": 335
         },
         {
           "name": "ci_qualifies_checkout",
-          "line": 248
+          "line": 359
         },
         {
           "name": "_mapping",
-          "line": 253
+          "line": 364
         },
         {
           "name": "_records",
-          "line": 257
+          "line": 368
         },
         {
           "name": "_hash",
-          "line": 261
+          "line": 372
         },
         {
           "name": "_linked_receipt_verified",
-          "line": 265
+          "line": 376
         },
         {
           "name": "_verified_json",
-          "line": 288
+          "line": 399
         },
         {
           "name": "_required_checks",
-          "line": 299
+          "line": 410
         },
         {
           "name": "_original_execution_control",
-          "line": 304
+          "line": 415
         },
         {
           "name": "_common_freeze_control",
-          "line": 378
+          "line": 489
         },
         {
           "name": "_standalone_final_control",
-          "line": 439
+          "line": 550
         },
         {
           "name": "_accepted_eleven_source_checks",
-          "line": 458
+          "line": 569
         },
         {
           "name": "_research_refresh_control",
-          "line": 573
+          "line": 684
         },
         {
           "name": "_diagnostic_v2_control",
-          "line": 817
+          "line": 928
         },
         {
           "name": "control_receipts",
-          "line": 863
+          "line": 974
         },
         {
           "name": "execution_evidence_panel",
-          "line": 927
+          "line": 1038
         },
         {
           "name": "_receipt_snapshot",
-          "line": 988
+          "line": 1099
         },
         {
           "name": "_reported_tokens",
-          "line": 993
+          "line": 1104
         },
         {
           "name": "_elapsed_seconds",
-          "line": 1014
+          "line": 1125
         },
         {
           "name": "gpu_lease_consumption",
-          "line": 1032
+          "line": 1143
         },
         {
           "name": "project_consumption",
-          "line": 1086
+          "line": 1197
         },
         {
           "name": "frozen_pilot_summary",
-          "line": 1178
+          "line": 1289
         },
         {
           "name": "plot_frozen_pilot",
-          "line": 1251
+          "line": 1362
         },
         {
           "name": "frozen_pilot_panel",
-          "line": 1307
+          "line": 1418
         },
         {
           "name": "plot",
-          "line": 1340
+          "line": 1451
         },
         {
           "name": "main",
-          "line": 1374
+          "line": 1485
         }
       ],
       "previous_snapshots": [
@@ -8785,14 +8835,518 @@
           "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
           "publication_evidence": "ci_dfd93d0",
           "identity_evidence": "catalog_integrity_dfd93d0"
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "2078201b249ea707afbad9300d92c68d8b8aa2ca884d43936b90c6809865c5c1",
+          "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T22:12:46.726866+00:00",
+          "scope": "Capture postérieure à DFD, avec définitions AST exactes et 206 tests locaux du module. Les octets 2078201b ont ensuite été publiés et validés par la CI exacte de38abb, avec deux skips documentés. Ancien snapshot DFD conservé ; aucune nouvelle mesure ROMEO déduite. Cette CI ne couvre pas le prompt de transport ee93e538 ajouté après ce commit.",
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 171
+            },
+            {
+              "name": "audit_table",
+              "line": 217
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 224
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 248
+            },
+            {
+              "name": "_mapping",
+              "line": 253
+            },
+            {
+              "name": "_records",
+              "line": 257
+            },
+            {
+              "name": "_hash",
+              "line": 261
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 265
+            },
+            {
+              "name": "_verified_json",
+              "line": 288
+            },
+            {
+              "name": "_required_checks",
+              "line": 299
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 304
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 378
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 439
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 458
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 573
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 817
+            },
+            {
+              "name": "control_receipts",
+              "line": 863
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 927
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 988
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 993
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1014
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1032
+            },
+            {
+              "name": "project_consumption",
+              "line": 1086
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1178
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1251
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1307
+            },
+            {
+              "name": "plot",
+              "line": 1340
+            },
+            {
+              "name": "main",
+              "line": 1374
+            }
+          ],
+          "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+          "published_release_evidence": [
+            "published_report_metrics_de38abb",
+            "ci_de38abb",
+            "ci_de38abb_skipped_scope"
+          ]
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+          "bytes": 127769,
+          "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T23:37:14.455577+00:00",
+          "scope": "Vue additive des métriques déjà enregistrées : SEARCH et FINAL séparés, coûts détaillés, inconnus et valeurs brutes conservés ; pilote après §16 et ratios ponctuels < 1 explicités. 223 tests locaux et revue indépendante acquis ; aucune CI de ces nouveaux octets ni mesure ROMEO déduite.",
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "campaign_metric_views",
+              "line": 171
+            },
+            {
+              "name": "campaign_metrics_panel",
+              "line": 225
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 260
+            },
+            {
+              "name": "audit_table",
+              "line": 306
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 313
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 337
+            },
+            {
+              "name": "_mapping",
+              "line": 342
+            },
+            {
+              "name": "_records",
+              "line": 346
+            },
+            {
+              "name": "_hash",
+              "line": 350
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 354
+            },
+            {
+              "name": "_verified_json",
+              "line": 377
+            },
+            {
+              "name": "_required_checks",
+              "line": 388
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 393
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 467
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 528
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 547
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 662
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 906
+            },
+            {
+              "name": "control_receipts",
+              "line": 952
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 1016
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 1077
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 1082
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1103
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1121
+            },
+            {
+              "name": "project_consumption",
+              "line": 1175
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1267
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1340
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1396
+            },
+            {
+              "name": "plot",
+              "line": 1429
+            },
+            {
+              "name": "main",
+              "line": 1463
+            }
+          ],
+          "preserved_source_reference": {
+            "path": "work/live/metrics-view-history/29371d3c/scripts/report_study_fr.py",
+            "sha256": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+            "bytes": 127769
+          },
+          "preserved_test_reference": {
+            "path": "work/live/metrics-view-history/29371d3c/tests/test_study_report.py",
+            "sha256": "273aa4474db0229f53eb9d8689824e62b1f3b49457f119a19976ddaeafbcb190",
+            "bytes": 112722
+          }
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+          "bytes": 129812,
+          "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T23:46:04.521626+00:00",
+          "scope": "Vue additive des métriques déjà fusionnées, y compris validité/configurations et limites des sous-totaux tokens. 230 tests ciblés et revue indépendante ; aucun recalcul, dénominateur inventé, nouveau modèle/GPU ou CI de ces octets. Anciennes captures et lot223 conservés séparément.",
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "campaign_metric_views",
+              "line": 171
+            },
+            {
+              "name": "campaign_metrics_panel",
+              "line": 236
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 282
+            },
+            {
+              "name": "audit_table",
+              "line": 328
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 335
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 359
+            },
+            {
+              "name": "_mapping",
+              "line": 364
+            },
+            {
+              "name": "_records",
+              "line": 368
+            },
+            {
+              "name": "_hash",
+              "line": 372
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 376
+            },
+            {
+              "name": "_verified_json",
+              "line": 399
+            },
+            {
+              "name": "_required_checks",
+              "line": 410
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 415
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 489
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 550
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 569
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 684
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 928
+            },
+            {
+              "name": "control_receipts",
+              "line": 974
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 1038
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 1099
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 1104
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1125
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1143
+            },
+            {
+              "name": "project_consumption",
+              "line": 1197
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1289
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1362
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1418
+            },
+            {
+              "name": "plot",
+              "line": 1451
+            },
+            {
+              "name": "main",
+              "line": 1485
+            }
+          ],
+          "preserved_source_reference": {
+            "path": "work/live/metrics-view-history/5cb7304a/scripts/report_study_fr.py",
+            "sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+            "bytes": 129812
+          },
+          "preserved_test_reference": {
+            "path": "work/live/metrics-view-history/5cb7304a/tests/test_study_report.py",
+            "sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+            "bytes": 115770
+          }
         }
       ],
-      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
-      "published_release_evidence": [
-        "published_report_metrics_de38abb",
-        "ci_de38abb",
-        "ci_de38abb_skipped_scope"
-      ]
+      "post_test_editorial_evidence": "campaign_metric_validity_editorial_post230"
     },
     "source_current:scripts/gpu_final_suite_acceptance.py": {
       "kind": "current_implementation_source_snapshot",
@@ -10662,6 +11216,1992 @@
         "independent_final_evaluation_observed": false
       },
       "scope": "Observation du 21 octobre à 22:43:57 UTC : le natif convolution 3141, job 774528, termine sa génération avec méthode completed et Slurm COMPLETED 0:0. Un appel CLI, un prompt, un tour complété et 3 713 227 tokens observés. L’artefact exporté 5f2b4394… et sa source e04ec209… ne correspondent à aucun des quatre artefacts ni sept réponses SEARCH essayés : aucune validation SEARCH de cet artefact exact ni gain revendiqué. Sa qualification FINAL indépendante reste à acquérir. Ce reçu ajoute un résultat aux 21 antérieurs, sans les revalider ni inférer un état futur."
+    },
+    "local_campaign_metric_views_00a67a3": {
+      "path": "work/live/campaign-observed-metrics-view-00a67a3.json",
+      "sha256": "9a6ee53e80808cf69e692d4866dcdba8237b736ed7d803b12c4ed23c7c3ada31",
+      "bytes": 4422,
+      "kind": "focused_local_recorded_campaign_metrics_presentation",
+      "git_base": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "tests_passed": 223,
+      "new_regression_cases": 17,
+      "junit": {
+        "path": "work/live/campaign-observed-metrics-view-00a67a3.xml",
+        "sha256": "b53d787e93814366af145b7a475a365bb1bac5184d8abefb6fe23d24ba864512",
+        "bytes": 36709
+      },
+      "source_files_after": {
+        "scripts/report_study_fr.py": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+        "tests/test_study_report.py": "273aa4474db0229f53eb9d8689824e62b1f3b49457f119a19976ddaeafbcb190"
+      },
+      "source_files_unchanged_during_tests": true,
+      "test_source_snapshot": {
+        "path": "tests/test_study_report.py",
+        "sha256": "273aa4474db0229f53eb9d8689824e62b1f3b49457f119a19976ddaeafbcb190",
+        "bytes": 112722,
+        "definitions": [
+          {
+            "name": "save",
+            "line": 27
+          },
+          {
+            "name": "method_outcome_summary",
+            "line": 32
+          },
+          {
+            "name": "test_html_separates_failed_method_from_qualified_measured_fallback",
+            "line": 58
+          },
+          {
+            "name": "test_markdown_preserves_failure_reason_fallback_gain_and_raw_json",
+            "line": 76
+          },
+          {
+            "name": "test_initial_fallback_iteration_zero_and_unknown_method_are_not_successes",
+            "line": 91
+          },
+          {
+            "name": "test_consumption_deduplicates_calls_and_preserves_unknown_failures",
+            "line": 102
+          },
+          {
+            "name": "test_same_call_with_conflicting_usage_cannot_silently_change_totals",
+            "line": 123
+          },
+          {
+            "name": "test_original_intent_cli_and_legacy_copies_share_one_call_without_counting_acks",
+            "line": 130
+          },
+          {
+            "name": "test_original_intent_unknown_failures_survive_rehost_without_zero_invoice",
+            "line": 155
+          },
+          {
+            "name": "test_original_intent_conflicting_legacy_usage_fails_closed",
+            "line": 166
+          },
+          {
+            "name": "test_original_distinct_attempts_are_not_deduplicated_by_prompt_key",
+            "line": 174
+          },
+          {
+            "name": "test_failed_timeout_and_unreported_structured_receipts_remain_visible",
+            "line": 182
+          },
+          {
+            "name": "native_before_thread",
+            "line": 198
+          },
+          {
+            "name": "test_native_started_before_first_thread_is_unknown_and_deduplicated_by_invocation",
+            "line": 204
+          },
+          {
+            "name": "test_native_later_thread_snapshot_links_the_initial_invocation_and_copies",
+            "line": 216
+          },
+          {
+            "name": "test_distinct_native_invocations_without_threads_are_not_merged",
+            "line": 230
+          },
+          {
+            "name": "test_requested_native_thread_identity_and_unidentifiable_receipt_fail_closed",
+            "line": 237
+          },
+          {
+            "name": "test_complementary_cached_usage_and_partial_failure_are_not_zero_invoices",
+            "line": 247
+          },
+          {
+            "name": "test_impossible_usage_cannot_be_reported_as_a_lower_bound",
+            "line": 262
+          },
+          {
+            "name": "lease",
+            "line": 268
+          },
+          {
+            "name": "test_gpu_leases_use_recorded_slurm_elapsed_formats",
+            "line": 277
+          },
+          {
+            "name": "test_failed_timeout_leases_and_rehost_copies_retain_cost_once",
+            "line": 285
+          },
+          {
+            "name": "test_active_unparsed_or_unverified_leases_remain_unknown_not_zero",
+            "line": 297
+          },
+          {
+            "name": "test_inconsistent_slurm_receipts_cannot_falsify_allocation_cost",
+            "line": 309
+          },
+          {
+            "name": "frozen_receipt",
+            "line": 323
+          },
+          {
+            "name": "test_frozen_pilot_preserves_raw_regression_native_identity_and_separate_scope",
+            "line": 347
+          },
+          {
+            "name": "test_partial_or_mismatched_pilot_cannot_produce_a_qualified_plot",
+            "line": 372
+          },
+          {
+            "name": "test_frozen_plot_and_missing_receipt",
+            "line": 387
+          },
+          {
+            "name": "test_green_ci_on_same_head_does_not_qualify_tracked_or_untracked_changes",
+            "line": 398
+          },
+          {
+            "name": "test_new_gpu_receipts_keep_executed_source_head_and_hashes_separate_from_report_head",
+            "line": 424
+          },
+          {
+            "name": "test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope",
+            "line": 440
+          },
+          {
+            "name": "diagnostic_v2_audit_fixture",
+            "line": 457
+          },
+          {
+            "name": "test_actual_diagnostic_audit_replaces_pending_only_with_verified_measured_chain_links",
+            "line": 492
+          },
+          {
+            "name": "test_present_but_unproved_diagnostic_receipt_is_not_qualification",
+            "line": 510
+          },
+          {
+            "name": "test_partial_authorities_and_secondary_parent_observation_remain_separate",
+            "line": 517
+          },
+          {
+            "name": "test_tuning_constraint_control_remains_pending_until_success_is_explicit",
+            "line": 542
+          },
+          {
+            "name": "linked_report_fixture",
+            "line": 551
+          },
+          {
+            "name": "original_execution_fixture",
+            "line": 558
+          },
+          {
+            "name": "test_original_actual_generation_links_are_presented_without_final_success_or_attested_model",
+            "line": 594
+          },
+          {
+            "name": "test_original_source_or_cli_or_method_failures_cannot_be_relabelled_completed",
+            "line": 607
+          },
+          {
+            "name": "common_freeze_fixture",
+            "line": 631
+          },
+          {
+            "name": "test_final_freeze_aliases_are_identities_not_eight_distinct_kernels_or_gains",
+            "line": 666
+          },
+          {
+            "name": "test_frozen_identity_links_and_alias_declarations_fail_closed",
+            "line": 680
+          },
+          {
+            "name": "refresh_documentary_fixture",
+            "line": 697
+          },
+          {
+            "name": "test_absent_documentary_result_is_pending_or_unknown_never_gpu_success",
+            "line": 733
+          },
+          {
+            "name": "test_documentary_control_success_is_limited_to_authenticated_json_subset",
+            "line": 742
+          },
+          {
+            "name": "test_documentary_authentication_never_opens_manifest_databases_rng_or_numeric_inputs",
+            "line": 753
+          },
+          {
+            "name": "test_documentary_partial_or_unverified_proof_never_becomes_acquired",
+            "line": 772
+          },
+          {
+            "name": "test_malformed_control_root_cannot_crash_or_qualify_other_receipts",
+            "line": 796
+          },
+          {
+            "name": "test_nested_list_or_scalar_fields_fail_closed_without_global_report_loss",
+            "line": 816
+          },
+          {
+            "name": "test_hash_matched_linked_manifest_must_still_be_expected_json_object",
+            "line": 825
+          },
+          {
+            "name": "test_new_control_links_are_role_whitelisted_before_any_protected_read",
+            "line": 835
+          },
+          {
+            "name": "test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequence",
+            "line": 865
+          },
+          {
+            "name": "test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals",
+            "line": 882
+          },
+          {
+            "name": "test_explicit_unproven_context_cannot_be_normalized_to_an_identity_ratio",
+            "line": 903
+          },
+          {
+            "name": "test_unmeasured_failure_is_unavailable_instead_of_a_paired_measurement",
+            "line": 921
+          },
+          {
+            "name": "test_legacy_valid_identity_stays_available_without_an_interval",
+            "line": 931
+          },
+          {
+            "name": "test_case_table_exposes_regression_intervals_and_uses_independent_direct_pairs",
+            "line": 937
+          },
+          {
+            "name": "test_case_table_never_turns_identity_or_unproven_context_into_measured_cases",
+            "line": 955
+          },
+          {
+            "name": "test_case_table_keeps_incomplete_or_invalid_intervals_unknown",
+            "line": 971
+          },
+          {
+            "name": "test_case_table_does_not_require_percentile_bootstrap_interval_to_contain_point_estimate",
+            "line": 978
+          },
+          {
+            "name": "test_case_table_displays_partial_measurement_failure_and_artifact_qualification_separately",
+            "line": 984
+          },
+          {
+            "name": "test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only",
+            "line": 997
+          },
+          {
+            "name": "identity_pilot_receipt",
+            "line": 1003
+          },
+          {
+            "name": "test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot",
+            "line": 1017
+          },
+          {
+            "name": "test_pilot_refuses_explicit_unproven_context_before_qualification_and_plot",
+            "line": 1037
+          },
+          {
+            "name": "resumed_documentary_fixture",
+            "line": 1059
+          },
+          {
+            "name": "test_resumed_documentary_authority_preserves_incomplete_original_and_separates_new_calls",
+            "line": 1115
+          },
+          {
+            "name": "test_missing_resumption_is_an_independent_unknown_result",
+            "line": 1133
+          },
+          {
+            "name": "test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls",
+            "line": 1145
+          },
+          {
+            "name": "_documentary_proof",
+            "line": 1160
+          },
+          {
+            "name": "twice_resumed_documentary_fixture",
+            "line": 1168
+          },
+          {
+            "name": "_repin_second_resume",
+            "line": 1256
+          },
+          {
+            "name": "third_resumed_documentary_fixture",
+            "line": 1267
+          },
+          {
+            "name": "test_third_resume_accepted_research_lineage_keeps_all_prior_incomplete_authorities_separate",
+            "line": 1366
+          },
+          {
+            "name": "test_third_resume_rejects_tampered_accepted_lineage_or_explicit_refresh",
+            "line": 1379
+          },
+          {
+            "name": "test_third_resume_absent_is_unknown_and_does_not_complete_old_accepted_research",
+            "line": 1427
+          },
+          {
+            "name": "test_standalone_final_control_absent_or_plan_cannot_prove_execution",
+            "line": 1436
+          },
+          {
+            "name": "test_standalone_final_control_requires_result_checks_owned_terminal_and_sources",
+            "line": 1446
+          },
+          {
+            "name": "test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain",
+            "line": 1463
+          },
+          {
+            "name": "test_second_resumption_rejects_hash_resealed_but_unsupported_ancestry",
+            "line": 1477
+          },
+          {
+            "name": "test_absent_second_resumption_remains_separate_unknown_authority",
+            "line": 1496
+          },
+          {
+            "name": "test_second_resume_authenticates_source_trial_bytes_not_only_manifest_claim",
+            "line": 1502
+          },
+          {
+            "name": "test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval",
+            "line": 1511
+          },
+          {
+            "name": "test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload",
+            "line": 1523
+          },
+          {
+            "name": "metric_summary",
+            "line": 1547
+          },
+          {
+            "name": "test_metric_view_keeps_merged_method_values_and_raw_unknown_list",
+            "line": 1554
+          },
+          {
+            "name": "test_metric_view_distinguishes_recorded_zero_from_unknown",
+            "line": 1585
+          },
+          {
+            "name": "test_metric_view_never_infers_gain_or_milestone_usage_from_totals",
+            "line": 1604
+          },
+          {
+            "name": "test_metric_view_does_not_fill_a_missing_research_metric_from_legacy_spelling",
+            "line": 1615
+          },
+          {
+            "name": "test_metric_panel_handles_absent_or_malformed_optional_metadata",
+            "line": 1624
+          },
+          {
+            "name": "test_report_artifact_exports_additive_metric_view_and_prioritizes_section16",
+            "line": 1631
+          }
+        ]
+      },
+      "historical_public_results_unchanged": true,
+      "peer_review": {
+        "status": "GO",
+        "reviewer": "/root/codex_research",
+        "scope": "Independent read-only code/contracts review; no tests/model/GPU/DB/SSH or study data read by reviewer. No blocking defect found.",
+        "source_sha256": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+        "tests_sha256": "273aa4474db0229f53eb9d8689824e62b1f3b49457f119a19976ddaeafbcb190"
+      },
+      "scope": "Un seul lot ciblé, 223 tests du module de rapport. Métriques déjà fusionnées reprises sans recalcul, interpolation ni nouvelle somme ; raw_unknown_metrics et résumé bruts inchangés. Vue JSON distincte campaign_metric_views, deux tables par campagne, pilote après comparaison §16 ; compteur des ratios ponctuels < 1 sans nouvelle décision statistique. Aucune étude active rendue, modèle, GPU ou nouvelle CI."
+    },
+    "historical_campaign_metric_preview_00a67a3": {
+      "path": "work/live/campaign-observed-metrics-preview-00a67a3.json",
+      "sha256": "fd74cd959e9e9670fc710ac0963df2b60beb9f7cdd46dd65e2122113d17e23be",
+      "bytes": 936,
+      "kind": "historical_public_metrics_view_preview_only",
+      "source_report_sha256": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+      "historical_result": {
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.full/result.json",
+        "sha256": "ecd2a31626e48fa269a8f3c62b05867637d5c5d9372019129dd272347187ddde"
+      },
+      "result_unchanged": true,
+      "HTML": {
+        "path": "work/live/campaign-observed-metrics-preview-00a67a3.html",
+        "sha256": "4d4eba9dfaf5c4627fcd0ef1c50330cc9a1c9dab6dda50c324662d927105f55b"
+      },
+      "scope": "Aperçu d’une ancienne campagne publique GEMM 3141 full, rendu puis inspecté visuellement par le primaire à 1600 px. Résultat brut inchangé ; aucune nouvelle performance, métrique recalculée, étude active rendue ou qualification scientifique."
+    },
+    "study_v2_dfd_full_greedy_774525_774526": {
+      "path": "work/live/section16-dfd93d0-full-greedy-774525-774526.json",
+      "sha256": "54082443a57063fe4cc976bc722c39fa3b4e7c1f1a6a7fda01807367e70b2c4d",
+      "bytes": 81352,
+      "kind": "bounded_terminal_audit_dfd_full_and_greedy_convolution3141",
+      "observed_at_utc": "2026-10-21T23:09:31.235971+00:00",
+      "records": [
+        {
+          "job_id": "774525",
+          "task_id": "quality-20261021-v2.convolution.3141.full",
+          "mode": "full",
+          "session_id": "suite-gen-0e606b6705d5f1ba3a7cdda622d69a8b",
+          "status": {
+            "certification_status": "generation_complete",
+            "execution_complete": true,
+            "generation_complete": true,
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "accounting_terminal": {
+            "json_pointer": "/worker_terminal",
+            "receipt": {
+              "elapsed": "00:50:36",
+              "exit_code": "0:0",
+              "job_id": "774525",
+              "nodes": "romeo-a031",
+              "state": "COMPLETED",
+              "terminal": true
+            },
+            "scope": "Preserved controller terminal accounting; no new squeue/sacct/SSH query",
+            "source": {
+              "encoding": "raw_file_bytes",
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.full/result.json",
+              "sha256": "528d06fd00173799cc8680894b438921c2cd142401373bf27f9d7c9f2170c8a2"
+            }
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.full/result.json",
+            "sha256": "528d06fd00173799cc8680894b438921c2cd142401373bf27f9d7c9f2170c8a2"
+          },
+          "candidate": {
+            "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+            "candidate_id": "baseline",
+            "kernel": "convolution",
+            "launch_rule": {
+              "block": [
+                128,
+                1,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "elementwise",
+              "shared_memory_bytes": 0,
+              "tile_x": null,
+              "tile_y": null,
+              "version": 1
+            },
+            "parameters": {},
+            "source_hash": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+            "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.full/generation/best.cu"
+          },
+          "trial_summary": {
+            "closed_trials": 3,
+            "trials_with_measured_candidate": 3
+          },
+          "generation_scores_excluded_from_suite_final": true,
+          "FINAL_qualification_claimed": false
+        },
+        {
+          "job_id": "774526",
+          "task_id": "quality-20261021-v2.convolution.3141.greedy_parent",
+          "mode": "greedy_parent",
+          "session_id": "suite-gen-75e899d3cb005651c1624f82e636d464",
+          "status": {
+            "certification_status": "generation_complete",
+            "execution_complete": true,
+            "generation_complete": true,
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "accounting_terminal": {
+            "json_pointer": "/worker_terminal",
+            "receipt": {
+              "elapsed": "00:56:52",
+              "exit_code": "0:0",
+              "job_id": "774526",
+              "nodes": "romeo-a031",
+              "state": "COMPLETED",
+              "terminal": true
+            },
+            "scope": "Preserved controller terminal accounting; no new squeue/sacct/SSH query",
+            "source": {
+              "encoding": "raw_file_bytes",
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.greedy_parent/result.json",
+              "sha256": "1e96eb278b78f98dc85c65040bba0fd93a5908d97076027ce29933275a88b775"
+            }
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.greedy_parent/result.json",
+            "sha256": "1e96eb278b78f98dc85c65040bba0fd93a5908d97076027ce29933275a88b775"
+          },
+          "candidate": {
+            "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+            "candidate_id": "baseline",
+            "kernel": "convolution",
+            "launch_rule": {
+              "block": [
+                128,
+                1,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "elementwise",
+              "shared_memory_bytes": 0,
+              "tile_x": null,
+              "tile_y": null,
+              "version": 1
+            },
+            "parameters": {},
+            "source_hash": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+            "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.greedy_parent/generation/best.cu"
+          },
+          "trial_summary": {
+            "closed_trials": 3,
+            "trials_with_measured_candidate": 3
+          },
+          "generation_scores_excluded_from_suite_final": true,
+          "FINAL_qualification_claimed": false
+        }
+      ],
+      "scope": "Deux nouveaux terminaux DFD seulement, sans revalidation des acquis antérieurs. Méthodes completed et Slurm COMPLETED 0:0, naïf exact retenu. Les candidats/mesures SEARCH et dossiers admis ne qualifient pas FINAL. Le cumul des quatre nouveaux terminaux porte le constat daté à 26 générations sur 144 et une finale commune sur 18.",
+      "limitations": [
+        "No new GPU validation, benchmark, profiling, model, SSH, scheduler or process operation occurred.",
+        "Terminal accounting is the preserved controller receipt; absence from squeue was reported by parent, not independently queried.",
+        "LangGraph/experiment files were only stat-ed; no SQLite, private RNG, pickle, sealed data or binary input was opened or hashed.",
+        "Research is evidenced by returned real CLI calls and source-linked web events plus graph chronology, not dossier filename presence alone.",
+        "Public context projections may be incomplete; full private prompt/context bytes were not reconstructed or read.",
+        "Completed generation and correct SEARCH candidates do not imply common FINAL qualification or optimizer speedup.",
+        "The frozen DFD controller still emits the obsolete unknown_metrics research_seconds alias; numeric tagged research wall remains available and old results are preserved."
+      ]
+    },
+    "study_v2_dfd_noauto_nopmpp_774556_774563": {
+      "path": "work/live/section16-dfd93d0-noauto-nopmpp-774556-774563.json",
+      "sha256": "85dbe20e9d734de3a11411aef32276af24719c473261bbf722284e518718dd49",
+      "bytes": 73073,
+      "kind": "bounded_terminal_audit_dfd_no_autotuning_and_no_pmpp_convolution3141",
+      "observed_at_utc": "2026-10-21T23:12:28.838442+00:00",
+      "records": [
+        {
+          "job_id": "774556",
+          "task_id": "quality-20261021-v2.convolution.3141.no_autotuning",
+          "mode": "no_autotuning",
+          "session_id": "suite-gen-5497c05a9fa6a08f99bc6b1533c00ec8",
+          "status": {
+            "certification_status": "generation_complete",
+            "execution_complete": true,
+            "generation_complete": true,
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "accounting_terminal": {
+            "json_pointer": "/worker_terminal",
+            "receipt": {
+              "elapsed": "00:42:09",
+              "exit_code": "0:0",
+              "job_id": "774556",
+              "nodes": "romeo-a031",
+              "state": "COMPLETED",
+              "terminal": true
+            },
+            "scope": "Preserved local terminal accounting; parent also reported sacct success, no scheduler query by auditor",
+            "source": {
+              "encoding": "raw_file_bytes",
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_autotuning/result.json",
+              "sha256": "33eb73d8a1e54afda5a8ad6a9f4c1d943b41b94bfbf962f16229ef8283ce9097"
+            }
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_autotuning/result.json",
+            "sha256": "33eb73d8a1e54afda5a8ad6a9f4c1d943b41b94bfbf962f16229ef8283ce9097"
+          },
+          "candidate": {
+            "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+            "candidate_id": "baseline",
+            "kernel": "convolution",
+            "launch_rule": {
+              "block": [
+                128,
+                1,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "elementwise",
+              "shared_memory_bytes": 0,
+              "tile_x": null,
+              "tile_y": null,
+              "version": 1
+            },
+            "parameters": {},
+            "source_hash": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+            "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_autotuning/generation/best.cu"
+          },
+          "trial_summary": {
+            "closed_trials": 3,
+            "configurations_with_recorded_validity": 1,
+            "correct_configurations": 1,
+            "research_blocked_cancelled_trials": 2,
+            "trials_with_valid_measured_candidate": 1
+          },
+          "generation_scores_excluded_from_suite_final": true,
+          "FINAL_qualification_claimed": false
+        },
+        {
+          "job_id": "774563",
+          "task_id": "quality-20261021-v2.convolution.3141.no_pmpp",
+          "mode": "no_pmpp",
+          "session_id": "suite-gen-bc67ddc00d9d2d21d6ed6cda646ad901",
+          "status": {
+            "certification_status": "generation_complete",
+            "execution_complete": true,
+            "generation_complete": true,
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "accounting_terminal": {
+            "json_pointer": "/worker_terminal",
+            "receipt": {
+              "elapsed": "00:35:00",
+              "exit_code": "0:0",
+              "job_id": "774563",
+              "nodes": "romeo-a031",
+              "state": "COMPLETED",
+              "terminal": true
+            },
+            "scope": "Preserved local terminal accounting; parent also reported sacct success, no scheduler query by auditor",
+            "source": {
+              "encoding": "raw_file_bytes",
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_pmpp/result.json",
+              "sha256": "a60df3505f9c32e46186e30444d275e8b1bbab8fdb7699d67eb38a74574010f8"
+            }
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_pmpp/result.json",
+            "sha256": "a60df3505f9c32e46186e30444d275e8b1bbab8fdb7699d67eb38a74574010f8"
+          },
+          "candidate": {
+            "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+            "candidate_id": "baseline",
+            "kernel": "convolution",
+            "launch_rule": {
+              "block": [
+                128,
+                1,
+                1
+              ],
+              "elements_key": "n",
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "kind": "elementwise",
+              "shared_memory_bytes": 0,
+              "tile_x": null,
+              "tile_y": null,
+              "version": 1
+            },
+            "parameters": {},
+            "source_hash": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+            "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.no_pmpp/generation/best.cu"
+          },
+          "trial_summary": {
+            "closed_trials": 3,
+            "configurations_with_recorded_validity": 2,
+            "correct_configurations": 2,
+            "research_blocked_cancelled_trials": 2,
+            "trials_with_valid_measured_candidate": 1
+          },
+          "generation_scores_excluded_from_suite_final": true,
+          "FINAL_qualification_claimed": false
+        }
+      ],
+      "scope": "Deux nouveaux terminaux DFD seulement, sans revalidation des acquis antérieurs. Méthodes completed et Slurm COMPLETED 0:0, naïf exact retenu. Les candidats/mesures SEARCH et dossiers admis ne qualifient pas FINAL. Le cumul des quatre nouveaux terminaux porte le constat daté à 26 générations sur 144 et une finale commune sur 18.",
+      "limitations": [
+        "Slurm COMPLETED0:0 and method completed mean each bounded generation ended; not three measured/valid kernels per method.",
+        "Each method closed three trials with one integrated valid candidate and two research-blocked cancellations; no_pmpp local tuning validated two configurations.",
+        "Dossiers were written retrieved even when runtime evidence guards later refused admission; actual CLI/web execution and actual admission are reported separately.",
+        "no_autotuning fresh diagnostic-driven refresh was performed but failed the unavailable-evidence guard; it is not requalified as ready.",
+        "All paired search confirmations are historical SEARCH/performance receipts, not independent common FINAL qualification or optimizer speedup.",
+        "Only SQLite file metadata was stat-ed; no database/RNG/pickle contents, private prompt files, sealed data or binary input was opened or hashed.",
+        "No new model/GPU/SSH/network/process/job/lock operation occurred; no drainer release marker was created.",
+        "Source identity concerns frozen DFD on-disk files before dispatch, not model weights or loaded bytecode."
+      ]
+    },
+    "dispatch_00a67a3_first_epochs": {
+      "path": "work/live/dispatch-00a67a3-first-epochs.json",
+      "sha256": "18540e0d54c22a7d786c2712533664388394091ac1edafa60e4ef4b14d86407a",
+      "bytes": 38294,
+      "kind": "independent_first_dispatch_epoch_audit",
+      "observed_at_utc": "2026-10-21T23:15:05.086295+00:00",
+      "ok": true,
+      "checks": {
+        "774656_ack_ownership": true,
+        "774656_dispatch_binding": true,
+        "774656_epoch_digest": true,
+        "774656_epoch_module_paths": true,
+        "774656_epoch_source": true,
+        "774656_hardware_binding": true,
+        "774656_long_48h": true,
+        "774656_model_config": true,
+        "774656_no_removed_global_cap_fields": true,
+        "774656_old_bootstrap_failure_preserved": true,
+        "774656_request_01f85c0c02dc4b2882473c865de4375a": true,
+        "774656_request_febcbbb1b53140a0850f5f85c90f9c2b": true,
+        "774657_ack_ownership": true,
+        "774657_dispatch_binding": true,
+        "774657_epoch_digest": true,
+        "774657_epoch_module_paths": true,
+        "774657_epoch_source": true,
+        "774657_hardware_binding": true,
+        "774657_long_48h": true,
+        "774657_model_config": true,
+        "774657_no_removed_global_cap_fields": true,
+        "774657_old_bootstrap_failure_preserved": true,
+        "774657_request_18a04204f42e4e62997872851819b81b": true,
+        "774657_request_original-eaac9410610921dc2f75d30cd5003317b291d573466fbe16206c3dc0437e0bc5": true,
+        "774658_ack_ownership": true,
+        "774658_dispatch_binding": true,
+        "774658_epoch_digest": true,
+        "774658_epoch_module_paths": true,
+        "774658_epoch_source": true,
+        "774658_hardware_binding": true,
+        "774658_long_48h": true,
+        "774658_model_config": true,
+        "774658_no_removed_global_cap_fields": true,
+        "774658_old_bootstrap_failure_preserved": true,
+        "774658_request_001e556340164196a6b2647ade1de20e": true,
+        "774658_request_fb747847a40c4ce2ac457aa8d6361028": true,
+        "774659_ack_ownership": true,
+        "774659_dispatch_binding": true,
+        "774659_epoch_digest": true,
+        "774659_epoch_module_paths": true,
+        "774659_epoch_source": true,
+        "774659_hardware_binding": true,
+        "774659_long_48h": true,
+        "774659_model_config": true,
+        "774659_no_removed_global_cap_fields": true,
+        "774659_old_bootstrap_failure_preserved": true,
+        "774659_request_0225c1681db04bb7aa69d0237dd1888a": true,
+        "774659_request_fbdae6ffeb2a4b4a9ddcfbc63032934f": true,
+        "all_188_frozen_source_files_match": true,
+        "ci_receipt_pin": true,
+        "controller_digest": true,
+        "controller_epoch_digest_000001": true,
+        "controller_epoch_digest_000002": true,
+        "controller_epoch_digest_000003": true,
+        "controller_epoch_digest_000004": true,
+        "controller_epoch_predecessor_000001": true,
+        "controller_epoch_predecessor_000002": true,
+        "controller_epoch_predecessor_000003": true,
+        "controller_epoch_predecessor_000004": true,
+        "controller_identity_hash": true,
+        "controller_module_paths": true,
+        "controller_no_global_resource_caps": true,
+        "controller_python_source_identity": true,
+        "controller_source": true,
+        "four_controller_epochs_preserved": true,
+        "four_distinct_uuid": true,
+        "inspected_receipts_unchanged_during_audit": true,
+        "observed_controller_identity": true,
+        "observed_controller_pin": true,
+        "source_188_file_map": true,
+        "source_archive_pin": true,
+        "source_head_and_clean_capture": true,
+        "source_metadata_pin": true,
+        "tar_contents_match_exact_git_commit_blobs": true,
+        "tar_safe_regular_files_and_directories": true
+      },
+      "controller": {
+        "epoch": {
+          "epoch_id": "000004-ab41a6839e1f49de88e54a4e36bdebbb",
+          "path": "results/quality-study-v2/dispatch-attestations/controller/000004-ab41a6839e1f49de88e54a4e36bdebbb.json",
+          "sha256": "3080df0d3ed7cf28c5cd776748c029776d545e9d01c9a25f996eab49f6125336",
+          "original_study_relative_path": "dispatch-attestations/controller/000004-ab41a6839e1f49de88e54a4e36bdebbb.json",
+          "path_base": "repository"
+        },
+        "exec_session_id": 5052,
+        "observed_receipt": {
+          "bytes": 2091,
+          "path": "work/live/controller-00a67a3-observed.json",
+          "sha256": "8b66750a12d43cdc331938bef53d378cb3bb660f0028f9622675d438344eaa5c"
+        },
+        "pid": 38604,
+        "source_head": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+        "source_identity_hash": "6e4caf8a8bec225fb3fbb706e20c301296e30f39b676d9550ff4fd19916961a4"
+      },
+      "observed_dispatches": [
+        {
+          "task_id": "quality-20261021-v2.convolution.3141.no_research",
+          "job_id": "774656",
+          "execution_completion": "not asserted; startup and existing SEARCH execution receipts only"
+        },
+        {
+          "task_id": "quality-20261021-v2.convolution.3141.true_upstream",
+          "job_id": "774657",
+          "execution_completion": "not asserted; startup and existing SEARCH execution receipts only"
+        },
+        {
+          "task_id": "quality-20261021-v2.convolution.3141.pmpp_permanent_only",
+          "job_id": "774658",
+          "execution_completion": "not asserted; startup and existing SEARCH execution receipts only"
+        },
+        {
+          "task_id": "quality-20261021-v2.matmul.1729.full",
+          "job_id": "774659",
+          "execution_completion": "not asserted; startup and existing SEARCH execution receipts only"
+        }
+      ],
+      "source_configuration_claims": {
+        "fixed_scientific_protocol": "3 trials,2 repairs,4 configurations per trial retained; not total tokens/tools/duration ceilings",
+        "global_resource_caps": null,
+        "removed_global_cap_fields_absent_from_all_four_configs": true,
+        "scheduler_limit": "48h per new lease is scheduler walltime, not a whole-study budget",
+        "source_locations": [
+          "optimizer_agent/campaign_config.py:74",
+          "optimizer_agent/suite_orchestrator.py:352",
+          "optimizer_agent/suite_orchestrator.py:1075"
+        ]
+      },
+      "scope": "Identité du nouveau contrôleur 00a67a3, chaîne d’epochs et quatre dispatchs vérifiées par 75 checks. Contrôleur observé en cours, partition long et durée technique Slurm 48 h ; aucun plafond global. Aucun résultat terminal supplémentaire ni conformité future du modèle déduit. Les 26 générations et la finale déjà acquises sont conservées."
+    },
+    "catalog_integrity_00a67a3": {
+      "path": "work/live/catalog-evidence-integrity-00a67a3.json",
+      "sha256": "96e7ddaf5540217597c999ac219db741dff6f532bd74ae8c28bf0a62ba1c91ff",
+      "bytes": 763226,
+      "kind": "published_catalogue_integrity_audit_no_execution",
+      "audited_commit": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "audited_registry": {
+        "sha256": "adf599411526a941e037703d31c591cdb2d568bba700f7e4ecc1cbe91e0d85f1",
+        "bytes": 755709,
+        "matches_commit": true,
+        "path": "docs/validation/requirement-evidence.json"
+      },
+      "observed_counts": {
+        "evidence_count": 170,
+        "requirement_count": 78,
+        "historical_index_receipts": 8,
+        "source_status_counts": {
+          "matched_historical_git": 46,
+          "historical_dirty_bytes_not_recovered_previously": 3,
+          "matched_published_current": 42
+        },
+        "current_source_count": 42,
+        "current_top_level_definitions_verified": 342,
+        "source_definition_mismatches": 0,
+        "explicit_reference_status_counts": {
+          "hash_matches": 217,
+          "matched_historical_git": 2,
+          "historical_unpinned_observation_now_has_file": 1
+        },
+        "explicit_byte_count_mismatches": 0,
+        "embedded_map_status_counts": {
+          "matched_historical_git": 557,
+          "hash_matches": 53,
+          "excluded_nonpublic_or_nontext_without_read": 9,
+          "known_historical_dirty_limit_annotation": 3,
+          "historical_bytes_not_recovered_in_git": 2
+        },
+        "internal_evidence_links": 1840,
+        "unresolved_internal_links": 0,
+        "runtime_evaluation_ids_not_registry_links": 3,
+        "missing_requirement_ids": [],
+        "unexpected_requirement_ids": [],
+        "spec_derived_sections": 45,
+        "spec_derived_ACs": 20,
+        "spec_derived_decisions": 10,
+        "requirement_location_defects": [],
+        "catalogue_entries_without_checked_reference": [],
+        "duplicate_json_keys": [],
+        "spec_copies_equal": true,
+        "spec_sha256_matches": true
+      },
+      "criteria": {
+        "published_bytes_match": true,
+        "declared_cardinalities_match": true,
+        "all_78_requirement_IDs_present": true,
+        "42_current_sources_and_AST_match": true,
+        "immutable_explicit_refs_match_or_match_historical_git": true,
+        "all_internal_evidence_links_resolve": true,
+        "historical_source_reconstruction_complete": false,
+        "no_functional_completion_inferred": true,
+        "all_permitted_embedded_maps_match_or_have_explicit_historical_limit": true,
+        "spec_and_all_75_spec_anchored_requirement_locations_match": true
+      },
+      "historical_provenance_limits": [
+        {
+          "id": "THREE_INITIAL_DIRTY_SNAPSHOTS_UNRECOVERED",
+          "severity": "known_provenance_limit",
+          "expected_hashes": {
+            "optimizer_agent/diagnostics.py": "31a74d9647956e01716000d9af9df8d53eb6e7945b26bbbad81bb2dc5ac24294",
+            "optimizer_agent/execution_backend.py": "a42245743a6fc2f5ed9af91ffc4dec7b7520e2a87bf50cf0420bd1e55c2ea651",
+            "optimizer_agent/suite_orchestrator.py": "9933250d0ff87356b7d1d3f0be9fbba0a722039f8464934cd4cdd6df42fe11bc"
+          },
+          "prior_audit": "work/live/catalog-evidence-integrity-dfd93d0.json",
+          "scope": "Pins unchanged. Reuse the previous Git and public-archive search; no new byte recovery is claimed and current bytes are not substituted."
+        },
+        {
+          "id": "INTERMEDIATE_LOCAL_V1_SOURCE_BYTES_NOT_RECOVERED",
+          "severity": "bounded_provenance_limit",
+          "records": [
+            {
+              "path": "optimizer_agent/upstream_original.py",
+              "expected_sha256": "3762dbe73eb8f11356558e67c5aa6c655506d126e58e48352c41edf6a2a40a22",
+              "status": "historical_bytes_not_recovered_in_git",
+              "git_history_candidates_checked": 5,
+              "location": "$.evidence_catalog.local_upstream_transport_prompt_v2_de38abb.previous_acceptance.source_files"
+            },
+            {
+              "path": "tests/test_upstream_original.py",
+              "expected_sha256": "d48e161af5079b2eac2c09f27f8fb93b91085a8f15c3c18715db205035bf093b",
+              "status": "historical_bytes_not_recovered_in_git",
+              "git_history_candidates_checked": 4,
+              "location": "$.evidence_catalog.local_upstream_transport_prompt_v2_de38abb.previous_acceptance.source_files"
+            }
+          ],
+          "scope": "V1 authenticated test receipt records identities and 41 tests. These unpublished intermediate bytes were not found in Git. Separate from the three initial dirty captures; no V2 substitution, rerun or repin."
+        }
+      ],
+      "subsequent_recovery_evidence": "historical_transport_v1_exact_source_recovery",
+      "scope": "Audit historique du catalogue publié 00a67a3 à 170 preuves et 78 exigences : 1 840 liens résolus, 42 sources courantes et 342 définitions exactes. Il n’audite pas le présent catalogue enrichi. Trois snapshots dirty initiaux restent non récupérés ; la limite séparée des deux sources V1 est levée ensuite par une reconstruction exacte additive, sans modifier cet ancien reçu. Une empreinte ne prouve pas une fonctionnalité, un test ou ROMEO."
+    },
+    "historical_transport_v1_exact_source_recovery": {
+      "path": "work/live/historical-source-recovery-v1/recovery-manifest.json",
+      "sha256": "6b0b8b1e86032114fbfe3e356041b0cfd54393f2108b23b650a2ce1fa012e0c0",
+      "bytes": 13364,
+      "kind": "exact_historical_two_file_source_reconstruction_from_pinned_inverse",
+      "observed_at_utc": "2026-10-21T23:17:47.171629+00:00",
+      "files": [
+        {
+          "version": "v1-reconstructed-exact",
+          "original_relative_path": "optimizer_agent/upstream_original.py",
+          "path": "work/live/historical-source-recovery-v1/v1-reconstructed-exact/optimizer_agent/upstream_original.py",
+          "sha256": "3762dbe73eb8f11356558e67c5aa6c655506d126e58e48352c41edf6a2a40a22",
+          "bytes": 44909,
+          "identity_basis": "Full-fileSHA256 equals the pre-existing immutableV1 testreceipt pin"
+        },
+        {
+          "version": "v1-reconstructed-exact",
+          "original_relative_path": "tests/test_upstream_original.py",
+          "path": "work/live/historical-source-recovery-v1/v1-reconstructed-exact/tests/test_upstream_original.py",
+          "sha256": "d48e161af5079b2eac2c09f27f8fb93b91085a8f15c3c18715db205035bf093b",
+          "bytes": 36901,
+          "identity_basis": "Full-fileSHA256 equals the pre-existing immutableV1 testreceipt pin"
+        },
+        {
+          "version": "v2-git-00a67a3",
+          "original_relative_path": "optimizer_agent/upstream_original.py",
+          "path": "work/live/historical-source-recovery-v1/v2-git-00a67a3/optimizer_agent/upstream_original.py",
+          "sha256": "ee93e53897a2c131c58ee6a2c66bfd2de6c964d44fc2de606d998ab8599024c5",
+          "bytes": 44941,
+          "identity_basis": "Exact Gitblob at committedV2 00a67a36be6252194b890cff781db7ee2d65c5c3"
+        },
+        {
+          "version": "v2-git-00a67a3",
+          "original_relative_path": "tests/test_upstream_original.py",
+          "path": "work/live/historical-source-recovery-v1/v2-git-00a67a3/tests/test_upstream_original.py",
+          "sha256": "fe31e6d33a0491f55346220e8ac1dc8c47572ed9783b4418624cdb1ab36f92a5",
+          "bytes": 36973,
+          "identity_basis": "Exact Gitblob at committedV2 00a67a36be6252194b890cff781db7ee2d65c5c3"
+        }
+      ],
+      "inverse_patch": {
+        "path": "work/live/historical-source-recovery-v1/inverse-v2-to-v1.patch",
+        "sha256": "5a347f2a60623008ec92ef72640fa55c1b32d13aee2d56120848de39dba46c33",
+        "bytes": 2103
+      },
+      "original_receipts_unchanged": true,
+      "scope": "Deux fichiers intermédiaires V1 reconstruits par inversion bornée du delta V2 et égalité aux hashes complets déjà épinglés 3762dbe7/d48e161a. Copies V2 et méthode archivées ; ce ne sont ni un backup original, ni un worktree historique complet, ni un nouveau test. Les trois captures dirty initiales et les prompts historiques non archivés restent manquants."
+    },
+    "original_complete_source_availability_1e9464d": {
+      "path": "work/live/final-export-original-source-supplement-1e9464d.json",
+      "sha256": "d146cbab3dbbcfe193ca62d9a7218c38c1340bf5534026786601ec1687e909da",
+      "bytes": 5953,
+      "kind": "original_repository_source_availability_supplement",
+      "observed_at_utc": "2026-10-21T23:16:59.849378+00:00",
+      "commit": "1e9464da54dfc651337a97c3643bfeefec712bc1",
+      "regular_file_count": 29,
+      "tar_member_count": 34,
+      "gzip_mtime": 0,
+      "source_archive": {
+        "bytes": 792115,
+        "path": "work/release-source-archives/1e9464da54dfc651337a97c3643bfeefec712bc1/source.tar.gz",
+        "sha256": "0a723b1b982356b7112556476d73a036a2356a9f392116ae4a8582755a71c13d"
+      },
+      "source_metadata": {
+        "bytes": 3982,
+        "path": "work/release-source-archives/1e9464da54dfc651337a97c3643bfeefec712bc1/source.json",
+        "sha256": "3e2bb5fc18214f70e5cee396b33f74ee3650776e577a3b115bd0565ad2ca7a28"
+      },
+      "verification": {
+        "complete_archive_file_set_equals_commit_tree": true,
+        "compressed_archive_roundtrip_exact": true,
+        "earlier_source_archives_unchanged": true,
+        "every_member_safe_unique_regular_file_or_directory": true,
+        "every_tar_file_git_blob_id_matches": true,
+        "git_commit_object_present_locally": true,
+        "git_tree_resolved_locally": true,
+        "gzip_zero_mtime": true,
+        "materialized_upstream_subset_matches_full_archive": true
+      },
+      "scope": "Disponibilité de l’archive originale complète 1e9464d : 29 fichiers, 34 membres, comparés aux blobs Git et gzip mtime=0. Aucune nouvelle exécution de l’original, assemblage réel, export d’étude, reconstruction d’un résultat scientifique ou qualification globale. Anciennes archives conservées."
+    },
+    "local_assembler_declared_inventory_28_fixtures": {
+      "path": "work/live/assemble-validation-declared-inventory-scope-fixtures.json",
+      "sha256": "2f35b2129df8baba39fd917ca117b2b2d6e2bf6f9c12237796978a3b985f5290",
+      "bytes": 3145,
+      "kind": "work_assembler_declared_inventory_scope_fixture_result",
+      "observed_at_utc": "2026-10-21T22:57:57.479147+00:00",
+      "source_files": [
+        {
+          "bytes": 40235,
+          "path": "work/live/assemble_validation_release.py",
+          "sha256": "d6b2d3f990035a46b9c6c804ad0b3ae3a123d663638335da722213dc2bfcffea"
+        },
+        {
+          "bytes": 26711,
+          "path": "work/live/test_assemble_validation_release.py",
+          "sha256": "92289b9620c7c40c2c718507df3b54a2b9e5416e30a959474cdf47c480d8e49a"
+        }
+      ],
+      "test_result": {
+        "coherent_suite_runs_on_this_final_delta": 1,
+        "command": "rtk proxy .venv/bin/python work/live/test_assemble_validation_release.py -v",
+        "duration_seconds_reported_by_unittest": 0.261,
+        "errors": 0,
+        "exit_code": 0,
+        "failures": 0,
+        "github_ci": false,
+        "passed": 28,
+        "tests": 28
+      },
+      "peer_review": {
+        "path": "work/live/assemble-validation-d6b2d3f9-peer-review.json",
+        "sha256": "2f9ccd1f9a29d648c8f09eb97a1fb59880581b263326785593b920c5965642df",
+        "bytes": 1233
+      },
+      "change_scope": {
+        "coverage_limitations": "Required public list of nonempty strings; explicit empty list permitted. Copied exactly, without normalization, to public plan, release manifest and result. Input SHA pin and existing immutable-source checks apply.",
+        "input_inventory_complete_semantics": "Finalized selected explicit file list only; not recovery of every expected historical proof",
+        "inventory_scope": "Only files explicitly declared in the SHA-pinned input index; not completeness of all expected historical evidence",
+        "original_control_authorities_requalified": false,
+        "output_integrity_field": "declared_inventory_integrity_verified",
+        "plan_integrity_verdict": null
+      },
+      "historical_gaps_not_resolved": [
+        "Three old dirty source snapshots remain unrecoverable; illustrative example retains this gap without treating Git archives as reconstruction.",
+        "Some historical prompts were not archived; no recovery of their original content is claimed."
+      ],
+      "actual_assembly_performed": false,
+      "scope": "28 fixtures CPU temporaires et revue indépendante du seul assembleur de travail. L’intégrité des fichiers explicitement déclarés ne certifie pas la complétude des preuves historiques. coverage_limitations obligatoire et conservée ; autorités originales inchangées, qualification scientifique non déduite. Aucun index réel ou base privée assemblé ; exports §16 réels toujours à produire."
+    },
+    "ci_00a67a3": {
+      "path": "work/live/ci-00a67a3.json",
+      "sha256": "14494ac827f51a0934b879fe81c67f6359240834ac40be551478a24e08a0231d",
+      "bytes": 1968,
+      "kind": "exact_sha_github_ci",
+      "headSha": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39689070994",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39689070994/job/119530432626"
+        }
+      ],
+      "scope": "CI exacte 00a67a3 terminée, pytest et compileall réussis. Nombre de tests non déduit des seules étapes du reçu ; les nombres de38 restent historiques. Cette CI ne couvre pas le nouveau renderer 29371d3c et ne prouve ni modèle réel, ni GPU, ni qualification scientifique."
+    },
+    "original_convolution3141_774657_00a_terminal": {
+      "path": "work/live/section16-00a67a3-original-774657.json",
+      "sha256": "987f1a1a423e0b8297c8277d327593daf1044fd49d77e24d828d5e928e48a4ef",
+      "bytes": 25503,
+      "kind": "bounded_original_convolution3141_terminal_under_00a67a3",
+      "observed_at_utc": "2026-10-21T23:38:52.667936+00:00",
+      "source_HEAD": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "original_commit": "1e9464da54dfc651337a97c3643bfeefec712bc1",
+      "original_pinned_source_files_verified": 16,
+      "adapter_source_hashes_verified": {
+        "codex_backend.py": "0b554761d84fa6b0915079b2551655864d10b73632a3dc195fbdbb7391f906ca",
+        "frozen_launch.py": "8498e6e1367cda0bfabe83354bef00c273b048dbb68686cef648fa6795e49718",
+        "gain_observer.py": "06c16293570c87c7b5b01807f9ffa36b4a65aa591db4c3d548366c1fd0016b9f",
+        "upstream_original.py": "ee93e53897a2c131c58ee6a2c66bfd2de6c964d44fc2de606d998ab8599024c5"
+      },
+      "job_id": "774657",
+      "terminal": {
+        "elapsed": "00:20:55",
+        "exit_code": "0:0",
+        "job_id": "774657",
+        "nodes": "romeo-a031",
+        "state": "COMPLETED",
+        "terminal": true
+      },
+      "model_protocol": {
+        "CLI_completed": 10,
+        "CLI_failed": 0,
+        "all_final_texts_strict_whole_JSON_objects": true,
+        "all_modes_exclusive": true,
+        "cached_tokens_are_subset_of_input": true,
+        "final_mode": 5,
+        "input_plus_output_tokens": 502425,
+        "scope": "Concrete compliance of these ten recorded calls with the updated bridge; not a guarantee for future model replies",
+        "text_extraction_or_repair_used_by_audit": false,
+        "tool_calls_mode": 5,
+        "transport_attempts_all_zero": true,
+        "uncertain_model_intents": [],
+        "unique_call_ids": 10,
+        "usage_complete": true,
+        "usage_sum": {
+          "cached_input_tokens": 259712,
+          "input_tokens": 462176,
+          "output_tokens": 40249,
+          "reasoning_output_tokens": 32744
+        }
+      },
+      "scope": "Nouveau terminal original 774657 seulement, au source propre 00a et pont ee93 V2 authentifiés. Dix invocations CLI complètes conformes au transport exclusif et au JSON final strict, sans extraction/réparation ; conformité concrète de ces appels, pas garantie future. Trois propositions correctes sur sept cas, meilleur itération 2 validé indépendamment sur quatorze cas SEARCH. Aucun gain utile confirmé, aucun FINAL, aucune requalification de l’ancien original 774527 failed. Borne inférieure de 27 générations auditées, héritant des 26 précédentes sans nouveau journal global lu.",
+      "result": {
+        "encoding": "raw_file_bytes",
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.true_upstream/result.json",
+        "sha256": "3b5d8f4ee9b024b55b49cc85c09f8f6e2876d51ad4860a2f7d0310183730ef20"
+      },
+      "generation_status": {
+        "candidate_fallback": null,
+        "certification_status": "not_yet_independently_finalized",
+        "execution_complete": true,
+        "generation_complete": true,
+        "method_error": null,
+        "method_status": "completed",
+        "method_termination": "iteration_limit",
+        "retained_best_available": true,
+        "status": "generation_complete"
+      },
+      "retained_candidate": {
+        "artifact_hash": "a50d10c6a965b8b751114aaf47fa5e9319c4ab2f0ac3ee8f4f39301c30aab809",
+        "candidate_id": "upstream-original-2",
+        "kernel": "convolution",
+        "launch_rule": {
+          "kind": "fixed_shape_table",
+          "table": {
+            "1": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "128": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                4,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "17": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                1,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "256": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                8,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "512": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                16,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "63": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                2,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            },
+            "64": {
+              "block": [
+                32,
+                1,
+                1
+              ],
+              "grid": [
+                2,
+                1,
+                1
+              ],
+              "shared_memory_bytes": 0
+            }
+          },
+          "version": 1
+        },
+        "parameters": {},
+        "source_hash": "63d461c4cce0e7d3a518bb70736aac85e421ac769765b58295078081b2aee311",
+        "source_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.true_upstream/generation/frozen-original.cu"
+      },
+      "candidate_source": {
+        "encoding": "raw_file_bytes",
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.true_upstream/generation/frozen-original.cu",
+        "sha256": "63d461c4cce0e7d3a518bb70736aac85e421ac769765b58295078081b2aee311"
+      },
+      "artifact_hash_recomputed": true,
+      "recorded_consumption": {
+        "cached_input_tokens": 259712,
+        "combined_method_and_observer_gpu_wall_seconds": 889.0097682939959,
+        "gain_observer_wall_seconds": 829.072848959011,
+        "input_tokens": 462176,
+        "local_configurations": 3,
+        "model_calls": 10,
+        "model_tokens": 502425,
+        "original_harness_calls": 35,
+        "original_harness_elapsed_seconds": 31.005911333981203,
+        "output_tokens": 40249,
+        "uncertain_model_intents": [],
+        "usage_complete": true
+      },
+      "oracle_qualification": {
+        "artifact_hash": "a50d10c6a965b8b751114aaf47fa5e9319c4ab2f0ac3ee8f4f39301c30aab809",
+        "case_count": 14,
+        "contract_hash": "b90df35cae631fa4e57b2fcbe1902b077d503457ea302f31c78482f4feaee96e",
+        "evaluation_id": "798b0dccb06d467897aac0e5474dd7b1",
+        "ok": true,
+        "receipt": {
+          "encoding": "raw_file_bytes",
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.3141.true_upstream/generation/frozen-search-validation.json",
+          "sha256": "580d397fd7873abbad2f3c61aae08ef3fbe4c2f16e6521f1beeb9717394be234"
+        },
+        "scope": "Existing independent SEARCH oracle receipt, not new validation or sealed FINAL qualification",
+        "status": "validated",
+        "suite": "search"
+      },
+      "first_useful_gain": {
+        "observer_confirmation_count": 3,
+        "scope": "Independent search observer only, with no result fed to original control/model; no confirmed useful gain recorded",
+        "status": "no_confirmed_gain",
+        "time_seconds": null
+      },
+      "FINAL_scope": {
+        "certification_status": "not_yet_independently_finalized",
+        "common_FINAL_evaluation_observed": false,
+        "generation_scores_excluded_from_suite_final": true,
+        "optimizer_speedup_claimed": false
+      },
+      "count_observation": {
+        "common_final_groups_previously_reported": 1,
+        "inherited_completed_generation_lower_bound": 27,
+        "new_terminal_generations_verified_here": 1,
+        "previous_frozen_generation_count_reported_by_parent": 26,
+        "scope": "Lower bound inherits the already frozen prior count; no live global journal or private database was read"
+      }
+    },
+    "prior_campaign_metric_view_223_exact_history": {
+      "path": "work/live/metrics-view-history/29371d3c/history-manifest.json",
+      "sha256": "50df96d7c7c0b615b03107a8af84d2acfb596c03bc9ee5e97b58ab3c06e4f02a",
+      "bytes": 1867,
+      "kind": "exact_prior_campaign_metrics_view_223_test_history",
+      "observed_at_utc": "2026-10-21T23:42:49.050448+00:00",
+      "files": [
+        {
+          "original_path": "scripts/report_study_fr.py",
+          "path": "work/live/metrics-view-history/29371d3c/scripts/report_study_fr.py",
+          "sha256": "29371d3c1b12d0bc8a8df9899f47425b2541fc02f06cabf167c1cd591e68d9ec",
+          "bytes": 127769
+        },
+        {
+          "original_path": "tests/test_study_report.py",
+          "path": "work/live/metrics-view-history/29371d3c/tests/test_study_report.py",
+          "sha256": "273aa4474db0229f53eb9d8689824e62b1f3b49457f119a19976ddaeafbcb190",
+          "bytes": 112722
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-view-00a67a3.json",
+          "path": "work/live/metrics-view-history/29371d3c/work/live/campaign-observed-metrics-view-00a67a3.json",
+          "sha256": "9a6ee53e80808cf69e692d4866dcdba8237b736ed7d803b12c4ed23c7c3ada31",
+          "bytes": 4422
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-view-00a67a3.xml",
+          "path": "work/live/metrics-view-history/29371d3c/work/live/campaign-observed-metrics-view-00a67a3.xml",
+          "sha256": "b53d787e93814366af145b7a475a365bb1bac5184d8abefb6fe23d24ba864512",
+          "bytes": 36709
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-view-00a67a3.log",
+          "path": "work/live/metrics-view-history/29371d3c/work/live/campaign-observed-metrics-view-00a67a3.log",
+          "sha256": "32e4f3543fdb695479cb5fcc2bd5b84ab892441cff26f88101a69308d50f6efc",
+          "bytes": 340
+        }
+      ],
+      "all_copied_bytes_match_prior_pins": true,
+      "scope": "Source 29371d3c, tests 273aa447 et reçu à 223 tests 9a6ee53e avec JUnit/log conservés exactement avant ajout validité/configurations. Aucun ancien reçu modifié, test rejoué ou worktree historique complet revendiqué."
+    },
+    "local_campaign_metric_validity_view_00a67a3": {
+      "path": "work/live/campaign-observed-metrics-validity-view-00a67a3.json",
+      "sha256": "d8ca2fe67e50fdee8eec41bca99939431efdb51fa014e3f21aaac4a8e218f148",
+      "bytes": 6204,
+      "kind": "focused_local_recorded_validity_and_metrics_presentation",
+      "git_base": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "tests_passed": 230,
+      "new_regression_cases": 7,
+      "junit": {
+        "path": "work/live/campaign-observed-metrics-validity-view-00a67a3.xml",
+        "sha256": "9b439f8403055dea2de3dc52e116d86c71f6831b072e4efb360f62760141df3e",
+        "bytes": 37804
+      },
+      "source_files_after": {
+        "scripts/report_study_fr.py": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+        "tests/test_study_report.py": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a"
+      },
+      "source_files_unchanged_during_tests": true,
+      "test_source_snapshot": {
+        "path": "tests/test_study_report.py",
+        "sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+        "bytes": 115770,
+        "definitions": [
+          {
+            "name": "save",
+            "line": 27
+          },
+          {
+            "name": "method_outcome_summary",
+            "line": 32
+          },
+          {
+            "name": "test_html_separates_failed_method_from_qualified_measured_fallback",
+            "line": 58
+          },
+          {
+            "name": "test_markdown_preserves_failure_reason_fallback_gain_and_raw_json",
+            "line": 76
+          },
+          {
+            "name": "test_initial_fallback_iteration_zero_and_unknown_method_are_not_successes",
+            "line": 91
+          },
+          {
+            "name": "test_consumption_deduplicates_calls_and_preserves_unknown_failures",
+            "line": 102
+          },
+          {
+            "name": "test_same_call_with_conflicting_usage_cannot_silently_change_totals",
+            "line": 123
+          },
+          {
+            "name": "test_original_intent_cli_and_legacy_copies_share_one_call_without_counting_acks",
+            "line": 130
+          },
+          {
+            "name": "test_original_intent_unknown_failures_survive_rehost_without_zero_invoice",
+            "line": 155
+          },
+          {
+            "name": "test_original_intent_conflicting_legacy_usage_fails_closed",
+            "line": 166
+          },
+          {
+            "name": "test_original_distinct_attempts_are_not_deduplicated_by_prompt_key",
+            "line": 174
+          },
+          {
+            "name": "test_failed_timeout_and_unreported_structured_receipts_remain_visible",
+            "line": 182
+          },
+          {
+            "name": "native_before_thread",
+            "line": 198
+          },
+          {
+            "name": "test_native_started_before_first_thread_is_unknown_and_deduplicated_by_invocation",
+            "line": 204
+          },
+          {
+            "name": "test_native_later_thread_snapshot_links_the_initial_invocation_and_copies",
+            "line": 216
+          },
+          {
+            "name": "test_distinct_native_invocations_without_threads_are_not_merged",
+            "line": 230
+          },
+          {
+            "name": "test_requested_native_thread_identity_and_unidentifiable_receipt_fail_closed",
+            "line": 237
+          },
+          {
+            "name": "test_complementary_cached_usage_and_partial_failure_are_not_zero_invoices",
+            "line": 247
+          },
+          {
+            "name": "test_impossible_usage_cannot_be_reported_as_a_lower_bound",
+            "line": 262
+          },
+          {
+            "name": "lease",
+            "line": 268
+          },
+          {
+            "name": "test_gpu_leases_use_recorded_slurm_elapsed_formats",
+            "line": 277
+          },
+          {
+            "name": "test_failed_timeout_leases_and_rehost_copies_retain_cost_once",
+            "line": 285
+          },
+          {
+            "name": "test_active_unparsed_or_unverified_leases_remain_unknown_not_zero",
+            "line": 297
+          },
+          {
+            "name": "test_inconsistent_slurm_receipts_cannot_falsify_allocation_cost",
+            "line": 309
+          },
+          {
+            "name": "frozen_receipt",
+            "line": 323
+          },
+          {
+            "name": "test_frozen_pilot_preserves_raw_regression_native_identity_and_separate_scope",
+            "line": 347
+          },
+          {
+            "name": "test_partial_or_mismatched_pilot_cannot_produce_a_qualified_plot",
+            "line": 372
+          },
+          {
+            "name": "test_frozen_plot_and_missing_receipt",
+            "line": 387
+          },
+          {
+            "name": "test_green_ci_on_same_head_does_not_qualify_tracked_or_untracked_changes",
+            "line": 398
+          },
+          {
+            "name": "test_new_gpu_receipts_keep_executed_source_head_and_hashes_separate_from_report_head",
+            "line": 424
+          },
+          {
+            "name": "test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope",
+            "line": 440
+          },
+          {
+            "name": "diagnostic_v2_audit_fixture",
+            "line": 457
+          },
+          {
+            "name": "test_actual_diagnostic_audit_replaces_pending_only_with_verified_measured_chain_links",
+            "line": 492
+          },
+          {
+            "name": "test_present_but_unproved_diagnostic_receipt_is_not_qualification",
+            "line": 510
+          },
+          {
+            "name": "test_partial_authorities_and_secondary_parent_observation_remain_separate",
+            "line": 517
+          },
+          {
+            "name": "test_tuning_constraint_control_remains_pending_until_success_is_explicit",
+            "line": 542
+          },
+          {
+            "name": "linked_report_fixture",
+            "line": 551
+          },
+          {
+            "name": "original_execution_fixture",
+            "line": 558
+          },
+          {
+            "name": "test_original_actual_generation_links_are_presented_without_final_success_or_attested_model",
+            "line": 594
+          },
+          {
+            "name": "test_original_source_or_cli_or_method_failures_cannot_be_relabelled_completed",
+            "line": 607
+          },
+          {
+            "name": "common_freeze_fixture",
+            "line": 631
+          },
+          {
+            "name": "test_final_freeze_aliases_are_identities_not_eight_distinct_kernels_or_gains",
+            "line": 666
+          },
+          {
+            "name": "test_frozen_identity_links_and_alias_declarations_fail_closed",
+            "line": 680
+          },
+          {
+            "name": "refresh_documentary_fixture",
+            "line": 697
+          },
+          {
+            "name": "test_absent_documentary_result_is_pending_or_unknown_never_gpu_success",
+            "line": 733
+          },
+          {
+            "name": "test_documentary_control_success_is_limited_to_authenticated_json_subset",
+            "line": 742
+          },
+          {
+            "name": "test_documentary_authentication_never_opens_manifest_databases_rng_or_numeric_inputs",
+            "line": 753
+          },
+          {
+            "name": "test_documentary_partial_or_unverified_proof_never_becomes_acquired",
+            "line": 772
+          },
+          {
+            "name": "test_malformed_control_root_cannot_crash_or_qualify_other_receipts",
+            "line": 796
+          },
+          {
+            "name": "test_nested_list_or_scalar_fields_fail_closed_without_global_report_loss",
+            "line": 816
+          },
+          {
+            "name": "test_hash_matched_linked_manifest_must_still_be_expected_json_object",
+            "line": 825
+          },
+          {
+            "name": "test_new_control_links_are_role_whitelisted_before_any_protected_read",
+            "line": 835
+          },
+          {
+            "name": "test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequence",
+            "line": 865
+          },
+          {
+            "name": "test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals",
+            "line": 882
+          },
+          {
+            "name": "test_explicit_unproven_context_cannot_be_normalized_to_an_identity_ratio",
+            "line": 903
+          },
+          {
+            "name": "test_unmeasured_failure_is_unavailable_instead_of_a_paired_measurement",
+            "line": 921
+          },
+          {
+            "name": "test_legacy_valid_identity_stays_available_without_an_interval",
+            "line": 931
+          },
+          {
+            "name": "test_case_table_exposes_regression_intervals_and_uses_independent_direct_pairs",
+            "line": 937
+          },
+          {
+            "name": "test_case_table_never_turns_identity_or_unproven_context_into_measured_cases",
+            "line": 955
+          },
+          {
+            "name": "test_case_table_keeps_incomplete_or_invalid_intervals_unknown",
+            "line": 971
+          },
+          {
+            "name": "test_case_table_does_not_require_percentile_bootstrap_interval_to_contain_point_estimate",
+            "line": 978
+          },
+          {
+            "name": "test_case_table_displays_partial_measurement_failure_and_artifact_qualification_separately",
+            "line": 984
+          },
+          {
+            "name": "test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only",
+            "line": 997
+          },
+          {
+            "name": "identity_pilot_receipt",
+            "line": 1003
+          },
+          {
+            "name": "test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot",
+            "line": 1017
+          },
+          {
+            "name": "test_pilot_refuses_explicit_unproven_context_before_qualification_and_plot",
+            "line": 1037
+          },
+          {
+            "name": "resumed_documentary_fixture",
+            "line": 1059
+          },
+          {
+            "name": "test_resumed_documentary_authority_preserves_incomplete_original_and_separates_new_calls",
+            "line": 1115
+          },
+          {
+            "name": "test_missing_resumption_is_an_independent_unknown_result",
+            "line": 1133
+          },
+          {
+            "name": "test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls",
+            "line": 1145
+          },
+          {
+            "name": "_documentary_proof",
+            "line": 1160
+          },
+          {
+            "name": "twice_resumed_documentary_fixture",
+            "line": 1168
+          },
+          {
+            "name": "_repin_second_resume",
+            "line": 1256
+          },
+          {
+            "name": "third_resumed_documentary_fixture",
+            "line": 1267
+          },
+          {
+            "name": "test_third_resume_accepted_research_lineage_keeps_all_prior_incomplete_authorities_separate",
+            "line": 1366
+          },
+          {
+            "name": "test_third_resume_rejects_tampered_accepted_lineage_or_explicit_refresh",
+            "line": 1379
+          },
+          {
+            "name": "test_third_resume_absent_is_unknown_and_does_not_complete_old_accepted_research",
+            "line": 1427
+          },
+          {
+            "name": "test_standalone_final_control_absent_or_plan_cannot_prove_execution",
+            "line": 1436
+          },
+          {
+            "name": "test_standalone_final_control_requires_result_checks_owned_terminal_and_sources",
+            "line": 1446
+          },
+          {
+            "name": "test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain",
+            "line": 1463
+          },
+          {
+            "name": "test_second_resumption_rejects_hash_resealed_but_unsupported_ancestry",
+            "line": 1477
+          },
+          {
+            "name": "test_absent_second_resumption_remains_separate_unknown_authority",
+            "line": 1496
+          },
+          {
+            "name": "test_second_resume_authenticates_source_trial_bytes_not_only_manifest_claim",
+            "line": 1502
+          },
+          {
+            "name": "test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval",
+            "line": 1511
+          },
+          {
+            "name": "test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload",
+            "line": 1523
+          },
+          {
+            "name": "metric_summary",
+            "line": 1547
+          },
+          {
+            "name": "test_metric_view_keeps_merged_method_values_and_raw_unknown_list",
+            "line": 1554
+          },
+          {
+            "name": "test_metric_view_distinguishes_recorded_zero_from_unknown",
+            "line": 1585
+          },
+          {
+            "name": "test_metric_view_never_infers_gain_or_milestone_usage_from_totals",
+            "line": 1604
+          },
+          {
+            "name": "test_metric_view_does_not_fill_a_missing_research_metric_from_legacy_spelling",
+            "line": 1615
+          },
+          {
+            "name": "test_metric_panel_handles_absent_or_malformed_optional_metadata",
+            "line": 1624
+          },
+          {
+            "name": "test_report_artifact_exports_additive_metric_view_and_prioritizes_section16",
+            "line": 1631
+          },
+          {
+            "name": "test_recorded_validity_view_preserves_method_overrides_without_deriving_fraction",
+            "line": 1678
+          },
+          {
+            "name": "test_recorded_validity_view_distinguishes_missing_null_and_explicit_zero",
+            "line": 1704
+          }
+        ]
+      },
+      "prior_223_history_manifest": {
+        "path": "work/live/metrics-view-history/29371d3c/history-manifest.json",
+        "sha256": "50df96d7c7c0b615b03107a8af84d2acfb596c03bc9ee5e97b58ab3c06e4f02a",
+        "bytes": 1867
+      },
+      "historical_source_receipts_and_result_unchanged": true,
+      "peer_review": {
+        "status": "GO",
+        "reviewer": "/root/codex_research",
+        "source_sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+        "tests_sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+        "scope": "Independent read-only delta review against archived223 source. No blocking defect; no tests, study data/DB, model, GPU, SSH or rendering by reviewer."
+      },
+      "scope": "Unique lot ciblé230PASS : six valeurs de validité/configurations et validation_evidence_basis déjà fusionnées affichées sans recalcul de fraction ni dénominateur inventé. Présence, absence, zéro et overrides testés ; validités SEARCH distinctes du dernier export et de FINAL. Usage du dernier callback séparé, tokens potentiellement sous-totaux si échec sans usage. Lot223 et résultat historique inchangés. Aucune nouvelle performance, facture, CI ou étude active rendue."
+    },
+    "public_proposal_timeout_and_continuation_774659_00a": {
+      "path": "work/live/matmul-1729-proposal-timeout-774659-00a67a3-verified.json",
+      "sha256": "7a030c10a7678d59698ac557e38cb127a49764180f128b28a14b5a9c054da1ec",
+      "bytes": 29565,
+      "kind": "public_proposal_timeout_and_continuation_audit",
+      "observed_at_utc": "2026-10-21T23:40:33.409105+00:00",
+      "public_audit_ok": true,
+      "checks": {
+        "actual_cli_timeout": true,
+        "all_present_native_requests_are_owned_baseline_source": true,
+        "all_present_native_requests_precede_first_trial": true,
+        "diagnostic_exact_replicas": true,
+        "diagnostic_factual_error_only": true,
+        "diagnostic_pin_trial": true,
+        "diagnostic_pin_trial_result": true,
+        "exact_owned_ack_and_hardware": true,
+        "inspected_json_unchanged_during_audit": true,
+        "new_search_contains_same_diagnostic": true,
+        "new_search_intent_exactly_bound": true,
+        "new_search_real_completed_cli": true,
+        "new_search_returned_payload_hash": true,
+        "new_selected_context_previous_error_is_clear": true,
+        "new_synthesis_intent_same_context": true,
+        "next_trial_selected_without_reusing_candidate": true,
+        "no_completed_candidate_payload": true,
+        "no_completed_turn_or_reported_usage": true,
+        "no_first_trial_candidate_or_evaluation_files": true,
+        "no_native_request_in_timed_out_trial_window": true,
+        "public_result_suspends_without_performance": true,
+        "source_epoch_audit_pin": true,
+        "technical_per_call_timeout_config": true
+      },
+      "identity": {
+        "first_trial_id": "01M5GBRRD9MZ9VZGGQAJDF95ET",
+        "job_id": "774659",
+        "next_trial_id": "01M5GCS3SB1BCPM7NPEGM99D9B",
+        "session_id": "suite-gen-5abb6dfb2461e654a435f1b823cf71ad",
+        "source_head": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+        "uuid": "9e80b6248e28cd5dda161302211d7cd2"
+      },
+      "timeout_cli": {
+        "call_id": "a72db923348847a6a253cd2de2a13291",
+        "configured_per_call_timeout_seconds": 600,
+        "cost_usd": null,
+        "elapsed_seconds": 600.0321025830053,
+        "partial_event_types": {
+          "thread.started": 1,
+          "turn.started": 1
+        },
+        "partial_stdout_bytes": 101,
+        "payload_present": false,
+        "process_termination_scope": "CLI receipt records timeout; no independent process-liveness/termination probe was performed",
+        "purpose": "proposal",
+        "reference": {
+          "bytes": 1335,
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.1729.full/generation/model/a72db923348847a6a253cd2de2a13291.json",
+          "sha256": "33101c0bad5b967bce5f1449f20c81540d95d748ee06dd849be377da5fece21f"
+        },
+        "status": "timeout",
+        "stderr_bytes": 938,
+        "token_values": null,
+        "usage_status": "unknown: no usage field and no usage-bearing completed event"
+      },
+      "usage_scope": "Timed-out call provider usage/cost is unknown, not zero. The raw CLI JSON contains no usage and no completed provider event. Historical ledger sub-totals may record zero for this missing call; that is not a complete consumption observation. No SQLite ledger was read and no historical subtotal was recomputed or changed. The new completed search usage is reported separately; a full campaign token/cost total is not certified.",
+      "accounting_scope": "consumption.gpu_seconds is an elapsed/allocation accounting field here, not CUDA kernel time: its1060.213s approximately spans selection interval1060.226s while all native requests precede the trial. This interpretation is an explicit inference from public timestamps; no numerical performance value is assigned.",
+      "public_context_limits": {
+        "diagnostic_component_sha256": "074232dfecc05bc28146b80ae7880ed0fc1839ba4f1c738080b514f12ecf8a2a",
+        "full_prompt_archived": false,
+        "prompt_sha256": "6814572f017c7e9bc8726647fc92d5a03b430157cd5217325ef92dd91206ad48",
+        "public_context_complete": false,
+        "scope": "Hashes and public diagnostic linkage verified; incomplete public context cannot reconstruct or prove every byte of the private full prompt.",
+        "serialized_context_sha256": "dd36c5888d40a60a2975ca026ea608037ca7fd9401ee56d2d95a024724f4f4b2"
+      },
+      "first_trial_public_scope": {
+        "candidate_id": null,
+        "cuda_timing_status": "No candidate timing observation exists. Zero request count is an inventory fact, never a zero CUDA duration or reward.",
+        "integration_status": "suspended_without_performance_observation",
+        "requires_targeted_research": false,
+        "tell_scope": "Public integration_status explicitly states suspended_without_performance_observation and publishes no score/reward/evaluation; subsequent trial still selects baseline. No SQLite/tree reward/event counters were read, so absence of a tell is not separately authenticated from the private store."
+      },
+      "scope": "Audit public de 23 contrôles : délai technique d’un appel proposition, sans payload candidat complet ni mesure native pendant cet essai ; diagnostic et nouvelle recherche réellement liés. Usage du call expiré inconnu, sans coût nul ni recomptage du ledger. Aucun SQLite, RNG, input privé ou tell privé audité. Les suites de recherche/synthèse/proposition/GPU et la terminaison globale ne sont pas qualifiées ; cet incident n’ajoute aucune génération aux 27 précédentes.",
+      "limitations": [
+        "Only public JSON receipts from this campaign and its earlier source-epoch audit were opened. No SQLite, RNG, numerical inputs/outputs, source code file, raw CLI trace file or unrelated-project trace was read.",
+        "No model, test, SSH, GPU, scheduler, stop/cancel or process-liveness command was issued.",
+        "This audit creates only this new JSON; old trial, CLI, diagnostic, request and generation receipts remain unchanged.",
+        "The active generation, future results and tree counters are not qualified; no campaign completion or successful replacement kernel is claimed.",
+        "The model directory is observed present during this audit; an earlier bounded listing did not include it. This change alone is not evidence of an additional failure."
+      ]
+    },
+    "prior_campaign_metric_validity_view_230_exact_history": {
+      "path": "work/live/metrics-view-history/5cb7304a/history-manifest.json",
+      "sha256": "418670b4b31d632abbf53c4d34ec451cdd7c2a3de0a1ab8e30c4db45e00d608c",
+      "bytes": 1904,
+      "kind": "exact_prior_campaign_validity_view_230_test_history",
+      "observed_at_utc": "2026-10-21T23:49:19.636043+00:00",
+      "files": [
+        {
+          "original_path": "scripts/report_study_fr.py",
+          "path": "work/live/metrics-view-history/5cb7304a/scripts/report_study_fr.py",
+          "sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+          "bytes": 129812
+        },
+        {
+          "original_path": "tests/test_study_report.py",
+          "path": "work/live/metrics-view-history/5cb7304a/tests/test_study_report.py",
+          "sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+          "bytes": 115770
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-validity-view-00a67a3.json",
+          "path": "work/live/metrics-view-history/5cb7304a/work/live/campaign-observed-metrics-validity-view-00a67a3.json",
+          "sha256": "d8ca2fe67e50fdee8eec41bca99939431efdb51fa014e3f21aaac4a8e218f148",
+          "bytes": 6204
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-validity-view-00a67a3.xml",
+          "path": "work/live/metrics-view-history/5cb7304a/work/live/campaign-observed-metrics-validity-view-00a67a3.xml",
+          "sha256": "9b439f8403055dea2de3dc52e116d86c71f6831b072e4efb360f62760141df3e",
+          "bytes": 37804
+        },
+        {
+          "original_path": "work/live/campaign-observed-metrics-validity-view-00a67a3.log",
+          "path": "work/live/metrics-view-history/5cb7304a/work/live/campaign-observed-metrics-validity-view-00a67a3.log",
+          "sha256": "d243e2f13ac113bd7bef4c2d050a900e88bdfe828d1f7ba4a21019a7c24ecd7e",
+          "bytes": 340
+        }
+      ],
+      "all_copied_bytes_match_prior_pins": true,
+      "scope": "Source 5cb7304a, tests 043c2481 et reçu à 230 tests d8ca2fe6 avec JUnit/log conservés exactement avant deux modifications de prose/libellé. Aucun ancien reçu ou test modifié."
+    },
+    "campaign_metric_validity_editorial_post230": {
+      "path": "work/live/campaign-observed-validity-post-test-editorial-00a67a3.json",
+      "sha256": "4c0823c9c57726bcbac5faf4ab7dd9e48acf6389ef98424e7149ea695ba639a5",
+      "bytes": 2409,
+      "kind": "post_test_editorial_instrumentation_scope_only",
+      "observed_at_utc": "2026-10-21T23:49:19.727256+00:00",
+      "tested_230_receipt": {
+        "path": "work/live/campaign-observed-metrics-validity-view-00a67a3.json",
+        "sha256": "d8ca2fe67e50fdee8eec41bca99939431efdb51fa014e3f21aaac4a8e218f148",
+        "bytes": 6204
+      },
+      "tested_source_sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+      "current_source_after_test": {
+        "path": "scripts/report_study_fr.py",
+        "sha256": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
+        "bytes": 130070
+      },
+      "unchanged_tests": {
+        "path": "tests/test_study_report.py",
+        "sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+        "bytes": 115770
+      },
+      "preserved_230_history_manifest": {
+        "path": "work/live/metrics-view-history/5cb7304a/history-manifest.json",
+        "sha256": "418670b4b31d632abbf53c4d34ec451cdd7c2a3de0a1ab8e30c4db45e00d608c",
+        "bytes": 1904
+      },
+      "AST_except_two_editorial_strings_unchanged": true,
+      "numeric_metrics_schema_and_logic_unchanged": true,
+      "local_test_rerun": false,
+      "scope": "Deux seules chaînes de prose/libellé modifiées après les 230 tests : périmètre de l’instrumentation pour observations/validations indépendantes et zéro ne signifiant pas aucun candidat évalué. Les 230 tests restent attachés au source 5cb7304a ; source courant d1d97584 non retesté localement, prochaine CI requise. Aucun nombre, calcul ou métrique brute changé."
+    },
+    "historical_campaign_validity_preview_00a67a3": {
+      "path": "work/live/campaign-observed-validity-preview-00a67a3.json",
+      "sha256": "4f97bd027739416750393f0af7189e911461164375a9ec1c4122098cb014346c",
+      "bytes": 875,
+      "kind": "historical_public_metrics_and_validity_preview_only",
+      "source_report_sha256": "5cb7304a7e9af81df775f384954c7179ae5d0df16b79e3d313b94d7f43ae9772",
+      "historical_result": {
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.full/result.json",
+        "sha256": "ecd2a31626e48fa269a8f3c62b05867637d5c5d9372019129dd272347187ddde"
+      },
+      "result_unchanged": true,
+      "HTML": {
+        "path": "work/live/campaign-observed-validity-preview-00a67a3.html",
+        "sha256": "eb77f386cf3c9694d2b6adf270acf91aa723a0b6c15907b58c14518c8dedbad2"
+      },
+      "scope": "Aperçu visuel par le primaire de l’ancienne campagne GEMM 3141 sur source 5cb7304a, antérieur aux deux changements éditoriaux d1d97584. Résultat brut inchangé, aucune étude active rendue ou nouvelle performance mesurée. Un candidat correct enregistré et des compteurs de configurations nuls reflètent des périmètres d’instrumentation distincts, pas une correction des nombres."
     }
   },
   "requirements": {
@@ -10938,12 +13478,15 @@
           "common_final_convolution_1729_terminal",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Véritable original 773802 et première finale commune convolution 1729 (774017) acquis dans leurs scopes. Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale sur 18, sans gain certifié. Autres comparaisons à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       ]
     },
     "SEC-3": {
@@ -11040,12 +13583,15 @@
           "common_final_convolution_1729_terminal",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Workflow sur six familles et reprise intégrale non qualifiés ; contrôle autonome 774520 hors cohortes."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       ]
     },
     "SEC-3.1": {
@@ -11137,12 +13683,15 @@
           "common_final_convolution_1729_terminal",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       ]
     },
     "SEC-3.2": {
@@ -11704,9 +14253,10 @@
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
           "diagnostic_loop_v2",
-          "convolution_targeted_diagnostic_b9bda60"
+          "convolution_targeted_diagnostic_b9bda60",
+          "public_proposal_timeout_and_continuation_774659_00a"
         ],
-        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit."
+        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit. Incident public 774659 : timeout technique de proposition et recherche relancée avec diagnostic lié. Usage expiré inconnu, sans mesure CUDA de cet essai ni audit privé du tell ; aucune nouvelle campagne terminée déduite."
       },
       "remaining": [
         "Boucles de production b9bda60 et contrôle documentaire DFD acquis dans leurs scopes. Le nouveau candidat AC-02 n’est ni compilé ni mesuré. Les empreintes et composants publics recherche/synthèse sont liés, mais leurs projections restent incomplètes et leurs prompts complets ne sont pas archivés. Le helper 773095 conserve son échec math.h."
@@ -13263,7 +15813,13 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Crash/replay local réel de preuveCUDA archivée; pas de nouvelle exécutionROMEO."
+        "Crash/replay local réel de preuveCUDA archivée; pas de nouvelle exécutionROMEO.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+      ],
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
       ]
     },
     "SEC-11.2": {
@@ -13413,9 +15969,10 @@
         "applicable": true,
         "evidence": [
           "native_vanilla",
-          "study_v2_transport_drain"
+          "study_v2_transport_drain",
+          "public_proposal_timeout_and_continuation_774659_00a"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Incident public 774659 : timeout technique de proposition et recherche relancée avec diagnostic lié. Usage expiré inconnu, sans mesure CUDA de cet essai ni audit privé du tell ; aucune nouvelle campagne terminée déduite."
       },
       "remaining": [
         "Budgets globaux explicitement remplacés par compteurs; délais techniques et duréeSlurm restent."
@@ -13529,7 +16086,10 @@
           "local_ac02_renderer_release",
           "search_tree_renderer_local",
           "local_recovery_export_release",
-          "ci_0013118"
+          "ci_0013118",
+          "local_campaign_metric_views_00a67a3",
+          "historical_campaign_metric_preview_00a67a3",
+          "local_campaign_metric_validity_view_00a67a3"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -13545,7 +16105,7 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -13583,10 +16143,21 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Bundle/rapport finaux §16 non acquis; exports incomplets explicitement non certifiés."
+        "Bundle/rapport finaux §16 non acquis; exports incomplets explicitement non certifiés.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "offline_presentation_evidence": [
-        "historical_observed_metrics_view_dfd93d0"
+        "historical_observed_metrics_view_dfd93d0",
+        "local_campaign_metric_views_00a67a3",
+        "historical_campaign_metric_preview_00a67a3",
+        "local_campaign_metric_validity_view_00a67a3",
+        "campaign_metric_validity_editorial_post230",
+        "historical_campaign_validity_preview_00a67a3"
+      ],
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
       ]
     },
     "SEC-14": {
@@ -13856,7 +16427,10 @@
         "evidence": [
           "local_release",
           "ci_45407a2",
-          "local_unscored_release"
+          "local_unscored_release",
+          "local_campaign_metric_views_00a67a3",
+          "historical_campaign_metric_preview_00a67a3",
+          "local_campaign_metric_validity_view_00a67a3"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -13869,7 +16443,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -13916,15 +16490,29 @@
           "section16_protocol_review_55",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Les anciens échecs et alias restent visibles."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "offline_presentation_evidence": [
-        "historical_observed_metrics_view_dfd93d0"
+        "historical_observed_metrics_view_dfd93d0",
+        "local_campaign_metric_views_00a67a3",
+        "historical_campaign_metric_preview_00a67a3",
+        "local_campaign_metric_validity_view_00a67a3",
+        "campaign_metric_validity_editorial_post230",
+        "historical_campaign_validity_preview_00a67a3"
+      ],
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
       ]
     },
     "SEC-17": {
@@ -14074,7 +16662,13 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Traçabilité documentaire, aucune exécution ajoutée par la correspondance."
+        "Traçabilité documentaire, aucune exécution ajoutée par la correspondance.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+      ],
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
       ]
     },
     "SEC-19": {
@@ -15324,9 +17918,10 @@
         "applicable": true,
         "evidence": [
           "study_v2_full_transport_failure",
-          "study_v2_transport_drain"
+          "study_v2_transport_drain",
+          "public_proposal_timeout_and_continuation_774659_00a"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Incident public 774659 : timeout technique de proposition et recherche relancée avec diagnostic lié. Usage expiré inconnu, sans mesure CUDA de cet essai ni audit privé du tell ; aucune nouvelle campagne terminée déduite."
       },
       "remaining": [
         "Reprise réseau v2/réconciliation à achever; budget global retiré par override humain."
@@ -15493,9 +18088,15 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Finaliste réel reconstruit/validé n316, 0 benchmark/0 modèle; exports §16 restent à produire."
+        "Finaliste réel reconstruit/validé n316, 0 benchmark/0 modèle; exports §16 restent à produire.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
-      "expected_result": "Source, paramètres, contrat, sources documentaires, versions et mesures accessibles par identifiants."
+      "expected_result": "Source, paramètres, contrat, sources documentaires, versions et mesures accessibles par identifiants.",
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
+      ]
     },
     "USER-LOCAL": {
       "id": "USER-LOCAL",
@@ -15582,9 +18183,10 @@
           "diagnostic_loop",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Le reçu 774657 authentifie dix invocations réelles du pont ee93 V2 au source 00a, conformes pour ces seules réponses. Aucun poids fournisseur ni comportement futur attesté."
       },
       "remaining": [
         "Processus et orchestration locaux; poids modèle hébergés par fournisseur. Démarrage lecteurv2 réel acquis; autres déclencheurs et étude complète restent en attente."
@@ -15649,12 +18251,15 @@
           "common_final_convolution_1729_terminal",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18, après des pannes SSH/DNS historiques. Contrôle autonome 774520 terminé. La reprise intégrale et la disponibilité réseau présente ne se déduisent pas de ces reçus."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       ]
     },
     "USER-PROFILE": {
@@ -15791,12 +18396,15 @@
           "common_final_convolution_1729_terminal",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -16329,9 +18937,15 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures."
+        "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
-      "derived_from": "SEC-11"
+      "derived_from": "SEC-11",
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
+      ]
     },
     "QUALITY-01": {
       "id": "QUALITY-01",
@@ -16369,7 +18983,10 @@
         "evidence": [
           "local_release",
           "ci_45407a2",
-          "local_unscored_release"
+          "local_unscored_release",
+          "local_campaign_metric_views_00a67a3",
+          "historical_campaign_metric_preview_00a67a3",
+          "local_campaign_metric_validity_view_00a67a3"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -16382,7 +18999,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16429,16 +19046,30 @@
           "section16_protocol_review_55",
           "study_v2_twenty_completed_generations_55_drain",
           "original_convolution2718_774527_dfd_terminal",
-          "native_convolution3141_774528_dfd_terminal"
+          "native_convolution3141_774528_dfd_terminal",
+          "study_v2_dfd_full_greedy_774525_774526",
+          "study_v2_dfd_noauto_nopmpp_774556_774563",
+          "original_convolution3141_774657_00a_terminal"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
       },
       "remaining": [
-        "Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Les anciens échecs et alias restent visibles."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "derived_from": "SEC-16",
       "offline_presentation_evidence": [
-        "historical_observed_metrics_view_dfd93d0"
+        "historical_observed_metrics_view_dfd93d0",
+        "local_campaign_metric_views_00a67a3",
+        "historical_campaign_metric_preview_00a67a3",
+        "local_campaign_metric_validity_view_00a67a3",
+        "campaign_metric_validity_editorial_post230",
+        "historical_campaign_validity_preview_00a67a3"
+      ],
+      "availability_and_fixture_evidence": [
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
       ]
     }
   },
@@ -16713,6 +19344,65 @@
         "native_convolution3141_774528_dfd_terminal"
       ],
       "scope": "Complément daté aux 21 résultats précédents : 22 générations sur 144, une finale commune sur 18. Artefact natif exporté distinct de tous les artefacts SEARCH essayés ; aucune validation, mesure ou qualification de cet export déduite. Aucun compteur futur extrapolé."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:37:14.455577+00:00",
+      "kind": "recorded_metrics_presentation_and_historical_source_availability",
+      "evidence": [
+        "local_campaign_metric_views_00a67a3",
+        "historical_campaign_metric_preview_00a67a3",
+        "historical_transport_v1_exact_source_recovery",
+        "original_complete_source_availability_1e9464d",
+        "local_assembler_declared_inventory_28_fixtures"
+      ],
+      "scope": "Vue additive testée localement et aperçu historique ; deux sources V1 récupérées exactement, archive originale complète disponible et 28 fixtures de l’assembleur acquises. Aucun nouvel export réel, modèle ou GPU."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:12:28.838442+00:00",
+      "kind": "four_new_DFD_terminals_26_generations_and_new_controller_dispatch",
+      "evidence": [
+        "study_v2_dfd_full_greedy_774525_774526",
+        "study_v2_dfd_noauto_nopmpp_774556_774563",
+        "dispatch_00a67a3_first_epochs",
+        "ci_00a67a3"
+      ],
+      "scope": "Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Le contrôleur suivant reste en cours à l’observation."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:37:14.455577+00:00",
+      "kind": "historical_00a_catalogue_integrity_170_entries",
+      "evidence": [
+        "catalog_integrity_00a67a3"
+      ],
+      "scope": "Audit du seul registre publié 00a à 170 entrées, sans certification du présent enrichissement. Les deux fichiers V1 sont récupérés ensuite ; les trois dirty initiaux et les prompts manquants restent limités."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:38:52.667936+00:00",
+      "kind": "new_original_00a_terminal_lower_bound27",
+      "evidence": [
+        "original_convolution3141_774657_00a_terminal"
+      ],
+      "scope": "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. L’état des tâches suivantes n’est pas inféré ; aucun ancien échec ou pin modifié."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:46:04.521626+00:00",
+      "kind": "recorded_validity_view230_and_preserved223",
+      "evidence": [
+        "local_campaign_metric_validity_view_00a67a3",
+        "prior_campaign_metric_view_223_exact_history",
+        "public_proposal_timeout_and_continuation_774659_00a"
+      ],
+      "scope": "Affichage des compteurs SEARCH enregistrés et limites des tokens sous-total, sans recalcul. Historique à 223 tests exact conservé ; contrôle public de l’incident proposition en cours distinct des 27 terminaux acquis."
+    },
+    {
+      "observed_at_utc": "2026-10-21T23:50:21.603884+00:00",
+      "kind": "post230_editorial_scope_and_preserved_tested_source",
+      "evidence": [
+        "campaign_metric_validity_editorial_post230",
+        "prior_campaign_metric_validity_view_230_exact_history",
+        "historical_campaign_validity_preview_00a67a3"
+      ],
+      "scope": "Compteurs dépendant de l’instrumentation explicités, sans valeur changée. Source 5cb7304a et 230 tests conservés ; source courant après prose non retesté localement, CI future distincte. Minimum de 27 générations et une finale inchangé."
     }
   ]
 }

@@ -149,7 +149,7 @@ def study_aggregate_table(summary):
             for mode, value in summary["aggregates"].items()]
     return table(["Méthode", "Prévus", "Méthodes réussies", "Méthodes échouées",
                   "Statuts méthode inconnus", "Ratios disponibles (mesures/identités)", "Artefacts qualifiés (mesures/identités)",
-                  "Régressions", "Absents/échecs sans mesure", "Ratio géométrique (mesures/identités)",
+                  "Régressions : ratios ponctuels < 1", "Absents/échecs sans mesure", "Ratio géométrique (mesures/identités)",
                   "Dispersion entre campagnes"], rows)
 
 
@@ -166,6 +166,117 @@ def study_campaign_table(summary):
     return table(["Famille", "Graine", "Méthode", "Statut méthode", "Défaillance méthode",
                   "Candidat de repli", "Statut final de l’artefact", "Origine du ratio", "Ratio final", "IC95%",
                   "Tokens", "Appels CLI", "Durée génération (s)", "Artefact"], rows)
+
+
+def campaign_metric_views(summary):
+    """Project recorded, already-merged metrics without recalculating any cost."""
+    quality = (
+        ("candidate_configurations_with_recorded_validity", "Configurations à validité enregistrée", "nombre"),
+        ("correct_candidates", "Configurations correctes enregistrées", "nombre"),
+        ("correct_candidate_fraction", "Part correcte enregistrée", "fraction de 0 à 1"),
+        ("configuration_observations", "Observations de configurations", "nombre"),
+        ("configurations_filtered_before_compilation", "Configurations filtrées avant compilation", "nombre"),
+        ("configurations_independently_validated", "Validations indépendantes enregistrées (périmètre méthode)", "nombre"))
+    costs = (
+        ("native_compile_stage_wall_seconds", "Compilation native", "s", "Temps des étapes de compilation enregistré par le harness ; exclu des latences kernel."),
+        ("compile_cache_hits", "Cache : réutilisations", "nombre", "Compteur de cache enregistré ; pas un nombre de candidats distincts."),
+        ("compile_cache_misses", "Cache : absences", "nombre", "Compteur de cache enregistré ; distinct des configurations explorées."),
+        ("research_model_wall_seconds", "Recherche : temps modèle", "s", "Appels de recherche identifiés ; une synthèse classée proposal peut être exclue. Pas le temps GPU du kernel."),
+        ("research_model_tokens", "Recherche : tokens modèle", "tokens", "Appels de recherche identifiés ; pas nécessairement tout le coût du dossier ni les cycles internes du fournisseur."),
+        ("research_events", "Recherche : événements", "nombre", "Événements enregistrés ; ne compte ni les requêtes web ni les dossiers admis."),
+        ("native_reservation_wall_seconds", "Réservations du harness", "s", "Temps des requêtes natives réservé enregistré ; distinct de la durée totale Slurm."),
+        ("cuda_event_kernel_seconds", "Kernels : CUDA Events cumulés", "s", "Temps kernel cumulé enregistré ; aucune nouvelle latence de classement calculée."),
+        ("observer_wall_seconds", "Observateur indépendant", "s", "Coût enregistré de l’observation inline ; aucun résultat transmis à la méthode."),
+        ("observer_wall_seconds_known_lower_bound", "Observateur : borne inférieure connue", "s", "Coût partiel connu enregistré ; ne remplace pas un total observateur inconnu."),
+        ("observer_gpu_requests", "Observateur : requêtes GPU", "nombre", "Requêtes GPU de l’observateur enregistrées séparément de la méthode."),
+        ("combined_method_and_observer_gpu_wall_seconds", "Méthode et observateur : total enregistré", "s", "Somme déjà présente dans le reçu ; aucune somme recalculée et aucune durée Slurm déduite."))
+    views = []
+    for row in summary["rows"]:
+        metrics = _mapping(row.get("metrics"))
+        method = _mapping(metrics.get("method_consumption"))
+        recorded = [{"key": key, "label": label, "value": metrics.get(key), "unit": unit, "scope": scope}
+                    for key, label, unit, scope in costs]
+        recorded += [{"key": "method_consumption." + key, "label": label, "value": method.get(key),
+                      "unit": unit, "scope": "Consommation méthode au dernier callback durable de l’observateur ; peut être partielle, séparée de son propre coût."}
+                     for key, label, unit in (
+                         ("method_gpu_evaluation_wall_seconds", "Méthode : évaluations GPU", "s"),
+                         ("method_harness_calls", "Méthode : appels harness", "nombre"),
+                         ("method_gpu_evaluation_calls", "Méthode : appels évaluation GPU", "nombre"))]
+        recorded.append({"key": "gpu_reservation_wall_seconds", "label": "Ledger des essais : temps écoulé",
+                         "value": row.get("gpu_reservation_wall_seconds"), "unit": "s",
+                         "scope": metrics.get("gpu_seconds_ledger_scope") or
+                         "Ledger incluant modèle, recherche, SSH et parfois interruptions ; ce n’est pas une durée GPU allouée Slurm."})
+        raw_unknown = metrics.get("unknown_metrics")
+        annotations = []
+        for declared in raw_unknown if isinstance(raw_unknown, list) else []:
+            key = "research_model_wall_seconds" if declared == "research_seconds" else declared
+            if isinstance(key, str) and metrics.get(key) is not None:
+                annotations.append({"declared_unknown": declared, "recorded_key": key,
+                                    "recorded_value": metrics[key]})
+        views.append({"run_id": row.get("run_id"), "workload": row.get("workload"),
+            "seed": row.get("seed"), "mode": row.get("mode"),
+            "generation_method_status": row.get("generation_method_status"),
+            "first_useful_search_gain": {"status": metrics.get("first_useful_gain_status"),
+                "seconds": metrics.get("time_to_first_useful_gain_seconds"),
+                "model_tokens": metrics.get("model_tokens_to_first_useful_gain"),
+                "model_calls": metrics.get("model_calls_to_first_useful_gain"),
+                "scope": metrics.get("first_useful_gain_scope"), "note": metrics.get("first_useful_gain_note")},
+            "independent_final_gain": {"status": row.get("status"),
+                "seconds": row.get("time_to_independently_confirmed_final_gain_seconds"),
+                "scope": "Délai depuis le début de la tâche de génération jusqu’au gain FINAL indépendamment confirmé, attente et interruptions comprises ; pas la seule durée de mesure finale."},
+            "recorded_quality": [{"key": key, "label": label, "value": metrics.get(key), "unit": unit}
+                                 for key, label, unit in quality],
+            "validation_evidence_basis": metrics.get("validation_evidence_basis"),
+            "method_callback_usage_complete": method.get("usage_complete"),
+            "recorded_costs": recorded, "raw_unknown_metrics": raw_unknown,
+            "view_annotations": annotations})
+    return views
+
+
+def campaign_metrics_panel(views):
+    statuses = {"observed": "gain utile observé", "no_promoted_gain": "aucune promotion enregistrée",
+                "no_confirmed_gain": "aucun gain confirmé enregistré", "not_recorded_by_method": "non enregistré par la méthode",
+                "unknown_incident": "inconnu après incident", "unknown_identity_context": "contexte d’identité inconnu"}
+    def number(value):
+        return fmt(value, 9) if isinstance(value, (int, float)) and not isinstance(value, bool) else "inconnu"
+    blocks = []
+    for view in views:
+        search, final = view["first_useful_search_gain"], view["independent_final_gain"]
+        status = search["status"]
+        label = (statuses.get(status, "statut non traduit") + " (" + status + ")"
+                 if isinstance(status, str) and status else "inconnu")
+        milestones = table(["Jalon", "Statut enregistré", "Délai (s)", "Tokens au jalon", "Invocations CLI au jalon"], [
+            ["Premier gain utile SEARCH", label, number(search["seconds"]), number(search["model_tokens"]), number(search["model_calls"])],
+            ["Gain FINAL indépendant", final["status"] or "inconnu", number(final["seconds"]), "non enregistrés", "non enregistrées"]])
+        costs = table(["Coût enregistré", "Valeur", "Unité", "Périmètre"],
+            [[cost["label"], number(cost["value"]), cost["unit"], cost["scope"]] for cost in view["recorded_costs"]])
+        quality = table(["Validité / configurations enregistrées", "Valeur", "Unité"],
+            [[entry["label"], number(entry["value"]), entry["unit"]] for entry in view["recorded_quality"]])
+        basis = view["validation_evidence_basis"]
+        callback_complete = view["method_callback_usage_complete"]
+        completeness = "oui" if callback_complete is True else "non" if callback_complete is False else "inconnu"
+        scope = " ".join(str(value) for value in (search.get("scope"), search.get("note")) if value)
+        unknown = "absente" if view["raw_unknown_metrics"] is None else json.dumps(view["raw_unknown_metrics"], ensure_ascii=False)
+        annotations = " ".join(str(note["declared_unknown"]) + " déclaré inconnu, mais " + note["recorded_key"] +
+            " contient une valeur enregistrée : " + number(note["recorded_value"]) + "." for note in view["view_annotations"])
+        name = (str(FAMILIES.get(view["workload"], view["workload"])) + " · graine " + str(view["seed"]) + " · " +
+                str(LABELS.get(view["mode"], view["mode"])) + " · méthode " + str(view["generation_method_status"] or "inconnue"))
+        blocks.append("<details><summary>" + escape(name) + "</summary><p>Campagne : <code>" +
+            escape(str(view["run_id"] or "non enregistré")) + "</code>.</p>" + milestones +
+            "<p>SEARCH : " + escape(scope or "périmètre détaillé non enregistré") + "</p><p>FINAL : " + escape(final["scope"]) +
+            "</p>" + quality + "<p>Fondement de validation enregistré : " +
+            escape(str(basis) if basis is not None else "non enregistré") +
+            ". Ces validités SEARCH ne qualifient pas automatiquement le dernier artefact exporté ni FINAL. "
+            "La fraction et ses compteurs sont repris tels quels, sans recalcul ni dénominateur supposé. Les compteurs d’observations de configurations et de validations indépendantes dépendent de l’instrumentation de la méthode : un zéro ne signifie pas zéro candidat évalué. Les validités et leurs preuves restent distinctes.</p>" + costs +
+            "<p>Usage complet indiqué au dernier callback méthode de l’observateur : " + completeness +
+            " ; ce callback peut précéder la fin de génération.</p><p>Liste historique <code>unknown_metrics</code> inchangée : " + escape(unknown) +
+            ".</p>" + ("<p>Annotation de vue seulement : " + escape(annotations) + "</p>" if annotations else "") + "</details>")
+    return ("<h3>Jalons et coûts enregistrés par campagne</h3><p>Les valeurs viennent des métriques déjà enregistrées et fusionnées par méthode. "
+            "Le premier gain utile SEARCH reste distinct de la certification FINAL ; une première mesure valide ne suffit pas à le démontrer. "
+            "L’observation inline peut augmenter le délai du premier gain. Les tokens et appels à ce jalon restent inconnus s’ils ne sont pas enregistrés, "
+            "sans interpolation depuis les totaux. Ces coûts ne constituent pas une comparaison à budget égal. "
+            "Les tokens enregistrés peuvent être des sous-totaux incomplets lorsqu’un appel échoué n’a pas retourné d’usage. "
+            "Aucun coût absent ne devient zéro ; aucun coût facturé en USD n’est déduit.</p>" + "".join(blocks))
 
 
 def case_comparison_table(summary, direct_views):
@@ -1405,6 +1516,7 @@ def main():
                              "policy": "Successful completed CI on HEAD qualifies only a clean source checkout"}
     report["control_receipts"] = control_receipts(REPO)
     report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"))
+    report["campaign_metric_views"] = campaign_metric_views(summary)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
                  value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis",
@@ -1441,7 +1553,6 @@ Les échecs, pertes et résultats encore inconnus restent visibles.</p>
 <p>Agent local Codex, modèle demandé <code>gpt-6-luna</code>, effort <code>max</code> ; orchestration LangGraph et recherche TreeQuest.
 L'inférence utilise le service OpenAI authentifié. Aucun plafond global de tokens, coût, appels ou durée cumulée n'est imposé.
 Les limites techniques et les durées obligatoires de Slurm restent enregistrées.</p>
-{frozen_pilot_panel(pilot, pilot_figure)}
 <h2>Étude §16 : trois méthodes, un évaluateur final</h2>
 <p>L'optimiseur amélioré, le véritable agent original au commit <code>1e9464d</code> et Codex vanilla natif sont des méthodes distinctes.
 Le vanilla reçoit un seul prompt et dispose de ses outils de compilation et benchmark. Le parent glouton constitue une ablation supplémentaire.
@@ -1455,15 +1566,18 @@ Les mesures locales ne remplacent aucune performance ROMEO. Les points et interv
 {chart_html}{study_aggregate_table(summary)}{direct_comparison_table(report['direct_comparison_views'])}
 {case_comparison_table(summary, report['direct_comparison_views'])}
 <p>{escape(report['method_outcome_policy'])} Les points représentent l’artefact retenu, y compris un candidat de repli.</p>
-<p>Les agrégats incluent les retours au noyau naïf et les régressions mesurées. Les absences ne reçoivent aucun gain inventé.
+<p>Les agrégats incluent les retours au noyau naïf. Le compteur « Régressions » dénombre les ratios ponctuels inférieurs à 1 ;
+il ne démontre pas une régression statistique si l’IC recouvre 1 et ne remplace pas un veto de cas critique. Les absences ne reçoivent aucun gain inventé.
 Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain universel ni de supériorité sur cuBLAS.</p>
+{frozen_pilot_panel(pilot, pilot_figure)}
 <h2>Consommation, régressions et provenance</h2>
 {consumption_html}
 <p>Les tokens comptent les entrées et sorties observées, y compris les tokens d'entrée servis du cache lorsqu'ils sont inclus par le fournisseur.
 Les traces conservent séparément les tokens mis en cache. Aucun coût en dollars n'est déduit sans reçu de facturation.
 Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les outils ; les CUDA Events ne mesurent que le kernel.
-Les coûts absents sont inconnus. Le rapport JSON contient les compteurs de compilation, cache, recherche, configurations et premier gain utile lorsque la méthode les observe.</p>
+Les coûts absents sont inconnus. Les vues suivantes présentent les jalons, la compilation, le cache, la recherche et les coûts méthode/observateur enregistrés, sans recalculer les métriques historiques.</p>
 <details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{study_campaign_table(summary)}</details>
+{campaign_metrics_panel(report['campaign_metric_views'])}
 <h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu','Périmètre et limites'], receipts)}
 <p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.
 Ces indisponibilités restent des diagnostics explicites ; aucun compteur n'est inventé et aucun temps instrumenté ne participe au classement.
