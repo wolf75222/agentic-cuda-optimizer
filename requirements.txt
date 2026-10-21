@@ -1,0 +1,5 @@
+-r optimizer_agent/requirements.txt
+langgraph-checkpoint-sqlite==3.1.2
+treequest @ git+https://github.com/SakanaAI/treequest.git@3fac4f8b07e14ed92742471492a59764993b9ab0
+PyYAML==6.0.3
+pytest==9.1.1

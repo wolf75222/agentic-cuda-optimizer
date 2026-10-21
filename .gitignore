@@ -1,8 +1,12 @@
 build/
-*.md
-!README.md
 __pycache__/
 .env
-*.cu
 results/
 .vscode/
+.venv/
+.pytest_cache/
+*.pyc
+*.sqlite*
+*.db
+*.egg-info/
+work/

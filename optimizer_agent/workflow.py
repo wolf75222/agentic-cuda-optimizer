@@ -3,6 +3,10 @@ from functools import partial
 
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
+
+# The durable Codex/ROMEO path shares LangGraph orchestration with the original
+# API entry point; no second model-controlled execution loop is introduced.
+from campaign_workflow import build_campaign_graph, build_experiment_graph
 from langgraph.prebuilt import ToolNode, tools_condition
 from openai import OpenAI
 

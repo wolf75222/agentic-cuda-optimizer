@@ -52,6 +52,13 @@ class KernelRequest:
     warmup: int
     iterations: int
     arguments: list[BufferArgument | ScalarArgument]
+    series: int = 1
+    compiler_options: list[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+    cache_dir: str | None = None
+    compile_cache_key: str | None = None
+    guard_outputs: bool = True
+    sentinel_byte: int = 255
 
     @classmethod
     def from_dict(cls, data:dict) -> "KernelRequest":
@@ -143,6 +150,25 @@ class HarnessRuner:
             result["ok"] = False
             result.setdefault("error", f"Harness exited with code {process.returncode}")
         return result
+
+    def run_sanitizer(self, run_id: str, request: KernelRequest, tool: str) -> dict:
+        """Instrument a fresh request; instrumented timings never become a score."""
+        import shutil
+        if tool not in {"memcheck", "racecheck", "initcheck", "synccheck"}:
+            raise ValueError("Unsupported Compute Sanitizer tool")
+        sanitizer = shutil.which("compute-sanitizer")
+        if not sanitizer:
+            return {"ok": False, "status": "tool_unavailable", "tool": tool}
+        request_path = self.write_request(run_id, request)
+        try:
+            process = subprocess.run(
+                [sanitizer, "--tool", tool, "--error-exitcode", "91", str(self.executable), "--request", str(request_path)],
+                capture_output=True, text=True, timeout=1200, check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return {"ok": False, "status": "infrastructure_failure", "tool": tool, "error": "sanitizer timeout"}
+        return {"ok": process.returncode == 0, "status": "passed" if process.returncode == 0 else "memory_error",
+                "tool": tool, "returncode": process.returncode, "stdout": process.stdout[-16000:], "stderr": process.stderr[-16000:]}
 
     def get_device_properties(self, device: int)->dict:
         process = subprocess.run(

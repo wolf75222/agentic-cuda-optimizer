@@ -23,12 +23,30 @@ inline nlohmann::json GetDeviceProperties(int ordinal)
     std::size_t totalBytes = 0;
     std::size_t freeBytes = 0;
     CUDA_CHECK(cuMemGetInfo(&freeBytes, &totalBytes));
+    int driverVersion = 0;
+    CUDA_CHECK(cuDriverGetVersion(&driverVersion));
+    int nvrtcMajor = 0, nvrtcMinor = 0;
+    CUDA::CheckNVRTC(nvrtcVersion(&nvrtcMajor, &nvrtcMinor));
+    CUuuid uuid{};
+    CUDA_CHECK(cuDeviceGetUuid(&uuid, device));
+    const char hex[] = "0123456789abcdef";
+    std::string uuidText;
+    for (unsigned char byte : uuid.bytes)
+    {
+        uuidText += hex[byte >> 4];
+        uuidText += hex[byte & 15];
+    }
 
     return nlohmann::json
     {
         {"device", ordinal},
         {"name", name},
         {"architecture", context.Architecture()},
+        {"uuid", uuidText},
+        {"driver_version", driverVersion},
+        {"nvrtc_version", std::to_string(nvrtcMajor) + "." + std::to_string(nvrtcMinor)},
+        {"cuda_toolkit_version", CUDA_VERSION},
+        {"harness_build_id", CUDA_HARNESS_BUILD_ID},
         {"compute_capability", {
             {"major", attribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR)},
             {"minor", attribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR)}}},

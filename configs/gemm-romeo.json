@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "gemm-luna-romeo",
+  "backend": "romeo",
+  "execution_config": "configs/romeo.json",
+  "workload": "matmul",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "max",
+  "max_trials": 3,
+  "max_repairs_per_trial": 2,
+  "max_configurations_per_trial": 4,
+  "actions": [
+    "tiling",
+    "coalescing",
+    "work_per_thread"
+  ],
+  "required_sanitizers": [
+    "memcheck",
+    "racecheck",
+    "initcheck",
+    "synccheck"
+  ]
+}

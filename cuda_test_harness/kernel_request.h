@@ -118,6 +118,12 @@ struct Request
     unsigned sharedBytes;
     unsigned warmup;
     unsigned iterations;
+    unsigned series = 1;
+    bool guardOutputs = true;
+    unsigned sentinelByte = 255;
+    std::vector<std::string> compilerOptions;
+    fs::path cacheDirectory;
+    std::string cacheKey;
 };
 
 inline Request Parse(const Json& json, const fs::path& base)
@@ -136,6 +142,24 @@ inline Request Parse(const Json& json, const fs::path& base)
         Integer<unsigned>(json.at("warmup")),
         Integer<unsigned>(json.at("iterations"))
     };
+    request.series = Integer<unsigned>(json.value("series", Json(1)));
+    request.guardOutputs = json.value("guard_outputs", true);
+    request.sentinelByte = Integer<unsigned>(json.value("sentinel_byte", Json(255)));
+    if (request.series == 0 || request.sentinelByte > 255)
+    {
+        throw std::invalid_argument("Require series > 0 and sentinel_byte <= 255");
+    }
+    request.compilerOptions = json.value("compiler_options", std::vector<std::string>{});
+    if (json.contains("cache_dir") && !json.at("cache_dir").is_null())
+    {
+        request.cacheDirectory = Resolve(base, json.at("cache_dir").get<std::string>());
+    }
+    if (json.contains("compile_cache_key") && !json.at("compile_cache_key").is_null())
+    {
+        request.cacheKey = json.at("compile_cache_key").get<std::string>();
+        if (request.cacheKey.size() != 64 || request.cacheKey.find_first_not_of("0123456789abcdef") != std::string::npos)
+            throw std::invalid_argument("compile_cache_key must be a SHA-256 hex string");
+    }
     if (request.device < 0 || request.kernel.empty() || request.iterations == 0)
     {
         throw std::invalid_argument("Require device >= 0, nonempty kernel, iterations > 0");
@@ -180,7 +204,7 @@ inline BufferDirection ParseBufferDirection(const std::string& direction)
 class Argument
 {
 public:
-    Argument(const Json& spec, const fs::path& base)
+    Argument(const Json& spec, const fs::path& base, bool poisonOutputs = true, unsigned sentinelByte = 255)
     {
         const auto kind = spec.at("kind").get<std::string>();
         if (kind == "buffer")
@@ -197,7 +221,7 @@ public:
                 {
                     throw std::invalid_argument("Output buffers require input_file: null; use inout to load a file");
                 }
-                initial_.resize(bytes, '\0');
+                initial_.resize(bytes, poisonOutputs ? static_cast<char>(sentinelByte) : '\0');
             }
             else
             {
@@ -280,6 +304,13 @@ public:
     bool IsOutput() const noexcept
     {
         return buffer_ && direction_ != BufferDirection::Input;
+    }
+    bool CheckReadOnly() const
+    {
+        if (!buffer_ || direction_ != BufferDirection::Input) return true;
+        std::string actual(buffer_->Size(), '\0');
+        buffer_->CopyToHost(actual.data(), actual.size());
+        return actual == initial_;
     }
     std::size_t Save(const fs::path& path) const
     {

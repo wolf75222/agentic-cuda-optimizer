@@ -2,7 +2,7 @@ from langchain_core.tools import tool
 from use_harness import HarnessRuner
 from nsight_profiler import profile_saved_kernel, read_saved_metrics
 
-def create_tools(runner: HarnessRuner, *, use_nsight: bool = False):
+def create_tools(runner: HarnessRuner, *, use_nsight: bool = False, experiment_store=None, run_id=None):
     @tool
     def get_device_properties(device:int) -> dict:
         """Read CUDA device properties and hardware limits."""
@@ -34,4 +34,19 @@ def create_tools(runner: HarnessRuner, *, use_nsight: bool = False):
         return read_saved_metrics(runner, iteration, case_index, metric_pattern,
                                   offset=offset, names_only=names_only)
 
-    return [get_device_properties, profile_kernel, read_profile_metrics] if use_nsight else [get_device_properties]
+    @tool
+    def consult_pmpp_topic(topic: str) -> dict:
+        """Read an installed, provenance-tagged PMPP-inspired topic card."""
+        from pmpp_guidance import consult_pmpp
+        return consult_pmpp(topic)
+
+    tools = [get_device_properties, consult_pmpp_topic]
+    if use_nsight:
+        tools.extend([profile_kernel, read_profile_metrics])
+    if experiment_store is not None:
+        @tool
+        def get_candidate_source(candidate_id: str) -> dict:
+            """Read an immutable candidate's exact source, parameters and evidence."""
+            return experiment_store.get_candidate_source(candidate_id, run_id)
+        tools.append(get_candidate_source)
+    return tools

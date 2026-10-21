@@ -11,6 +11,12 @@
 #include <utility>
 #include <vector>
 
+// CMake and the ROMEO build script provide a source/toolchain hash. Manual
+// direct builds remain usable, but cannot reuse binaries without that identity.
+#ifndef CUDA_HARNESS_BUILD_ID
+#define CUDA_HARNESS_BUILD_ID "unidentified-build-cache-disabled"
+#endif
+
 namespace CUDA
 {
 inline void Check(CUresult status, const char* expression, const char* file, int line)
@@ -138,17 +144,22 @@ private:
 };
 
 inline Compilation Compile(const std::string& source, const std::string& name,
-    const std::string& architecture)
+    const std::string& architecture, const std::vector<std::string>& extraOptions = {})
 {
     Program program(source, name);
     const std::string archOption = "--gpu-architecture=" + architecture;
     const std::string includeOption = "--include-path=" CUDA_HARNESS_INCLUDE_DIR;
     const std::string ccclOption = includeOption + "/cccl";
-    const char* options[] = {
-        "--std=c++17", archOption.c_str(), "--generate-line-info",
-        includeOption.c_str(), ccclOption.c_str()
-    };
-    const auto status = nvrtcCompileProgram(program.Get(), 5, options);
+    std::vector<std::string> optionStrings = {"--std=c++17", archOption, "--generate-line-info", includeOption, ccclOption};
+    for (const auto& option : extraOptions)
+    {
+        if (option.rfind("--gpu-architecture", 0) == 0 || option.rfind("-arch", 0) == 0)
+            throw std::invalid_argument("Architecture is fixed by the execution worker");
+        optionStrings.push_back(option);
+    }
+    std::vector<const char*> options;
+    for (const auto& option : optionStrings) options.push_back(option.c_str());
+    const auto status = nvrtcCompileProgram(program.Get(), static_cast<int>(options.size()), options.data());
     Compilation result;
     std::size_t length = 0;
     CheckNVRTC(nvrtcGetProgramLogSize(program.Get(), &length));

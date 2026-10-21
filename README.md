@@ -1,87 +1,98 @@
-# CUDA Kernel Optimizer
+# CUDA Kernel Optimizer — Codex Luna Max / ROMEO
 
-## Contents
+Fork of [bertaye/agentic-cuda-optimizer](https://github.com/bertaye/agentic-cuda-optimizer), based on `1e9464da54dfc651337a97c3643bfeefec712bc1`. The primary entry point runs **Codex locally with `gpt-6-luna` and reasoning effort `max`**, keeps LangGraph orchestration, and evaluates kernels on an exclusively reserved ROMEO GPU through SSH and Slurm.
 
-- [How it works](#how-it-works)
-- [Setup](#setup)
-- [Run](#run)
-- [Examples](#examples)
-- [Results and limits](#results-and-limits)
-- [Workflow graph](#workflow-graph)
+“Local agent” means the Codex process, tools and orchestration run on your workstation. Luna inference uses the authenticated OpenAI service. The original API workflow remains available and is documented in [UPSTREAM_README.md](docs/UPSTREAM_README.md).
 
-An agentic CUDA kernel optimizer that turns workload descriptions into GPU implementations through an automated cycle of code generation, correctness checks, benchmarking, and refinement. Powered by LangGraph, the agent explores kernel implementations and launch configurations, queries GPU properties, and can research NVIDIA documentation for optimization guidance and inspect Nsight Compute counters to inform its next experiment. Each experiment is recorded, and the fastest validated implementation is retained.
+There is **no global token, cost, GPU-time or campaign-time ceiling**. Usage is recorded for comparison without stopping the agents. The user's explicit instruction supersedes the global-budget example in the supplied specification. Iteration/repair counts and technical per-call/worker timeouts remain; Slurm also requires a job walltime.
 
-The model can change both kernel code and per-case launch configurations. A standalone C++ harness compiles kernels with NVRTC, launches them through the CUDA Driver API, and saves outputs. Python handles comparison and candidate selection.
+## Install and run
 
-## How it works
+Controller requirements: Python 3.12+, Git, SSH, an authenticated Codex CLI, and network access for mandatory research. No local CUDA GPU is needed for ROMEO execution.
 
-1. Load or generate a signature, input cases, reference kernel, and initial kernel.
-2. Run the reference and evaluate the initial implementation.
-3. Propose a change, compile it, compare outputs with NumPy, and measure kernel latency.
-4. Feed results back into the next attempt; repair invalid candidates within the iteration budget.
-5. Save the fastest validated candidate, execution history, and a timing heatmap.
-
-Every case must pass validation. Ranking uses the geometric mean of latency across performance cases; small correctness cases do not affect the score. Timing defaults to 10 warmup launches and 100 measured launches using CUDA events. Compilation time and profiler replay timings are excluded from ranking.
-
-## Setup
-
-Developed on Windows with an RTX 3060 Laptop GPU. Requires Python 3.12+, an NVIDIA GPU and compatible CUDA Toolkit/driver, CMake 3.24+, a C++17 compiler, and an OpenAI API key. The build commands below use Visual Studio 2026 with the C++ tools installed.
-
-From the repository root:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\python -m pip install -r optimizer_agent/requirements.txt
-cmake -S cuda_test_harness -B cuda_test_harness/build -DCMAKE_BUILD_TYPE=Release
-cmake --build cuda_test_harness/build --parallel
+```sh
+./scripts/setup.sh
+codex login
+ssh -o BatchMode=yes romeo hostname
+./scripts/run_optimizer.sh run --config configs/gemm-romeo.json
+./scripts/run_optimizer.sh resume --config configs/gemm-romeo.json
+./scripts/run_optimizer.sh compare --config configs/gemm-comparison.json
+.venv/bin/python -m pytest -q
 ```
 
-Create a `.env` file in the repository root:
+No API key is needed for the primary CLI path when ChatGPT authentication works. A cached model list does not establish account access. The terminal CLI `0.143.0` rejected Luna, while the application’s bundled `0.163.0-alpha.10.2` was verified to run it. The backend selects `CODEX_CLI_PATH`, then an existing ChatGPT application binary on macOS, then `codex` on `PATH`. Override explicitly if needed:
 
-```dotenv
-OPENAI_API_KEY=your-key-here
+```sh
+export CODEX_CLI_PATH='/path/to/working/codex'
+"$CODEX_CLI_PATH" login status
+"$CODEX_CLI_PATH" exec --ignore-user-config --ephemeral -s read-only \
+  -m gpt-6-luna -c 'model_reasoning_effort="max"' 'Reply READY without tools.'
 ```
 
-## Run
+Calls use isolated ephemeral directories, disabled shell tools/project document injection, structured responses, real token receipts and a timeout. The backend never silently changes model. Subscription dollar cost is recorded as unavailable.
 
-```powershell
-.venv\Scripts\python optimizer_agent/optimizer_agent.py --description "Single-precision GEMM with rectangular matrices." --max-iterations 7
+## Configure SSH and Slurm
+
+Use an existing SSH key/agent, with no credentials in repository configuration:
+
+```sshconfig
+Host romeo
+    HostName YOUR_ROMEO_LOGIN_HOST
+    User YOUR_ROMEO_USER
+    IdentityFile ~/.ssh/YOUR_EXISTING_KEY
+    IdentitiesOnly yes
 ```
 
-The default model is `gpt-5-mini` with medium reasoning effort. API usage is billed to your account. Use `-h` for all options, or `--config optimizer_agent/example.json` for the included configuration example.
+Edit [configs/romeo.json](configs/romeo.json): account, partition, constraint, resource, walltime, module, private scratch root. The tested installation uses account `r250127`, partition `instant`, constraint `armgpu`, `gpu:h100:1`, and module `cuda/12.6`. These are installation-specific values.
 
-Supply your own workload components with `--signature`, `--reference`, `--initial-kernel`, and `--input-cases`. Omitted components are inferred or generated. To continue from an earlier run using its saved inputs:
+The tested login node is x86_64; CUDA tools target the AArch64 GPU nodes. **Compilation runs inside Slurm**, with the node’s C++ compiler and NVRTC. The remote worker supports ROMEO Python 3.9 and requires no controller packages or CMake on the login node.
 
-```powershell
-.venv\Scripts\python optimizer_agent/optimizer_agent.py --description "Single-precision GEMM with rectangular matrices." --input-cases results/run-001/input_cases.json --reference results/run-001/reference.cu --initial-kernel results/run-001/best.cu --max-iterations 7
+Only the evaluator harness/worker, candidate sources and input buffers are staged. Credentials, Git metadata and the local virtual environment are excluded. Durable submission intent and exact job receipts recover uncertain acknowledgements without blindly repeating `sbatch`. Cancellation is restricted to the session’s recorded job.
+
+The worker keeps its native CUDA process/context and compiled modules between normal requests, serializes benchmark/profile activity and checks for foreign GPU processes. A compromised or hung context quarantines the allocation; a compatible new worker is required after resource cleanup.
+
+## Workloads and comparison
+
+The built-in suite supports square float32 GEMM, reduction, inclusive scan, 1D three-point stencil, three-tap convolution and RMS normalization: `matmul`, `reduction`, `scan`, `stencil`, `convolution`, `normalization`. Each has small/tail cases and a separate lazily generated final suite. Scope remains one kernel, fixed ABI/layout/precision and deterministic launch arithmetic.
+
+Use a new `run_id` after a workload, numerical policy, protocol, GPU or incompatible toolchain change. Completed runs are not overwritten. `compare` reserves one GPU for agent and vanilla, using the same CPU oracle, initial kernel, distribution and measurement rules. Vanilla has one ordinary optimization prompt with no mandatory research or tuning and is explicitly experimental. Actual resource consumption is reported. This pilot does not establish general optimizer superiority.
+
+If an unfinished campaign's worker has stopped, `resume --config FILE --worker-session NEW_UNIQUE_ID` starts a new isolated worker while retaining the campaign's `run_id`. Target identity is checked before combining evidence; an incompatible GPU requires a new campaign. A completed `resume` reads its manifest without allocating a GPU.
+
+The multi-campaign protocol and isolated ablations are explicit commands:
+
+```sh
+# Writes a 90-campaign plan; submits zero jobs.
+./scripts/run_optimizer.sh plan-suite --config configs/gemm-comparison.json
+# Explicitly executes the planned studies (substantial GPU/model budget).
+./scripts/run_optimizer.sh suite --config configs/gemm-comparison.json
+./scripts/run_optimizer.sh report-suite --config configs/gemm-comparison.json
 ```
 
-This example assumes the earlier run generated `reference.cu`; supplied references are saved as `supplied-reference.cu`. Input manifests retain paths to their binary data, so keep those files available.
+The plan repeats three seeds over six families and full/greedy-parent/no-tuning/no-research/no-PMPP modes. Each ablation retains the other evaluation rules. The greedy mode reproduces the original incumbent-parent policy; it is not a measurement of the entire unmodified upstream program. That reference still requires its own run and resource receipts. Missing and uncertified campaigns remain visible in the report.
 
-Optional flags:
+## Architecture and evaluation
 
-- `--use-nsight`: profile a performance case after each valid candidate and expose profiler tools to the model. Requires Nsight Compute and permission to access GPU performance counters.
-- `--nvidia-research`: retrieve NVIDIA guidance before generating kernels.
+LangGraph owns initialization → selection → research guard → experiment subgraph → durable integration → diagnosis → finalization. The subgraph bounds repairs. A separate genuine TreeQuest AB-MCTS-A tree chooses parents/actions using `ask`/`tell`. TreeQuest is pinned to `3fac4f8b07e14ed92742471492a59764993b9ab0`; its maintained eligibility extension masks invalid selections **before trial creation**. Closures have explicit candidate, parent/action, subtree or strategy-family scopes, and upstream source hashes are checked.
 
-## Examples
+Research opens real CCCL/CUB, CUTLASS/CuTe, applicable library code, CUDA documentation and available PMPP material. Dossiers retain queries, retrieval status, exact provenance/content hashes and applicable techniques. A new family requires new research. Unavailable search blocks that trial; documented negative results can support an explicitly original hypothesis. The original PMPP guide remains in proposal/diagnosis context; no full-book access or unconsulted page citations are claimed.
 
-Float32 GEMM on an RTX 3060 Laptop GPU, with NVIDIA research and Nsight Compute enabled.
+The independent evaluator owns full outputs, read-only input checks, sentinels, numerical rules, launch arithmetic and CPU oracles. Correctness precedes benchmarking. Integer comparison is exact; tolerances/nonfinite policy are frozen. Conservative source admission rejects known precision/ABI violations, but cannot prove arbitrary CUDA semantics.
 
-| Run 022 | Run 023 |
-| --- | --- |
-| Optimizing the generated starting kernel. | Continuing from run 022's best kernel with the same inputs and reference. |
-| <a href="docs/run-022-heatmap.png"><img src="docs/run-022-heatmap.png" alt="Run 022: timings and candidate changes" width="400"></a> | <a href="docs/run-023-heatmap.png"><img src="docs/run-023-heatmap.png" alt="Run 023: timings and candidate changes" width="400"></a> |
+CUDA Events measure the kernel; transfers, compilation and profiling are excluded from latency. The fixed estimator is the median of series means. All tree rewards use the same baseline: `gain/(1+gain)`. Promotion requires fresh alternating A/B series, a paired bootstrap lower bound above the useful-gain threshold and critical-case limits. Finalization checks the exact artifact on held-out data, required sanitizer passes and a fresh baseline comparison. Missing tools or incomplete finalization never imply certification.
 
-## Results and limits
+SQLite separately persists LangGraph checkpoints, TreeQuest tree/RNG/pending trials, immutable evidence, integration journal and budgets. A result has one tree reward; cached observations retain their IDs and intentional remeasurements receive new ones. Final exposure is persisted before execution; interrupted finalization requires a new independent holdout.
 
-Each session gets a directory under `results/run-NNN/` containing kernel sources, requests, input/output data, model/tool responses, `history.json`, and `summary.json`. Successful runs export `best.cu`, per-case replay requests, and `heatmap.png`/`heatmap.svg`. Nsight reports are saved when profiling is enabled.
+## Profiling and fallback
 
-This is an experimental optimizer for individual kernels. Passing supplied cases does not prove general correctness, and a generated reference is not an independent correctness oracle. Improvements are workload-dependent; no comparison against cuBLAS or other vendor libraries is currently included. Keep the GPU otherwise idle when comparing timings.
+Nsight Compute runs on ROMEO first, in the serialized allocation, with a diagnostic question and explicit metrics. Permission errors such as `ERR_NVGPUCTRPERM` and missing tools are retained with bounded attempts. A configured local CUDA runner/Nsight can provide fallback diagnostics with its own hardware fingerprint. The tested Mac has no CUDA GPU, so local fallback is unavailable.
 
-Generated input scripts execute locally as Python subprocesses without a sandbox. Generated CUDA kernels also run on the local GPU.
+Local profile times/counters never enter a ROMEO ranking. Replay/cache conditions and ordinary compilation/benchmark receipts remain available when counters cannot be read.
 
-## Workflow graph
+## Artifacts and qualification
 
-The graph below is rendered from the compiled LangGraph workflow with Nsight profiling enabled. Dashed edges are conditional routes. Without `--use-nsight`, evaluation routes directly to the next attempt or finalization; NVIDIA research is skipped unless `--nvidia-research` is set.
+Campaign artifacts include configuration/contract/environment, both SQLite stores, baseline/candidate sources, launch rules, proposals, research dossiers, raw evaluations/confirmations/profiles, `best.cu`, `best-launch.json`, `final.json`, `manifest.json` and events. Worker artifacts include Slurm ownership/terminal receipts, native requests/results, outputs and tool logs.
 
-[![LangGraph workflow showing preparation, model/tool calls, evaluation, repair, and finalization](docs/workflow.png)](docs/workflow.png)
+Termination reason is separate from certification: `certified`, `validated_no_gain`, `validated_gain_uncertified`, `final_validation_failed`, `finalization_incomplete`. The best known source stays available on failure.
+
+The [specification](docs/spec.md) is preserved as requirements. [Acceptance coverage](docs/ACCEPTANCE.md) distinguishes implementation, simulated tests, GPU evidence and remaining qualification. [Validation results](docs/VALIDATION.md) records actual executions. Local tests are distinct from GitHub CI; one GPU pilot does not replace the multi-campaign six-family ablation study in specification section16.

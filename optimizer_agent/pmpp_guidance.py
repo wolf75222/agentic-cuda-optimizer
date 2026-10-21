@@ -31,3 +31,40 @@ applicable technique. A repeat is allowed when motivated by a measurement questi
 This is experimental guidance, not a requirement to use every technique or to
 claim an improvement before measurement.
 """
+
+
+# These short cards are original project material, not quotations or a purported
+# index of the copyrighted book. The publisher's fourth-edition companion can be
+# consulted by ResearchService when it is actually accessible.
+PMPP_COMPANION_URL = "https://shop.elsevier.com/books/book-companion/9780323912310"
+PMPP_CARD_PROVENANCE = {
+    "edition": "Project-authored PMPP-inspired guidance (fourth-edition companion referenced)",
+    "provenance": "Original repository guidance; no full book text is installed or claimed",
+    "source_file": __file__,
+    "companion_url": PMPP_COMPANION_URL,
+}
+PMPP_TOPICS = {
+    "coalescing": "Map neighboring lanes to adjacent addresses; check the actual stride, alignment and tails.",
+    "tiling": "Load reusable tiles cooperatively; estimate saved traffic, synchronization and shared-memory cost.",
+    "register_reuse": "Compute multiple outputs per thread while checking registers, spills and available parallelism.",
+    "occupancy": "Compare useful blocks to SM count; registers and shared memory can reduce resident warps.",
+    "divergence": "Inspect lane-dependent branches and tail predicates without removing required edge cases.",
+    "synchronization": "Every participating thread must reach block barriers; initialization must cover padded tiles.",
+    "reduction": "Combine values cooperatively and verify association, precision and synchronization against the oracle.",
+    "scan": "Track dependencies, identity elements and ordering; device-wide algorithms may require multiple launches.",
+    "stencil": "Include halo traffic and boundary conditions when comparing shared tiles to direct global access.",
+    "convolution": "Explore spatial and channel reuse, preserving layout, precision and all valid output positions.",
+}
+
+
+def consult_pmpp(topics: list[str]) -> list[dict]:
+    """Read only installed cards and report their exact provenance and hash."""
+    import hashlib
+    from pathlib import Path
+
+    unknown = set(topics) - PMPP_TOPICS.keys()
+    if unknown:
+        raise ValueError(f"PMPP topics unavailable: {sorted(unknown)}")
+    digest = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    return [dict(PMPP_CARD_PROVENANCE, topic=topic, text=PMPP_TOPICS[topic],
+                 content_sha256=digest, access="installed original guide") for topic in topics]

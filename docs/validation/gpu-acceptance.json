@@ -1,0 +1,183 @@
+{
+  "protected_job_id": "769515",
+  "jobs": [
+    {
+      "session_id": "gpu-probes-20261021",
+      "label": "probes",
+      "job_id": "769644",
+      "hardware": {
+        "environment": "romeo",
+        "hostname": "romeo-a057",
+        "machine": "aarch64",
+        "slurm_job_id": "769644",
+        "cuda_visible_devices": "0",
+        "device_properties": {
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "cuda_toolkit_version": 12060,
+          "device": 0,
+          "driver_version": 13010,
+          "free_memory_bytes": 101400772608,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+          "l2_cache_bytes": 62914560,
+          "max_block_dimensions": [
+            1024,
+            1024,
+            64
+          ],
+          "max_grid_dimensions": [
+            2147483647,
+            65535,
+            65535
+          ],
+          "max_registers_per_block": 65536,
+          "max_registers_per_multiprocessor": 65536,
+          "max_shared_memory_per_block_bytes": 49152,
+          "max_shared_memory_per_block_optin_bytes": 232448,
+          "max_shared_memory_per_multiprocessor_bytes": 233472,
+          "max_threads_per_block": 1024,
+          "max_threads_per_multiprocessor": 2048,
+          "multiprocessor_count": 132,
+          "name": "NVIDIA GH200 120GB",
+          "nvrtc_version": "12.6",
+          "total_memory_bytes": 102005473280,
+          "uuid": "fd5317a4afa5b1e64376135af6a193bb",
+          "warp_size": 32
+        },
+        "nvidia_smi": "GPU-fd5317a4-afa5-b1e6-4376-135af6a193bb, NVIDIA GH200 120GB, 590.48.01, 00000019:01:00.0",
+        "toolkit": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Wed_Oct_30_00:08:18_PDT_2024\nCuda compilation tools, release 12.6, V12.6.85\nBuild cuda_12.6.r12.6/compiler.35059454_0",
+        "compiler": "g++ (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5)",
+        "profiling_available": true,
+        "sanitizer_available": true,
+        "gpu_uuids": [
+          "GPU-fd5317a4-afa5-b1e6-4376-135af6a193bb"
+        ],
+        "fingerprint_id": "637dddc482650db954dafbabf7e2ce85768dd59547e718080235eede5fe47933"
+      },
+      "terminal_receipt": {
+        "job_id": "769644",
+        "state": "FAILED",
+        "exit_code": "3:0",
+        "elapsed": "00:01:02",
+        "nodes": "romeo-a057",
+        "terminal": true
+      }
+    },
+    {
+      "session_id": "gpu-recovery-20261021",
+      "label": "recovery",
+      "job_id": "769661",
+      "hardware": {
+        "environment": "romeo",
+        "hostname": "romeo-a057",
+        "machine": "aarch64",
+        "slurm_job_id": "769661",
+        "cuda_visible_devices": "0",
+        "device_properties": {
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "cuda_toolkit_version": 12060,
+          "device": 0,
+          "driver_version": 13010,
+          "free_memory_bytes": 101401100288,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+          "l2_cache_bytes": 62914560,
+          "max_block_dimensions": [
+            1024,
+            1024,
+            64
+          ],
+          "max_grid_dimensions": [
+            2147483647,
+            65535,
+            65535
+          ],
+          "max_registers_per_block": 65536,
+          "max_registers_per_multiprocessor": 65536,
+          "max_shared_memory_per_block_bytes": 49152,
+          "max_shared_memory_per_block_optin_bytes": 232448,
+          "max_shared_memory_per_multiprocessor_bytes": 233472,
+          "max_threads_per_block": 1024,
+          "max_threads_per_multiprocessor": 2048,
+          "multiprocessor_count": 132,
+          "name": "NVIDIA GH200 120GB",
+          "nvrtc_version": "12.6",
+          "total_memory_bytes": 102005473280,
+          "uuid": "fd5317a4afa5b1e64376135af6a193bb",
+          "warp_size": 32
+        },
+        "nvidia_smi": "GPU-fd5317a4-afa5-b1e6-4376-135af6a193bb, NVIDIA GH200 120GB, 590.48.01, 00000019:01:00.0",
+        "toolkit": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Wed_Oct_30_00:08:18_PDT_2024\nCuda compilation tools, release 12.6, V12.6.85\nBuild cuda_12.6.r12.6/compiler.35059454_0",
+        "compiler": "g++ (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5)",
+        "profiling_available": true,
+        "sanitizer_available": true,
+        "gpu_uuids": [
+          "GPU-fd5317a4-afa5-b1e6-4376-135af6a193bb"
+        ],
+        "fingerprint_id": "cc0e902c89ce9e2dee9b5fefb525d1abf4661f6ae8aa722de38383caddbbe7af"
+      },
+      "terminal_receipt": {
+        "job_id": "769661",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:00:17",
+        "nodes": "romeo-a057",
+        "terminal": true
+      }
+    }
+  ],
+  "checks": {
+    "safe_probes": true,
+    "destructive_probe": true,
+    "new_allocation_cpu_oracle_validation": true,
+    "new_worker_distinct_job": true,
+    "owned_jobs_terminal": true,
+    "protected_job_identity_unchanged": true
+  },
+  "protected_before": "JobId=769515 JobName=aco-gemm-pilot-20261021 UserId=rmdraux(100267) GroupId=rmdraux(100267) MCS_label=N/A Priority=4884 Nice=0 Account=r250127 QOS=normal JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:09:10 TimeLimit=00:30:00 TimeMin=N/A SubmitTime=2026-10-21T11:53:35 EligibleTime=2026-10-21T11:53:35 AccrueTime=2026-10-21T11:53:35 StartTime=2026-10-21T11:53:35 EndTime=2026-10-21T12:23:35 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-21T11:53:35 Scheduler=Main Partition=instant AllocNode:Sid=romeo1:1988934 ReqNodeList=(null) ExcNodeList=(null) NodeList=romeo-a057 BatchHost=romeo-a057 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=8G,node=1,billing=4,gres/gpu=1 AllocTRES=cpu=4,mem=8G,node=1,billing=4,gres/gpu=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=8G MinTmpDiskNode=0 Features=armgpu DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/job.sh WorkDir=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021 StdErr=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/slurm-769515.err StdIn=/dev/null StdOut=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/slurm-769515.out Power= TresPerNode=gres/gpu:h100:1 TresPerTask=cpu:4 \n",
+  "protected_after": "JobId=769515 JobName=aco-gemm-pilot-20261021 UserId=rmdraux(100267) GroupId=rmdraux(100267) MCS_label=N/A Priority=4884 Nice=0 Account=r250127 QOS=normal JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:10:49 TimeLimit=00:30:00 TimeMin=N/A SubmitTime=2026-10-21T11:53:35 EligibleTime=2026-10-21T11:53:35 AccrueTime=2026-10-21T11:53:35 StartTime=2026-10-21T11:53:35 EndTime=2026-10-21T12:23:35 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-21T11:53:35 Scheduler=Main Partition=instant AllocNode:Sid=romeo1:1988934 ReqNodeList=(null) ExcNodeList=(null) NodeList=romeo-a057 BatchHost=romeo-a057 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=8G,node=1,billing=4,gres/gpu=1 AllocTRES=cpu=4,mem=8G,node=1,billing=4,gres/gpu=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=8G MinTmpDiskNode=0 Features=armgpu DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/job.sh WorkDir=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021 StdErr=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/slurm-769515.err StdIn=/dev/null StdOut=/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/gemm-pilot-20261021/slurm-769515.out Power= TresPerNode=gres/gpu:h100:1 TresPerTask=cpu:4 \n",
+  "passed": true,
+  "protected_identity_comparison": {
+    "JobId": {
+      "before": "769515",
+      "after": "769515",
+      "unchanged": true
+    },
+    "JobName": {
+      "before": "aco-gemm-pilot-20261021",
+      "after": "aco-gemm-pilot-20261021",
+      "unchanged": true
+    },
+    "UserId": {
+      "before": "rmdraux(100267)",
+      "after": "rmdraux(100267)",
+      "unchanged": true
+    },
+    "Partition": {
+      "before": "instant",
+      "after": "instant",
+      "unchanged": true
+    },
+    "NodeList": {
+      "before": "romeo-a057",
+      "after": "romeo-a057",
+      "unchanged": true
+    },
+    "StartTime": {
+      "before": "2026-10-21T11:53:35",
+      "after": "2026-10-21T11:53:35",
+      "unchanged": true
+    },
+    "Restarts": {
+      "before": "0",
+      "after": "0",
+      "unchanged": true
+    }
+  }
+}

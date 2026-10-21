@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "run_id": "gemm-pilot-20261021",
+  "backend": "romeo",
+  "execution_config": "configs/romeo.json",
+  "workload": "matmul",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "max",
+  "max_trials": 1,
+  "max_repairs_per_trial": 2,
+  "max_configurations_per_trial": 3,
+  "model_timeout_seconds": 420,
+  "actions": [
+    "tiling"
+  ],
+  "search_sizes": [
+    128,
+    256,
+    512
+  ],
+  "final_sizes": [
+    96,
+    192,
+    384
+  ],
+  "benchmark_series": 3,
+  "confirmation_batches": 7,
+  "launches_per_series": 10,
+  "required_sanitizers": [
+    "memcheck",
+    "racecheck",
+    "initcheck",
+    "synccheck"
+  ]
+}

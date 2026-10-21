@@ -41,8 +41,15 @@ if(HARNESS_SOURCES)
     target_include_directories(cuda_test_harness PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
     target_link_libraries(cuda_test_harness PRIVATE CUDA::cuda_driver CUDA::nvrtc)
     list(GET CUDAToolkit_INCLUDE_DIRS 0 NVRTC_INCLUDE_DIR)
+    set(HARNESS_BUILD_INPUT "${CUDAToolkit_VERSION};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION}")
+    foreach(INPUT_FILE IN LISTS HARNESS_SOURCES HARNESS_HEADERS)
+        file(SHA256 "${INPUT_FILE}" INPUT_HASH)
+        string(APPEND HARNESS_BUILD_INPUT ";${INPUT_HASH}")
+    endforeach()
+    string(SHA256 HARNESS_BUILD_ID "${HARNESS_BUILD_INPUT}")
     target_compile_definitions(cuda_test_harness PRIVATE
-        CUDA_HARNESS_INCLUDE_DIR="${NVRTC_INCLUDE_DIR}")
+        CUDA_HARNESS_INCLUDE_DIR="${NVRTC_INCLUDE_DIR}"
+        CUDA_HARNESS_BUILD_ID="${HARNESS_BUILD_ID}")
 else()
     # Keep configuration working while the harness contains only headers.
     add_library(cuda_test_harness INTERFACE ${HARNESS_HEADERS})

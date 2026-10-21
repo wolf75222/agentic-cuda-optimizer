@@ -1,0 +1,306 @@
+"""Evaluator policy tests; actual CUDA evidence is produced by the ROMEO run."""
+from dataclasses import replace
+import hashlib
+from pathlib import Path
+import threading
+import time
+
+import numpy as np
+import pytest
+
+from agent_workload import OutputComparison
+from compile_cache import CompilationCache, compilation_manifest
+from evaluation import Candidate, EvaluationCase, Evaluator, LaunchRule, WorkloadContract, paired_bootstrap, _source_contract_violations
+from gpu_scheduler import GPUScheduler, GPUInterferenceError
+from use_harness import BufferArgument, BufferDirection, KernelRequest
+
+
+class FakeRunner:
+    def __init__(self, directory, *, wrong=False, readonly=True, fail_stage=None):
+        self.directory = directory
+        self.wrong, self.readonly, self.fail_stage = wrong, readonly, fail_stage
+        self.calls = []
+
+    def get_device_properties(self, device):
+        return {"architecture": "sm_90", "uuid": "fake", "max_threads_per_block": 1024,
+                "max_shared_memory_per_block_bytes": 49152, "driver_version": 12000, "nvrtc_version": "12.0"}
+
+    def run(self, run_id, request):
+        self.calls.append((run_id, request))
+        if self.fail_stage:
+            return {"ok": False, "stage": self.fail_stage, "error": "controlled failure"}
+        value = np.fromfile(request.arguments[0].input_file, dtype="<f4") * 2
+        if self.wrong:
+            value[-1] = np.nan
+        path = self.directory / (run_id + ".bin")
+        value.tofile(path)
+        latency = 1.0 if "fast" in Path(request.source).name else 2.0
+        return {"ok": True, "guard_readonly_ok": self.readonly, "guard_outputs_poisoned": True,
+                "environment": self.get_device_properties(0),
+                "outputs": [{"path": str(path), "bytes": value.nbytes}], "latency_ms": latency,
+                "latency_samples_ms": [latency] * request.iterations}
+
+
+def setup(tmp_path, runner=None, final=True, **overrides):
+    source = tmp_path / "baseline.cu"
+    source.write_text('extern "C" __global__ void f(float* x) {}')
+    fast = tmp_path / "fast.cu"
+    fast.write_text(source.read_text() + "\n// different compiled artifact")
+    candidate = Candidate("fast", fast, "f", LaunchRule())
+    baseline = Candidate("baseline", source, "f", LaunchRule())
+    inp = tmp_path / "a.bin"
+    np.arange(17, dtype="<f4").tofile(inp)
+    request = KernelRequest(str(source), "f", "run", 0, [1, 1, 1], [256, 1, 1], 0, 0, 1,
+                            [BufferArgument(68, str(inp), BufferDirection.Input), BufferArgument(68, None, BufferDirection.Output)])
+    case = EvaluationCase("search", request, [OutputComparison(0, "float32", 0, 0)], {"n": 17}, critical=True)
+    contract = WorkloadContract("test", 1, "double", "f(x)", "CPU NumPy multiplication",
+                                benchmark_series=3, confirmation_batches=4, launches_per_series=2,
+                                bootstrap_samples=200, **overrides)
+    suites = {"short": [case], "search": [case], "performance": [case]}
+    if final:
+        suites["final"] = [replace(case, case_id="holdout", seed=900)]
+    runner = runner or FakeRunner(tmp_path)
+    oracle = lambda c: [np.fromfile(c.request.arguments[0].input_file, dtype="<f4") * 2]
+    evaluator = Evaluator(runner, contract, oracle, suites)
+    return evaluator, candidate, baseline, case
+
+
+def test_validation_precedes_benchmark_and_preserves_raw_series(tmp_path):
+    evaluator, candidate, _, _ = setup(tmp_path)
+    result = evaluator.benchmark(candidate)
+    assert result["ok"] and result["status"] == "measured"
+    modes = [request.mode for _, request in evaluator.runner.calls]
+    # Short + full search each run twice; an exact performance subset adds no
+    # duplicate correctness launches before the three fresh timing series.
+    assert modes == ["run"] * 4 + ["benchmark"] * 3
+    assert result["cases"]["search"]["latency_ms"] == 1
+    assert result["cases"]["search"]["series"][0]["raw_ms"] == [1, 1]
+    assert evaluator.runner.calls[0][1].sentinel_byte != evaluator.runner.calls[1][1].sentinel_byte
+
+
+@pytest.mark.parametrize("changed", ["seed", "metadata", "comparison", "input_bytes"])
+def test_performance_validation_is_reused_only_for_exact_frozen_search_cases(tmp_path, changed):
+    evaluator, candidate, _, case = setup(tmp_path)
+    performance = replace(case)
+    if changed == "seed":
+        performance.seed += 1
+    elif changed == "metadata":
+        performance.metadata = {"n": 17, "different_layout": "new"}
+    elif changed == "comparison":
+        performance.comparisons = [OutputComparison(0, "float32", 0.1, 0)]
+    else:
+        from copy import deepcopy
+        performance.request = deepcopy(case.request)
+        new_input = tmp_path / "different-input.bin"
+        (np.arange(17, dtype="<f4") + 1).tofile(new_input)
+        performance.request.arguments[0].input_file = str(new_input)
+    suites = {"short": [case], "search": [case], "performance": [performance]}
+    exact = Evaluator(evaluator.runner, evaluator.contract, evaluator.oracle, suites)
+    assert exact.benchmark(candidate)["ok"]
+    assert [request.mode for _, request in evaluator.runner.calls] == ["run"] * 6 + ["benchmark"] * 3
+
+
+@pytest.mark.parametrize("issue,status", [("wrong", "numerical_error"), ("readonly", "memory_error"), ("compile", "compilation_error")])
+def test_invalid_candidates_never_benchmark(tmp_path, issue, status):
+    runner = FakeRunner(tmp_path, wrong=issue == "wrong", readonly=issue != "readonly",
+                        fail_stage="compile" if issue == "compile" else None)
+    evaluator, candidate, _, _ = setup(tmp_path, runner)
+    result = evaluator.benchmark(candidate)
+    assert not result["ok"] and result["status"] == status
+    assert all(request.mode == "run" for _, request in runner.calls)
+
+
+def test_candidate_source_parameters_and_contract_are_pinned(tmp_path):
+    evaluator, candidate, _, case = setup(tmp_path)
+    case.comparisons[0].absolute_tolerance = 1e9
+    # Constructor deep-copies the caller's test/numerical metadata.
+    assert evaluator._suites["search"][0].comparisons[0].absolute_tolerance == 0
+    candidate.parameters["precision"] = "fp16"
+    with pytest.raises(ValueError, match="parameters changed"):
+        evaluator.validate(candidate)
+    candidate.parameters.clear()
+    candidate.source.write_text("modified")
+    with pytest.raises(ValueError, match="source changed"):
+        evaluator.validate(candidate)
+
+
+def test_input_modification_is_rejected_before_gpu(tmp_path):
+    evaluator, candidate, _, case = setup(tmp_path)
+    Path(case.request.arguments[0].input_file).write_bytes(b"x" * 68)
+    with pytest.raises(ValueError, match="input changed"):
+        evaluator.validate(candidate)
+    assert not evaluator.runner.calls
+
+
+def test_confirmation_alternates_pairs_and_uses_new_samples(tmp_path):
+    evaluator, candidate, baseline, _ = setup(tmp_path)
+    measured = evaluator.benchmark(candidate)
+    result = evaluator.confirm(candidate, baseline)
+    assert result["evaluation_id"] != measured["evaluation_id"]
+    assert result["status"] == "promoted"
+    assert result["interval"]["lower"] == pytest.approx(2)
+    assert [p["order"] for p in result["pairs"]] == [["baseline", "fast"], ["fast", "baseline"]] * 2
+
+
+def test_bootstrap_resamples_complete_series_and_critical_regression(tmp_path):
+    result = paired_bootstrap({"a": [1, 1, 1], "b": [10, 10, 10]},
+                              {"a": [2, 2, 2], "b": [9, 9, 9]}, {"a": 1, "b": 1}, samples=200)
+    assert result["gain"] > 1
+    assert result["case_gains"]["b"]["upper"] < 1
+    evaluator, fast, baseline, _ = setup(tmp_path)
+    # The candidate under test is slower on the critical case.
+    result = evaluator.confirm(baseline, fast)
+    assert result["status"] == "not_improved" and not result["critical_cases_ok"]
+
+
+def test_final_holdout_is_one_use_and_artifact_is_exact(tmp_path):
+    evaluator, candidate, baseline, _ = setup(tmp_path)
+    with pytest.raises(ValueError, match="reserved"):
+        evaluator.validate(candidate, "final")
+    result = evaluator.finalize(candidate, baseline)
+    assert result["status"] == "certified"
+    assert result["artifact_hash"] == candidate.artifact_hash
+    assert result["source_hash"] == hashlib.sha256(candidate.source.read_bytes()).hexdigest()
+    assert evaluator.finalize(candidate, baseline)["status"] == "finalization_incomplete"
+
+
+def test_lazy_holdout_created_after_search_preserves_contract_hash(tmp_path):
+    evaluator, candidate, baseline, case = setup(tmp_path, final=False)
+    calls = []
+    factory = lambda: (calls.append("final") or [replace(case, case_id="holdout", seed=333)])
+    lazy = Evaluator(evaluator.runner, evaluator.contract, evaluator.oracle, evaluator._suites,
+                     final_suite_factory=factory, final_suite_identity="frozen-final-generator-and-seed-commitment")
+    original_hash = lazy.contract_hash
+    lazy.benchmark(candidate)
+    assert not calls
+    assert lazy.finalize(candidate, baseline)["status"] == "certified"
+    assert calls == ["final"] and lazy.contract_hash == original_hash
+
+
+def test_missing_required_sanitizer_blocks_certification(tmp_path):
+    evaluator, candidate, baseline, _ = setup(tmp_path, required_sanitizers=("racecheck",))
+    result = evaluator.finalize(candidate, baseline)
+    assert result["status"] == "finalization_incomplete"
+    assert result["sanitizers"][0]["status"] == "tool_unavailable"
+
+
+def test_final_numerical_failure_is_explicit_and_cannot_certify(tmp_path):
+    evaluator, candidate, baseline, _ = setup(tmp_path)
+    assert evaluator.benchmark(candidate)["ok"]
+    evaluator.runner.wrong = True
+    result = evaluator.finalize(candidate, baseline)
+    assert result["status"] == "final_validation_failed" and not result["ok"]
+    assert "confirmation" not in result
+
+
+def test_returning_baseline_requires_final_validation_but_no_gain_claim(tmp_path):
+    evaluator, _, baseline, _ = setup(tmp_path)
+    result = evaluator.finalize(baseline, baseline)
+    assert result["status"] == "validated_no_gain" and result["validation"]["ok"]
+    assert all(request.mode == "run" for _, request in evaluator.runner.calls)
+
+
+def test_hardware_drift_invalidates_a_measurement(tmp_path):
+    class DriftingRunner(FakeRunner):
+        def run(self, run_id, request):
+            result = super().run(run_id, request)
+            result["environment"]["uuid"] = "a-different-gpu"
+            return result
+    evaluator, candidate, _, _ = setup(tmp_path, DriftingRunner(tmp_path))
+    result = evaluator.benchmark(candidate)
+    assert result["status"] == "infrastructure_failure" and not result["ok"]
+
+
+def test_integer_comparison_is_exact_regardless_of_float_tolerances(tmp_path):
+    evaluator, _, _, case = setup(tmp_path)
+    integer_case = replace(case, comparisons=[OutputComparison(0, "int32", 1000, 1000)])
+    output = tmp_path / "integer.bin"
+    np.array([43], dtype="<i4").tofile(output)
+    report = {"outputs": [{"path": str(output), "bytes": 4}]}
+    assert not evaluator._compare(integer_case, report, [np.array([42], dtype="<i4")])["ok"]
+
+
+def test_launch_rule_applies_tails_without_generator_or_optin_memory():
+    rule = LaunchRule(kind="square_2d", block=[16, 16, 1], tile_x=32, tile_y=16)
+    assert rule.apply({"n": 63})["grid"] == [2, 4, 1]
+    with pytest.raises(ValueError, match="shared-memory"):
+        replace(rule, shared_memory_bytes=64 * 1024).apply({"n": 63}, {"max_shared_memory_per_block_bytes": 49152})
+
+
+def test_compilation_cache_invalidates_content_dependencies_options_target_and_toolchain(tmp_path):
+    source = tmp_path / "kernel.cu"
+    dependency = tmp_path / "dep.h"
+    source.write_text('#include "dep.h"\n')
+    dependency.write_text("#define X 1")
+    kwargs = {"architecture": "sm_90", "toolchain": {"nvrtc": "12.0"}, "options": ["--std=c++17"]}
+    manifest = compilation_manifest(source, **kwargs)
+    assert compilation_manifest(source, **kwargs) == manifest
+    cache = CompilationCache(tmp_path / "cache")
+    cache.store(manifest, b"cubin")
+    assert cache.lookup(manifest).read_bytes() == b"cubin"
+    dependency.write_text("#define X 2")
+    assert compilation_manifest(source, **kwargs)["key"] != manifest["key"]
+    dependency.write_text("#define X 1")
+    for key, value in (("architecture", "sm_80"), ("toolchain", {"nvrtc": "12.1"}), ("options", ["--use_fast_math"])):
+        assert compilation_manifest(source, **{**kwargs, key: value})["key"] != manifest["key"]
+    cache.lookup(manifest).write_bytes(b"corrupted")
+    assert cache.lookup(manifest) is None
+
+
+def test_gpu_reservations_exclude_other_threads_and_detect_interference(tmp_path):
+    scheduler = GPUScheduler(tmp_path, "gpu-uuid")
+    other = GPUScheduler(tmp_path, "gpu-uuid")
+    entered = threading.Event()
+    def contend():
+        with other.reserve():
+            entered.set()
+    with scheduler.reserve("benchmark"):
+        thread = threading.Thread(target=contend)
+        thread.start()
+        assert not entered.wait(0.1)
+    thread.join(timeout=2)
+    assert entered.is_set()
+    with pytest.raises(GPUInterferenceError):
+        with GPUScheduler(tmp_path, "gpu-uuid", interference_probe=lambda: True).reserve():
+            pass
+
+
+@pytest.mark.parametrize("operation", [
+    "__half h;", "half2 h;", "__nv_bfloat16 h;", "auto x = __float2half(1.0f);",
+    "nvcuda::wmma::fragment<int,1,1,1> f;", "auto x = __float_to_tf32(1.0f);",
+    'asm volatile("mma.sync.aligned.m16n8k8.row.col.f32.tf32.tf32.f32;");',
+    'asm volatile("cvt.rn.f16.f32 %0, %1;" : : );',
+])
+def test_explicit_lower_precision_is_rejected_under_float32_contract(operation):
+    signature = 'extern "C" __global__ void f(const float* a,float* c,int n)'
+    source = signature + " { " + operation + " }"
+    assert _source_contract_violations(source, "f", signature, "float32")
+
+
+def test_precision_guard_ignores_comments_and_strings_and_preserves_float32_vectorization():
+    signature = 'extern "C" __global__ void f(const float* a,float* c,int n)'
+    source = '''// __half tf32 wmma and asm("mma.sync") are forbidden in actual code
+    /* half2 __nv_bfloat16 */
+    extern "C" __global__ __launch_bounds__(256) void f(const float* __restrict__ a,float* c,int n) {
+        const char* documentation = "half tf32 __global__ void incorrect(double a)";
+        float4 values; c[0] = a[0];
+    }'''
+    assert not _source_contract_violations(source, "f", signature, "float32")
+
+
+@pytest.mark.parametrize("source", [
+    '__global__ void f(const float* a,float* c) {}',
+    '__global__ void f(const double* a,float* c,int n) {}',
+    '__global__ void f(const float* a,float* c,int n) {} __global__ void second(float* x) {}',
+])
+def test_abi_changes_and_extra_global_kernels_are_rejected(source):
+    assert _source_contract_violations(source, "f", '__global__ void f(const float* a,float* c,int n)', "float32")
+
+
+def test_contract_precision_violation_never_reaches_compiler_or_benchmark(tmp_path):
+    evaluator, _, _, _ = setup(tmp_path, allowed_precision="float32")
+    source = tmp_path / "hidden_half.cu"
+    source.write_text('__global__ void f(float* x) { __half h; }')
+    result = evaluator.benchmark(Candidate("half", source, "f", LaunchRule()))
+    assert result["status"] == "contract_violation" and not result["ok"]
+    assert not evaluator.runner.calls
