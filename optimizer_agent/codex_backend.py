@@ -537,8 +537,13 @@ were provided to synthesis; requested symbols/locators and downloaded full bodie
 are not evidence that omitted text was read. Do not infer omitted implementations.
 {pmpp_instruction}
 Published timing is not target timing.
-Source must contain the full single CUDA kernel, includes and supporting device
-code. No allocations, host preprocessing or multiple kernel launches. Synchronize
+Source must contain the full single CUDA kernel and supporting device code.
+The harness compiles device source with NVRTC, not a host C++ compiler. The
+controller adds the candidate source directory as an include path; it does not
+stage host standard-library headers. In particular, previous target compilation
+receipts reject math.h. Keep the returned device source self-contained and use
+only dependencies explicitly available in the supplied compilation context.
+No allocations, host preprocessing or multiple kernel launches. Synchronize
 all participating threads safely at tails. The launch_rule freezes arithmetic
 metadata (square_2d grid=ceil(n/tile_x),ceil(n/tile_y),1; block stays explicit).
 tile_x/tile_y are output coverage, including work per thread, not shared K width.

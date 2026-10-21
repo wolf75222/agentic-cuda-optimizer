@@ -200,17 +200,19 @@ def test_original_failed_candidate_is_repaired_and_geomean_selects_it(tmp_path,p
     assert all(case["validation_ok"] for case in history[2]["case_runs"])
 
 
-def test_interrupted_original_graph_resumes_real_checkpoint_and_usage(tmp_path,pinned):
-    class InterruptedResponses(OriginalResponses):
-        interrupted = False
-        def generate_json(self,*args,**kwargs):
-            if len(self.prompts) == 1 and not self.interrupted:
-                self.interrupted = True
-                raise KeyboardInterrupt("simulated process interruption before next original model call")
-            return super().generate_json(*args,**kwargs)
+def test_interrupted_original_graph_resumes_real_checkpoint_and_usage(tmp_path,pinned,monkeypatch):
     config = CampaignConfig(run_id="original-resume",workload="scan",search_sizes=(8,),final_sizes=(8,),
         max_trials=2,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
-    backend = InterruptedResponses((1,17,63,8),"scan")
+    backend = OriginalResponses((1,17,63,8),"scan")
+    invoke = module.OriginalCodexTransport.invoke
+    interrupted = []
+    def after_completed_reply(self,messages):
+        result = invoke(self,messages)
+        if len(backend.prompts) == 2 and not interrupted:
+            interrupted.append(True)
+            raise KeyboardInterrupt("simulated process interruption after durable model reply before graph checkpoint")
+        return result
+    monkeypatch.setattr(module.OriginalCodexTransport,"invoke",after_completed_reply)
     runner = CPUHarness(tmp_path/"runner")
     with pytest.raises(KeyboardInterrupt):
         module.run_upstream_campaign(config,runner,tmp_path/"original",model_backend=backend,source_snapshot=pinned)
@@ -248,7 +250,8 @@ def test_original_eight_call_guard_is_original_algorithm_count(tmp_path,pinned):
     backend = LoopingTools((1,17,63,8),"scan",tools=True)
     result = module.run_upstream_campaign(config,CPUHarness(tmp_path/"runner"),tmp_path/"original",
         model_backend=backend,source_snapshot=pinned)
-    assert result["generation_complete"] and result["status"] == "generation_failed"
+    assert result["generation_complete"] and result["status"] == "method_failed"
+    assert result["method_status"] == "failed" and result["method_error"]
     assert result["usage"]["model_calls"] == 8
     assert result["original_limits"]["max_model_calls_per_proposal"] == 8
     assert "Model/tool call budget exhausted for this proposal" in result["original_summary"]["error"]
@@ -266,7 +269,7 @@ def test_original_reference_cannot_validate_itself_with_same_wrong_launch(tmp_pa
         max_trials=2,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
     result = module.run_upstream_campaign(config,WrongReference(tmp_path/"runner"),tmp_path/"original",
         model_backend=OriginalResponses((1,17,63,8),"scan"),source_snapshot=pinned)
-    assert result["status"] == "generation_failed" and result["candidate"] is None
+    assert result["status"] == "method_failed" and result["candidate"] is None
     assert "independent oracle" in result["original_summary"]["error"]
     assert json.loads((tmp_path/"original"/"baseline-independent-validation.json").read_text())["ok"]
 
@@ -321,6 +324,154 @@ def test_original_transport_retry_count_survives_resume_without_reissuing_exhaus
     assert backend.calls == 3
     assert resumed.usage()["model_calls"] == 3
     assert not resumed.usage()["usage_complete"]
+
+
+def fake_completed_cli(tmp_path,monkeypatch):
+    """Real CodexBackend receipt path with Popen simulated, never a process."""
+    from optimizer_agent import codex_backend
+    calls = []
+    directory = tmp_path/"model-transport"
+    payload = {"kind":"final","text":"frozen original reply","tool_calls":[]}
+    usage = {"input_tokens":120,"cached_input_tokens":20,"output_tokens":30}
+    class Process:
+        returncode = 0
+        def __init__(self,command,**kwargs):
+            calls.append(command)
+            self.output = Path(command[command.index("--output-last-message")+1])
+            # The intention physically exists before the simulated CLI starts.
+            intents = list((directory/"intents").glob("*/*/intent.json"))
+            assert len(intents) == 1
+            intent = json.loads(intents[0].read_text())
+            assert intent["request"]["prompt"] == "exact original conversation"
+            assert intent["request"]["schema"] == module.CHAT_SCHEMA
+            assert Path(intent["trace_directory"]) == intents[0].parent/"cli"
+        def communicate(self,prompt,timeout):
+            assert prompt == "exact original conversation"
+            self.output.write_text(json.dumps(payload))
+            return "\n".join(json.dumps(event) for event in [
+                {"type":"thread.started","thread_id":"simulated-original-cli"},
+                {"type":"turn.completed","usage":usage}]),""
+    monkeypatch.setattr(codex_backend.subprocess,"Popen",Process)
+    backend = module.CodexBackend(module.CodexConfig(executable="never-executed-codex",trace_dir=tmp_path/"unscoped-model"))
+    return backend,directory,calls,payload,usage
+
+
+def test_completed_cli_before_transport_ack_recovers_exact_receipt_without_a_second_prompt(tmp_path,monkeypatch):
+    backend,directory,calls,payload,usage = fake_completed_cli(tmp_path,monkeypatch)
+    transport = module.OriginalCodexTransport(backend,directory=directory)
+    def crash_before_ack(*args,**kwargs):
+        raise KeyboardInterrupt("CLI receipt completed before original calls.json acknowledgement")
+    monkeypatch.setattr(transport,"_ack",crash_before_ack)
+    with pytest.raises(KeyboardInterrupt):
+        transport._call("exact original conversation",module.CHAT_SCHEMA)
+    assert len(calls) == 1 and not (directory/"calls.json").exists()
+    traces = list((directory/"intents").glob("*/*/cli/*.json"))
+    assert len(traces) == 1 and json.loads(traces[0].read_text())["status"] == "completed"
+    resumed = module.OriginalCodexTransport(backend,directory=directory)
+    result = resumed._call("exact original conversation",module.CHAT_SCHEMA)
+    assert result.payload == payload and result.call_id == traces[0].stem
+    assert result.usage["input_tokens"] == usage["input_tokens"]
+    assert len(calls) == 1 and resumed.usage()["model_calls"] == 1
+    assert resumed.usage()["usage_complete"] is True
+    assert not resumed.usage()["uncertain_model_intents"]
+    assert len(json.loads((directory/"calls.json").read_text())) == 1
+
+
+def test_reply_before_calls_json_commit_is_also_reconciled_without_backend(tmp_path,monkeypatch):
+    class Backend:
+        calls = 0
+        def generate_json(self,*args,**kwargs):
+            self.calls += 1
+            return SimpleNamespace(payload={"kind":"final","text":"saved","tool_calls":[]},
+                usage={"input_tokens":3,"output_tokens":4},events=[],call_id="already-complete")
+    backend = Backend()
+    transport = module.OriginalCodexTransport(backend,directory=tmp_path)
+    write = module.durable_json
+    def lose_ack(path,value):
+        if Path(path) == tmp_path/"calls.json":
+            raise KeyboardInterrupt("transport acknowledgement lost")
+        write(path,value)
+    monkeypatch.setattr(module,"durable_json",lose_ack)
+    with pytest.raises(KeyboardInterrupt):
+        transport._call("original conversation",module.CHAT_SCHEMA)
+    monkeypatch.setattr(module,"durable_json",write)
+    resumed = module.OriginalCodexTransport(backend,directory=tmp_path)
+    assert resumed._call("original conversation",module.CHAT_SCHEMA).call_id == "already-complete"
+    assert backend.calls == 1
+
+
+def test_changed_durable_original_reply_cannot_be_reused_or_issue_a_new_prompt(tmp_path,monkeypatch):
+    backend,directory,calls,_,_ = fake_completed_cli(tmp_path,monkeypatch)
+    transport = module.OriginalCodexTransport(backend,directory=directory)
+    transport._call("exact original conversation",module.CHAT_SCHEMA)
+    path = directory/"calls.json"
+    records = json.loads(path.read_text())
+    records[0]["result"]["payload"]["text"] = "unexpected replacement"
+    path.write_text(json.dumps(records))
+    resumed = module.OriginalCodexTransport(backend,directory=directory)
+    with pytest.raises(module.OriginalTransportUncertain):
+        resumed._call("exact original conversation",module.CHAT_SCHEMA)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("case",["missing","partial","failed","wrong_model","wrong_effort","wrong_purpose","wrong_payload","wrong_usage","missing_completion","ambiguous"])
+def test_unacknowledged_cli_intent_without_exact_completion_fails_closed_before_any_new_prompt(tmp_path,monkeypatch,case):
+    backend,directory,calls,_,_ = fake_completed_cli(tmp_path,monkeypatch)
+    transport = module.OriginalCodexTransport(backend,directory=directory)
+    monkeypatch.setattr(transport,"_ack",lambda *args,**kwargs:(_ for _ in ()).throw(KeyboardInterrupt()))
+    with pytest.raises(KeyboardInterrupt):
+        transport._call("exact original conversation",module.CHAT_SCHEMA)
+    trace = next((directory/"intents").glob("*/*/cli/*.json"))
+    receipt = json.loads(trace.read_text())
+    if case == "missing":trace.unlink()
+    elif case == "partial":trace.write_text('{"status":"completed",')
+    elif case == "ambiguous":trace.with_name("another-call.json").write_text(json.dumps(receipt))
+    else:
+        if case == "failed":receipt["status"] = "failed"
+        elif case == "wrong_model":receipt["model"] = "another-model"
+        elif case == "wrong_effort":receipt["reasoning_effort"] = "low"
+        elif case == "wrong_purpose":receipt["purpose"] = "research"
+        elif case == "wrong_payload":receipt["payload"] = {"unrelated":"payload"}
+        elif case == "wrong_usage":receipt["usage"]["input_tokens"] += 1
+        elif case == "missing_completion":receipt["events"] = []
+        trace.write_text(json.dumps(receipt))
+    resumed = module.OriginalCodexTransport(backend,directory=directory)
+    # Even a different graph prompt must not bypass an uncertain older intent.
+    with pytest.raises(module.OriginalTransportUncertain):
+        resumed._call("new prompt must not be issued",module.CHAT_SCHEMA)
+    assert len(calls) == 1 and resumed.usage()["usage_complete"] is False
+    assert resumed.usage()["model_calls"] == 1
+
+
+def test_model_exception_after_valid_initial_preserves_best_but_reports_method_failure(tmp_path,pinned):
+    class FailureAfterInitial(OriginalResponses):
+        def generate_json(self,prompt,schema,**kwargs):
+            if len(self.prompts) >= 2:
+                raise module.CodexError("simulated provider failure after initial kernel")
+            return super().generate_json(prompt,schema,**kwargs)
+    config = CampaignConfig(run_id="original-method-failed",workload="scan",search_sizes=(8,),final_sizes=(8,),
+        max_trials=2,max_repairs_per_trial=0,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
+    backend = FailureAfterInitial((1,17,63,8),"scan")
+    result = module.run_upstream_campaign(config,CPUHarness(tmp_path/"runner"),tmp_path/"original",
+        model_backend=backend,source_snapshot=pinned)
+    assert result["generation_complete"] and result["status"] == "method_failed"
+    assert result["method_status"] == "failed" and "provider failure" in result["method_error"]
+    assert result["method_termination"] == "external_exception"
+    assert result["original_summary"]["status"] == "failed"
+    assert result["candidate"] and result["retained_best_available"] and result["search_validation"]["ok"]
+    assert result["candidate_fallback"] == {"retained":True,"selected_iteration":0,
+        "selected_origin":"supplied_initial","reason":"method_failed"}
+
+
+def test_controlled_final_compilation_failure_retains_original_successful_best_semantics(tmp_path,pinned):
+    config = CampaignConfig(run_id="original-invalid-last",workload="scan",search_sizes=(8,),final_sizes=(8,),
+        max_trials=1,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
+    result = module.run_upstream_campaign(config,CPUHarness(tmp_path/"runner"),tmp_path/"original",
+        model_backend=OriginalResponses((1,17,63,8),"scan",repair=True),source_snapshot=pinned)
+    assert result["status"] == "generated" and result["method_status"] == "completed"
+    assert result["method_error"] is None and result["candidate_fallback"] is None
+    assert result["original_summary"]["best_iteration"] == 0
+    assert result["original_summary"]["termination"] == "iteration_limit"
 
 
 def test_independent_first_gain_observer_preserves_original_choices_and_messages(tmp_path,pinned):
@@ -387,7 +538,8 @@ def test_original_observer_infrastructure_failure_stops_graph_and_export_gpu_val
     monkeypatch.setattr(module.common_evaluation.Evaluator,"confirm",failure)
     result = module.run_upstream_campaign(config,runner,tmp_path/"original",model_backend=backend,
         source_snapshot=pinned,observe_first_gain=True)
-    assert result["status"] == "generation_failed" and result["candidate"]
+    assert result["status"] == "method_failed" and result["candidate"]
+    assert result["method_status"] == "failed" and result["method_termination"] == "external_exception"
     assert result["search_validation"]["status"] == "infrastructure_failure"
     assert result["metrics"]["first_useful_gain_status"] == "unknown_incident"
     assert len(backend.prompts) == 4 and len(runner.calls) == calls_at_failure[-1]

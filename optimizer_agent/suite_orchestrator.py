@@ -354,8 +354,18 @@ def generation_adapter(entry, runner, directory, session, *, resume=False, sensi
         usage["model_calls"] = 1
         usage["native_completed_turns"] = len(result.get("usage_events", []))
         result.setdefault("elapsed_seconds", result.get("ended_at", time.time())-result["started_at"])
+    # A method may fail after having produced a valid retained best. Preserve
+    # that failure while allowing a transparent independent measurement of the
+    # frozen artifact. Finishing the attempt does not make the method succeed.
+    method_status = result.get("method_status")
+    if method_status is None:
+        method_status = "failed" if result.get("status") in {"failed", "method_failed", "generation_failed"} else "completed"
+    if method_status not in {"completed", "failed"}:
+        raise ValueError("A concluded generation requires an explicit completed or failed method status")
     result = {**result, "candidate": candidate_receipt(candidate), "generation_complete": True,
-              "mode": mode, "status": "generation_complete", "evidence_path": str(Path(directory).resolve()),
+              "mode": mode, "status": "method_failed" if method_status == "failed" else "generation_complete",
+              "method_status": method_status, "generation_stage_status": "generation_complete",
+              "evidence_path": str(Path(directory).resolve()),
               "usage": usage, "model_call_unit":"Codex CLI invocations; provider-internal model/tool cycles may be unreported",
               "generation_scores_excluded_from_suite_final": True}
     return result
@@ -525,7 +535,11 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         if mode not in candidates:
             continue
         candidate, qualification = candidates[mode], qualifications[mode]
+        generation = generations.get(entry["config"]["run_id"], {})
         result = {**candidate_receipt(candidate), "qualified": qualification.get("ok") is True,
+            "generation_method_status": generation.get("method_status"),
+            "generation_method_error": generation.get("method_error"),
+            "candidate_fallback": generation.get("candidate_fallback"),
             "sanitizer_qualification": qualification, "status": "final_validation_failed"}
         if result["qualified"] and baseline_ok:
             if candidate.artifact_hash == baseline.artifact_hash:

@@ -29,6 +29,8 @@ from optimizer_agent.campaign import (
 )
 from optimizer_agent.research_service import ResearchDossier
 from optimizer_agent.codex_backend import Proposal
+from optimizer_agent.campaign_workflow import build_experiment_graph
+from optimizer_agent.diagnostics import evidence_reference
 from scripts.gpu_autotuning_acceptance import ReceiptRunner
 
 
@@ -137,13 +139,15 @@ def execute_on_runner(runtime):
     dossier = ResearchDossier.from_dict(read_json(runtime.trial_dir(fourth)/"dossier.json"))
     if diagnostic["diagnostic_id"] not in dossier.diagnostic_ids:
         raise RuntimeError("Targeted dossier lost its immutable diagnostic linkage")
-    fourth.update(runtime.generate(fourth))
-    if fourth.get("error") or not fourth.get("candidate_id"):
+    fourth, attempts = run_guarded_experiment(runtime, fourth)
+    if (not attempts or attempts[-1]["repair"] != fourth["repair"]
+            or not attempts[-1].get("evaluation_reference")):
         raise RuntimeError("Actual guarded Luna proposal blocked: "+str(fourth.get("error")))
-    proposal = verify_real_proposal(runtime,fourth,dossier)
-    fourth.update(runtime.evaluate(fourth))
+    proposal = verify_real_proposal(runtime, fourth, dossier,
+        source_parent_id=attempts[-1]["effective_source_parent_id"],
+        proposal_reference=attempts[-1]["proposal_reference"])
     if not fourth.get("valid"):
-        raise RuntimeError("Actual Luna proposal failed independent CUDA evaluation: "+str(fourth.get("error")))
+        raise RuntimeError("Actual Luna proposal failed independent CUDA evaluation after configured repairs: "+str(fourth.get("error")))
     fourth.update(runtime.integrate(fourth))
     candidate = runtime.candidate(fourth["candidate_id"])
     measured = read_json(runtime.trial_dir(fourth)/f'evaluation-{candidate.candidate_id}.json')
@@ -163,24 +167,74 @@ def execute_on_runner(runtime):
     return {"controls":controls,"diagnostic_id":diagnostic["diagnostic_id"],"diagnostic":diagnostic,
         "initial_research_id":initial_dossier.research_id,"targeted_research_id":dossier.research_id,
         "fourth_trial_id":fourth["trial_id"],"proposal_call_id":proposal["call_id"],
+        "fourth_attempts":attempts,
         "candidate_id":candidate.candidate_id,"candidate_artifact_hash":candidate.artifact_hash,
         "candidate_measurement":measured,"actual_profile_or_unavailability":profile,"checks":checks}
 
 
-def verify_real_proposal(runtime,state,dossier):
+def run_guarded_experiment(runtime, state):
+    """Use the campaign's actual repair routing and retain every attempt receipt."""
+    state = dict(state)
+    attempts, events = [], []
+    path = runtime.trial_dir(state) / "acceptance-experiment.json"
+    status = "running"
+    try:
+        for update in build_experiment_graph(runtime).stream(state, stream_mode="updates"):
+            for node, values in update.items():
+                previous_candidate = state.get("candidate_id")
+                if node == "generate" and values.get("candidate_id") and not values.get("error"):
+                    proposal_path = runtime.trial_dir(state) / f'proposal-{state["repair"]}-{state["research_round"]}.json'
+                    proposal = read_json(proposal_path)
+                    attempts.append({"repair":state["repair"], "candidate_id":values["candidate_id"],
+                        "effective_source_parent_id":(previous_candidate if state["repair"] > 0
+                            else runtime.trial(state)["parent"]["candidate_id"]),
+                        "proposal_reference":evidence_reference(proposal_path, runtime.directory,
+                            kind="proposal", identity=proposal.get("call_id"))})
+                state.update(values)
+                if node == "evaluate":
+                    evaluation_path = runtime.trial_dir(state) / f'evaluation-{state["candidate_id"]}.json'
+                    evaluation = read_json(evaluation_path)
+                    attempts[-1].update(status=evaluation["status"], valid=bool(state.get("valid")),
+                        evaluation_reference=evidence_reference(evaluation_path, runtime.directory,
+                            kind="evaluation", identity=evaluation.get("evaluation_id")))
+                events.append({"node":node, "repair":state.get("repair"), "update":values})
+                write_json(path, {"schema_version":1, "status":status, "max_repairs":runtime.max_repairs,
+                                  "attempts":attempts, "events":events})
+        status = "completed" if state.get("valid") else "failed"
+    except Exception as error:
+        status = "graph_error"
+        events.append({"node":"exception", "error":str(error)})
+        raise
+    finally:
+        write_json(path, {"schema_version":1, "status":status, "max_repairs":runtime.max_repairs,
+                          "attempts":attempts, "events":events})
+    return state, attempts
+
+
+def verify_real_proposal(runtime,state,dossier,*,source_parent_id=None,proposal_reference=None):
     """The fourth model proposal has every normal guard, independent of controls."""
     if runtime.config.experimental_mode is not None:
         raise RuntimeError("The actual fourth proposal requires the normal research-enabled campaign mode")
     trial = runtime.trial(state)
     dossier.research_ready(runtime.contract_hash,trial["action"],runtime.environment_hash)
-    proposal = read_json(runtime.trial_dir(state)/f'proposal-{state["repair"]}-{state["research_round"]}.json')
+    path = runtime.trial_dir(state)/f'proposal-{state["repair"]}-{state["research_round"]}.json'
+    if proposal_reference and (proposal_reference["path"] != str(path.relative_to(runtime.directory))
+            or proposal_reference["sha256"] != hashlib.sha256(path.read_bytes()).hexdigest()):
+        raise RuntimeError("The final proposal differs from its exact experiment attempt receipt")
+    proposal = read_json(path)
     if proposal.get("acceptance_control") or proposal.get("generation_mode"):
         raise RuntimeError("A static acceptance control cannot serve as the fourth actual model proposal")
-    Proposal.from_dict(proposal,parent_id=trial["parent"]["candidate_id"],
-        source_parent_id=trial["parent"]["candidate_id"],contract_hash=runtime.contract_hash,family=trial["action"])
+    validated = Proposal.from_dict(proposal,parent_id=trial["parent"]["candidate_id"],
+        source_parent_id=(source_parent_id or trial["parent"]["candidate_id"]),
+        contract_hash=runtime.contract_hash,family=trial["action"])
     dossier.validate_proposal(proposal)
     if not proposal.get("call_id"):
         raise RuntimeError("The fourth actual model proposal is missing its Codex call receipt ID")
+    candidate = runtime.candidate(state["candidate_id"])
+    if (validated.source != candidate.source.read_text() or validated.kernel != candidate.kernel
+            or json.dumps(validated.launch_rule,sort_keys=True) != json.dumps(asdict(candidate.launch_rule),sort_keys=True)
+            or validated.parameters != candidate.parameters):
+        raise RuntimeError("The final proposal differs from the exact candidate independently evaluated")
     return proposal
 
 

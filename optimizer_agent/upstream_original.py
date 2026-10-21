@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import contextlib
 import builtins
+import copy
 from dataclasses import asdict, replace
+import fcntl
 import hashlib
 import importlib
 import json
@@ -33,7 +35,7 @@ from langchain_core.messages import AIMessage
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph
 
-from .codex_backend import CodexBackend, CodexConfig, CodexError, schema_object
+from .codex_backend import CodexBackend, CodexConfig, CodexError, schema_object, validate_json_shape
 from .frozen_launch import FrozenShapeLaunchRule
 
 REPO = Path(__file__).resolve().parents[1]
@@ -54,6 +56,25 @@ def write_json(path,value):
     temporary = path.with_name(path.name+"."+uuid.uuid4().hex+".tmp")
     temporary.write_text(json.dumps(value,indent=2,default=str,allow_nan=False))
     temporary.replace(path)
+
+
+def durable_json(path,value):
+    """Commit transport intent/acknowledgement before advancing its caller."""
+    path = Path(path)
+    path.parent.mkdir(parents=True,exist_ok=True)
+    temporary = path.with_name(path.name+"."+uuid.uuid4().hex+".tmp")
+    try:
+        with temporary.open("w") as file:
+            json.dump(value,file,sort_keys=True,allow_nan=False)
+            file.write("\n");file.flush();os.fsync(file.fileno())
+        temporary.replace(path)
+        descriptor = os.open(path.parent,os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def content_hash(value):
@@ -148,6 +169,10 @@ CHAT_SCHEMA = schema_object({"kind":{"type":"string","enum":["final","tool_calls
         "name":{"type":"string"},"arguments_json":{"type":"string"}})}})
 
 
+class OriginalTransportUncertain(RuntimeError):
+    """An original model intent has no uniquely authenticated completed reply."""
+
+
 class OriginalCodexTransport:
     """Lossless chat/tool-message bridge; decisions remain upstream JSON schemas."""
     def __init__(self,backend,max_retries=2,directory=None):
@@ -160,12 +185,156 @@ class OriginalCodexTransport:
             self.records = json.loads((self.directory/"calls.json").read_text())
             self.calls = [SimpleNamespace(**record["result"]) for record in self.records if record.get("result")]
         self.responses = self
+        self._lock = threading.RLock()
 
     def bind_tools(self,tools):
         self.tools = tools
         return self
 
+    def _backend_identity(self):
+        config = getattr(self.backend,"config",None)
+        if isinstance(config,CodexConfig):
+            return {"kind":"codex_cli","config":{key:value for key,value in asdict(config).items() if key != "trace_dir"}}
+        return {"kind":"injected_backend","class":type(self.backend).__module__+"."+type(self.backend).__qualname__}
+
+    @contextlib.contextmanager
+    def _journal_lock(self):
+        with self._lock:
+            if self.directory is None:
+                yield
+                return
+            self.directory.mkdir(parents=True,exist_ok=True)
+            with (self.directory/"transport.lock").open("a+") as lock:
+                try:
+                    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                except BlockingIOError as error:
+                    raise OriginalTransportUncertain("The original model transport is already active") from error
+                try:
+                    path = self.directory/"calls.json"
+                    self.records = json.loads(path.read_text()) if path.exists() else []
+                    self.calls = [SimpleNamespace(**record["result"]) for record in self.records if record.get("result")]
+                    yield
+                finally:
+                    fcntl.flock(lock,fcntl.LOCK_UN)
+
+    def _intent(self,key,attempt,request):
+        if self.directory is None:
+            return None
+        directory = self.directory/"intents"/key/str(attempt)
+        path = directory/"intent.json"
+        if path.exists():
+            raise OriginalTransportUncertain("An unresolved original model intent cannot be issued again")
+        intent = {"schema_version":1,"key":key,"attempt":attempt,"request":request,
+            "backend":self._backend_identity(),"trace_directory":str((directory/"cli").resolve()),
+            "created_at_unix":time.time()}
+        durable_json(path,intent)
+        return path,intent
+
+    @staticmethod
+    def _result_data(result):
+        return {name:getattr(result,name,default) for name,default in
+            (("payload",{}),("usage",{}),("events",[]),("model",None),
+             ("reasoning_effort",None),("elapsed_seconds",None),("call_id",None))}
+
+    def _ack(self,record,intent=None):
+        record = dict(record)
+        if intent:
+            path,body = intent
+            record = dict(record,intent_hash=content_hash(body))
+            traces = list(Path(body["trace_directory"]).glob("*.json"))
+            if len(traces) == 1 and not traces[0].is_symlink():
+                record.setdefault("cli_receipt",{"path":str(traces[0]),
+                    "sha256":hashlib.sha256(traces[0].read_bytes()).hexdigest()})
+        record["record_hash"] = content_hash({key:value for key,value in record.items() if key != "record_hash"})
+        if intent:
+            # This durable result also supports injected CPU transports. Real
+            # CLI recovery below covers the earlier window before this write.
+            durable_json(path.parent/"reply.json",{"intent_hash":content_hash(body),"record":record})
+        self.records.append(record)
+        if record.get("result"):
+            self.calls.append(SimpleNamespace(**record["result"]))
+        if self.directory:
+            durable_json(self.directory/"calls.json",self.records)
+
+    def _completed_cli(self,path,intent):
+        trace = Path(intent["trace_directory"])
+        files = list(trace.glob("*.json")) if trace.exists() else []
+        if len(files) != 1 or files[0].is_symlink():
+            raise OriginalTransportUncertain("Original CLI receipt is missing or ambiguous; preserve its intent without a new prompt")
+        try:
+            receipt = json.loads(files[0].read_text())
+            config = intent["backend"]["config"]
+            if (not isinstance(receipt,dict) or receipt.get("status") != "completed" or receipt.get("returncode") != 0
+                    or receipt.get("call_id") != files[0].stem
+                    or receipt.get("purpose") != intent["request"]["purpose"]
+                    or receipt.get("model") != config["model"] or receipt.get("reasoning_effort") != config["reasoning_effort"]):
+                raise ValueError("CLI identity/status differs from the frozen intent")
+            validate_json_shape(receipt["payload"],intent["request"]["schema"])
+            events = receipt["events"]
+            if not isinstance(events,list) or any(not isinstance(event,dict) for event in events):
+                raise ValueError("CLI event receipt must be a list of objects")
+            completed = [event for event in events if event.get("type") == "turn.completed"]
+            if not completed or any(event.get("type") in {"error","turn.failed"} for event in events):
+                raise ValueError("CLI completion evidence is missing or failed")
+            usage = receipt["usage"]
+            if not isinstance(usage,dict) or not {"input_tokens","output_tokens"} <= set(usage):
+                raise ValueError("Completed CLI token receipt is incomplete")
+            turn_usage = completed[-1].get("usage")
+            if (not isinstance(turn_usage,dict) or not {"input_tokens","output_tokens"} <= set(turn_usage)
+                    or any(type(usage[key]) is not int or usage[key] < 0 for key in ("input_tokens","output_tokens"))):
+                raise ValueError("CLI completed turn has no exact token consumption")
+            for key,value in turn_usage.items():
+                if usage.get(key) != value:
+                    raise ValueError("CLI usage differs from its completed turn")
+            return {key:receipt.get(key) for key in
+                ("payload","usage","events","model","reasoning_effort","elapsed_seconds","call_id")}
+        except (OSError,ValueError,KeyError,TypeError) as error:
+            raise OriginalTransportUncertain("Original CLI receipt is not a uniquely authenticated completed reply") from error
+
+    def _reconcile(self):
+        if self.directory is None:
+            return
+        for path in sorted((self.directory/"intents").glob("*/*/intent.json")):
+            try:
+                intent = json.loads(path.read_text())
+                request = intent["request"]
+                key = content_hash({"prompt":request["prompt"],"schema":request["schema"],
+                    "purpose":request["purpose"],"search":request["max_web_search_calls"]})
+                if (intent.get("schema_version") != 1 or intent["key"] != key or path.parent.parent.name != key
+                        or path.parent.name != str(intent["attempt"]) or intent["backend"] != self._backend_identity()
+                        or Path(intent["trace_directory"]) != (path.parent/"cli").resolve()):
+                    raise ValueError("Frozen model intent identity changed")
+                existing = [record for record in self.records if record["key"] == key and record["attempt"] == intent["attempt"]]
+                if existing:
+                    if (len(existing) != 1 or existing[0].get("intent_hash") != content_hash(intent)
+                            or existing[0].get("record_hash") != content_hash({key:value for key,value in existing[0].items() if key != "record_hash"})):
+                        raise ValueError("Original acknowledgement differs from its intent")
+                    continue
+                reply = path.parent/"reply.json"
+                if reply.exists():
+                    recovered = json.loads(reply.read_text())
+                    record = recovered["record"]
+                    if (recovered.get("intent_hash") != content_hash(intent) or record.get("intent_hash") != content_hash(intent)
+                            or record.get("key") != key or record.get("attempt") != intent["attempt"]
+                            or record.get("record_hash") != content_hash({key:value for key,value in record.items() if key != "record_hash"})):
+                        raise ValueError("Original reply belongs to a different intent")
+                elif intent["backend"]["kind"] == "codex_cli":
+                    record = {"key":key,"attempt":intent["attempt"],"purpose":request["purpose"],
+                              "result":self._completed_cli(path,intent)}
+                else:
+                    raise OriginalTransportUncertain("Original model intent has no completed acknowledgement; no new prompt is allowed")
+                self._ack(record,(path,intent))
+            except OriginalTransportUncertain:
+                raise
+            except (OSError,ValueError,KeyError,TypeError) as error:
+                raise OriginalTransportUncertain("Original model intent/reply is corrupt or inconsistent; no new prompt is allowed") from error
+
     def _call(self,prompt,schema,*,purpose="proposal",max_web_search_calls=None):
+        with self._journal_lock():
+            self._reconcile()
+            return self._call_locked(prompt,schema,purpose=purpose,max_web_search_calls=max_web_search_calls)
+
+    def _call_locked(self,prompt,schema,*,purpose="proposal",max_web_search_calls=None):
         # Message IDs are assigned in the original graph checkpoint. They make
         # reference/initial conversations distinct even when source text matches,
         # while replaying the exact interrupted graph task reuses its receipt.
@@ -177,20 +346,18 @@ class OriginalCodexTransport:
         if len(previous_failures) > self.max_retries:
             raise CodexError(previous_failures[-1]["error"])
         for attempt in range(len(previous_failures),self.max_retries+1):
+            intent = self._intent(key,attempt,{"prompt":prompt,"schema":schema,"purpose":purpose,
+                                             "max_web_search_calls":max_web_search_calls})
+            backend = self.backend
+            if intent and isinstance(getattr(backend,"config",None),CodexConfig):
+                backend = copy.copy(backend)
+                backend.config = replace(backend.config,trace_dir=Path(intent[1]["trace_directory"]))
             try:
-                result = self.backend.generate_json(prompt,schema,purpose=purpose,max_web_search_calls=max_web_search_calls)
-                self.calls.append(result)
-                self.records.append({"key":key,"attempt":attempt,"purpose":purpose,"result":{
-                    name:getattr(result,name,default) for name,default in
-                    (("payload",{}),("usage",{}),("events",[]),("model",None),
-                     ("reasoning_effort",None),("elapsed_seconds",None),("call_id",None))}})
-                if self.directory:
-                    write_json(self.directory/"calls.json",self.records)
+                result = backend.generate_json(prompt,schema,purpose=purpose,max_web_search_calls=max_web_search_calls)
+                self._ack({"key":key,"attempt":attempt,"purpose":purpose,"result":self._result_data(result)},intent)
                 return result
             except CodexError as error:
-                self.records.append({"key":key,"attempt":attempt,"purpose":purpose,"error":str(error),"usage":None})
-                if self.directory:
-                    write_json(self.directory/"calls.json",self.records)
+                self._ack({"key":key,"attempt":attempt,"purpose":purpose,"error":str(error),"usage":None},intent)
                 if attempt == self.max_retries:
                     raise
 
@@ -236,8 +403,15 @@ class OriginalCodexTransport:
         return SimpleNamespace(output_text=output["output_text"],model_dump=lambda **kwargs:output)
 
     def usage(self):
-        totals = {"model_calls":len(self.records),"input_tokens":0,"cached_input_tokens":0,"output_tokens":0,
-                  "usage_complete":all(record.get("result") for record in self.records)}
+        pending = []
+        if self.directory:
+            acknowledged = {(record["key"],str(record["attempt"])) for record in self.records}
+            for path in (self.directory/"intents").glob("*/*/intent.json"):
+                if (path.parent.parent.name,path.parent.name) not in acknowledged:
+                    pending.append(str(path.relative_to(self.directory)))
+        totals = {"model_calls":len(self.records)+len(pending),"input_tokens":0,"cached_input_tokens":0,"output_tokens":0,
+                  "usage_complete":not pending and all(record.get("result") for record in self.records),
+                  "uncertain_model_intents":pending}
         for call in self.calls:
             for key in ("input_tokens","cached_input_tokens","output_tokens"):
                 totals[key] += call.usage.get(key,0)
@@ -437,6 +611,7 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             # history, or its selected incumbent. A checkpoint can precede this
             # callback, so examine it on resume before advancing the graph.
             observer.observe(observed_candidate,evidence_id="original-attempt-"+str(attempt.iteration))
+        external_error = None
         try:
             observe_attempt(state)
             if not checkpoint.values or checkpoint.next:
@@ -448,7 +623,8 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             if observer:
                 from .gain_observer import ObserverInfrastructureError
                 observer_failed = isinstance(error,ObserverInfrastructureError)
-            state = dict(state,error=f"{type(error).__name__}: {error}")
+            external_error = f"{type(error).__name__}: {error}"
+            state = dict(state,error=external_error)
             (directory/"error.log").write_text(traceback.format_exc())
             state.update(original.nodes.finalize_result(state))
         best = state.get("best_attempt")
@@ -471,6 +647,9 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             write_json(directory/"frozen-search-validation.json",validation)
             write_json(directory/"candidate.json",frozen)
         summary = json.loads((directory/"summary.json").read_text()) if (directory/"summary.json").exists() else {}
+        method_error = external_error or summary.get("error") or state.get("error")
+        method_status = "failed" if method_error else "completed"
+        retained_best_available = bool(frozen and validation and validation.get("ok"))
         generated = [attempt for attempt in state.get("optimization_history",[]) if attempt.iteration > 0]
         validations = [{"iteration":attempt.iteration,"valid":all(case.validation_ok for case in attempt.case_runs),
             "case_results":[{"case_index":case.case_index,"valid":case.validation_ok} for case in attempt.case_runs],
@@ -497,7 +676,13 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             metrics["first_useful_gain_note"] = "Independent observer only; original model/control flow receives no result; elapsed includes observation overhead"
             metrics["unknown_metrics"] = [name for name in metrics["unknown_metrics"] if metrics.get(name) is None]
         manifest = {"run_id":config.run_id,"method":"true_upstream_original","generation_complete":True,
-            "status":"generated" if frozen is not None and validation.get("ok") else "generation_failed",
+            "status":"method_failed" if method_error else "generated" if retained_best_available else "generation_failed",
+            "method_status":method_status,"method_error":method_error,
+            "method_termination":"external_exception" if external_error else summary.get("termination",state.get("error")),
+            "retained_best_available":retained_best_available,
+            "candidate_fallback":({"retained":True,"selected_iteration":best.iteration,
+                "selected_origin":"supplied_initial" if best.iteration == 0 else "original_generated_proposal",
+                "reason":"method_failed"} if method_error and retained_best_available else None),
             "certification_status":"not_yet_independently_finalized","candidate":frozen,
             "best_candidate_id":frozen["candidate_id"] if frozen else None,"upstream":identity,
             "original_feature_settings":{"nvidia_research":nvidia_research,"use_nsight":False},
@@ -518,6 +703,8 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
                 "provider reasoning effort vocabulary extended to max; other original config checks retained",
                 "independent supplied reference/oracle admission","durable checkpointer attached at compile",
                 "exact shape-table export; final qualification deferred",
-                "optional independent gain observer outside original state/messages/selection"]}
+                "optional independent gain observer outside original state/messages/selection",
+                "durable prompt intents and scoped completed CLI receipt recovery; unresolved intents never issue another prompt",
+                "original method failure retained separately from its independently validated best artifact"]}
         write_json(manifest_path,manifest)
         return manifest

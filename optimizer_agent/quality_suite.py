@@ -84,6 +84,9 @@ def summarize_suite(plan, manifests, groups=None):
         usage = generation.get("usage", generation.get("budgets", {}).get("spent", {}))
         row = {k: entry[k] for k in ("workload", "seed", "mode")}
         row.update(run_id=run_id, generation_status=generation.get("status", generation.get("certification_status", "missing")),
+            generation_method_status=generation.get("method_status"),
+            generation_method_error=generation.get("method_error"),
+            candidate_fallback=generation.get("candidate_fallback"),
             status=result.get("status", "pending_common_final" if generation else "missing"),
             gain=interval.get("gain"), lower=interval.get("lower"), upper=interval.get("upper"),
             case_gains=interval.get("case_gains", {}),
@@ -107,6 +110,9 @@ def summarize_suite(plan, manifests, groups=None):
         measured = [r["gain"] for r in selected if r["gain"] is not None and r["gain"] > 0]
         qualified = sum(r["final_qualified"] for r in selected)
         aggregates[mode] = {"planned": len(selected), "generation_received": sum(r["generation_status"] != "missing" for r in selected),
+            "method_completed": sum(r["generation_method_status"] == "completed" for r in selected),
+            "method_failed": sum(r["generation_method_status"] == "failed" for r in selected),
+            "method_status_unknown": sum(r["generation_method_status"] is None for r in selected),
             "final_measured": len(measured), "qualified": qualified, "certified": sum(r["status"] == "certified" for r in selected),
             "missing": sum(r["generation_status"] == "missing" for r in selected),
             "unmeasured_or_failed": len(selected)-len(measured), "regressions": sum(r["regression"] for r in selected),

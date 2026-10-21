@@ -46,6 +46,13 @@ Source, configuration and target identities are checked on resume. Interruptions
 without a completed receipt remain distinguishable from completed calls; exact
 remote worker recovery belongs to the owning suite orchestrator.
 
+Each original-model request records its prompt/schema/configuration intent before
+launching Codex, with a separate CLI receipt directory for that attempt. If the
+controller stops after Codex completes but before acknowledging the response,
+resume authenticates that receipt and restores the response without another
+invocation. A missing, partial or ambiguous receipt leaves the intent uncertain
+and refuses further prompts; it is not silently retried.
+
 `candidate.json` contains source and artifact hashes, the frozen launch table,
 the original selected iteration and whether it is the supplied initial source
 or an original generated proposal. `manifest.json` records the upstream and
@@ -53,3 +60,10 @@ adapter source identities, original summary, independent search validation,
 actual model token receipts and raw original harness receipt references. Its
 `generation_complete` does not certify GPU performance. The grouped evaluator
 qualifies all frozen modes together on fresh data and a common new GPU.
+
+An external method failure remains `method_status=failed`, with its recorded
+error, even when a valid retained best can be exported. `candidate_fallback`
+identifies that artifact's original iteration and whether it came from the
+supplied initial source. The common final evaluator may measure this artifact;
+the reports retain the method failure alongside that measurement. Finishing an
+attempt, completing its Slurm job and qualifying its artifact are separate facts.

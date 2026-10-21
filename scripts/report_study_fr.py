@@ -51,6 +51,31 @@ def table(headers, rows):
         "<tr>" + "".join("<td>" + escape(str(x)) + "</td>" for x in row) + "</tr>" for row in rows) + "</tbody></table></div>"
 
 
+def study_aggregate_table(summary):
+    from optimizer_agent.suite_report import method_count_cells
+    rows = [[LABELS.get(mode, mode), value["planned"], *method_count_cells(value),
+             value["final_measured"], value["qualified"], value["regressions"],
+             value["unmeasured_or_failed"], fmt(value["geometric_mean_all_measured_gain"]),
+             fmt(value["gain_stddev_between_campaigns"])]
+            for mode, value in summary["aggregates"].items()]
+    return table(["Méthode", "Prévus", "Méthodes réussies", "Méthodes échouées",
+                  "Statuts méthode inconnus", "Artefacts mesurés", "Artefacts qualifiés",
+                  "Régressions", "Absents/échecs sans mesure", "Gain géométrique mesuré",
+                  "Dispersion entre campagnes"], rows)
+
+
+def study_campaign_table(summary):
+    from optimizer_agent.suite_report import method_outcome_cells
+    rows = [[FAMILIES.get(row["workload"], row["workload"]), row["seed"],
+             LABELS.get(row["mode"], row["mode"]), *method_outcome_cells(row), row["status"],
+             fmt(row.get("gain")), "["+fmt(row.get("lower"))+" ; "+fmt(row.get("upper"))+"]",
+             fmt(row.get("model_tokens"), 9), fmt(row.get("model_calls")), fmt(row.get("wall_seconds")),
+             row.get("artifact_hash") or "absent"] for row in summary["rows"]]
+    return table(["Famille", "Graine", "Méthode", "Statut méthode", "Défaillance méthode",
+                  "Candidat de repli", "Statut final de l’artefact", "Gain final mesuré", "IC95%",
+                  "Tokens", "Appels CLI", "Durée génération (s)", "Artefact"], rows)
+
+
 def audit_table(path):
     lines = Path(path).read_text().splitlines()
     rows = [[cell.strip() for cell in line.strip().strip("|").split("|")]
@@ -225,8 +250,16 @@ def project_consumption(results):
             if key in aliases:
                 parents[find(index)] = find(aliases[key])
             aliases[key] = index
-    for path in sorted(Path(results).rglob("model/*.json")):
+    # The original adapter now isolates each Codex invocation below its durable
+    # prompt intent. ACKs/calls.json are transport records, not extra CLI calls.
+    structured_paths = {}
+    for pattern, layout in (("model/*.json", "model"),
+                            ("model-transport/intents/*/*/cli/*.json", "original_intent_cli")):
+        for path in Path(results).rglob(pattern):
+            structured_paths[path] = layout
+    for path, layout in sorted(structured_paths.items()):
         value, origin = _receipt_snapshot(path)
+        origin["receipt_layout"] = layout
         identity = value.get("call_id") or path.stem
         if not re.fullmatch(r"[0-9a-f]{32}", str(identity)):
             if re.fullmatch(r"[0-9a-f]{32}", path.stem):
@@ -287,7 +320,7 @@ def project_consumption(results):
         calls_without_reported_cached_usage=sum("cached_input_tokens" in row["missing_usage_fields"] for row in provenance),
         call_provenance=provenance, model_tokens=totals["input_tokens"]+totals["output_tokens"], cost_usd=None,
         observed_lower_bounds=True,
-        scope="All retained CLI-call receipts including failures, pilots, diagnostics and copied archives; deduplicated by structured call ID or linked native invocation/thread identities. Missing/partial usage remains unknown, not a zero invoice.",
+        scope="All retained CLI-call receipts including original intent-scoped CLI traces, failures, pilots, diagnostics and copied archives; deduplicated by structured call ID or linked native invocation/thread identities. Original transport ACKs/calls.json are not additional calls. Missing/partial usage remains unknown, not a zero invoice.",
         cached_tokens_included_in_input=True, reasoning_tokens_included_in_output=True)
     totals.update(gpu_lease_consumption(results))
     return totals
@@ -493,13 +526,6 @@ def main():
     report["source_checkout"] = source
     report["ci_evidence"] = {"receipt": ci, "exact_checkout_qualified": ci_ok,
                              "policy": "Successful completed CI on HEAD qualifies only a clean source checkout"}
-    aggregate_rows = [[LABELS.get(mode, mode), value["planned"], value["final_measured"], value["qualified"],
-                       value["regressions"], value["unmeasured_or_failed"], fmt(value["geometric_mean_all_measured_gain"]),
-                       fmt(value["gain_stddev_between_campaigns"])] for mode, value in summary["aggregates"].items()]
-    results = [[FAMILIES.get(row["workload"], row["workload"]), row["seed"], LABELS.get(row["mode"], row["mode"]),
-                row["status"], fmt(row["gain"]), "["+fmt(row["lower"])+", "+fmt(row["upper"])+"]",
-                fmt(row["model_tokens"], 9), fmt(row.get("model_calls")), fmt(row.get("wall_seconds")),
-                row.get("artifact_hash") or "absent"] for row in summary["rows"]]
     report["control_receipts"] = control_receipts(REPO)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
@@ -543,7 +569,8 @@ Le protocole déclaré couvre {len(plan['workloads'])} opérations, {len(plan['s
 <p>Chaque groupe compare ses artefacts sur un même GPU réservé, avec oracle CPU indépendant, toutes les sorties, quatre sanitizers,
 puis confirmations AB/BA et bootstrap des séries. Les chronométrages d'allocations différentes ne sont jamais regroupés.
 Les mesures locales ne remplacent aucune performance ROMEO. Les points et intervalles ci-dessous montrent les campagnes individuelles ; un gain supérieur à1 favorise le candidat face au naïf.</p>
-{chart_html}{table(['Méthode','Prévus','Mesurés','Qualifiés','Régressions','Absents/échecs','Gain géométrique mesuré','Dispersion entre campagnes'], aggregate_rows)}
+{chart_html}{study_aggregate_table(summary)}
+<p>{escape(report['method_outcome_policy'])} Les points représentent l’artefact retenu, y compris un candidat de repli.</p>
 <p>Les agrégats incluent les retours au noyau naïf et les régressions mesurées. Les absences ne reçoivent aucun gain inventé.
 Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain universel ni de supériorité sur cuBLAS.</p>
 <h2>Consommation, régressions et provenance</h2>
@@ -552,7 +579,7 @@ Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain
 Les traces conservent séparément les tokens mis en cache. Aucun coût en dollars n'est déduit sans reçu de facturation.
 Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les outils ; les CUDA Events ne mesurent que le kernel.
 Les coûts absents sont inconnus. Le rapport JSON contient les compteurs de compilation, cache, recherche, configurations et premier gain utile lorsque la méthode les observe.</p>
-<details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{table(['Famille','Graine','Méthode','Statut final','Gain','IC95%','Tokens','AppelsCLI','Durée génération(s)','Artefact'], results)}</details>
+<details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{study_campaign_table(summary)}</details>
 <h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu'], receipts)}
 <p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.
 Ces indisponibilités restent des diagnostics explicites ; aucun compteur n'est inventé et aucun temps instrumenté ne participe au classement.

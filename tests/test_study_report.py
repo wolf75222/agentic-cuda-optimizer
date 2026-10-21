@@ -10,11 +10,80 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
     frozen_pilot_panel, plot_frozen_pilot, FROZEN_ROLES, FROZEN_PAIRS)
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
+from scripts.report_study_fr import study_aggregate_table, study_campaign_table
+from optimizer_agent.suite_report import write_report, method_outcome_cells
 
 
 def save(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value))
+
+
+def method_outcome_summary():
+    from optimizer_agent.quality_suite import summarize_suite
+    modes = ["true_upstream", "full", "native_codex_vanilla"]
+    plan = {"modes": modes, "workloads": ["convolution"], "entries": [
+        {"workload": "convolution", "seed": 1729, "mode": mode, "group_id": "shared",
+         "config": {"run_id": mode}} for mode in modes]}
+    manifests = {
+        "true_upstream": {"status": "method_failed", "method_status": "failed",
+            "method_error": "compiler | <worker>\nexit 1", "generation_complete": True,
+            "candidate_fallback": {"retained": True, "selected_iteration": 3,
+                "selected_origin": "original_generated_proposal", "reason": "method_failed"},
+            "candidate": {"artifact_hash": "retained-before-failure"}},
+        "full": {"status": "completed", "method_status": "completed", "candidate_fallback": None},
+        # A historical artifact can have a final measurement without a method outcome receipt.
+        "native_codex_vanilla": {"candidate": {"artifact_hash": "historical-artifact"}}}
+    candidates = {mode: {"status": "certified", "qualified": True,
+        "artifact_hash": manifests[mode].get("candidate", {}).get("artifact_hash", "full-artifact"),
+        "confirmation": {"interval": {"gain": gain, "lower": gain-.01, "upper": gain+.01}}}
+        for mode, gain in zip(modes, [1.25, 1.1, .9])}
+    return summarize_suite(plan, manifests, {"shared": {"execution_complete": True,
+        "all_modes_available": True, "candidates": candidates}})
+
+
+def test_html_separates_failed_method_from_qualified_measured_fallback():
+    summary = method_outcome_summary()
+    html = study_campaign_table(summary)
+    aggregate = study_aggregate_table(summary)
+    assert summary["scientific_qualified"] is True  # Artifact qualification is a separate claim.
+    assert "Statut méthode" in html and "Statut final de l’artefact" in html
+    assert "<td>échouée</td>" in html and "<td>certified</td>" in html
+    assert "compiler | &lt;worker&gt;\nexit 1" in html
+    assert "<worker>" not in html
+    assert "proposition de l’agent original, itération 3 (échec de la méthode)" in html
+    assert "<td>1.25</td>" in html and "<td>retained-before-failure</td>" in html
+    assert "Méthodes réussies" in aggregate and "Méthodes échouées" in aggregate
+    assert "Statuts méthode inconnus" in aggregate
+    assert summary["aggregates"]["true_upstream"]["method_completed"] == 0
+    assert summary["aggregates"]["true_upstream"]["method_failed"] == 1
+    assert summary["aggregates"]["native_codex_vanilla"]["method_status_unknown"] == 1
+
+
+def test_markdown_preserves_failure_reason_fallback_gain_and_raw_json(tmp_path):
+    summary = method_outcome_summary()
+    report = write_report(tmp_path, {"summary": summary})
+    markdown = (tmp_path/"rapport-fr.md").read_text()
+    original = summary["rows"][0]
+    assert "Méthodes réussies | Méthodes échouées | Statuts méthode inconnus" in markdown
+    assert "échouée | compiler &#124; &lt;worker&gt;<br>exit 1" in markdown
+    assert "itération 3 (échec de la méthode) | certified | 1.25 | [1.24 ; 1.26]" in markdown
+    assert "transformer cet échec en succès" in markdown
+    assert "| native_codex_vanilla | inconnu |" in markdown
+    assert report["summary"]["rows"][0]["candidate_fallback"] == original["candidate_fallback"]
+    assert report["summary"]["rows"][0]["generation_method_error"] == "compiler | <worker>\nexit 1"
+    assert json.loads((tmp_path/"report.json").read_text())["summary"]["rows"][0]["gain"] == 1.25
+
+
+def test_initial_fallback_iteration_zero_and_unknown_method_are_not_successes():
+    status, error, fallback = method_outcome_cells({"generation_method_status": "failed",
+        "candidate_fallback": {"retained": True, "selected_iteration": 0,
+            "selected_origin": "supplied_initial", "reason": "method_failed"}})
+    assert status == "échouée" and error == "non renseignée"
+    assert "noyau initial fourni, itération 0" in fallback
+    assert method_outcome_cells({}) == ["inconnu", "non renseignée", "inconnu"]
+    assert method_outcome_cells({"generation_method_status": "completed", "candidate_fallback": None}) == [
+        "réussie", "aucune signalée", "aucun"]
 
 
 def test_consumption_deduplicates_calls_and_preserves_unknown_failures(tmp_path):
@@ -43,6 +112,58 @@ def test_same_call_with_conflicting_usage_cannot_silently_change_totals(tmp_path
     save(tmp_path/"two/model"/("a"*32+".json"), {"status":"completed","usage":{"input_tokens":200,"output_tokens":20}})
     with pytest.raises(ValueError, match="Conflicting observed usage"):
         project_consumption(tmp_path)
+
+
+def test_original_intent_cli_and_legacy_copies_share_one_call_without_counting_acks(tmp_path):
+    call_id = "d"*32
+    receipt = {"call_id": call_id, "status": "completed", "usage": {
+        "input_tokens": 100, "cached_input_tokens": 80, "output_tokens": 20}}
+    paths = [tmp_path/"original/model-transport/intents/prompt-key/0/cli"/(call_id+".json"),
+             tmp_path/"rehost/archive/model-transport/intents/prompt-key/0/cli"/(call_id+".json"),
+             tmp_path/"legacy/model"/(call_id+".json")]
+    for path in paths:
+        save(path, receipt)
+    # Even an ACK exposing the same usage is never a second provider call.
+    save(tmp_path/"original/model-transport/intents/prompt-key/0/result.json", receipt)
+    save(tmp_path/"original/model-transport/calls.json", [receipt])
+    save(tmp_path/"unrelated/cli"/("e"*32+".json"), dict(receipt, call_id="e"*32))
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == 1 and value["model_tokens"] == 120
+    assert value["cached_input_tokens"] == 80 and value["unreported_call_usage"] == 0
+    call = value["call_provenance"][0]
+    assert call["identity"] == "structured:"+call_id
+    assert {row["path"] for row in call["receipts"]} == {str(path) for path in paths}
+    assert {row["receipt_layout"] for row in call["receipts"]} == {"model", "original_intent_cli"}
+    assert all(row["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+               for row in call["receipts"] for path in paths if str(path) == row["path"])
+
+
+@pytest.mark.parametrize("status,usage", [("failed", None), ("timeout", {})])
+def test_original_intent_unknown_failures_survive_rehost_without_zero_invoice(tmp_path, status, usage):
+    receipt = {"call_id": "e"*32, "status": status, "usage": usage, "error": "unreported CLI failure"}
+    for name in ["original", "rehost"]:
+        save(tmp_path/name/"model-transport/intents/key/0/cli"/("e"*32+".json"), receipt)
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == value["unreported_call_usage"] == 1
+    assert value["calls_without_any_reported_usage"] == 1 and value["cost_usd"] is None
+    assert value["call_provenance"][0]["observed_usage"] == {}
+    assert len(value["call_provenance"][0]["receipts"]) == 2
+
+
+def test_original_intent_conflicting_legacy_usage_fails_closed(tmp_path):
+    receipt = {"call_id": "f"*32, "status": "completed", "usage": {"input_tokens": 100, "output_tokens": 20}}
+    save(tmp_path/"original/model-transport/intents/key/0/cli"/("f"*32+".json"), receipt)
+    save(tmp_path/"legacy/model"/("f"*32+".json"), dict(receipt, usage={"input_tokens": 200, "output_tokens": 20}))
+    with pytest.raises(ValueError, match="Conflicting observed usage"):
+        project_consumption(tmp_path)
+
+
+def test_original_distinct_attempts_are_not_deduplicated_by_prompt_key(tmp_path):
+    for attempt, char in enumerate(["a", "b"]):
+        save(tmp_path/"original/model-transport/intents/shared-prompt"/str(attempt)/"cli"/(char*32+".json"),
+             {"call_id": char*32, "status": "failed"})
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == value["unreported_call_usage"] == 2
 
 
 def test_failed_timeout_and_unreported_structured_receipts_remain_visible(tmp_path):

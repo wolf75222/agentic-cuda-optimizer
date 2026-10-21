@@ -12,6 +12,9 @@ and reproducible tests. An implemented guard, a simulated test, a local Codex
 call, a Slurm submission and a completed CUDA measurement establish different
 facts. This file does not certify an optimizer improvement or a successful
 ROMEO campaign. Actual campaign results belong in the run manifest and report.
+The dated, requirement-by-requirement status is maintained in
+[SPEC_AUDIT.fr.md](SPEC_AUDIT.fr.md); the matrix below describes the evidence
+each criterion requires, including criteria whose scoped receipts are acquired.
 
 The repository retains the upstream LangGraph path. The new campaign uses local
 Codex CLI with the explicitly configured model and reasoning effort, LangGraph
