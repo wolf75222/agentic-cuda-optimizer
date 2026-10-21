@@ -226,6 +226,8 @@ def _source_contract_violations(source: str, kernel: str, signature: str, precis
                 break
         if precision == "float64" and re.search(r"\bfloat\b", code):
             violations.append("float32 arithmetic violates declared float64 precision")
+        if precision == "float32" and re.search(r"\bdouble\b", code):
+            violations.append("explicit double/long double arithmetic violates declared float32 precision")
     return violations
 
 
@@ -312,7 +314,7 @@ class Evaluator:
         if self.scheduler is None:
             if self._properties is None:
                 first = self._suites["search"][0]
-                self._properties = self.runner.get_device_properties(first.request.device)
+                self._properties = deepcopy(self.runner.get_device_properties(first.request.device))
             device_key = str(self._properties.get("uuid", self._properties.get("architecture", "device-0")))
             self.scheduler = GPUScheduler(Path(tempfile.gettempdir()) / "agentic-cuda-gpu-reservations", device_key)
         return self.scheduler.reserve(purpose)
@@ -326,7 +328,7 @@ class Evaluator:
     def _request(self, candidate, case, *, benchmark=False, series=1):
         self._guard(candidate)
         if self._properties is None:
-            self._properties = self.runner.get_device_properties(case.request.device)
+            self._properties = deepcopy(self.runner.get_device_properties(case.request.device))
         expected_environment = json.loads(self.contract.metadata_json).get("target_environment", {})
         if any(self._properties.get(k) != v for k, v in expected_environment.items()):
             raise ValueError("Execution environment differs from the immutable workload contract")
@@ -531,6 +533,76 @@ class Evaluator:
             elif interval["upper"] <= threshold or not critical_ok:
                 result["status"] = "not_improved"
             return result
+
+    def qualify_sanitizers(self, candidate, suite="performance"):
+        """Fresh correctness and instrumented checks; never collect ranking data.
+
+        This is a separate receipt for an exact artifact, including generated
+        comparison candidates that were not promoted to campaign incumbent.
+        Required tools belong to the frozen contract; an empty list is not a
+        successful sanitizer qualification.
+        """
+        if suite == "final":
+            raise ValueError("Final suite is reserved for finalize()")
+        with self._reservation("sanitizer qualification"):
+            self._guard(candidate)
+            result = {**self._base(candidate, "sanitizer_qualification_incomplete"), "ok": False,
+                      "suite": suite, "source_hash": candidate._source_hash,
+                      "launch_rule": asdict(candidate.launch_rule), "parameters": json.loads(candidate._parameters_json),
+                      "environment": deepcopy(self._properties), "required_sanitizers": list(self.contract.required_sanitizers),
+                      "sanitizers": [], "ranking_eligible": False, "instrumented_timings_excluded": True}
+            cases = self._suites.get(suite, [])
+            if not cases or not self.contract.required_sanitizers:
+                return {**result, "error": "A nonempty bound suite and required sanitizer tools are necessary"}
+            # Deliberately bypass _validated: post-hoc qualification gets fresh,
+            # complete correctness evidence for every case it instruments.
+            validation = self._validate(candidate, suite)
+            result["validation"] = validation
+            if not validation["ok"]:
+                if validation["status"] in {"numerical_error", "memory_error", "compilation_error", "contract_violation"}:
+                    result["status"] = "sanitizer_qualification_failed"
+                return result
+            if not hasattr(self.runner, "run_sanitizer"):
+                return {**result, "error": "Sanitizer runner is unavailable"}
+            for tool in self.contract.required_sanitizers:
+                for case in cases:
+                    request = self._request(candidate, case)
+                    row = {"tool": tool, "case_id": case.case_id, "seed": case.seed,
+                           "launch": {k: getattr(request, k) for k in ("grid", "block", "shared_memory_bytes")}}
+                    try:
+                        before = deepcopy(self.runner.get_device_properties(request.device))
+                        if not self._check_environment({"environment": before}):
+                            row.update(ok=False, status="infrastructure_failure", error="Hardware/toolchain changed before sanitizer")
+                            result["sanitizers"].append(row)
+                            return result
+                        report = deepcopy(self.runner.run_sanitizer(uuid.uuid4().hex, request, tool))
+                        after = deepcopy(self.runner.get_device_properties(request.device))
+                    except Exception as error:
+                        row.update(ok=False, status="infrastructure_failure", error=str(error))
+                        result["sanitizers"].append(row)
+                        return result
+                    row = {**report, **row,
+                           "hardware_guard": {"before": before, "after": after,
+                                              "reported_environment": report.get("environment")}}
+                    # Local wrappers may return tool logs instead of native JSON;
+                    # authenticate their explicitly bound device before and after.
+                    hardware_ok = self._check_environment({"environment": after})
+                    if "environment" in report:
+                        hardware_ok = hardware_ok and self._check_environment(report)
+                    if report.get("tool", tool) != tool:
+                        hardware_ok = False
+                    if not hardware_ok:
+                        row.update(ok=False, status="infrastructure_failure", error="Hardware/toolchain changed during sanitizer")
+                    self._guard(candidate)
+                    result["sanitizers"].append(row)
+                    if not row.get("ok"):
+                        diagnostics = str(row.get("error", "")).lower()
+                        unavailable = (row.get("status") in {"tool_unavailable", "infrastructure_failure"}
+                                       or any(word in diagnostics for word in ("unavailable", "not found", "permission denied")))
+                        result["status"] = "sanitizer_qualification_incomplete" if unavailable else "sanitizer_qualification_failed"
+                        return result
+            self._guard(candidate)
+            return {**result, "ok": True, "status": "sanitizer_qualified"}
 
     def finalize(self, candidate, baseline):
         if self._final_exposed:

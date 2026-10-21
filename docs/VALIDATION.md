@@ -2,7 +2,7 @@
 
 ## Local policy and integration checks
 
-`python -m pytest -q`: **148 passed** on the local Python 3.12 environment.
+`python -m pytest -q`: **216 passed** on the local Python 3.12 environment.
 Shell entry points pass syntax checks; Python sources pass compilation checks.
 The six-family/three-seed ablation planner produces 90 campaign entries and submits
 zero jobs. Those planned studies have not been executed and establish no general
@@ -43,11 +43,18 @@ not a performance gain from an optimizer.
 
 ## Agent versus vanilla comparison
 
-The current uncapped end-to-end comparison uses
-`configs/gemm-comparison.json` and one shared allocation, job 769874. It evaluates
+The uncapped end-to-end comparison uses
+`configs/gemm-comparison.json` (`gemm-e2e-20261021`) and one shared allocation. It evaluates
 the naive GEMM baseline, the LangGraph/TreeQuest/research/autotuning agent and
 a vanilla single-prompt Luna Max proposal. Generation runs locally with the
-application's verified Codex CLI 0.163.0-alpha.10.2, `gpt-6-luna`, effort`max`.
+application's verified Codex CLI 0.163.0-alpha.10.2, `gpt-6-luna`, effort `max`.
+
+Earlier pilots are retained as failed/incomplete evidence. In particular, the
+research call in job 770104 completed with 1,290,314 tokens; generation correctly
+blocked because the described contract omitted buffer-alias semantics. The
+release now supplies the native harness's disjoint-allocation/read-only/full-output
+rules explicitly and distinguishes adaptation prerequisites from rejected
+unchanged reference implementations. This failure was not a token limit.
 
 Final candidate identities, correctness results, fresh paired series and intervals
 will be recorded only after execution finishes. A source, model response or job

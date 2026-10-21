@@ -1,0 +1,17 @@
+{
+  "provenance": "Original string shapes from real Luna Max research dossier e2c1998322464ea88717a70a5545176a; fixture does not replace source-body receipts",
+  "sources": [
+    {"source_id": "source-b177b2349ce70a2d-e5438e13", "kind": "cuda_documentation"},
+    {"source_id": "source-8be5b7397513d692", "kind": "code"},
+    {"source_id": "pmpp-installed", "kind": "pmpp"}
+  ],
+  "reference_kernels": [
+    "source-b177b2349ce70a2d-e5438e13 — CUDA 12.6 Programming Guide shared-memory MatMulKernel; useful tiled scalar algorithm, but requires tail and launch adaptation.",
+    "source-8be5b7397513d692 — CuTe gemm_device; useful shared-memory staging, K-tile loop, and register-accumulator structure, but not directly reusable."
+  ],
+  "pmpp_topics": [
+    "tiling — installed original project guidance in optimizer_agent/pmpp_guidance.py; Project-authored PMPP-inspired guidance (fourth-edition companion referenced); no full book text is installed or claimed.",
+    "coalescing — installed original project guidance in optimizer_agent/pmpp_guidance.py; Project-authored PMPP-inspired guidance (fourth-edition companion referenced); no full book text is installed or claimed."
+  ],
+  "hypotheses": [{"source_ids": ["source-b177b2349ce70a2d-e5438e13", "source-8be5b7397513d692", "pmpp-installed"]}]
+}

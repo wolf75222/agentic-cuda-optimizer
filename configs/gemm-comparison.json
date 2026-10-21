@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "run_id": "gemm-comparison-20261021",
+  "run_id": "gemm-e2e-20261021",
   "backend": "romeo",
   "execution_config": "configs/romeo.json",
   "workload": "matmul",
@@ -9,7 +9,7 @@
   "max_trials": 1,
   "max_repairs_per_trial": 2,
   "max_configurations_per_trial": 3,
-  "model_timeout_seconds": 420,
+  "model_timeout_seconds": 600,
   "actions": [
     "tiling"
   ],

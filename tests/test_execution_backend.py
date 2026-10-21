@@ -406,12 +406,104 @@ def test_read_only_transient_retries_are_bounded(monkeypatch):
     assert len(calls) == 3
 
 
-def test_ssh_mutation_is_never_blindly_replayed_after_network_failure(monkeypatch):
+def test_scheduler_command_is_never_blindly_replayed_after_network_failure(monkeypatch):
     calls = []
     def invoke(command, **kwargs):
         calls.append(command)
         return subprocess.CompletedProcess(command, 255, b"", b"Connection reset by peer")
     monkeypatch.setattr(subprocess, "run", invoke)
     with pytest.raises(BackendError, match="Connection reset"):
-        SSHTransport("romeo").write("/isolated/request.json", b"payload")
+        SSHTransport("romeo").run(["sbatch", "--parsable", "/isolated/job.sh"])
+    assert len(calls) == 1
+
+
+def test_atomic_upload_retries_identical_content_after_lost_acknowledgement(tmp_path, monkeypatch):
+    transport = SSHTransport("romeo")
+    target = tmp_path / "input-0.bin"
+    payload = b"GPU input bytes\0" * 1024
+    calls = []
+    monkeypatch.setattr("execution_backend.time.sleep", lambda seconds: None)
+    def invoke(command, *, data, **kwargs):
+        calls.append((command, data))
+        # Execute the exact remote atomic-upload program locally. First commit
+        # succeeds physically, then its SSH acknowledgement is lost.
+        result = subprocess.run([sys.executable, "-c", command[2], *command[3:]],
+                                input=data, capture_output=True, timeout=5)
+        assert result.returncode == 0
+        if len(calls) == 1:
+            raise subprocess.TimeoutExpired(command, 60)
+        return result
+    monkeypatch.setattr(transport, "run", invoke)
+    transport.write(str(target), payload)
+    assert target.read_bytes() == payload
+    assert len(calls) == 2 and calls[0] == calls[1]
+    assert not list(tmp_path.glob("*.upload-*"))
+
+
+def test_atomic_upload_rejects_truncated_stdin_without_overwriting_valid_file(tmp_path, monkeypatch):
+    transport = SSHTransport("romeo")
+    target = tmp_path / "input.bin"
+    target.write_bytes(b"previous complete input")
+    calls = []
+    def invoke(command, *, data, **kwargs):
+        calls.append(command)
+        return subprocess.run([sys.executable, "-c", command[2], *command[3:]],
+                              input=data[:-1], capture_output=True, timeout=5)
+    monkeypatch.setattr(transport, "run", invoke)
+    with pytest.raises(BackendError, match="incomplete or changed payload"):
+        transport.write(str(target), b"new expected input")
+    assert target.read_bytes() == b"previous complete input"
+    assert len(calls) == 1
+    assert not list(tmp_path.glob("*.upload-*"))
+
+
+def test_atomic_upload_checks_hash_even_when_changed_payload_length_matches(tmp_path, monkeypatch):
+    transport = SSHTransport("romeo")
+    target = tmp_path / "input.bin"
+    def invoke(command, *, data, **kwargs):
+        changed = bytes([data[0] ^ 1]) + data[1:]
+        return subprocess.run([sys.executable, "-c", command[2], *command[3:]],
+                              input=changed, capture_output=True, timeout=5)
+    monkeypatch.setattr(transport, "run", invoke)
+    with pytest.raises(BackendError, match="incomplete or changed payload"):
+        transport.write(str(target), b"expected bytes")
+    assert not target.exists()
+
+
+def test_atomic_upload_transient_retries_are_identical_and_bounded(monkeypatch):
+    transport = SSHTransport("romeo")
+    calls = []
+    monkeypatch.setattr("execution_backend.time.sleep", lambda seconds: None)
+    def invoke(command, *, data, **kwargs):
+        calls.append((command, data))
+        return subprocess.CompletedProcess(command, 255, b"", b"Connection reset by peer")
+    monkeypatch.setattr(transport, "run", invoke)
+    with pytest.raises(BackendError, match="Connection reset"):
+        transport.write("/isolated/input.bin", b"input")
+    assert len(calls) == 3
+    assert calls[0] == calls[1] == calls[2]
+
+
+def test_atomic_upload_timeouts_are_bounded_and_report_reconciliation(monkeypatch):
+    transport = SSHTransport("romeo")
+    calls = []
+    monkeypatch.setattr("execution_backend.time.sleep", lambda seconds: None)
+    def invoke(command, **kwargs):
+        calls.append(command)
+        raise subprocess.TimeoutExpired(command, 60)
+    monkeypatch.setattr(transport, "run", invoke)
+    with pytest.raises(BackendError, match="3 identical attempts.*resume this request ID"):
+        transport.write("/isolated/input.bin", b"input")
+    assert len(calls) == 3
+
+
+def test_atomic_upload_does_not_retry_ssh_authentication_failure(monkeypatch):
+    transport = SSHTransport("romeo")
+    calls = []
+    def invoke(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 255, b"", b"Permission denied (publickey)")
+    monkeypatch.setattr(transport, "run", invoke)
+    with pytest.raises(BackendError, match="Permission denied"):
+        transport.write("/isolated/input.bin", b"input")
     assert len(calls) == 1

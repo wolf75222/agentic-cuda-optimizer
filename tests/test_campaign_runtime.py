@@ -79,6 +79,17 @@ def selected(runtime):
     return {"run_id":runtime.config.run_id,"trials_done":0,**runtime.initialize({}),**runtime.select({})}
 
 
+def test_generator_memory_facts_are_bound_into_immutable_contract(runtime_setup):
+    import json
+    runtime, config, runner, model = runtime_setup
+    policy = runtime.workload_description["memory_policy"]
+    assert policy == json.loads(runtime.evaluator.contract.metadata_json)["memory_policy"]
+    assert "disjoint" in policy["allocations"]
+    assert "fully overwrite" in policy["output"]
+    assert "read-only" in policy["inputs"]
+    assert "float32 FMA is allowed" in policy["arithmetic"]
+
+
 def test_real_runtime_initialization_and_pending_trial_resume(runtime_setup):
     runtime,config,runner,model = runtime_setup
     state = selected(runtime)

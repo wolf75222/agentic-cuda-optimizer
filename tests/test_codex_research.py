@@ -10,13 +10,13 @@ from unittest.mock import patch
 
 from optimizer_agent.codex_backend import (
     CodexBackend, CodexConfig, CodexError, CodexResult, PROPOSAL_SCHEMA, CandidateGenerator,
-    Proposal, schema_object,
+    Proposal, schema_object, proposal_schema_for_dossier,
 )
 from optimizer_agent.pmpp_guidance import PMPP_GUIDANCE, consult_pmpp
 from optimizer_agent.research_service import (
     NeedsResearch, ResearchBlocked, ResearchConfig, ResearchDossier,
     ResearchService, SourceRecord, observed_web_queries, observed_search_call_count, cuda_documentation_requests,
-    SEARCH_SCHEMA,
+    SEARCH_SCHEMA, synthesis_schema, normalize_research_references,
 )
 
 
@@ -214,6 +214,58 @@ class ResearchTests(unittest.TestCase):
             with self.assertRaisesRegex(ResearchBlocked, "hash changed"):
                 dossier.research_ready("hash", "tiling", "gpu-fingerprint")
 
+    def test_real_luna_descriptive_reference_shape_preserves_originals(self):
+        fixture = json.loads((Path(__file__).parent / "fixtures/luna_research_reference_shape.json").read_text())
+        sources = [SourceRecord(item["source_id"], item["kind"], "", "", "", "", "", "", "", "", "", "", "", 1)
+                   for item in fixture["sources"]]
+        normalized = normalize_research_references(fixture, sources)
+        self.assertEqual(normalized["reference_kernels"], ["source-8be5b7397513d692"])
+        self.assertEqual(normalized["pmpp_topics"], ["tiling", "coalescing"])
+        originals = {entry["original"] for entry in normalized["reference_context"]}
+        self.assertTrue(set(fixture["reference_kernels"]) <= originals)
+        self.assertTrue(set(fixture["pmpp_topics"]) <= originals)
+        self.assertEqual(normalize_research_references(normalized, sources), normalized)
+        fixture["reference_kernels"].append("source-0000000000000000 — never retrieved")
+        with self.assertRaisesRegex(ResearchBlocked, "Unretrieved reference"):
+            normalize_research_references(fixture, sources)
+
+    def test_dynamic_reference_schemas_only_allow_retrieved_identifiers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            dossier = self.make_dossier(directory)
+            schema = synthesis_schema(dossier.sources)
+            self.assertEqual(set(schema["properties"]["reference_kernels"]["items"]["enum"]), {"code", "cccl"})
+            self.assertEqual(set(schema["properties"]["hypotheses"]["items"]["properties"]["source_ids"]["items"]["enum"]),
+                             {"code", "cccl", "cuda", "pmpp"})
+            self.assertIn("tiling", schema["properties"]["pmpp_topics"]["items"]["enum"])
+            proposal_schema = proposal_schema_for_dossier(dossier)
+            self.assertEqual(set(proposal_schema["properties"]["references"]["items"]["enum"]), {"code", "cccl", "cuda", "pmpp"})
+
+    def test_adaptation_prerequisite_schema_preserves_genuinely_false_checks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            dossier = self.make_dossier(directory)
+            schema = synthesis_schema(dossier.sources)
+            description = schema["properties"]["applicability_checks"]["description"]
+            self.assertIn("EXCLUSIVELY", description)
+            self.assertIn("standalone adaptation", description)
+            self.assertIn("unchanged-reference copyability", description)
+            self.assertIn("unavailable from the supplied contract", schema["properties"]["missing_evidence"]["description"])
+            raw = dossier.to_dict()
+            raw["applicability_checks"] = [dict(condition="Memory alias semantics are defined",
+                evidence="A, B and C overlap is unspecified in this deliberately incomplete test contract", satisfied=False)]
+            replay = ResearchDossier.from_dict(raw)
+            self.assertFalse(replay.applicability_checks[0]["satisfied"])
+            with self.assertRaisesRegex(ResearchBlocked, "unsatisfied"):
+                replay.research_ready("hash", "tiling", "gpu-fingerprint")
+
+    def test_actual_saved_luna_dossier_all_guards(self):
+        path = Path(__file__).resolve().parent.parent / "results/gemm-comparison-20261021/agent/research/e2c1998322464ea88717a70a5545176a.json"
+        if not path.is_file():
+            self.skipTest("Real campaign receipt is local integration evidence, not a checked-in fixture")
+        dossier = ResearchDossier.from_dict(json.loads(path.read_text()))
+        self.assertEqual(dossier.reference_kernels, ["source-8be5b7397513d692"])
+        self.assertEqual(len(dossier.reference_context), 8)
+        self.assertTrue(dossier.research_ready(dossier.workload_hash, dossier.strategy_family, dossier.environment_fingerprint))
+
     def test_boolean_or_search_snippet_cannot_satisfy_guard(self):
         with tempfile.TemporaryDirectory() as directory:
             dossier = self.make_dossier(directory)
@@ -300,6 +352,9 @@ class ResearchTests(unittest.TestCase):
             self.assertEqual(dossier.usage["input_tokens"], 30)
             self.assertIn("__global__ void kernel", backend.prompts[1])
             self.assertIn("Official NVIDIA synchronization", backend.prompts[1])
+            self.assertIn("applicability_checks must EXCLUSIVELY list prerequisites", backend.prompts[1])
+            self.assertIn("copying any\nreference kernel is unnecessary", backend.prompts[1])
+            self.assertIn("unspecified aliasing cannot be assumed safe", backend.prompts[1])
             ablation_backend = Backend()
             ablation_backend.prompts = []
             ablation = ResearchService(ablation_backend, Path(directory) / "no-pmpp", fetcher=fetcher,
@@ -311,6 +366,26 @@ class ResearchTests(unittest.TestCase):
             self.assertNotIn("pmpp", {source.kind for source in ablation.sources})
             self.assertNotIn(PMPP_GUIDANCE, ablation_backend.prompts[1])
             self.assertTrue(ablation.research_ready("hash", "tiling", "gpu"))
+            class ManySourcesBackend(Backend):
+                def generate_json(self, *args, **kwargs):
+                    result = super().generate_json(*args, **kwargs)
+                    if len(self.prompts) == 1:
+                        result.payload["sources"] = [dict(kind="code", repository="NVIDIA/cutlass",
+                            url=f"https://raw.githubusercontent.com/NVIDIA/cutlass/main/example{index}.cu",
+                            file=f"example{index}.cu", symbol="kernel", section_or_locator="full source", reason="test")
+                            for index in range(12)]
+                    return result
+            many_backend = ManySourcesBackend()
+            many_backend.prompts = []
+            # A hypothetical long elapsed duration must not activate a shared
+            # phase deadline under the default uncapped configuration.
+            with patch("optimizer_agent.research_service.time.monotonic", side_effect=[0] + [1e8] * 20) as clock:
+                many = ResearchService(many_backend, Path(directory) / "many", fetcher=fetcher).prepare(
+                    {"contract_hash": "hash"}, {}, {"strategy_family": "tiling"},
+                    {"environment_fingerprint": "gpu"})
+            self.assertGreater(len(many.sources), 8)
+            self.assertEqual(clock.call_count, 1)
+            self.assertTrue(many.research_ready("hash", "tiling", "gpu"))
 
     def test_code_is_downloaded_as_source_and_rejects_untrusted_urls(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -366,6 +441,12 @@ class ResearchTests(unittest.TestCase):
             ResearchConfig(include_pmpp=False)
         self.assertTrue(ResearchConfig(required=False, experimental=True).experimental)
         self.assertIsNone(ResearchConfig().max_search_calls_per_dossier)
+        self.assertIsNone(ResearchConfig().max_sources)
+        self.assertIsNone(ResearchConfig().total_timeout_seconds)
+        explicit = ResearchConfig(max_sources=8, total_timeout_seconds=1200)
+        self.assertEqual((explicit.max_sources, explicit.total_timeout_seconds), (8, 1200))
+        with self.assertRaises(ValueError):
+            ResearchConfig(total_timeout_seconds=0)
         self.assertNotIn("maxItems", SEARCH_SCHEMA["properties"]["sources"])
 
     def test_search_quota_counts_actions_once_and_service_rejects_overrun(self):

@@ -1,9 +1,8 @@
-"""Conditional, budgeted profiling with explicit hardware provenance."""
+"""Conditional profiling with explicit hardware provenance and observed usage."""
 from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import asdict
-import fcntl
 import json
 from pathlib import Path
 import platform
@@ -14,18 +13,25 @@ import time
 
 
 @contextmanager
-def reserve_local_gpu(device=0):
-    """Local benchmark and profiler callers share this advisory GPU lock."""
+def reserve_local_gpu(device=0, *, properties=None):
+    """Use the evaluator's shared physical-GPU reservation for profiling."""
     import tempfile
-    path = Path(tempfile.gettempdir()) / f"agentic-cuda-optimizer-gpu-{device}.lock"
-    with path.open("a") as lock:
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+    try:
+        from .gpu_scheduler import GPUScheduler
+    except ImportError:
+        from gpu_scheduler import GPUScheduler
+    properties = properties or {}
+    # Keep the fallback identical to Evaluator._reservation as well. UUID is
+    # preferred because CUDA ordinals can differ between local processes.
+    device_key = str(properties.get("uuid", properties.get("architecture", "device-0")))
+    scheduler = GPUScheduler(Path(tempfile.gettempdir()) / "agentic-cuda-gpu-reservations", device_key)
+    with scheduler.reserve("profiling"):
         yield
 
 
 class HybridProfiler:
-    def __init__(self, remote_runner=None, local_runner=None, *, max_profiles=3,
-                 max_seconds=300, timeout=120):
+    def __init__(self, remote_runner=None, local_runner=None, *, max_profiles=None,
+                 max_seconds=None, timeout=120):
         self.remote_runner = remote_runner
         self.local_runner = local_runner
         self.max_profiles = max_profiles
@@ -89,7 +95,7 @@ class HybridProfiler:
                    "--page", "details", "--metrics", ",".join(metrics), "--log-file", str(directory / "metrics.csv"),
                    str(self.local_runner.executable), "--request", str(path)]
         try:
-            with reserve_local_gpu(request.device):
+            with reserve_local_gpu(request.device, properties=fingerprint["device_properties"]):
                 process = subprocess.run(command, capture_output=True, text=True,
                                          timeout=(min(self.timeout, max(1, self.max_seconds-self.elapsed)) if self.max_seconds is not None else self.timeout), check=False)
             (directory / "stdout.log").write_text(process.stdout)

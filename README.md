@@ -5,6 +5,7 @@ Fork of [bertaye/agentic-cuda-optimizer](https://github.com/bertaye/agentic-cuda
 “Local agent” means the Codex process, tools and orchestration run on your workstation. Luna inference uses the authenticated OpenAI service. The original API workflow remains available and is documented in [UPSTREAM_README.md](docs/UPSTREAM_README.md).
 
 There is **no global token, cost, GPU-time or campaign-time ceiling**. Usage is recorded for comparison without stopping the agents. The user's explicit instruction supersedes the global-budget example in the supplied specification. Iteration/repair counts and technical per-call/worker timeouts remain; Slurm also requires a job walltime.
+Research also has no default search-call/source-count quota or cumulative phase timeout.
 
 ## Install and run
 
@@ -57,6 +58,11 @@ The built-in suite supports square float32 GEMM, reduction, inclusive scan, 1D t
 
 Use a new `run_id` after a workload, numerical policy, protocol, GPU or incompatible toolchain change. Completed runs are not overwritten. `compare` reserves one GPU for agent and vanilla, using the same CPU oracle, initial kernel, distribution and measurement rules. Vanilla has one ordinary optimization prompt with no mandatory research or tuning and is explicitly experimental. Actual resource consumption is reported. This pilot does not establish general optimizer superiority.
 
+The contract explicitly fixes disjoint input/output allocations, read-only inputs,
+fully overwritten output, float32 arithmetic and launch independence. Direct
+generated-kernel comparisons must also qualify both exact artifacts with every
+configured sanitizer on every measured shape before the comparison succeeds.
+
 If an unfinished campaign's worker has stopped, `resume --config FILE --worker-session NEW_UNIQUE_ID` starts a new isolated worker while retaining the campaign's `run_id`. Target identity is checked before combining evidence; an incompatible GPU requires a new campaign. A completed `resume` reads its manifest without allocating a GPU.
 
 The multi-campaign protocol and isolated ablations are explicit commands:
@@ -64,7 +70,7 @@ The multi-campaign protocol and isolated ablations are explicit commands:
 ```sh
 # Writes a 90-campaign plan; submits zero jobs.
 ./scripts/run_optimizer.sh plan-suite --config configs/gemm-comparison.json
-# Explicitly executes the planned studies (substantial GPU/model budget).
+# Explicitly executes the planned studies (substantial GPU/model use).
 ./scripts/run_optimizer.sh suite --config configs/gemm-comparison.json
 ./scripts/run_optimizer.sh report-suite --config configs/gemm-comparison.json
 ```
@@ -81,7 +87,7 @@ The independent evaluator owns full outputs, read-only input checks, sentinels, 
 
 CUDA Events measure the kernel; transfers, compilation and profiling are excluded from latency. The fixed estimator is the median of series means. All tree rewards use the same baseline: `gain/(1+gain)`. Promotion requires fresh alternating A/B series, a paired bootstrap lower bound above the useful-gain threshold and critical-case limits. Finalization checks the exact artifact on held-out data, required sanitizer passes and a fresh baseline comparison. Missing tools or incomplete finalization never imply certification.
 
-SQLite separately persists LangGraph checkpoints, TreeQuest tree/RNG/pending trials, immutable evidence, integration journal and budgets. A result has one tree reward; cached observations retain their IDs and intentional remeasurements receive new ones. Final exposure is persisted before execution; interrupted finalization requires a new independent holdout.
+SQLite separately persists LangGraph checkpoints, TreeQuest tree/RNG/pending trials, immutable evidence, integration journal and observed resource use. A result has one tree reward; cached observations retain their IDs and intentional remeasurements receive new ones. Final exposure is persisted before execution; interrupted finalization requires a new independent holdout.
 
 ## Profiling and fallback
 
@@ -89,10 +95,30 @@ Nsight Compute runs on ROMEO first, in the serialized allocation, with a diagnos
 
 Local profile times/counters never enter a ROMEO ranking. Replay/cache conditions and ordinary compilation/benchmark receipts remain available when counters cannot be read.
 
+On a CUDA-capable Linux workstation, build the existing harness and install Nsight
+Compute, then set `local_profile_harness` to its absolute executable path:
+
+```sh
+cmake -S cuda_test_harness -B cuda_test_harness/build -DCMAKE_BUILD_TYPE=Release
+cmake --build cuda_test_harness/build --parallel
+ncu --version
+```
+
+For older completed paired measurements lacking sanitizer qualification,
+`scripts/qualify_comparison.py --config FILE --worker-session NEW_UNIQUE_ID`
+checks the exact artifacts in a new compatible ROMEO allocation, without a model
+call or a new benchmark. Measurement and qualification contracts/jobs remain distinct.
+
 ## Artifacts and qualification
 
 Campaign artifacts include configuration/contract/environment, both SQLite stores, baseline/candidate sources, launch rules, proposals, research dossiers, raw evaluations/confirmations/profiles, `best.cu`, `best-launch.json`, `final.json`, `manifest.json` and events. Worker artifacts include Slurm ownership/terminal receipts, native requests/results, outputs and tool logs.
 
 Termination reason is separate from certification: `certified`, `validated_no_gain`, `validated_gain_uncertified`, `final_validation_failed`, `finalization_incomplete`. The best known source stays available on failure.
+
+`scripts/export_evidence.py --campaign results/RUN_ID --output /absolute/output`
+exports a clean committed source tree, completed comparison, successful matching
+Slurm accounting, raw receipts and an HTML report. It refuses incomplete results;
+the archive manifest hashes the actual exported bytes. Downloaded reference bodies
+stay in the local cache; their URLs, locators and hashes remain in the dossiers.
 
 The [specification](docs/spec.md) is preserved as requirements. [Acceptance coverage](docs/ACCEPTANCE.md) distinguishes implementation, simulated tests, GPU evidence and remaining qualification. [Validation results](docs/VALIDATION.md) records actual executions. Local tests are distinct from GitHub CI; one GPU pilot does not replace the multi-campaign six-family ablation study in specification section16.

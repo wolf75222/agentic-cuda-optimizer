@@ -109,6 +109,19 @@ class CampaignRuntime:
             raise ValueError("GPU/toolchain changed; scores cannot be merged at resume")
         write_json(env_path, self.environment)
         self.suite = WorkloadSuite(config.workload, self.directory / "evaluator_data", config)
+        self.memory_policy = {
+            "allocations": "A, B and C are distinct, disjoint device allocations; no aliasing",
+            "inputs": "A and B are read-only and checked bitwise after each launch",
+            "input_domain": "Dense finite float32 values in [-1,1]; no NaN/Inf, sparsity or sentinel-input assumptions",
+            "output": "C is output-only, poisoned before every launch; fully overwrite it without reading prior C",
+            "storage": "Contiguous exact-sized float32 buffers; no padding, halo or auxiliary allocation",
+            "sizes": "A/B/C each n*n elements" if config.workload == "matmul" else
+                     "A n, B 3, C n elements" if config.workload == "convolution" else
+                     "A/B n, C 1 element" if config.workload == "reduction" else "A/B/C each n elements",
+            "shape_scalar": "n is positive signed int32 with physically admissible allocations; handle non-divisible tails and use sufficiently wide address arithmetic",
+            "arithmetic": "Full float32 arithmetic; ordinary float32 FMA is allowed; double, TF32, half and bfloat16 arithmetic are excluded",
+            "launches": "Independent invocations; no persistent data, prior-output accumulation or cross-launch synchronization",
+        }
         self.baseline = self.suite.baseline(REPO / config.baseline_source)
         cases = self.suite.cases()
         perf = [c for c in cases if c.metadata["n"] in config.search_sizes]
@@ -123,6 +136,7 @@ class CampaignRuntime:
             metadata_json=json.dumps({"operation": config.workload, "precision": "float32",
                 "timed_scope": "single CUDA kernel, CUDA Events, transfers/compilation excluded",
                 "cache_regime": "warm, inputs reset before every launch",
+                "memory_policy": self.memory_policy,
                 "environment": self.environment,
                 "numerical_tolerance": {"atol": 2e-4, "rtol": 2e-4}} ,sort_keys=True))
         self.evaluator = Evaluator(runner, contract, self.suite.oracle,
@@ -173,6 +187,8 @@ class CampaignRuntime:
         self.workload_description = {"contract_hash": self.contract_hash, "operation": config.workload,
             "signature": self.suite.signature, "precision": "float32 input/output, full float32 arithmetic",
             "layout": "row-major contiguous matrices a[n,n], b[n,n], c[n,n], c[row*n+col]=sum_k a[row*n+k]*b[k*n+col]" if config.workload == "matmul" else "contiguous one-dimensional arrays",
+            "memory_policy": self.memory_policy,
+            "gemm_semantics": "C=A*B, alpha=1, beta=0, no transpose/strides/bias" if config.workload == "matmul" else None,
             "search_sizes": list(config.search_sizes), "shape_domain": "all positive n; tails required",
             "atol": 2e-4, "rtol": 2e-4, "single_kernel": True, "environment": self.environment}
 
@@ -613,6 +629,8 @@ def compare(config, *, worker_session_id=None):
                   "limits": ["One workload and one campaign per mode; no universal optimizer superiority claim",
                              "Vanilla and agent have different orchestration and consumed resources",
                              "No local profiling time is included in ROMEO performance"]}
+        result["ok"] = comparison_completed(result)
+        result["status"] = "completed" if result["ok"] else "incomplete"
         write_json(directory / "comparison.json", result)
         return result
     except BaseException as error:
@@ -623,26 +641,29 @@ def compare(config, *, worker_session_id=None):
         write_json(directory / "worker-terminal.json", backend.wait_until_finished(timeout=60))
 
 
-def compare_generated_candidates(config, directory, runner):
-    """Compare generated kernels even when promotion correctly kept the baseline.
-
-    Both generators have finished. Fresh, independent data/shapes are used here,
-    and these results cannot feed back into generation or replace certifications.
-    """
+def load_direct_candidates(config, directory):
+    """Reconstruct the exact generated artifacts selected for the paired pilot."""
     candidates = {}
     for mode in ("agent", "vanilla"):
         results = [read_json(p) for p in (directory / mode / "trials").glob("*/result.json")]
         valid = [r for r in results if r.get("tell", {}).get("valid")]
         if not valid:
-            return {"ok": False, "status": "missing_valid_generated_kernel", "mode": mode}
+            raise ValueError(f"Missing valid generated kernel: {mode}")
         chosen = min(valid, key=lambda r: sum(math.log(x) for x in r["tell"]["latencies"].values()))
         state = ExperimentStore(directory / mode / "experiments.sqlite").get_candidate_source(
             chosen["candidate_id"], config.run_id + "." + mode)
         path = directory / "direct-comparison" / (mode + ".cu")
         path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists() and path.read_text() != state["source"]:
+            raise ValueError(f"Direct comparison source changed: {mode}")
         path.write_text(state["source"])
         candidates[mode] = Candidate(mode+"-"+chosen["candidate_id"], path, state["kernel"],
                                      LaunchRule(**state["launch_rule"]), state["parameters"])
+    return candidates
+
+
+def direct_evaluator(config, directory, runner):
+    """Independent post-generation cases shared by measurement and qualification."""
     independent = replace(config, seed=config.seed+3000017)
     suite = WorkloadSuite(config.workload, directory / "direct-comparison" / "inputs", independent)
     cases = suite.cases(final=True)
@@ -652,14 +673,95 @@ def compare_generated_candidates(config, directory, runner):
         launches_per_series=config.launches_per_series, warmup=config.warmup,
         confidence=config.confidence_level, min_relative_gain=config.min_relative_gain,
         max_critical_regression=config.max_critical_regression,
+        required_sanitizers=config.required_sanitizers,
         metadata_json=json.dumps({"precision": "float32", "scope": "generated kernels on independent final shapes"}))
-    evaluator = Evaluator(runner, contract, suite.oracle, {"short": cases[:1], "search": cases, "performance": cases})
+    return Evaluator(runner, contract, suite.oracle, {"short": cases[:1], "search": cases, "performance": cases})
+
+
+def compare_generated_candidates(config, directory, runner):
+    """Compare and sanitize generated kernels independently after generation."""
+    try:
+        candidates = load_direct_candidates(config, directory)
+    except ValueError as error:
+        return {"ok": False, "status": "missing_valid_generated_kernel", "error": str(error)}
+    evaluator = direct_evaluator(config, directory, runner)
     result = evaluator.confirm(candidates["agent"], candidates["vanilla"])
     result.update(scope="fresh data/shapes after generation; independent direct kernel comparison",
                   gain_direction="vanilla latency / agent latency; >1 favors agent",
-                  candidate_artifacts={mode: c.artifact_hash for mode, c in candidates.items()})
+                  candidate_artifacts={mode: c.artifact_hash for mode, c in candidates.items()},
+                  required_sanitizers=list(config.required_sanitizers))
+    qualification = {mode: evaluator.qualify_sanitizers(candidate)
+                     for mode, candidate in candidates.items()}
+    result["sanitizer_qualification"] = {"ok": all(item.get("ok") for item in qualification.values()),
+                                        "candidates": qualification}
     write_json(directory / "direct-comparison" / "comparison.json", result)
     return result
+
+
+def comparison_completed(result):
+    """A baseline fallback alone cannot complete the generated-kernel pilot."""
+    modes = ("agent", "vanilla")
+    outcomes = result.get("results", {})
+    if any(outcomes.get(mode, {}).get("status") not in
+           {"certified", "validated_no_gain", "validated_gain_uncertified"} for mode in modes):
+        return False
+    direct = result.get("generated_agent_vs_vanilla", {})
+    if direct.get("ok") is not True or direct.get("status") not in {"promoted", "not_improved", "inconclusive"}:
+        return False
+    artifacts = direct.get("candidate_artifacts", {})
+    if any(not artifacts.get(mode) for mode in modes) or not direct.get("pairs"):
+        return False
+    known_tools = {"memcheck", "racecheck", "initcheck", "synccheck"}
+    required = direct.get("required_sanitizers")
+    if not isinstance(required, (list, tuple)) or not required or set(required)-known_tools:
+        return False
+    required = set(required)
+    pairs = direct["pairs"]
+    if not isinstance(pairs, list) or any(not isinstance(pair, dict) or not isinstance(pair.get("case_id"), str)
+                                          or not pair["case_id"] for pair in pairs):
+        return False
+    paired_cases = {pair["case_id"] for pair in pairs}
+    qualification = direct.get("sanitizer_qualification", {})
+    if not isinstance(qualification, dict) or qualification.get("ok") is not True:
+        return False
+    qualified_candidates = qualification.get("candidates", {})
+    if not isinstance(qualified_candidates, dict):
+        return False
+    for mode in modes:
+        qualified = qualified_candidates.get(mode, {})
+        if (not isinstance(qualified, dict) or qualified.get("ok") is not True
+                or qualified.get("status") != "sanitizer_qualified"
+                or qualified.get("artifact_hash") != artifacts[mode]):
+            return False
+        tools = qualified.get("required_sanitizers")
+        if not isinstance(tools, (list, tuple)) or set(tools) != required:
+            return False
+        validation = qualified.get("validation", {})
+        if not isinstance(validation, dict) or validation.get("ok") is not True:
+            return False
+        cases = validation.get("cases", [])
+        if (not isinstance(cases, list) or not cases
+                or any(not isinstance(case, dict) or not isinstance(case.get("case_id"), str)
+                       or not case["case_id"] for case in cases)):
+            return False
+        validated_cases = {case["case_id"] for case in cases}
+        if validated_cases != paired_cases:
+            return False
+        reports = qualified.get("sanitizers", [])
+        if not isinstance(reports, list) or not reports:
+            return False
+        coverage = set()
+        for report in reports:
+            if (not isinstance(report, dict) or report.get("ok") is not True
+                    or report.get("tool") not in known_tools
+                    or report.get("case_id") not in validated_cases):
+                return False
+            coverage.add((report["tool"], report["case_id"]))
+        if any((tool, case_id) not in coverage for tool in required for case_id in validated_cases):
+            return False
+    interval = direct.get("interval", {})
+    return all(isinstance(interval.get(key), (int, float)) and math.isfinite(interval[key])
+               and interval[key] > 0 for key in ("gain", "lower", "upper"))
 
 
 def main(argv=None):
@@ -699,7 +801,7 @@ def main(argv=None):
     if args.command == "compare":
         result = compare(config, worker_session_id=args.worker_session)
         print(json.dumps(result, indent=2))
-        return 0 if all(x["status"] in ("certified", "validated_no_gain", "validated_gain_uncertified") for x in result["results"].values()) else 1
+        return 0 if comparison_completed(result) else 1
     result = execute(config, resume=args.command == "resume", worker_session_id=args.worker_session)
     print(json.dumps({"run_id": config.run_id, "certification_status": result["certification_status"],
                       "manifest": str(REPO / config.results_dir / config.run_id / "manifest.json")}, indent=2))

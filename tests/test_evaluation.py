@@ -304,3 +304,111 @@ def test_contract_precision_violation_never_reaches_compiler_or_benchmark(tmp_pa
     result = evaluator.benchmark(Candidate("half", source, "f", LaunchRule()))
     assert result["status"] == "contract_violation" and not result["ok"]
     assert not evaluator.runner.calls
+
+
+@pytest.mark.parametrize("accumulator_type", ["double", "long double"])
+def test_float32_contract_rejects_explicit_widening_before_gpu(tmp_path, accumulator_type):
+    evaluator, _, _, _ = setup(tmp_path, allowed_precision="float32")
+    source = tmp_path / "wider_precision.cu"
+    source.write_text('__global__ void f(float* x) { '
+                      + accumulator_type + ' sum=0; '
+                      + 'for(int i=0;i<17;++i) sum += (' + accumulator_type + ')x[i]; '
+                      + 'x[0]=(float)sum; }')
+    result = evaluator.benchmark(Candidate("wider", source, "f", LaunchRule()))
+    assert result["status"] == "contract_violation" and not result["ok"]
+    assert any("double/long double" in violation for violation in result["violations"])
+    assert not evaluator.runner.calls
+
+
+class SanitizerRunner(FakeRunner):
+    def __init__(self, directory, *, sanitizer_status="passed", drift=False, wrong=False):
+        super().__init__(directory, wrong=wrong)
+        self.sanitizer_calls = []
+        self.sanitizer_status = sanitizer_status
+        self.drift = drift
+
+    def run_sanitizer(self, run_id, request, tool):
+        self.sanitizer_calls.append((run_id, request, tool))
+        environment = self.get_device_properties(request.device)
+        if self.drift:
+            environment["uuid"] = "different-sanitizer-gpu"
+        return {"ok": self.sanitizer_status == "passed", "tool": tool, "status": self.sanitizer_status,
+                "environment": environment, "latency_ms": 123456.0}
+
+
+def test_sanitizer_qualification_validates_every_case_then_runs_all_tools_without_benchmark(tmp_path):
+    tools = ("memcheck", "racecheck", "initcheck", "synccheck")
+    runner = SanitizerRunner(tmp_path)
+    original, candidate, _, case = setup(tmp_path, runner, required_sanitizers=tools)
+    other = replace(case, case_id="second-shape", seed=551)
+    evaluator = Evaluator(runner, original.contract, original.oracle,
+                          {"short": [case], "search": [case], "performance": [case, other]})
+    result = evaluator.qualify_sanitizers(candidate)
+    assert result["ok"] and result["status"] == "sanitizer_qualified"
+    assert result["artifact_hash"] == candidate.artifact_hash
+    assert result["contract_hash"] == evaluator.contract_hash
+    assert result["source_hash"] == hashlib.sha256(candidate.source.read_bytes()).hexdigest()
+    assert result["launch_rule"]["block"] == candidate.launch_rule.block
+    assert not result["ranking_eligible"] and result["instrumented_timings_excluded"]
+    assert len(runner.calls) == 4  # Fresh full correctness: two cases, two repetitions.
+    assert len(runner.sanitizer_calls) == 8
+    assert {(row["tool"], row["case_id"]) for row in result["sanitizers"]} == {
+        (tool, case_id) for tool in tools for case_id in ("search", "second-shape")}
+    assert all(request.mode == "run" for _, request in runner.calls)
+    assert all(request.mode == "run" and request.warmup == 0 and request.iterations == 1
+               for _, request, _ in runner.sanitizer_calls)
+    # Instrumented latency is retained as a tool diagnostic, never a score.
+    assert "cases" not in result and "interval" not in result
+    second = evaluator.qualify_sanitizers(candidate)
+    assert second["evaluation_id"] != result["evaluation_id"] and len(runner.calls) == 8
+
+
+@pytest.mark.parametrize("status,expected", [("tool_unavailable", "sanitizer_qualification_incomplete"),
+                                             ("memory_error", "sanitizer_qualification_failed")])
+def test_sanitizer_qualification_does_not_treat_missing_or_failed_tools_as_success(tmp_path, status, expected):
+    runner = SanitizerRunner(tmp_path, sanitizer_status=status)
+    evaluator, candidate, _, _ = setup(tmp_path, runner, required_sanitizers=("memcheck", "racecheck"))
+    result = evaluator.qualify_sanitizers(candidate)
+    assert not result["ok"] and result["status"] == expected
+    assert len(runner.sanitizer_calls) == 1
+
+
+def test_sanitizer_qualification_rejects_hardware_drift_and_incorrect_candidate(tmp_path):
+    runner = SanitizerRunner(tmp_path, drift=True)
+    evaluator, candidate, _, _ = setup(tmp_path, runner, required_sanitizers=("memcheck",))
+    result = evaluator.qualify_sanitizers(candidate)
+    assert not result["ok"] and result["status"] == "sanitizer_qualification_incomplete"
+    assert result["sanitizers"][0]["status"] == "infrastructure_failure"
+    runner.drift, runner.wrong = False, True
+    runner.sanitizer_calls.clear()
+    result = evaluator.qualify_sanitizers(candidate)
+    assert not result["ok"] and result["validation"]["status"] == "numerical_error"
+    assert not runner.sanitizer_calls
+
+
+def test_sanitizer_qualification_requires_declared_tools_and_cannot_expose_holdout(tmp_path):
+    evaluator, candidate, _, _ = setup(tmp_path)
+    result = evaluator.qualify_sanitizers(candidate)
+    assert not result["ok"] and result["status"] == "sanitizer_qualification_incomplete"
+    assert not evaluator.runner.calls
+    with pytest.raises(ValueError, match="reserved"):
+        evaluator.qualify_sanitizers(candidate, "final")
+
+
+def test_sanitizer_hardware_identity_snapshot_cannot_change_through_runner_alias(tmp_path):
+    class MutablePropertiesRunner(SanitizerRunner):
+        def __init__(self, directory):
+            super().__init__(directory)
+            self.properties = super().get_device_properties(0)
+        def get_device_properties(self, device):
+            return self.properties
+        def run_sanitizer(self, run_id, request, tool):
+            self.properties["uuid"] = "changed-in-place"
+            return {"ok": True, "tool": tool, "environment": self.properties}
+    runner = MutablePropertiesRunner(tmp_path)
+    evaluator, candidate, _, _ = setup(tmp_path, runner, required_sanitizers=("memcheck",))
+    result = evaluator.qualify_sanitizers(candidate)
+    assert not result["ok"] and result["status"] == "sanitizer_qualification_incomplete"
+    assert result["environment"]["uuid"] == "fake"
+    assert result["sanitizers"][0]["hardware_guard"]["before"]["uuid"] == "fake"
+    assert result["sanitizers"][0]["hardware_guard"]["after"]["uuid"] == "changed-in-place"

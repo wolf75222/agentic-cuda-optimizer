@@ -34,6 +34,14 @@ def slurm_state(receipt: dict) -> str:
     return receipt.get("state", "UNKNOWN").split()[0].rstrip("+")
 
 
+def transient_ssh_failure(process: subprocess.CompletedProcess) -> bool:
+    message = process.stderr.decode(errors="replace").lower()
+    return process.returncode == 255 and any(value in message for value in (
+        "could not resolve hostname", "temporary failure in name resolution", "connection timed out",
+        "connection reset", "connection closed", "network is unreachable", "no route to host",
+        "connection refused", "kex_exchange_identification", "broken pipe"))
+
+
 def safe_id(value: str) -> str:
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,100}", value):
         raise ValueError("Identifiers must contain only letters, numbers, underscore, dot or dash")
@@ -100,7 +108,8 @@ class SSHTransport:
         # OpenSSH passes its remote command through a shell. Quote each argument
         # before composing that command, even though local execution has no shell.
         process = subprocess.run(
-            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "--", self.host,
+            ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+             "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=2", "--", self.host,
              shlex.join([str(arg) for arg in argv])], input=data,
             capture_output=True, timeout=timeout, check=False)
         if check and process.returncode:
@@ -108,23 +117,46 @@ class SSHTransport:
         return process
 
     def write(self, path: str, data: bytes):
-        script = ("import os,pathlib,sys; p=pathlib.Path(sys.argv[1]); "
-                  "p.parent.mkdir(parents=True,exist_ok=True); "
-                  "t=p.with_name(p.name+'.upload-'+str(os.getpid())); "
-                  "t.write_bytes(sys.stdin.buffer.read()); os.replace(str(t),str(p))")
-        self.run(["python3", "-c", script, path], data=data)
+        # Verify before commit: a disconnected SSH stdin can otherwise look
+        # like EOF and atomically publish a *truncated* input. Both an original
+        # delayed upload and its retry may commit only these exact same bytes.
+        script = """import hashlib,os,pathlib,sys
+p=pathlib.Path(sys.argv[1])
+payload=sys.stdin.buffer.read()
+if len(payload)!=int(sys.argv[2]) or hashlib.sha256(payload).hexdigest()!=sys.argv[3]:
+    print('Atomic upload rejected: incomplete or changed payload',file=sys.stderr)
+    sys.exit(65)
+p.parent.mkdir(parents=True,exist_ok=True)
+t=p.with_name(p.name+'.upload-'+str(os.getpid()))
+try:
+    t.write_bytes(payload)
+    os.replace(str(t),str(p))
+finally:
+    if t.exists(): t.unlink()
+"""
+        command = ["python3", "-c", script, path, str(len(data)), hashlib.sha256(data).hexdigest()]
+        for attempt in range(3):
+            try:
+                process = self.run(command, data=data, check=False)
+            except subprocess.TimeoutExpired as error:
+                if attempt == 2:
+                    raise BackendError("Atomic SSH upload timed out after 3 identical attempts; "
+                                       "resume this request ID to reconcile, never submit duplicate execution") from error
+                time.sleep(1)
+                continue
+            if process.returncode == 0:
+                return
+            if not transient_ssh_failure(process) or attempt == 2:
+                raise BackendError(process.stderr.decode(errors="replace")[-4000:])
+            time.sleep(1)
 
     def read(self, path: str, *, optional: bool = False) -> bytes | None:
         command = ["python3", "-c",
                    "import pathlib,sys; p=pathlib.Path(sys.argv[1]); "
                    "sys.stdout.buffer.write(p.read_bytes()) if p.is_file() else sys.exit(44)", path]
-        transient_messages = ("could not resolve hostname", "temporary failure in name resolution",
-                              "connection timed out", "connection reset", "connection closed",
-                              "network is unreachable", "no route to host", "connection refused",
-                              "kex_exchange_identification", "broken pipe")
         # Reads are safe to repeat after an uncertain connection outcome. This
-        # retry applies to no mutations: sbatch/SSH writes retain their receipts
-        # and explicit reconciliation rather than being blindly replayed.
+        # never retries a scheduler/execution command. Atomic same-body uploads
+        # use their own verified-content retry protocol above.
         for attempt in range(3):
             try:
                 process = self.run(command, check=False)
@@ -138,8 +170,7 @@ class SSHTransport:
             if process.returncode == 0:
                 return process.stdout
             message = process.stderr.decode(errors="replace")[-4000:]
-            transient = process.returncode == 255 and any(value in message.lower() for value in transient_messages)
-            if not transient or attempt == 2:
+            if not transient_ssh_failure(process) or attempt == 2:
                 raise BackendError(message)
             time.sleep(1)
 

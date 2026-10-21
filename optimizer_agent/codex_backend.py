@@ -7,6 +7,7 @@ execution. Raw JSONL receipts retain actual tool calls and token accounting.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, is_dataclass
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -115,6 +116,17 @@ PROPOSAL_SCHEMA = schema_object({
 })
 
 
+def proposal_schema_for_dossier(dossier: Any) -> dict:
+    schema = deepcopy(PROPOSAL_SCHEMA)
+    identifiers = list(dict.fromkeys(source.source_id for source in dossier.sources))
+    if not identifiers:
+        raise ValueError("Researched proposals require actually retrieved source IDs")
+    schema["properties"]["references"] = {"type": "array", "items": {"type": "string", "enum": identifiers}}
+    schema["properties"]["techniques"] = {"type": "array", "items": {
+        "type": "string", "enum": list(dossier.covered_techniques)}}
+    return schema
+
+
 def validate_json_shape(value: Any, schema: dict, path: str = "$") -> None:
     """Validate the deliberately small JSON Schema subset used by CLI contracts.
 
@@ -161,7 +173,7 @@ class CodexBackend:
         started = time.monotonic()
         timeout = min(self.config.timeout_seconds, timeout_seconds) if timeout_seconds is not None else self.config.timeout_seconds
         if timeout <= 0:
-            raise CodexError("Codex wall-time budget is exhausted")
+            raise CodexError("Codex request timeout has expired")
         if max_web_search_calls is not None and (type(max_web_search_calls) is not int or max_web_search_calls < 1):
             raise ValueError("Search-call budget must be a positive integer")
         with tempfile.TemporaryDirectory(prefix="cuda-codex-") as temporary:
@@ -210,7 +222,7 @@ class CodexBackend:
                     raise CodexError(f"Codex {purpose} timed out after {timeout}s")
                 events = []
                 if len(stdout.encode()) > self.config.max_output_bytes:
-                    raise CodexError("Codex event output exceeded the configured byte budget")
+                    raise CodexError("Codex event output exceeded the technical response-size limit")
                 for line in stdout.splitlines():
                     try:
                         events.append(json.loads(line))
@@ -303,7 +315,7 @@ class CodexBackend:
                 stdout.append(line)
                 byte_count += len(line.encode())
                 if byte_count > self.config.max_output_bytes:
-                    raise CodexError("Codex event output exceeded the configured byte budget")
+                    raise CodexError("Codex event output exceeded the technical response-size limit")
                 try:
                     event = json.loads(line)
                 except json.JSONDecodeError:
@@ -494,7 +506,7 @@ parameter to block_x/block_y/tile_x/tile_y as needed for launch consistency.
 Context:\n{json.dumps({'parent': parent, 'effective_source_parent': effective_source_parent,
                        'action': action, 'contract': workload,
                        'research': dossier.to_dict(), 'evidence': evidence}, default=plain)}"""
-        result = self.backend.generate_json(prompt, PROPOSAL_SCHEMA, purpose="proposal")
+        result = self.backend.generate_json(prompt, proposal_schema_for_dossier(dossier), purpose="proposal")
         proposal = Proposal.from_payload(result.payload, parent_id=parent_id,
                                          contract_hash=contract_hash, family=family,
                                          source_parent_id=source_parent_id,

@@ -7,6 +7,7 @@ snippets and model-provided `research_ready` booleans cannot satisfy the guard.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 from html.parser import HTMLParser
@@ -57,9 +58,15 @@ SEARCH_SCHEMA = schema_object({"sources": {"type": "array", "items": SOURCE_REQU
 SYNTHESIS_SCHEMA = schema_object({
     "covered_techniques": STRINGS, "reference_kernels": STRINGS,
     "launch_requirements": STRINGS, "dependencies": STRINGS,
-    "applicability_checks": {"type": "array", "items": schema_object({
-        "condition": STRING, "evidence": STRING, "satisfied": {"type": "boolean"}})},
-    "incompatible_conditions": STRINGS, "missing_evidence": STRINGS,
+    "applicability_checks": {"type": "array",
+        "description": "EXCLUSIVELY documentary prerequisites for the proposed standalone adaptation under the supplied workload contract. Direct unchanged-reference copyability and a reference's ABI/layout mismatch belong in incompatible_conditions, never in this prerequisite list when writing a new adapted kernel.",
+        "items": dict(schema_object({
+            "condition": {"type": "string", "description": "A fact required by the chosen standalone adaptation, such as defined memory-alias semantics or available block-barrier semantics; exclude unchanged-reference copyability and future candidate compilation/correctness/performance outcomes."},
+            "evidence": STRING, "satisfied": {"type": "boolean"}}),
+            description="One required adaptation prerequisite; an unresolved prerequisite remains false and blocks generation.")},
+    "incompatible_conditions": STRINGS,
+    "missing_evidence": {"type": "array", "items": STRING,
+        "description": "Only prerequisite facts unavailable from the supplied contract and actually read source sections. Future candidate compilation, tail tests, numerical validation, resource reports and performance are evaluator work, recorded in launch_requirements or validation_metrics."},
     "pmpp_topics": STRINGS,
     "hypotheses": {"type": "array", "items": schema_object({
         "documented_fact": STRING, "observed_code_property": STRING,
@@ -69,13 +76,82 @@ SYNTHESIS_SCHEMA = schema_object({
 })
 
 
+def synthesis_schema(sources: list["SourceRecord"]) -> dict:
+    """Provider constraints are grounded in receipts, never model-invented IDs."""
+    schema = deepcopy(SYNTHESIS_SCHEMA)
+    known = list(dict.fromkeys(source.source_id for source in sources))
+    code = list(dict.fromkeys(source.source_id for source in sources if source.kind == "code"))
+    if not known or not code:
+        raise ResearchBlocked("Synthesis requires actually retrieved code sources")
+    schema["properties"]["reference_kernels"] = {"type": "array", "items": {"type": "string", "enum": code}}
+    schema["properties"]["hypotheses"]["items"]["properties"]["source_ids"] = {
+        "type": "array", "items": {"type": "string", "enum": known}}
+    if any(source.kind == "pmpp" for source in sources):
+        schema["properties"]["pmpp_topics"] = {"type": "array", "items": {"type": "string", "enum": list(PMPP_TOPICS)}}
+    else:
+        schema["properties"]["pmpp_topics"] = {"type": "array", "items": STRING, "maxItems": 0}
+    return schema
+
+
+def normalize_research_references(value: dict, sources: list["SourceRecord"]) -> dict:
+    """Recover known IDs from old descriptive output without inventing provenance.
+
+    Full original strings are retained. A documentation page describing a kernel
+    remains documentary context; only actual code records enter reference_kernels.
+    Any unrecognized source ID or reference with no registered ID fails closed.
+    """
+    value = deepcopy(value)
+    known = {source.source_id: source for source in sources}
+    context = list(value.get("reference_context", []))
+
+    def normalize(items, field_name, *, code_only=False):
+        result = []
+        for original in items:
+            if not isinstance(original, str):
+                raise ResearchBlocked(f"Invalid reference type in {field_name}")
+            identifiers = [identifier for identifier in known if re.search(
+                r"(?<![A-Za-z0-9_-])" + re.escape(identifier) + r"(?![A-Za-z0-9_-])", original)]
+            tokens = set(re.findall(r"(?<![A-Za-z0-9_-])(?:source-[A-Za-z0-9_-]+|pmpp-installed)(?![A-Za-z0-9_-])", original))
+            if not identifiers or tokens - known.keys():
+                raise ResearchBlocked(f"Unretrieved reference in {field_name}: {original}")
+            selected = [identifier for identifier in identifiers
+                        if not code_only or known[identifier].kind == "code"]
+            if original not in selected or len(selected) != 1:
+                annotation = {"field": field_name, "original": original,
+                              "known_source_ids": identifiers, "selected_source_ids": selected}
+                if annotation not in context:
+                    context.append(annotation)
+            result.extend(selected)
+        return list(dict.fromkeys(result))
+
+    value["reference_kernels"] = normalize(value.get("reference_kernels", []), "reference_kernels", code_only=True)
+    for index, hypothesis in enumerate(value.get("hypotheses", [])):
+        hypothesis["source_ids"] = normalize(hypothesis.get("source_ids", []), f"hypotheses[{index}].source_ids")
+    topics = []
+    for original in value.get("pmpp_topics", []):
+        if not isinstance(original, str):
+            raise ResearchBlocked("Invalid PMPP topic reference")
+        match = re.match(r"^([A-Za-z_]+)(?:\s|$)", original)
+        topic = match.group(1) if match else ""
+        if topic not in PMPP_TOPICS or not any(source.kind == "pmpp" for source in sources):
+            raise ResearchBlocked(f"Unconsulted PMPP topic: {original}")
+        if original != topic:
+            annotation = {"field": "pmpp_topics", "original": original, "selected_topic": topic}
+            if annotation not in context:
+                context.append(annotation)
+        topics.append(topic)
+    value["pmpp_topics"] = list(dict.fromkeys(topics))
+    value["reference_context"] = context
+    return value
+
+
 @dataclass(frozen=True)
 class ResearchConfig:
     required: bool = True
     web_required: bool = True
-    max_sources: int = 8
+    max_sources: int | None = None
     fetch_timeout_seconds: float = 20
-    total_timeout_seconds: float = 1200
+    total_timeout_seconds: float | None = None
     max_source_bytes: int = 16 * 1024 * 1024
     max_prompt_chars_per_source: int = 30000
     experimental: bool = False
@@ -87,10 +163,11 @@ class ResearchConfig:
             raise ValueError("A conforming campaign requires live web and mandatory research")
         if not self.experimental and not self.include_pmpp:
             raise ValueError("Disabling PMPP requires an explicitly experimental research service")
-        if min(self.max_sources, self.fetch_timeout_seconds, self.total_timeout_seconds,
-               self.max_source_bytes, self.max_prompt_chars_per_source) <= 0:
-            raise ValueError("Research budgets must be positive")
-        if self.max_sources < 4:
+        if min(self.fetch_timeout_seconds, self.max_source_bytes, self.max_prompt_chars_per_source) <= 0:
+            raise ValueError("Technical source-fetch and response limits must be positive")
+        if self.total_timeout_seconds is not None and self.total_timeout_seconds <= 0:
+            raise ValueError("An explicitly configured phase timeout must be positive")
+        if self.max_sources is not None and (type(self.max_sources) is not int or self.max_sources < 4):
             raise ValueError("Source quota must cover CCCL, CUTLASS, CUDA documentation and PMPP")
         if self.max_search_calls_per_dossier is not None and (
                 type(self.max_search_calls_per_dossier) is not int or self.max_search_calls_per_dossier <= 0):
@@ -141,6 +218,7 @@ class ResearchDossier:
     usage: dict = field(default_factory=dict)
     call_ids: list[str] = field(default_factory=list)
     experimental_mode: str | None = None
+    reference_context: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -148,7 +226,10 @@ class ResearchDossier:
     @classmethod
     def from_dict(cls, value: dict) -> "ResearchDossier":
         value = dict(value)
-        value["sources"] = [SourceRecord(**source) for source in value["sources"]]
+        sources = [source if isinstance(source, SourceRecord) else SourceRecord(**source)
+                   for source in value["sources"]]
+        value = normalize_research_references(value, sources)
+        value["sources"] = sources
         return cls(**value)
 
     def research_ready(self, workload_hash: str, family: str, environment_fingerprint: str) -> bool:
@@ -359,11 +440,13 @@ Context: {json.dumps({'workload': workload, 'parent': parent, 'action': action,
             sources, contents, failures = [], [], []
             for request in requests:
                 pmpp_reserve = 1 if self.config.include_pmpp else 0
-                if request["url"] in seen or len(sources) >= self.config.max_sources - pmpp_reserve:
+                if request["url"] in seen or (self.config.max_sources is not None and
+                        len(sources) >= self.config.max_sources - pmpp_reserve):
                     continue
                 seen.add(request["url"])
-                if time.monotonic() - started >= self.config.total_timeout_seconds:
-                    raise ResearchBlocked("Research total time budget exhausted")
+                if self.config.total_timeout_seconds is not None and (
+                        time.monotonic() - started >= self.config.total_timeout_seconds):
+                    raise ResearchBlocked("Explicit research phase timeout expired")
                 try:
                     source, text = self._open_source(request)
                     sources.append(source)
@@ -389,9 +472,10 @@ Context: {json.dumps({'workload': workload, 'parent': parent, 'action': action,
                 contents.append({"source": asdict(pmpp), "read_text": cards_text})
             if not {"code", "cuda_documentation"} <= {source.kind for source in sources}:
                 raise ResearchBlocked(f"Required source fetch failed: {json.dumps(failures)}")
-            remaining = self.config.total_timeout_seconds - (time.monotonic() - started)
-            if remaining <= 0:
-                raise ResearchBlocked("Research total time budget exhausted")
+            remaining = (self.config.total_timeout_seconds - (time.monotonic() - started)
+                         if self.config.total_timeout_seconds is not None else None)
+            if remaining is not None and remaining <= 0:
+                raise ResearchBlocked("Explicit research phase timeout expired")
             topic_instruction = ("PMPP topics must be from the installed cards, with exact project provenance; "
                                  "access to the book itself is not claimed."
                                  if self.config.include_pmpp else
@@ -408,6 +492,16 @@ Research establishes whether an algorithmic adaptation is feasible, not whether
 an as-yet unwritten candidate is already compiled, correct or faster. A reference
 kernel does not need the exact workload ABI, layout or launch configuration:
 record the required standalone adaptation in launch_requirements and hypotheses.
+applicability_checks must EXCLUSIVELY list prerequisites of the chosen standalone
+adaptation under the complete supplied contract. The proposal can be an original
+full-float32 tiled CUDA kernel inspired by the read algorithms; copying any
+reference kernel is unnecessary. In particular, never list "a reference can be
+copied unchanged with the exact ABI/layout/tails/launch" as an applicability_check
+for this adaptation. A reference's unchanged-copyability, wrapper ABI mismatch,
+unsupported specialized path or missing reference tail handling belongs in
+incompatible_conditions or rejected examples, with adaptation work recorded in
+launch_requirements. Keep any genuinely missing adaptation prerequisite false;
+for example, unspecified aliasing cannot be assumed safe without contract evidence.
 For example, adapting a float GEMM tile to row-major pointer indexing, the exact
 single-kernel ABI, guarded partial-tile loads/zero padding, guarded stores, and
 barriers reached by every block thread is a concrete proposal requirement.
@@ -433,13 +527,14 @@ different GPU is target performance. Retain incompatible rejected examples.
 Context: {json.dumps({'workload': workload, 'action': action, 'evidence': evidence,
                      'rejected_examples': search.payload['rejected_examples'],
                      'fetch_failures': failures}, default=plain)}
-Actually read source content:\n{json.dumps(contents)}""", SYNTHESIS_SCHEMA, purpose="proposal", timeout_seconds=remaining)
+Actually read source content:\n{json.dumps(contents)}""", synthesis_schema(sources), purpose="proposal", timeout_seconds=remaining)
             usage = {"input_tokens": sum(result.usage.get("input_tokens", 0) for result in (search, synthesis)),
                      "output_tokens": sum(result.usage.get("output_tokens", 0) for result in (search, synthesis)),
                      "cost_usd": None}
+            synthesis_payload = normalize_research_references(synthesis.payload, sources)
             dossier = ResearchDossier(research_id, workload_hash, family, environment, queries,
                                       "retrieved", datetime.now(timezone.utc).isoformat(), sources,
-                                      **synthesis.payload, usage=usage,
+                                      **synthesis_payload, usage=usage,
                                       call_ids=[search.call_id, synthesis.call_id],
                                       experimental_mode=None if self.config.include_pmpp else "ablation_no_pmpp")
             (self.directory / f"{research_id}.json").write_text(json.dumps(dossier.to_dict(), indent=2), encoding="utf-8")
@@ -462,7 +557,7 @@ Actually read source content:\n{json.dumps(contents)}""", SYNTHESIS_SCHEMA, purp
         if fragment:
             final_url = urldefrag(final_url)[0] + "#" + fragment
         if not body or len(body) > self.config.max_source_bytes:
-            raise ValueError("Source is empty or over byte budget")
+            raise ValueError("Source is empty or exceeds the technical response-size limit")
         text = body.decode("utf-8", errors="replace")
         if request["kind"] == "code":
             path = urlparse(final_url).path.strip("/")
