@@ -72,8 +72,10 @@ def plan_suite(base: CampaignConfig, seeds=(1729, 2718, 3141), *, include_greedy
                 "greedy_parent": "Optional isolated parent-selection ablation; never an upstream substitute"}}
 
 
-def summarize_suite(plan, manifests, groups=None):
+def summarize_suite(plan, manifests, groups=None, *, protocol_incidents=None, protocol_incident_observations=None):
     groups = groups or {}
+    protocol_incidents = protocol_incidents or {}
+    protocol_incident_observations = protocol_incident_observations or []
     rows, aggregates = [], {}
     for entry in plan["entries"]:
         run_id = entry["config"]["run_id"]
@@ -101,6 +103,13 @@ def summarize_suite(plan, manifests, groups=None):
             total_generation_task_wall_seconds=generation.get("total_task_wall_seconds_including_queue"),
             time_to_independently_confirmed_final_gain_seconds=result.get("time_to_independently_confirmed_final_gain_seconds"),
             final_terminal=group.get("worker_terminal"), final_environment=group.get("environment"))
+        incidents = protocol_incidents.get(run_id, [])
+        if incidents:
+            row.update(original_generation_method_status=row["generation_method_status"],
+                original_generation_method_error=row["generation_method_error"],
+                generation_method_status="failed",
+                generation_method_error="Legacy search protocol violation: a documentary research refusal was consumed as zero tree reward; historical tree, usage and artifact decisions are preserved.",
+                generation_protocol_incidents=incidents)
         if result.get("status") == "validated_no_gain":
             row["gain"] = 1.0
             row["gain_basis"] = "exact_baseline_artifact"
@@ -142,8 +151,16 @@ def summarize_suite(plan, manifests, groups=None):
             expected_pairs.add("pmpp_permanent_only_vs_no_pmpp")
         contrasts = groups.get(key, {}).get("method_comparisons", {})
         direct_comparisons_qualified &= all(contrasts.get(name, {}).get("ok") is True for name in expected_pairs)
+    artifact_evaluations_qualified = complete and all(
+        r["final_qualified"] and r["gain"] is not None for r in rows) and direct_comparisons_qualified
+    method_protocols_qualified = False if any(protocol_incidents.values()) else (
+        None if any(row.get("status") == "invalid" for row in protocol_incident_observations) else True)
     return {"schema_version": 2, "rows": rows, "aggregates": aggregates,
             "direct_comparisons_qualified": direct_comparisons_qualified,
-            "complete": complete, "scientific_qualified": complete and all(
-                r["final_qualified"] and r["gain"] is not None for r in rows) and direct_comparisons_qualified,
+            "complete": complete, "scientific_qualified": artifact_evaluations_qualified and method_protocols_qualified is True,
+            "artifact_evaluations_qualified": artifact_evaluations_qualified,
+            "original_scientific_qualified": artifact_evaluations_qualified,
+            "method_protocols_qualified": method_protocols_qualified,
+            "method_protocols_qualification_scope": "Additive public incident evidence only; absence is not an exhaustive historical protocol audit.",
+            "protocol_incident_observations": protocol_incident_observations,
             "claim": "Only shared final experiments support quality comparisons; implementation or unit tests alone do not establish GPU performance."}

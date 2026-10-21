@@ -3,6 +3,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -77,6 +78,52 @@ class BackendTests(unittest.TestCase):
             self.assertIsNone(result.usage["cost_usd"])
             receipt = json.loads(next(Path(directory).glob("*.json")).read_text())
             self.assertEqual(receipt["status"], "completed")
+
+    def test_nonobject_jsonl_and_accessed_field_shapes_record_failed_receipts(self):
+        malformed_events = [None, [], 42, "text", {"type": "item.completed", "item": []},
+                            {"type": "item.completed", "item": {"action": []}},
+                            {"type": "item.completed", "item": {"type": "agent_message", "text": []}},
+                            {"type": "turn.completed", "usage": True}]
+        prefix = {"type": "thread.started", "thread_id": "observed-prefix"}
+        for malformed in malformed_events:
+            with self.subTest(event=malformed), tempfile.TemporaryDirectory() as directory:
+                class Process:
+                    returncode = 0
+                    def communicate(self, prompt, timeout):
+                        return "\n".join(map(json.dumps, [prefix, malformed])), "diagnostic"
+
+                backend = CodexBackend(CodexConfig(trace_dir=Path(directory)))
+                with patch("optimizer_agent.codex_backend.subprocess.Popen", return_value=Process()):
+                    with self.assertRaisesRegex(CodexError, "Codex JSONL") as caught:
+                        backend.generate_json("test", {})
+                receipt = json.loads(next(Path(directory).glob("*.json")).read_text())
+                self.assertEqual(receipt["status"], "failed")
+                self.assertEqual(receipt["error"], str(caught.exception))
+                self.assertEqual(receipt["events"], [prefix])
+                self.assertEqual(receipt["returncode"], 0)
+                self.assertEqual(receipt["stderr"], "diagnostic")
+                self.assertNotIn("usage", receipt)
+                self.assertEqual(backend.calls, [])
+
+    def test_streaming_nonobject_jsonl_terminates_and_records_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            script = Path(directory) / "fake-codex"
+            script.write_text(f"#!{sys.executable}\nimport sys,time\nsys.stdin.read()\n"
+                              "print('[]',flush=True)\ntime.sleep(30)\n")
+            script.chmod(0o755)
+            backend = CodexBackend(CodexConfig(executable=str(script), timeout_seconds=5,
+                                              trace_dir=Path(directory) / "trace"))
+            started = time.monotonic()
+            with self.assertRaisesRegex(CodexError, "event must be an object") as caught:
+                backend.generate_json("research", {}, purpose="research", max_web_search_calls=1)
+            self.assertLess(time.monotonic() - started, 3)
+            receipt = json.loads(next((Path(directory) / "trace").glob("*.json")).read_text())
+            self.assertEqual(receipt["status"], "failed")
+            self.assertEqual(receipt["error"], str(caught.exception))
+            self.assertIn("[]", receipt["stdout"])
+            self.assertLess(receipt["returncode"], 0)
+            self.assertNotIn("usage", receipt)
+            self.assertEqual(backend.calls, [])
 
     def test_timeout_kills_process_group_and_records(self):
         class Process:

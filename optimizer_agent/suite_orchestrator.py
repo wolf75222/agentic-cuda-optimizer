@@ -27,6 +27,7 @@ import traceback
 
 from .campaign_config import CampaignConfig
 from .quality_suite import TOOLS, stable_id, summarize_suite
+from .protocol_incidents import load_protocol_incidents
 
 REPO = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "recovery_required"}
@@ -161,6 +162,51 @@ def write_json(path, value):
 
 def read_json(path):
     return json.loads(Path(path).read_text())
+
+
+def write_native_preflight(directory, value):
+    """Keep every old/new probe byte string before replacing the latest view."""
+    directory = Path(directory)
+    latest = directory / "native-read-isolation-preflight.json"
+    archive = directory / "native-read-isolation-preflight-archive"
+    if archive.is_symlink() or latest.is_symlink():
+        raise ValueError("Native preflight receipt paths must not be symlinks")
+    if latest.exists() and (not latest.is_file() or latest.stat().st_nlink != 1):
+        raise ValueError("Native preflight latest must be a regular file without aliases")
+    archive.mkdir(parents=True, exist_ok=True)
+
+    def sync_directory(path):
+        descriptor = os.open(path, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+    sync_directory(directory)
+
+    def preserve(raw):
+        digest = hashlib.sha256(raw).hexdigest()
+        destination = archive / (digest + ".json")
+        if destination.is_symlink() or (destination.exists() and (
+                not destination.is_file() or destination.stat().st_nlink != 1)):
+            raise ValueError("Native preflight archive must be a regular file without aliases")
+        try:
+            with destination.open("xb") as handle:
+                handle.write(raw)
+                handle.flush()
+                os.fsync(handle.fileno())
+        except FileExistsError:
+            if destination.read_bytes() != raw:
+                raise ValueError("Native preflight archive content-address mismatch")
+        sync_directory(archive)
+        return {"path": str(destination), "sha256": digest}
+
+    previous = preserve(latest.read_bytes()) if latest.exists() else None
+    raw = json.dumps(value, indent=2, allow_nan=False, default=str).encode()
+    current = preserve(raw)
+    write_json(latest, value)
+    sync_directory(directory)
+    return {"previous": previous, "current": current, "latest": str(latest)}
 
 
 def config_from_dict(data):
@@ -823,7 +869,7 @@ class SuiteOrchestrator:
                 from .codex_backend import default_codex_executable
                 from .native_read_isolation import probe_read_isolation
                 preflight = probe_read_isolation(self.directory.parent, codex_executable=default_codex_executable())
-                write_json(directory / "native-read-isolation-preflight.json", preflight)
+                write_native_preflight(directory, preflight)
                 if preflight.get("ok") is not True:
                     raise ValueError("Native generator read-isolation preflight did not pass")
             backend = self._backend(task, config, directory)
@@ -1010,7 +1056,9 @@ class SuiteOrchestrator:
         tasks = self.journal.tasks()
         manifests = {r["id"]: r["result"] for r in tasks if r["kind"] == "generation" and r["result"]}
         groups = {r["id"]: r["result"] for r in tasks if r["kind"] == "final" and r["result"]}
-        summary = summarize_suite(self.plan, manifests, groups)
+        protocol_incidents, incident_observations = load_protocol_incidents(self.directory, self.plan)
+        summary = summarize_suite(self.plan, manifests, groups, protocol_incidents=protocol_incidents,
+                                  protocol_incident_observations=incident_observations)
         with self.journal.connection() as db:
             previous_attempts = [{"task_id": row["task_id"], "attempt": row["attempt"], "reason": row["reason"],
                 "seed_commitment": row["commitment"], "receipt": json.loads(row["snapshot"])}

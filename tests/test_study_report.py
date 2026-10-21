@@ -18,7 +18,7 @@ from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RE
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
 from scripts.report_study_fr import ORIGINAL_CAMPAIGN, FINAL_DIRECTORY, FIRST_GROUP
 from scripts.report_study_fr import comparison_view, direct_comparison_views, direct_comparison_table, plot
-from scripts.report_study_fr import RESEARCH_REFRESH_RESUMED, REFRESH_RESUMPTION_CHECKS
+from scripts.report_study_fr import RESEARCH_REFRESH_RESUMED, RESEARCH_REFRESH_RESUMED_2, REFRESH_RESUMPTION_CHECKS
 from optimizer_agent.suite_report import write_report, method_outcome_cells
 
 
@@ -1017,6 +1017,161 @@ def test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls(tmp
     assert next(r for r in rows if r["path"] == RESEARCH_REFRESH)["ok"] is False
     resumed = next(r for r in rows if r["path"] == RESEARCH_REFRESH_RESUMED)
     assert resumed["ok"] is False and resumed["observed_new_model_call_count"] is None
+
+
+def _documentary_proof(root, receipt):
+    files = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+             for path in root.rglob("*.json") if path.name not in ("proof-sha256.json", "research-refresh-acceptance.json")}
+    receipt["proof_manifest"] = linked_report_fixture(root, "proof-sha256.json",
+        {"schema_version":1,"hash_algorithm":"sha256","files":files})
+    save(root/"research-refresh-acceptance.json",receipt)
+
+
+def twice_resumed_documentary_fixture(root):
+    """Explicit synthetic 7/16 → 9/19 refusal → successful new control."""
+    anchor, previous = resumed_documentary_fixture(root)
+    a, p, n = (root/Path(name).parent for name in (RESEARCH_REFRESH,RESEARCH_REFRESH_RESUMED,RESEARCH_REFRESH_RESUMED_2))
+    def call(index, purpose, directory):
+        row = {"call_id":format(index,"032x"),"usage":{"input_tokens":index*10,"output_tokens":1},"elapsed_seconds":float(index)}
+        payload = {"fixture":index}
+        linked_report_fixture(directory,"campaign/model/"+row["call_id"]+".json",dict(row,purpose=purpose,
+            status="completed",returncode=0,model="gpt-6-luna",reasoning_effort="max",payload=payload))
+        return row, {"call_id":row["call_id"],"purpose":purpose,"stage":"research_service","kernel_proposal":False,
+            "status":"completed","returned_payload_sha256":hashlib.sha256(json.dumps(payload,sort_keys=True).encode()).hexdigest()}
+    anchor["model_calls"] = [call(i,purpose,a)[0] for i,purpose in enumerate(
+        ("research","proposal","proposal","proposal","proposal","research","proposal"),1)]
+    kinds = ["campaign_initialized","checkpoint","selection","selection","model","model","research","model",
+        "generation","model","generation","model","diagnostic","model","model","research_blocked"]
+    model_index, events = 0, []
+    for index,kind in enumerate(kinds,1):
+        payload = {}
+        if kind == "model": payload = deepcopy(anchor["model_calls"][model_index]); model_index += 1
+        if kind == "diagnostic": payload = {"diagnostic_id":"diag-fixture"}
+        if kind == "research_blocked": payload = {"error":"research_blocked: fixture initial guard refusal"}
+        events.append({"event_id":index,"kind":kind,"payload":payload})
+    save(a/"events.json",events)
+    initial = json.loads((a/"campaign/acceptance-evidence/initial-dossier.json").read_text())
+    save(a/"campaign/trials/fixture-trial/dossier.json",initial)
+    refusal_path=a/"campaign/acceptance-evidence/blocked-refusal.json"
+    refusal=json.loads(refusal_path.read_text());refusal["call_id"]=anchor["model_calls"][4]["call_id"];save(refusal_path,refusal)
+    anchor.update(checks={},error="Actual targeted research blocked: "+events[-1]["payload"]["error"],
+        ledger_usage={"spent":{"model_calls":7,"model_tokens":sum(c["usage"]["input_tokens"]+1 for c in anchor["model_calls"])}})
+    _documentary_proof(a,anchor)
+    shutil.rmtree(p/"campaign");shutil.copytree(a/"campaign",p/"campaign")
+    pairs = [call(8,"research",p),call(9,"proposal",p)]
+    calls,invocations = [pair[0] for pair in pairs],[pair[1] for pair in pairs]
+    save(p/"campaign/acceptance-controls-resume/invocations.json",invocations)
+    save(p/"campaign/hardware-evidence-context.json",{"historical":True})
+    previous["resumption"].update(evidence_repository=str(root.resolve()),
+        source_receipt={"path":RESEARCH_REFRESH,"path_base":"repository","sha256":hashlib.sha256((a/"research-refresh-acceptance.json").read_bytes()).hexdigest()},
+        source_proof_manifest={"path":str(Path(RESEARCH_REFRESH).parent/"proof-sha256.json"),"path_base":"repository",
+            "sha256":hashlib.sha256((a/"proof-sha256.json").read_bytes()).hexdigest()})
+    error="research_blocked: fixture resumed applicability refusal"
+    suffix=[{"event_id":17+i,"kind":"model","payload":dict(row,purpose=inv["purpose"])} for i,(row,inv) in enumerate(pairs)]
+    suffix.append({"event_id":19,"kind":"research_blocked","payload":{"error":error}})
+    save(p/"events.json",events+suffix)
+    research_id="a"*32
+    save(p/("campaign/research/"+research_id+".json"),{"research_id":research_id,"receipt_version":2,
+        "call_ids":[c["call_id"] for c in calls],"diagnostic_ids":["diag-fixture"],"missing_evidence":["fixture missing evidence"],
+        "applicability_checks":[{"satisfied":False}]})
+    save(p/("campaign/research/"+research_id+"-blocked.json"),{"research_id":research_id,
+        "retrieval_status":"research_blocked","error":"fixture resumed applicability refusal"})
+    tokens=sum(c["usage"]["input_tokens"]+c["usage"]["output_tokens"] for c in calls)
+    previous.update(ok=False,status="incomplete",checks={},inherited_model_calls=deepcopy(anchor["model_calls"]),model_calls=calls,
+        error="Actual resumed targeted research blocked: "+error,resume_source_unchanged=True,
+        ledger_usage={"spent":{"model_calls":9,"model_tokens":anchor["ledger_usage"]["spent"]["model_tokens"]+tokens}},
+        new_usage_delta={"model_calls":2,"model_tokens":tokens})
+    save(p/"run-intent.json",{"run_id":previous["run_id"],"source_provenance":previous["source_provenance"],
+        "new_gpu_requests":0,"resumption":previous["resumption"]})
+    for source,target in (("research-refresh-acceptance.json","previous-receipt.json"),("proof-sha256.json","previous-proof.json"),
+        ("events.json","previous-events.json"),("campaign/acceptance-evidence/initial-dossier.json","previous-dossier.json")):
+        shutil.copy2(a/source,p/"source-evidence"/target)
+    _documentary_proof(p,previous)
+    shutil.copytree(p,n)
+    new=deepcopy(previous)
+    new.update(run_id="fixture-resumed-2",ok=True,status="documentary_research_refresh_resumption_acceptance_passed",
+        checks={name:True for name in REFRESH_CHECKS+REFRESH_RESUMPTION_CHECKS},
+        inherited_model_calls=anchor["model_calls"]+calls,model_calls=[call(i,purpose,n)[0] for i,purpose in
+            ((10,"research"),(11,"proposal"),(12,"proposal"))],source_provenance={"HEAD":"d"*40},
+        initial_call_id=anchor["model_calls"][2]["call_id"],compatible_call_id=anchor["model_calls"][3]["call_id"],
+        blocked_call_id=anchor["model_calls"][4]["call_id"],final_call_id=format(12,"032x"),
+        initial_research_id="initial",renewed_research_id="renewed-2",diagnostic_id="diag-fixture",uncovered_technique="warp_shuffle")
+    new["resumption"].update(source_directory=str(Path(RESEARCH_REFRESH_RESUMED).parent),
+        source_receipt={"path":RESEARCH_REFRESH_RESUMED,"path_base":"repository","sha256":hashlib.sha256((p/"research-refresh-acceptance.json").read_bytes()).hexdigest()},
+        source_proof_manifest={"path":str(Path(RESEARCH_REFRESH_RESUMED).parent/"proof-sha256.json"),"path_base":"repository",
+            "sha256":hashlib.sha256((p/"proof-sha256.json").read_bytes()).hexdigest()},
+        inherited_completed_model_calls=9,controls_directory="acceptance-controls-resume-2",
+        research_round_derivation={"initial_anchor_round":2,"completed_failed_round":3,"next_fresh_round":4})
+    new["initial_dossier_sha256"]=hashlib.sha256((n/"campaign/acceptance-evidence/initial-dossier.json").read_bytes()).hexdigest()
+    new["renewed_dossier_sha256"]=linked_report_fixture(n,"campaign/trials/fixture-trial/dossier.json",
+        {"research_id":"renewed-2","receipt_version":2,"covered_techniques":["tiling","warp_shuffle"],"diagnostic_ids":["diag-fixture"]})["sha256"]
+    new["runtime_evidence_context"]=linked_report_fixture(n,"campaign/runtime-evidence-context.json",{"historical_baseline":True})
+    save(n/"campaign/acceptance-controls-resume-2/invocations.json",[])
+    save(n/"run-intent.json",{"run_id":new["run_id"],"source_provenance":new["source_provenance"],"new_gpu_requests":0,"resumption":new["resumption"]})
+    for source,target in (("research-refresh-acceptance.json","previous-receipt.json"),("proof-sha256.json","previous-proof.json"),
+        ("events.json","previous-events.json"),("campaign/acceptance-evidence/initial-dossier.json","previous-dossier.json")):
+        shutil.copy2(p/source,n/"source-evidence"/target)
+    _documentary_proof(n,new)
+    return anchor,previous,new
+
+
+def _repin_second_resume(root, previous, new):
+    p,n=(root/Path(name).parent for name in (RESEARCH_REFRESH_RESUMED,RESEARCH_REFRESH_RESUMED_2))
+    _documentary_proof(p,previous)
+    new["resumption"]["source_receipt"]["sha256"]=hashlib.sha256((p/"research-refresh-acceptance.json").read_bytes()).hexdigest()
+    new["resumption"]["source_proof_manifest"]["sha256"]=hashlib.sha256((p/"proof-sha256.json").read_bytes()).hexdigest()
+    for source,target in (("research-refresh-acceptance.json","previous-receipt.json"),("proof-sha256.json","previous-proof.json")):
+        shutil.copy2(p/source,n/"source-evidence"/target)
+    save(n/"run-intent.json",{"run_id":new["run_id"],"source_provenance":new["source_provenance"],"new_gpu_requests":0,"resumption":new["resumption"]})
+    _documentary_proof(n,new)
+
+
+def test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain(tmp_path):
+    _,_,new=twice_resumed_documentary_fixture(tmp_path)
+    rows=control_receipts(tmp_path)
+    assert all(next(row for row in rows if row["path"]==name)["ok"] is False for name in (RESEARCH_REFRESH,RESEARCH_REFRESH_RESUMED))
+    result=next(row for row in rows if row["path"]==RESEARCH_REFRESH_RESUMED_2)
+    assert result["ok"] is True, result["authentication_checks"]
+    assert all(result["authentication_checks"].values())
+    assert result["inherited_model_call_count"]==9 and result["observed_new_model_call_count"]==3
+    assert not result["new_gpu_execution"] and not result["database_or_final_inputs_read"]
+    assert "Chaîne authentifiée 7 → 9" in execution_evidence_panel(rows)
+
+
+@pytest.mark.parametrize("fault",["missing_anchor_pin","unsupported_count","wrong_round","source_was_successful",
+    "altered_event_prefix","wrong_refusal_suffix","missing_failed_dossier","dossier_not_failed","missing_ancestor_copy","ledger_delta"])
+def test_second_resumption_rejects_hash_resealed_but_unsupported_ancestry(tmp_path,fault):
+    _,previous,new=twice_resumed_documentary_fixture(tmp_path)
+    p,n=(tmp_path/Path(name).parent for name in (RESEARCH_REFRESH_RESUMED,RESEARCH_REFRESH_RESUMED_2))
+    if fault=="missing_anchor_pin":previous["resumption"]["source_receipt"].pop("sha256")
+    elif fault=="unsupported_count":new["resumption"]["inherited_completed_model_calls"]=10
+    elif fault=="wrong_round":new["resumption"]["research_round_derivation"]["next_fresh_round"]=5
+    elif fault=="source_was_successful":previous["ok"]=True
+    elif fault in ("altered_event_prefix","wrong_refusal_suffix"):
+        events=json.loads((p/"events.json").read_text());events[0 if fault=="altered_event_prefix" else -1]["kind"]="generation";save(p/"events.json",events)
+    elif fault=="missing_failed_dossier":(p/("campaign/research/"+"a"*32+"-blocked.json")).unlink()
+    elif fault=="dossier_not_failed":
+        file=p/("campaign/research/"+"a"*32+".json");dossier=json.loads(file.read_text());dossier.update(missing_evidence=[],applicability_checks=[{"satisfied":True}]);save(file,dossier)
+    elif fault=="missing_ancestor_copy":(p/"source-evidence/previous-receipt.json").unlink()
+    else:previous["new_usage_delta"]["model_tokens"]+=1
+    _repin_second_resume(tmp_path,previous,new)
+    result=next(row for row in control_receipts(tmp_path) if row["path"]==RESEARCH_REFRESH_RESUMED_2)
+    assert result["ok"] is False and result["observed_new_model_call_count"] is None
+
+
+def test_absent_second_resumption_remains_separate_unknown_authority(tmp_path):
+    resumed_documentary_fixture(tmp_path)
+    result=next(row for row in control_receipts(tmp_path) if row["path"]==RESEARCH_REFRESH_RESUMED_2)
+    assert result["ok"] is None and not result["available"] and "en attente" in result["status"]
+
+
+def test_second_resume_authenticates_source_trial_bytes_not_only_manifest_claim(tmp_path):
+    twice_resumed_documentary_fixture(tmp_path)
+    source=tmp_path/Path(RESEARCH_REFRESH_RESUMED).parent/"campaign/trials/fixture-trial/dossier.json"
+    save(source,{"research_id":"unrecorded-admission"})
+    result=next(row for row in control_receipts(tmp_path) if row["path"]==RESEARCH_REFRESH_RESUMED_2)
+    assert result["ok"] is False
+    assert result["authentication_checks"]["source_nine_ancestor_copies_and_trace_hashes"] is False
 
 
 def test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval():

@@ -33,6 +33,27 @@ class CodexError(RuntimeError):
     pass
 
 
+def _parse_codex_event(line: str) -> dict:
+    """Validate the JSONL envelope before accessing provider event fields."""
+    try:
+        event = json.loads(line)
+    except json.JSONDecodeError:
+        raise CodexError("Codex emitted invalid JSONL") from None
+    if not isinstance(event, dict):
+        raise CodexError("Codex JSONL event must be an object")
+    if "item" in event:
+        item = event["item"]
+        if not isinstance(item, dict):
+            raise CodexError("Codex JSONL item must be an object")
+        if item.get("action") is not None and not isinstance(item["action"], dict):
+            raise CodexError("Codex JSONL item action must be an object")
+        if item.get("type") == "agent_message" and "text" in item and not isinstance(item["text"], str):
+            raise CodexError("Codex JSONL agent message text must be a string")
+    if event.get("usage") is not None and not isinstance(event["usage"], dict):
+        raise CodexError("Codex JSONL usage must be an object")
+    return event
+
+
 class _SearchBudgetExceeded(CodexError):
     def __init__(self, stdout: str, stderr: str, count: int):
         super().__init__(f"Codex live-search budget exceeded ({count} observed search calls)")
@@ -236,7 +257,7 @@ class CodexBackend:
                 except _SearchBudgetExceeded as error:
                     receipt.update(status="tool_budget_exhausted", elapsed_seconds=time.monotonic() - started,
                                    stdout=error.stdout, stderr=error.stderr[-4000:],
-                                   observed_search_calls=error.count)
+                                   observed_search_calls=error.count, error=str(error))
                     self._save_receipt(call_id, receipt)
                     raise
                 except subprocess.TimeoutExpired as error:
@@ -247,20 +268,26 @@ class CodexBackend:
                         # The streaming monitor has already terminated/drained
                         # the process; communicate() cannot flush closed stdin.
                         stdout, stderr = error.output or "", error.stderr or ""
+                    message = f"Codex {purpose} timed out after {timeout}s"
                     receipt.update(status="timeout", elapsed_seconds=time.monotonic() - started,
-                                   stdout=stdout[-self.config.max_output_bytes:], stderr=stderr[-4000:])
+                                   stdout=stdout[-self.config.max_output_bytes:], stderr=stderr[-4000:],
+                                   error=message)
                     self._save_receipt(call_id, receipt)
-                    raise CodexError(f"Codex {purpose} timed out after {timeout}s")
+                    raise CodexError(message)
+                except CodexError as error:
+                    # A streaming shape/response failure may precede completion.
+                    # Preserve its observed bytes without inventing usage.
+                    receipt.update(stdout=getattr(error, "stdout", ""),
+                                   stderr=getattr(error, "stderr", "")[-4000:],
+                                   returncode=process.returncode)
+                    raise
                 events = []
+                receipt.update(events=events, returncode=process.returncode,
+                               stderr=stderr[-4000:], elapsed_seconds=time.monotonic() - started)
                 if len(stdout.encode()) > self.config.max_output_bytes:
                     raise CodexError("Codex event output exceeded the technical response-size limit")
                 for line in stdout.splitlines():
-                    try:
-                        events.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        raise CodexError("Codex emitted invalid JSONL") from None
-                receipt.update(events=events, returncode=process.returncode,
-                               stderr=stderr[-4000:], elapsed_seconds=time.monotonic() - started)
+                    events.append(_parse_codex_event(line))
                 if process.returncode:
                     raise CodexError(f"Codex {purpose} failed (exit {process.returncode}): {stderr[-1000:]}")
                 failures = [event for event in events if event.get("type") in ("turn.failed", "error")]
@@ -347,15 +374,12 @@ class CodexBackend:
                 byte_count += len(line.encode())
                 if byte_count > self.config.max_output_bytes:
                     raise CodexError("Codex event output exceeded the technical response-size limit")
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue  # The caller rejects malformed JSONL with its receipt.
+                event = _parse_codex_event(line)
                 item = event.get("item", {})
                 if event.get("type") == "item.completed" and item.get("type") in ("web_search", "web_search_call") and (
                         item.get("action") or {}).get("type") == "search":
                     identity = item.get("id") or event.get("item_id")
-                    if not identity:
+                    if not isinstance(identity, str) or not identity:
                         continue
                     search_ids.add(identity)
                     if len(search_ids) > search_limit:
@@ -372,6 +396,8 @@ class CodexBackend:
                 reader.join(timeout=1)
             if isinstance(error, subprocess.TimeoutExpired):
                 error.output, error.stderr = "".join(stdout), "".join(stderr)
+            elif isinstance(error, CodexError):
+                error.stdout, error.stderr = "".join(stdout), "".join(stderr)
             raise
         finally:
             for pipe in (process.stdin, process.stdout, process.stderr):

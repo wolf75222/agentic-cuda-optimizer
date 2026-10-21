@@ -33,6 +33,7 @@ ORIGINAL_EXECUTION = "work/live/true-upstream-first-generation-ef057b3.json"
 COMMON_FINAL_FREEZE = "work/live/common-final-convolution-1729-freeze-audit.json"
 RESEARCH_REFRESH = "results/research-refresh-ac02-20261021/research-refresh-acceptance.json"
 RESEARCH_REFRESH_RESUMED = "results/research-refresh-ac02-resumed-20261021/research-refresh-acceptance.json"
+RESEARCH_REFRESH_RESUMED_2 = "results/research-refresh-ac02-resumed-2-20261021/research-refresh-acceptance.json"
 FIRST_GROUP = "quality-20261021-v2.convolution.1729"
 ORIGINAL_CAMPAIGN = "results/quality-study-v2/campaigns/" + FIRST_GROUP + ".true_upstream"
 FINAL_DIRECTORY = "results/quality-study-v2/final-groups/" + FIRST_GROUP
@@ -58,6 +59,7 @@ PROOF_PATHS = (
     ("Gel du premier groupe final — identités et aliases", COMMON_FINAL_FREEZE),
     ("AC-02 — renouvellement documentaire réel", RESEARCH_REFRESH),
     ("AC-02 — reprise documentaire isolée", RESEARCH_REFRESH_RESUMED),
+    ("AC-02 — deuxième reprise documentaire isolée", RESEARCH_REFRESH_RESUMED_2),
     ("Autotuning réel", "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json"),
     ("Précision, cache et reconstruction", "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json"),
     ("Diagnostic et nouvelle recherche", "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json"),
@@ -383,19 +385,24 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
     call_ids = [value.get(key) for key in ("initial_call_id", "compatible_call_id", "blocked_call_id", "final_call_id")]
     new_calls = _records(value.get("model_calls"))
     inherited_calls = _records(value.get("inherited_model_calls")) if resumed else []
+    resumption = _mapping(value.get("resumption")) if resumed else {}
+    inherited_count = resumption.get("inherited_completed_model_calls")
+    controls_directory = "acceptance-controls-resume-2" if inherited_count == 9 else "acceptance-controls-resume"
     calls = inherited_calls + new_calls
     if resumed:
-        required += ["resume-state.json", "campaign/acceptance-controls-resume/invocations.json",
+        required += ["resume-state.json", "campaign/"+controls_directory+"/invocations.json",
                      "campaign/hardware-evidence-context.json",
                      "source-evidence/previous-receipt.json", "source-evidence/previous-proof.json",
                      "source-evidence/previous-events.json", "source-evidence/previous-dossier.json"]
+        if inherited_count == 9:
+            required += ["campaign/runtime-evidence-context.json"]
     valid_call_ids = bool(calls) and all(_hash(call.get("call_id"), 32) for call in calls)
     required += ["campaign/model/"+call["call_id"]+".json" for call in calls if
                  _hash(call.get("call_id"), 32)]
     renewed = [name for name in files if isinstance(name, str) and re.fullmatch(r"campaign/trials/[A-Za-z0-9_-]+/dossier\.json", name)]
     required += renewed
     list_files = {"events.json", "campaign/acceptance-controls/invocations.json",
-                  "source-evidence/previous-events.json", "campaign/acceptance-controls-resume/invocations.json"}
+                  "source-evidence/previous-events.json", "campaign/"+controls_directory+"/invocations.json"}
     linked = {name: _verified_json(root, {"path": name, "sha256": files.get(name)}, expected_type=list if name in list_files else dict) for name in required}
     initial_name = "campaign/acceptance-evidence/initial-dossier.json"
     initial = linked.get(initial_name) or {}
@@ -436,26 +443,29 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
                 "no_new_generation_event", "no_new_candidate_or_source_change", "no_accepted_proposal_file"))),
     }
     if resumed:
-        resumption = _mapping(value.get("resumption"))
-        original = _verified_json(repo, resumption.get("source_receipt"), exact=RESEARCH_REFRESH) or {}
-        old_proof = _verified_json(repo, resumption.get("source_proof_manifest"), exact=str(Path(RESEARCH_REFRESH).parent/"proof-sha256.json")) or {}
+        source_path = RESEARCH_REFRESH_RESUMED if inherited_count == 9 else RESEARCH_REFRESH
+        original = _verified_json(repo, resumption.get("source_receipt"), exact=source_path) or {}
+        old_proof = _verified_json(repo, resumption.get("source_proof_manifest"), exact=str(Path(source_path).parent/"proof-sha256.json")) or {}
         old_files = _mapping(old_proof.get("files"))
         old_dossiers = [name for name in old_files if isinstance(name, str) and re.fullmatch(r"campaign/trials/[A-Za-z0-9_-]+/dossier\.json", name)]
         old_ids, new_ids = [call.get("call_id") for call in inherited_calls], [call.get("call_id") for call in new_calls]
         checks.update({
             "resumption_required_checks": _required_checks(value, REFRESH_RESUMPTION_CHECKS),
             "original_incomplete_authority_preserved": bool(
-                original.get("kind") == "documentary_research_refresh_acceptance" and original.get("ok") is False and
-                original.get("status") == "incomplete" and resumption.get("source_directory") == str(Path(RESEARCH_REFRESH).parent) and
+                type(inherited_count) is int and inherited_count in (7, 9) and original.get("kind") == ("documentary_research_refresh_resumption_acceptance"
+                    if inherited_count == 9 else "documentary_research_refresh_acceptance") and original.get("ok") is False and
+                original.get("status") == "incomplete" and resumption.get("source_directory") == str(Path(source_path).parent) and
                 _mapping(resumption.get("source_receipt")).get("path_base") == "repository" and
                 _mapping(resumption.get("source_proof_manifest")).get("path_base") == "repository" and
                 old_proof.get("schema_version") == 1 and old_proof.get("hash_algorithm") == "sha256" and
                 _mapping(original.get("proof_manifest")).get("sha256") == _mapping(resumption.get("source_proof_manifest")).get("sha256") and
                 files.get("source-evidence/previous-receipt.json") == _mapping(resumption.get("source_receipt")).get("sha256") and
                 files.get("source-evidence/previous-proof.json") == _mapping(resumption.get("source_proof_manifest")).get("sha256")),
-            "seven_completed_calls_inherited_without_repetition": bool(
-                resumption.get("inherited_completed_model_calls") == 7 and inherited_calls == original.get("model_calls") and
-                len(old_ids) == len(set(old_ids)) == 7 and bool(new_ids) and len(new_ids) == len(set(new_ids)) and
+            "completed_call_prefix_inherited_without_repetition": bool(
+                inherited_count in (7, 9) and inherited_calls == (
+                    _records(original.get("inherited_model_calls"))+_records(original.get("model_calls"))
+                    if inherited_count == 9 else original.get("model_calls")) and
+                len(old_ids) == len(set(old_ids)) == inherited_count and bool(new_ids) and len(new_ids) == len(set(new_ids)) and
                 set(old_ids).isdisjoint(new_ids) and resumption.get("no_initial_proposal_or_diagnostic_replay") is True and
                 all(_hash(call_id, 32) and files.get("campaign/model/"+call_id+".json") ==
                     old_files.get("campaign/model/"+call_id+".json") for call_id in old_ids)),
@@ -468,6 +478,109 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
             "final_call_new_and_initial_controls_inherited": bool(all(_hash(call_id, 32) for call_id in call_ids) and
                 set(call_ids[:3]).issubset(old_ids) and call_ids[3] in new_ids),
         })
+        if inherited_count == 9:
+            # Only the observed seven-call anchor followed by its two-call
+            # research refusal is supported. This is not an arbitrary ancestry
+            # walk, and no database, RNG or numerical input is opened.
+            chain = _mapping(original.get("resumption"))
+            anchor = _verified_json(repo, chain.get("source_receipt"), exact=RESEARCH_REFRESH) or {}
+            anchor_proof = _verified_json(repo, chain.get("source_proof_manifest"),
+                exact=str(Path(RESEARCH_REFRESH).parent/"proof-sha256.json")) or {}
+            anchor_files = _mapping(anchor_proof.get("files"))
+            source_root, anchor_root = repo/Path(RESEARCH_REFRESH_RESUMED).parent, repo/Path(RESEARCH_REFRESH).parent
+            def source_json(name, *, anchor_file=False, expected_type=dict):
+                file_map, base = (anchor_files, anchor_root) if anchor_file else (old_files, source_root)
+                return _verified_json(base, {"path":name, "sha256":file_map.get(name)},
+                                      exact=name, expected_type=expected_type)
+            prefix = source_json("events.json", anchor_file=True, expected_type=list) or []
+            prior_events = source_json("events.json", expected_type=list) or []
+            prior_intent = source_json("run-intent.json") or {}
+            prior_calls = _records(original.get("model_calls"))
+            anchor_calls = _records(anchor.get("model_calls"))
+            prior_invocations = source_json("campaign/acceptance-controls-resume/invocations.json", expected_type=list) or []
+            initial_kinds = ["campaign_initialized", "checkpoint", "selection", "selection", "model", "model",
+                "research", "model", "generation", "model", "generation", "model", "diagnostic", "model", "model", "research_blocked"]
+            last_error = _mapping(prior_events[-1].get("payload")).get("error") if prior_events else None
+            prefix_error = _mapping(prefix[-1].get("payload")).get("error") if prefix else None
+            source_trace_rows = [source_json("campaign/model/"+call["call_id"]+".json") or {}
+                                 for call in prior_calls if _hash(call.get("call_id"), 32)]
+            exact_suffix = bool(len(prior_calls) == len(prior_invocations) == len(source_trace_rows) == 2 and
+                [row.get("purpose") for row in prior_invocations] == ["research", "proposal"] and all(
+                invocation.get("stage") == "research_service" and invocation.get("kernel_proposal") is False and
+                invocation.get("status") == "completed" and invocation.get("call_id") == call.get("call_id") == trace.get("call_id") and
+                trace.get("status") == "completed" and trace.get("returncode") == 0 and
+                trace.get("model") == "gpt-6-luna" and trace.get("reasoning_effort") == "max" and
+                trace.get("purpose") == invocation.get("purpose") and trace.get("usage") == call.get("usage") and
+                hashlib.sha256(json.dumps(trace.get("payload"), sort_keys=True, default=str, allow_nan=False).encode()).hexdigest()
+                    == invocation.get("returned_payload_sha256")
+                for call, invocation, trace in zip(prior_calls, prior_invocations, source_trace_rows)))
+            diagnostic_ids = [_mapping(row.get("payload")).get("diagnostic_id") for row in prefix if row.get("kind") == "diagnostic"]
+            failed_dossiers = []
+            for name in old_files:
+                if not isinstance(name, str) or not re.fullmatch(r"campaign/research/[0-9a-f]{32}\.json", name):
+                    continue
+                dossier = source_json(name) or {}
+                if dossier.get("call_ids") == [row.get("call_id") for row in prior_calls]:
+                    blocked = source_json(name[:-5]+"-blocked.json") or {}
+                    failed_dossiers.append((dossier, blocked))
+            method_refusal = bool(len(failed_dossiers) == 1 and len(diagnostic_ids) == 1 and diagnostic_ids[0] == diagnostic_id)
+            if method_refusal:
+                dossier, blocked = failed_dossiers[0]
+                method_refusal = bool(dossier.get("receipt_version") == 2 and diagnostic_id in dossier.get("diagnostic_ids", []) and
+                    (dossier.get("missing_evidence") or any(row.get("satisfied") is False for row in _records(dossier.get("applicability_checks")))) and
+                    blocked.get("research_id") == dossier.get("research_id") and blocked.get("retrieval_status") == "research_blocked" and
+                    last_error == "research_blocked: "+str(blocked.get("error")))
+            prior_spent = _mapping(_mapping(original.get("ledger_usage")).get("spent"))
+            anchor_spent = _mapping(_mapping(anchor.get("ledger_usage")).get("spent"))
+            prior_delta = _mapping(original.get("new_usage_delta"))
+            checks.update({
+                "strict_seven_to_nine_source_chain": bool(
+                    resumption.get("evidence_repository") == str(repo.resolve()) and intent.get("resumption") == resumption and
+                    value.get("runtime_evidence_context") == {"path":"campaign/runtime-evidence-context.json",
+                        "sha256":files.get("campaign/runtime-evidence-context.json")} and
+                    resumption.get("controls_directory") == "acceptance-controls-resume-2" and
+                    resumption.get("research_round_derivation") == {"initial_anchor_round":2,"completed_failed_round":3,"next_fresh_round":4} and
+                    chain.get("source_directory") == str(Path(RESEARCH_REFRESH).parent) and
+                    chain.get("evidence_repository") == str(repo.resolve()) and
+                    chain.get("inherited_completed_model_calls") == 7 and chain.get("no_initial_proposal_or_diagnostic_replay") is True and
+                    all(_mapping(chain.get(role)).get("path_base") == "repository" for role in ("source_receipt","source_proof_manifest")) and
+                    anchor.get("kind") == "documentary_research_refresh_acceptance" and anchor.get("ok") is False and anchor.get("status") == "incomplete" and
+                    anchor_proof.get("schema_version") == 1 and anchor_proof.get("hash_algorithm") == "sha256" and
+                    _mapping(anchor.get("proof_manifest")).get("sha256") == _mapping(chain.get("source_proof_manifest")).get("sha256") and
+                    len(anchor_calls) == 7 and original.get("inherited_model_calls") == anchor_calls and
+                    original.get("resume_source_unchanged") is True and original.get("bootstrap_files_unchanged") is True and not original.get("checks") and
+                    original.get("new_gpu_requests") == original.get("new_gpu_requests_attempted") == 0 and original.get("hardware_currently_observed") is False and
+                    value.get("historical_bootstrap") == original.get("historical_bootstrap") == anchor.get("historical_bootstrap") and
+                    prior_intent.get("resumption") == chain and prior_intent.get("source_provenance") == original.get("source_provenance")),
+                "source_nine_exact_failed_round_events_and_calls": bool(
+                    [row.get("kind") for row in prefix] == initial_kinds and len(prior_events) == 19 and prior_events[:16] == prefix and
+                    [row.get("kind") for row in prior_events[16:]] == ["model","model","research_blocked"] and
+                    anchor.get("error") == "Actual targeted research blocked: "+str(prefix_error) and
+                    original.get("error") == "Actual resumed targeted research blocked: "+str(last_error) and exact_suffix and
+                    [_mapping(row.get("payload")).get("call_id") for row in prior_events if row.get("kind") == "model"] == old_ids and
+                    all(_mapping(row.get("payload")).get("usage") == call.get("usage") and
+                        _mapping(row.get("payload")).get("purpose") == invocation.get("purpose")
+                        for row, call, invocation in zip(prior_events[16:18], prior_calls, prior_invocations))),
+                "source_nine_method_dossier_refusal_linked": method_refusal,
+                "source_nine_ancestor_copies_and_trace_hashes": bool(all(old_files.get("source-evidence/"+target) == expected and _hash(expected)
+                    for target, expected in (("previous-receipt.json",_mapping(chain.get("source_receipt")).get("sha256")),
+                        ("previous-proof.json",_mapping(chain.get("source_proof_manifest")).get("sha256")),
+                        ("previous-events.json",anchor_files.get("events.json")),
+                        ("previous-dossier.json",anchor_files.get(initial_name)))) and
+                    source_json("source-evidence/previous-receipt.json") == anchor and
+                    source_json("source-evidence/previous-proof.json") == anchor_proof and
+                    source_json("source-evidence/previous-events.json",expected_type=list) == prefix and
+                    source_json("source-evidence/previous-dossier.json") == source_json(initial_name,anchor_file=True) and
+                    all(old_files.get(name) == expected and _hash(expected) for name, expected in anchor_files.items()
+                        if name.startswith("campaign/model/") or name in (initial_name,"campaign/acceptance-evidence/blocked-refusal.json",
+                            "campaign/acceptance-controls/invocations.json")) and
+                    all(old_files.get(name) == anchor_files.get(name) and source_json(name) is not None and
+                        source_json(name) == source_json(name,anchor_file=True) for name in old_dossiers)),
+                "source_nine_declared_ledger_delta": bool(prior_spent.get("model_calls") == 9 and anchor_spent.get("model_calls") == 7 and
+                    prior_delta.get("model_calls") == 2 and prior_delta.get("model_tokens") ==
+                        sum(_mapping(call.get("usage")).get("input_tokens",0)+_mapping(call.get("usage")).get("output_tokens",0) for call in prior_calls) and
+                    prior_delta == {key:prior_spent.get(key,0)-anchor_spent.get(key,0) for key in set(prior_spent)|set(anchor_spent)}),
+            })
     verified = all(checks.values())
     pending = (root/"run-intent.json").is_file()
     return {"ok": verified if value else None, "authentication_checks": checks,
@@ -482,7 +595,7 @@ def _research_refresh_control(repo, value, path, *, resumed=False):
         "inherited_model_call_count": len(inherited_calls) if verified and resumed else None,
         "declared_new_ledger_usage_delta": value.get("new_usage_delta") if verified and resumed else None,
         "new_usage_delta_scope": "Delta déclaré par le ledger du contrôle ; usage fournisseur non réconcilié ici, aucun prix déduit" if resumed else None,
-        "scope": ("Reprise isolée : sept appels précédents hérités sans répétition, nouveaux appels distincts ; "
+        "scope": (f"Reprise isolée : {len(inherited_calls)} appels précédents hérités sans répétition, nouveaux appels distincts ; "
                  "ancien reçu incomplet conservé comme autorité séparée, état de reprise dérivé explicitement des preuves publiques. "
                  "Le contexte matériel documentaire conserve API CUDA et package pilote séparés, sans compatibilité forcée. "
                  if resumed and verified else "") + ("Contrôle documentaire conduit par de vrais appels Codex/web : dossier neuf, variation compatible sans recherche, "
@@ -569,6 +682,7 @@ def control_receipts(repo):
             COMMON_FINAL_FREEZE: lambda: _common_freeze_control(repo, value),
             RESEARCH_REFRESH: lambda: _research_refresh_control(repo, value, path),
             RESEARCH_REFRESH_RESUMED: lambda: _research_refresh_control(repo, value, path, resumed=True),
+            RESEARCH_REFRESH_RESUMED_2: lambda: _research_refresh_control(repo, value, path, resumed=True),
             DIAGNOSTIC_V2_AUDIT: lambda: _diagnostic_v2_control(repo, value)}
         if relative in authenticators:
             try:
@@ -641,6 +755,15 @@ def execution_evidence_panel(receipts):
     else:
         html += "Les preuves ne permettent pas de conclure au renouvellement complet par la reprise ; le reçu initial garde son statut. "
     html += "Ce contrôle reste documentaire : aucun nouveau GPU ni résultat de performance §16.</p>"
+    resumed2 = by_path.get(RESEARCH_REFRESH_RESUMED_2, {})
+    html += "<p>Deuxième autorité séparée de reprise AC-02 : "+escape(resumed2.get("status", "résultat encore inconnu"))+". "
+    if resumed2.get("ok") is True:
+        html += (f"Chaîne authentifiée 7 → 9 : {fmt(resumed2.get('inherited_model_call_count'))} appels hérités, "
+                 f"{fmt(resumed2.get('observed_new_model_call_count'))} nouveaux appels observés ; "
+                 "les deux autorités précédentes incomplètes conservent leur statut. ")
+    else:
+        html += "Aucune réussite de cette deuxième reprise n’est déduite ; les deux autorités précédentes gardent leur statut. "
+    html += "Contrôle documentaire sans nouveau GPU ni qualification de performance.</p>"
     return html
 
 
@@ -1089,7 +1212,9 @@ td,th{{padding:9px;border-bottom:1px solid #d6e2e5;text-align:left;vertical-alig
 code{{overflow-wrap:anywhere}}details{{margin-top:20px}}summary{{cursor:pointer;font-weight:600}}
 </style><h1>Comparaison vérifiée des agents CUDA sur ROMEO</h1>
 <p class='status'>Campagnes et évaluations communes terminées : <strong>{'oui' if summary['complete'] else 'non'}</strong>.
-Tous les artefacts finaux qualifiés : <strong>{'oui' if summary['scientific_qualified'] else 'non'}</strong>.
+Tous les artefacts finaux qualifiés : <strong>{'oui' if summary.get('artifact_evaluations_qualified', summary['scientific_qualified']) else 'non'}</strong>.
+Incidents de protocole des méthodes : <strong>{'état inconnu' if summary.get('method_protocols_qualified', True) is None else 'aucun incident signalé' if summary.get('method_protocols_qualified', True) else 'incident vérifié'}</strong>.
+Qualification globale de l'étude : <strong>{'oui' if summary['scientific_qualified'] else 'non'}</strong>.
 Les échecs, pertes et résultats encore inconnus restent visibles.</p>
 <p><a href='https://github.com/wolf75222/agentic-cuda-optimizer'>Fork publié</a> · source du rapport : <code>{head}</code> · {ci_html}.</p>
 <p>Checkout source : <strong>{'modifié' if source['dirty'] else 'propre'}</strong> ; {len(source['tracked_changes'])} chemins suivis modifiés et {len(source['untracked_files'])} fichiers non suivis non ignorés. Les chemins exacts sont enregistrés dans le JSON du rapport.</p>

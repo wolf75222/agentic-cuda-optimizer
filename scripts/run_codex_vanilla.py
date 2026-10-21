@@ -167,17 +167,16 @@ Save the resulting kernel.cu and launch.json in this workspace, then return the 
 
 
 def observed_models(value):
-    models = set()
-    if isinstance(value,dict):
-        for key,item in value.items():
-            if key in {"model","model_id","model_slug"} and isinstance(item,str):
-                models.add(item)
-            elif isinstance(item,(dict,list)):
-                models.update(observed_models(item))
-    elif isinstance(value,list):
-        for item in value:
-            models.update(observed_models(item))
-    return models
+    """Read provider lifecycle fields, never model names in tool/content payloads.
+
+    Unrecognized envelopes carry no model-identity evidence. This observes CLI
+    metadata rather than attesting the provider's executed model weights.
+    """
+    if not isinstance(value,dict) or not isinstance(value.get("type"),str) or value["type"] not in {
+            "thread.started","turn.started","turn.completed","turn.failed"}:
+        return set()
+    return {value[key] for key in ("model","model_id","model_slug")
+            if isinstance(value.get(key),str) and value[key].strip()}
 
 
 def normalized_candidate(payload, protected, operation="matmul"):
@@ -313,7 +312,7 @@ def run_vanilla(config, output, session_id, executable, *, service_factory=None,
             "raw_jsonl":str(protected/"codex.jsonl")}
         write_json(protected/"candidate.json",candidate)
         receipt.update(status="completed",candidate=candidate,ended_at=time.time(),
-            model_identity_evidence="provider JSONL model fields" if receipt["actual_models"] else "requested CLI model; provider did not emit model identity")
+            model_identity_evidence="provider lifecycle envelope model fields" if receipt["actual_models"] else "requested CLI model; provider did not emit model identity")
     except BaseException as error:
         receipt.update(status="failed",error=str(error),ended_at=time.time())
         raise

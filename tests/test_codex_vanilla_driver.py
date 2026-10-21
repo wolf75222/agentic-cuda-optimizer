@@ -183,6 +183,35 @@ def test_provider_omitted_model_identity_is_not_invented(tmp_path):
     assert receipt["usage"]["cached_input_tokens"] == 80
 
 
+@pytest.mark.parametrize("kind", ["thread.started", "turn.started", "turn.completed", "turn.failed"])
+@pytest.mark.parametrize("field", ["model", "model_id", "model_slug"])
+def test_observed_model_identity_is_only_a_top_level_lifecycle_field(kind, field):
+    event = {"type":kind, field:"provider-model", "metadata":{"model":"tool-model"},
+             "item":{"model_slug":"content-model"}}
+    assert driver.observed_models(event) == {"provider-model"}
+    assert driver.observed_models({"type":"item.completed", field:"tool-model"}) == set()
+    assert driver.observed_models({"type":[], field:"malformed-envelope-model"}) == set()
+    assert driver.observed_models([event]) == set()
+
+
+def test_tool_and_content_model_names_are_not_provider_identity(tmp_path):
+    events = [
+        {"type":"item.completed", "model":"tool-envelope-model", "item":{
+            "type":"command_execution", "model_id":"tool-model", "output":{"model_slug":"output-model"}}},
+        {"type":"item.completed", "item":{"type":"agent_message", "model":"content-model",
+            "text":json.dumps(payload())}},
+        {"type":"turn.completed", "metadata":{"model":"metadata-model"},
+            "usage":{"input_tokens":100, "output_tokens":10}},
+    ]
+    _,_,_,options = fake_execution(tmp_path,events=events)
+    root = tmp_path/"tool-model-payload"
+    receipt = driver.run_vanilla(CampaignConfig(),root,"owned-session","/test/codex",**options)
+    assert receipt["actual_models"] == []
+    assert "provider did not emit" in receipt["model_identity_evidence"]
+    assert receipt["candidate"]["provenance"]["actual_models"] == []
+    assert "output-model" in root.joinpath("evidence/codex.jsonl").read_text()
+
+
 def test_existing_session_directory_is_never_overwritten(tmp_path):
     root = tmp_path/"existing"
     root.joinpath("workspace").mkdir(parents=True)

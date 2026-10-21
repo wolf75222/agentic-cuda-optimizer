@@ -3,8 +3,12 @@
 Les compteurs de tokens, coût, appels et temps cumulé sont observés ; ils ne
 ferment pas la campagne. Les délais d'un processus SSH, d'une requête GPU, d'un
 appel modèle et la durée obligatoire de l'allocation Slurm restent des
-protections techniques distinctes. La configuration ROMEO utilise `short` avec
-`24:00:00` pour les allocations longues.
+protections techniques distinctes. Les nouvelles allocations ROMEO utilisent
+`long` avec `48:00:00`, admis par un probe `sbatch --test-only` sans soumission.
+La partition accepte au plus 30 jours, mais une demande aussi longue avait une
+estimation de démarrage bien plus tardive. Les anciens workers `short`/24h
+conservent leur bail et leur configuration archivés. Cette durée obligatoire
+par allocation n'est pas un plafond cumulé de la campagne.
 
 ## Reconnexion pendant une opération
 

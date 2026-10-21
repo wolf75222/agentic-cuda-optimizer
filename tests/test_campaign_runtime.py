@@ -160,12 +160,103 @@ def archive_candidate(runtime,state,candidate_id="fast",source=None,parameters=N
     return candidate
 
 
+def record_measurement(runtime, state, candidate, measurement=None):
+    measurement = measurement or runtime.evaluator.benchmark(candidate)
+    campaign.write_json(runtime.trial_dir(state)/f"evaluation-{candidate.candidate_id}.json",measurement)
+    state.update(candidate_id=candidate.candidate_id,research_ready=True,
+                 valid=measurement["ok"],evaluation_id=measurement["evaluation_id"],
+                 evaluation_status=measurement["status"])
+    return measurement
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+@pytest.mark.parametrize("stop", ["exhausted", "repair_remaining", "needs_research", "research_blocked", "wrong_binding"])
+def test_only_current_exhausted_cuda_failure_is_a_zero_observation(runtime_setup,legacy,stop):
+    import json
+    runtime,config,_,_ = runtime_setup
+    state = selected(runtime)
+    candidate = archive_candidate(runtime,state)
+    measurement = {"evaluation_id":"stable-cuda-error","candidate_id":candidate.candidate_id,
+                   "ok":False,"status":"compilation_error","error":"Explicit CPU fixture"}
+    record_measurement(runtime,state,candidate,measurement)
+    state.update(retryable=True,repair=runtime.max_repairs,error=json.dumps(measurement)[:5000])
+    if legacy:
+        state.pop("evaluation_id"); state.pop("evaluation_status")
+    if stop == "repair_remaining":state["repair"] -= 1
+    elif stop == "needs_research":state["needs_research"] = True
+    elif stop == "research_blocked":state.update(research_ready=False,error="Research failed after the CUDA error")
+    elif stop == "wrong_binding":
+        if legacy:state["error"] = "Malformed later proposal"
+        else:state["evaluation_id"] = "another-evaluation"
+    result = runtime.prepare_result(state)
+    if stop == "exhausted":
+        assert result["tell"]["valid"] is False
+        assert result["tell"]["evaluation_id"] == measurement["evaluation_id"]
+        runtime.integrate(state)
+        assert len(runtime.policy.snapshot()["tree"].tree) == 2
+    else:
+        assert "tell" not in result
+        runtime.integrate(state)
+        assert len(runtime.policy.snapshot()["tree"].tree) == 1
+        assert not runtime.policy.pending_trials()
+    assert runtime.store.incumbent(config.run_id)["candidate_id"] is None
+
+
+@pytest.mark.parametrize("already_consumed", [False,True])
+def test_cached_legacy_documentary_zero_is_preserved_but_never_newly_told(runtime_setup,already_consumed):
+    runtime,config,_,_ = runtime_setup
+    state = selected(runtime)
+    candidate = archive_candidate(runtime,state)
+    state.update(candidate_id=candidate.candidate_id,valid=False,retryable=True,repair=1,
+                 research_ready=False,needs_research=True,error="research_blocked: explicit CPU fixture")
+    consumption = {"trials":1,"gpu_seconds":0}
+    result = {"candidate_id":candidate.candidate_id,"error":state["error"],"consumption":consumption,
+        "tell":{"evaluation_id":"legacy-documentary-zero","valid":False,"purpose":"tree_reward",
+                "consumption":consumption,"state":runtime.store.get_candidate_source(candidate.candidate_id,config.run_id)}}
+    path = runtime.trial_dir(state)/"result.json"
+    campaign.write_json(path,result)
+    original = path.read_bytes()
+    if already_consumed:
+        runtime.policy.tell_once(state["trial_id"],result["tell"])
+        runtime.policy.close("candidate",candidate.candidate_id,"repair budget exhausted",evidence=[state["error"]])
+    tree_size = len(runtime.policy.snapshot()["tree"].tree)
+    closures = sum(event["kind"] == "branch_decision" for event in runtime.store.events(config.run_id))
+    assert runtime.integrate(state)["trials_done"] == 1
+    assert runtime.integrate(state)["trials_done"] == 1
+    assert path.read_bytes() == original
+    assert len(runtime.policy.snapshot()["tree"].tree) == tree_size == (2 if already_consumed else 1)
+    assert sum(event["kind"] == "branch_decision" for event in runtime.store.events(config.run_id)) == closures
+    assert len(list(runtime.trial_dir(state).glob("legacy-result-integration-refused-*.json"))) == 1
+    assert not runtime.policy.pending_trials()
+
+
+def test_cached_real_exhausted_cuda_failure_keeps_legacy_stable_reward_id(runtime_setup):
+    import json
+    runtime,config,_,_ = runtime_setup
+    state = selected(runtime)
+    candidate = archive_candidate(runtime,state)
+    measurement = {"evaluation_id":"actual-old-compile-attempt","candidate_id":candidate.candidate_id,
+                   "ok":False,"status":"compilation_error","error":"CPU fixture genuine compile failure"}
+    record_measurement(runtime,state,candidate,measurement)
+    state.update(retryable=True,repair=runtime.max_repairs,error=json.dumps(measurement)[:5000])
+    state.pop("evaluation_id");state.pop("evaluation_status")
+    result = runtime.prepare_result(state)
+    result["tell"]["evaluation_id"] = "old-durable-reward-id"
+    path = runtime.trial_dir(state)/"result.json"
+    campaign.write_json(path,result)
+    original = path.read_bytes()
+    runtime.integrate(state)
+    assert path.read_bytes() == original and len(runtime.policy.snapshot()["tree"].tree) == 2
+    assert not list(runtime.trial_dir(state).glob("legacy-result-integration-refused-*.json"))
+    rewards = [event for event in runtime.store.events(config.run_id) if event["kind"] == "tree_reward"]
+    assert len(rewards) == 1 and rewards[0]["payload"]["evaluation_id"] == "old-durable-reward-id"
+
+
 def test_confirmation_and_promotion_replay_reuses_durable_evidence(runtime_setup):
     runtime,config,runner,model = runtime_setup
     state = selected(runtime)
     candidate = archive_candidate(runtime,state)
-    state.update(candidate_id=candidate.candidate_id,valid=True)
-    campaign.write_json(runtime.trial_dir(state)/"evaluation-fast.json",runtime.evaluator.benchmark(candidate))
+    record_measurement(runtime,state,candidate)
     real_promote = runtime.store.promote
     def crash_after_promotion(*args,**kwargs):
         promoted = real_promote(*args,**kwargs)
@@ -253,7 +344,7 @@ def test_same_tuned_executable_in_distinct_trials_preserves_both_lineages(runtim
     for index in range(2):
         state = {"run_id":runtime.config.run_id,"trials_done":index,**runtime.select({"trials_done":index})}
         candidate = archive_candidate(runtime,state,candidate_id=f"initial-{index}",source=source)
-        state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1)
+        state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1,research_ready=True)
         proposal = {"source":source,"kernel":runtime.config.workload,"launch_rule":asdict(candidate.launch_rule),
                     "parameter_space":[{"name":"TILE","values":[16,32]}],
                     "parameter_bindings":[{"parameter":"TILE","target":"source_macro"}]}
@@ -278,8 +369,7 @@ def test_runtime_no_tree_ablation_uses_genuine_confirmed_greedy_parent(runtime_s
     first = selected(control)
     assert control.trial(first)["action"] == config.actions[0]
     candidate = archive_candidate(control,first)
-    first.update(candidate_id=candidate.candidate_id,valid=True)
-    campaign.write_json(control.trial_dir(first)/"evaluation-fast.json",control.evaluator.benchmark(candidate))
+    record_measurement(control,first,candidate)
     control.integrate(first)
     second = control.select({"trials_done":1})
     assert control.trial(second)["parent"]["candidate_id"] == "fast"
@@ -304,8 +394,7 @@ def test_profile_records_actual_gpu_usage_without_global_cap(runtime_setup,monke
     runtime,config,_,_ = runtime_setup
     state = selected(runtime)
     candidate = archive_candidate(runtime,state)
-    state.update(candidate_id=candidate.candidate_id,valid=True)
-    campaign.write_json(runtime.trial_dir(state)/"evaluation-fast.json",runtime.evaluator.benchmark(candidate))
+    record_measurement(runtime,state,candidate)
     runtime.integrate(state)
     runtime.config = replace(config,profile=True)
     runtime.evaluator._request = lambda candidate,case:object()

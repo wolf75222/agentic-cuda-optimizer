@@ -300,6 +300,51 @@ def test_actual_runtime_reuses_exact_dossier_then_blocks_refreshes_and_admits(ru
     assert len([x for x in runtime.store.events(runtime.config.run_id) if x["kind"]=="generation"]) == 3
 
 
+def test_compile_failure_then_uncovered_repair_and_blocked_refresh_never_tells_cuda_zero(
+        runtime_setup,tmp_path,monkeypatch):
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    from optimizer_agent.campaign_workflow import build_campaign_graph
+    runtime,controls,prepared,prompts = protocol_runtime(runtime_setup,tmp_path,monkeypatch)
+    prepare = runtime.research_service.prepare
+    def research(*args,**kwargs):
+        if prepared:
+            raise campaign.ResearchBlocked("Explicit CPU fixture: refresh transport unavailable")
+        return prepare(*args,**kwargs)
+    runtime.research_service.prepare = research
+    propose = runtime.generator.propose
+    def proposal(*args,**kwargs):
+        if prompts:
+            controls.queue("unsupported-repair","explicit refusal control")
+        return propose(*args,**kwargs)
+    runtime.generator.propose = proposal
+    benchmark = runtime.evaluator.benchmark
+    failures = []
+    def compile_failure(candidate,*args,**kwargs):
+        if candidate.candidate_id == "baseline":
+            return benchmark(candidate,*args,**kwargs)
+        failures.append(candidate.candidate_id)
+        return {"evaluation_id":"cpu-actual-compile-failure","candidate_id":candidate.candidate_id,
+                "ok":False,"status":"compilation_error","error":"explicit CPU fixture compile error"}
+    runtime.evaluator.benchmark = compile_failure
+    with SqliteSaver.from_conn_string(str(tmp_path/"graph.sqlite")) as checkpoints:
+        graph = build_campaign_graph(runtime,checkpoints)
+        final = graph.invoke({"run_id":runtime.config.run_id},
+            {"configurable":{"thread_id":runtime.config.run_id},"recursion_limit":100})
+    assert final["finished"] and final["trials_done"] == 1 and final["repair"] == 1
+    assert final["research_ready"] is False and final["retryable"] is False
+    assert len(prompts) == 2 and len(failures) == 1
+    assert len(runtime.policy.snapshot()["tree"].tree) == 1
+    events = runtime.store.events(runtime.config.run_id)
+    assert any(event["kind"] == "research_blocked" for event in events)
+    assert not any(event["kind"] == "branch_decision" and
+                   event["payload"].get("reason") == "repair budget exhausted" for event in events)
+    trial_paths = list((runtime.directory/"trials").glob("*/result.json"))
+    assert len(trial_paths) == 1
+    result = campaign.read_json(trial_paths[0])
+    assert "tell" not in result and result["integration_status"] == "suspended_without_performance_observation"
+    assert runtime.store.incumbent(runtime.config.run_id)["candidate_id"] is None
+
+
 def test_documentary_adapter_runs_unchanged_protocol_without_any_gpu_cost_or_current_hardware_claim(runtime_setup,tmp_path,monkeypatch):
     runtime,controls,prepared,prompts = protocol_runtime(runtime_setup,tmp_path,monkeypatch,documentary=True)
     result = acceptance.exercise(runtime,controls,uncovered_technique="register_blocking")
@@ -395,6 +440,11 @@ def failed_resumption_fixture(tmp_path,monkeypatch):
                     {"type":"turn.completed","usage":{"input_tokens":2,"output_tokens":3}}]),""
         return Process()
     monkeypatch.setattr(acceptance.ResearchService,"prepare",research)
+    # This intentionally incomplete invented baseline is not a live native
+    # archive. Only the documentary fixtures use this explicit CPU stand-in.
+    monkeypatch.setattr(acceptance,"resume_runtime_context",lambda origin:{
+        "kind":"explicit_cpu_fixture_not_native_evidence", "hardware_currently_observed":False,
+        "job_id":origin["job_id"], "session_id":origin["session_id"]})
     monkeypatch.setattr(acceptance,"controller_provenance",lambda *args:{"HEAD":"explicit-cpu-fixture", "dirty_state":[],
         "sources":{"scripts/run_research_refresh_acceptance.py":acceptance.sha(Path(acceptance.__file__))}})
     monkeypatch.setattr("optimizer_agent.codex_backend.subprocess.Popen",popen)
@@ -487,3 +537,157 @@ def test_resumption_source_inventory_drift_prevents_success_claim(tmp_path,monke
     assert result["ok"] is False and result["status"]=="incomplete"
     assert result["resume_source_unchanged"] is False and result["checks"]["resume_source_unchanged"] is False
     assert result["new_gpu_requests_attempted"]==0
+
+
+def twice_blocked_fixture(tmp_path,monkeypatch):
+    (tmp_path/".git").mkdir()
+    initial,control=failed_resumption_fixture(tmp_path,monkeypatch)
+    source=tmp_path/"once-resumed"
+    result=acceptance.run_resumption_acceptance(source,"explicit-cpu-first-resume-blocked",initial,
+        **resume_pins(initial),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and len(result["model_calls"])==2
+    assert len(campaign.read_json(source/"events.json"))==19 and len(control["prompts"])==9
+    return initial,source,control
+
+
+def rewrite_fixture_manifest(source):
+    """Re-pin explicitly invented negative fixture data, never real receipts."""
+    manifest=campaign.read_json(source/"proof-sha256.json")
+    manifest["files"]={str(p.relative_to(source)):acceptance.sha(p) for p in source.rglob("*")
+        if p.is_file() and str(p.relative_to(source)) not in (acceptance.RECEIPT,"proof-sha256.json")}
+    campaign.write_json(source/"proof-sha256.json",manifest)
+    receipt=campaign.read_json(source/acceptance.RECEIPT)
+    receipt["proof_manifest"]["sha256"]=acceptance.sha(source/"proof-sha256.json")
+    campaign.write_json(source/acceptance.RECEIPT,receipt)
+
+
+def test_second_resumption_derives_failed_round3_and_researches_round4_without_replaying_nine_calls(tmp_path,monkeypatch):
+    initial,source,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    snapshots={p:{str(f.relative_to(p)):acceptance.sha(f) for f in p.rglob("*") if f.is_file()} for p in (initial,source)}
+    prepared=acceptance.inspect_resume_source(source,**resume_pins(source))
+    assert len(prepared["calls"])==9 and prepared["state"]["repair"]==2
+    assert prepared["state"]["research_round"]==3
+    assert campaign.read_json(source/"resume-state.json")["state"]["research_round"]==2
+    assert prepared["research_round_derivation"]=={
+        "initial_anchor_round":2,"completed_failed_round":3,"next_fresh_round":4}
+    control["block_targeted"]=False
+    output=tmp_path/"twice-resumed"
+    result=acceptance.run_resumption_acceptance(output,"explicit-cpu-second-resume",source,
+        **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert result["ok"] is True,result.get("error")
+    assert len(result["inherited_model_calls"])==9 and len(result["model_calls"])==3
+    assert len(control["prompts"])==12 and result["new_usage_delta"]["model_calls"]==3
+    assert result["ledger_usage"]["spent"]["model_calls"]==12
+    assert result["resumption"]["controls_directory"]=="acceptance-controls-resume-2"
+    assert (output/"campaign/acceptance-controls-resume-2/invocations.json").is_file()
+    assert acceptance.sha(output/"campaign/acceptance-controls-resume/invocations.json")==snapshots[source]["campaign/acceptance-controls-resume/invocations.json"]
+    assert (output/"campaign/trials"/prepared["state"]["trial_id"]/"proposal-2-4.json").is_file()
+    assert campaign.read_json(output/"resume-state.json")["state"]["research_round"]==3
+    assert result["new_gpu_requests_attempted"]==0 and result["bootstrap_files_unchanged"] is True
+    assert result["resume_source_unchanged"] is True
+    events=campaign.read_json(output/"events.json")
+    assert events[:19]==campaign.read_json(source/"events.json")
+    assert [e["kind"] for e in events[19:]]==["model","model","research","model","generation"]
+    for archive,hashes in snapshots.items():
+        assert hashes=={str(f.relative_to(archive)):acceptance.sha(f) for f in archive.rglob("*") if f.is_file()}
+    # This is deliberately bounded support for the observed first resumption,
+    # not permission to recursively replay arbitrary future incomplete states.
+    with pytest.raises(ValueError):acceptance.inspect_resume_source(output,**resume_pins(output))
+    assert len(control["prompts"])==12
+
+
+def test_second_resumption_can_stay_blocked_without_claiming_admission_or_replaying_old_calls(tmp_path,monkeypatch):
+    initial,source,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    result=acceptance.run_resumption_acceptance(tmp_path/"twice-resumed","explicit-cpu-still-blocked",source,
+        **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["status"]=="incomplete" and "checks" not in result
+    assert len(result["inherited_model_calls"])==9 and len(result["model_calls"])==2
+    assert len(control["prompts"])==11 and result["ledger_usage"]["spent"]["model_calls"]==11
+    assert result["resume_source_unchanged"] is True and result["new_gpu_requests_attempted"]==0
+    assert campaign.read_json(initial/acceptance.RECEIPT)["ok"] is False
+    assert campaign.read_json(source/acceptance.RECEIPT)["ok"] is False
+
+
+@pytest.mark.parametrize("defect",["anchor_role","anchor_hash","old_call","old_campaign","new_call",
+    "repeated_call","new_payload","unknown_cli","event_suffix","entry_round","hardware",
+    "ledger","intent","deeper_chain","extra_candidate","private_reference","policy_snapshot"])
+def test_second_resumption_rejects_re_pinned_tampered_or_ambiguous_chain_before_any_new_call(tmp_path,monkeypatch,defect):
+    _,source,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    receipt=campaign.read_json(source/acceptance.RECEIPT)
+    intent=campaign.read_json(source/"run-intent.json")
+    if defect=="anchor_role":
+        receipt["resumption"]["source_receipt"]["path"]="incomplete/campaign/experiments.sqlite"
+    elif defect=="anchor_hash":receipt["resumption"]["source_proof_manifest"]["sha256"]="0"*64
+    elif defect=="old_call":receipt["inherited_model_calls"][0]["usage"]["input_tokens"]+=1
+    elif defect=="old_campaign":
+        p=source/"campaign/acceptance-evidence/blocked-refusal.json";p.write_text(p.read_text()+" ")
+    elif defect=="new_call":receipt["model_calls"][0]["usage"]["input_tokens"]+=1
+    elif defect=="repeated_call":receipt["model_calls"][0]["call_id"]=receipt["inherited_model_calls"][0]["call_id"]
+    elif defect=="new_payload":
+        p=source/"campaign/model"/(receipt["model_calls"][0]["call_id"]+".json")
+        data=campaign.read_json(p);data["payload"]={"explicitly_tampered":True};campaign.write_json(p,data)
+    elif defect=="unknown_cli":campaign.write_json(source/"campaign/model"/("f"*32+".json"),{})
+    elif defect=="event_suffix":
+        p=source/"events.json";data=campaign.read_json(p);data[-1]["kind"]="diagnostic";campaign.write_json(p,data)
+    elif defect=="entry_round":
+        p=source/"resume-state.json";data=campaign.read_json(p);data["state"]["research_round"]=3;campaign.write_json(p,data)
+    elif defect=="hardware":
+        p=source/"campaign/hardware-evidence-context.json";data=campaign.read_json(p);data["job_id"]="999";campaign.write_json(p,data)
+    elif defect=="ledger":receipt["new_usage_delta"]["model_calls"]=1
+    elif defect=="intent":intent["run_id"]="different-run"
+    elif defect=="deeper_chain":receipt["resumption"]["inherited_completed_model_calls"]=9
+    elif defect=="extra_candidate":campaign.write_json(source/"campaign/trials/extra/proposal-2-4.json",{})
+    elif defect=="policy_snapshot":
+        with acceptance.sqlite3.connect(source/"campaign/experiments.sqlite") as db:
+            db.execute("UPDATE campaigns SET tree_version=tree_version+1")
+    else:receipt["resumption"]["source_receipt"]["path"]="final-groups/fake/holdout-reveal.json"
+    if defect!="intent":intent["resumption"]=receipt["resumption"]
+    campaign.write_json(source/acceptance.RECEIPT,receipt);campaign.write_json(source/"run-intent.json",intent)
+    rewrite_fixture_manifest(source)
+    with pytest.raises(ValueError):
+        acceptance.run_resumption_acceptance(tmp_path/"refused-second","explicit-cpu-refused",source,
+            **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert len(control["prompts"])==9 and not (tmp_path/"refused-second/run-intent.json").exists()
+
+
+def test_second_resumption_detects_initial_anchor_inventory_drift_during_new_calls(tmp_path,monkeypatch):
+    initial,source,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    control["block_targeted"]=False
+    control["inject_source_artifact"]=initial/"unexpected-during-second-resume"
+    result=acceptance.run_resumption_acceptance(tmp_path/"twice-resumed","explicit-cpu-ancestor-drift",source,
+        **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["status"]=="incomplete"
+    assert result["checks"]["resume_source_unchanged"] is False
+    assert result["resume_source_unchanged"] is False and result["new_gpu_requests_attempted"]==0
+
+
+def test_resumption_source_directory_alias_is_rejected_before_any_archived_payload_read(tmp_path,monkeypatch):
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch)
+    pins=resume_pins(source)
+    alias=tmp_path/"source-alias";alias.symlink_to(source,target_is_directory=True)
+    original=Path.read_bytes
+    def forbidden_archive_read(path):
+        assert not path.resolve().is_relative_to(source),"Aliased source was read before its path guard"
+        return original(path)
+    monkeypatch.setattr(Path,"read_bytes",forbidden_archive_read)
+    with pytest.raises(ValueError,match="symlink"):
+        acceptance.run_resumption_acceptance(tmp_path/"refused-alias","explicit-cpu-source-alias",alias,**pins)
+    assert len(control["prompts"])==7 and not (tmp_path/"refused-alias/run-intent.json").exists()
+
+
+@pytest.mark.parametrize("target",["initial_anchor","resumed_source","bootstrap","initial_anchor_alias"])
+def test_second_resumption_output_cannot_mutate_any_immutable_archive_before_rejection(tmp_path,monkeypatch,target):
+    initial,source,control=twice_blocked_fixture(tmp_path,monkeypatch)
+    bootstrap=tmp_path/"bootstrap"
+    archives=(initial,source,bootstrap)
+    snapshots={p:{str(f.relative_to(p)):acceptance.sha(f) for f in p.rglob("*") if f.is_file()} for p in archives}
+    root={"initial_anchor":initial,"resumed_source":source,"bootstrap":bootstrap}.get(target)
+    if target=="initial_anchor_alias":
+        root=tmp_path/"ancestor-alias";root.symlink_to(initial,target_is_directory=True)
+    output=root/"must-not-be-created"
+    with pytest.raises(ValueError,match="immutable"):
+        acceptance.run_resumption_acceptance(output,"explicit-cpu-unsafe-output",source,
+            **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert not output.exists() and len(control["prompts"])==9
+    for archive,hashes in snapshots.items():
+        assert hashes=={str(f.relative_to(archive)):acceptance.sha(f) for f in archive.rglob("*") if f.is_file()}

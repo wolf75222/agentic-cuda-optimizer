@@ -39,7 +39,7 @@ from .pmpp_guidance import PMPP_GUIDANCE
 from .diagnostics import (build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary,
                           compact_candidate_evidence)
 from .workload_semantics import operation_spec
-from .hardware_research_context import runner_hardware_research_context
+from .hardware_research_context import runner_hardware_research_context, runner_runtime_research_context
 from benchmark_workloads import WorkloadSuite
 from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
 from execution_backend import SlurmBackend, SlurmConfig
@@ -149,6 +149,7 @@ class CampaignRuntime:
                 "memory_policy": self.memory_policy,
                 "environment": self.environment,
                 "numerical_tolerance": {"atol": 2e-4, "rtol": 2e-4}} ,sort_keys=True))
+        self.performance_case_ids = [case.case_id for case in perf]
         self.evaluator = Evaluator(runner, contract, self.suite.oracle,
             {"short": cases[:2], "search": cases, "performance": perf},
             final_suite_factory=lambda: self.suite.cases(final=True),
@@ -306,6 +307,7 @@ class CampaignRuntime:
         return {"trial_id": trial_id, "candidate_id": None, "repair": 0, "research_round": 0,
                 "research_ready": False, "needs_research": False, "valid": False,
                 "retryable": False, "error": None, "termination_reason": None,
+                "evaluation_id": None, "evaluation_status": None,
                 "diagnostic_id": selected_trial.get("diagnostic_id"),
                 "research_refresh_required": selected_trial.get("research_refresh_required", False)}
 
@@ -326,7 +328,15 @@ class CampaignRuntime:
                         diagnostic["diagnostic_id"] not in dossier.diagnostic_ids):
                     refresh = True
             if not path.exists() or refresh:
-                dossier = self.research_service.prepare(self.workload_description,
+                workload = dict(self.workload_description)
+                runtime_context = runner_runtime_research_context(self.runner, self.environment,
+                    self.directory / "baseline-measurement.json", expected_contract_hash=self.contract_hash,
+                    baseline_candidate=self.baseline,
+                    expected_case_ids=self.performance_case_ids,
+                    benchmark_series=self.config.benchmark_series, launches_per_series=self.config.launches_per_series)
+                if runtime_context is not None:
+                    workload["runtime_evidence_context"] = runtime_context
+                dossier = self.research_service.prepare(workload,
                     compact_candidate_evidence(trial["parent"], self.directory),
                     {"strategy_family": trial["action"]},
                     {"environment_fingerprint": self.environment_hash, "diagnostic": diagnostic,
@@ -342,24 +352,28 @@ class CampaignRuntime:
                     "research_refresh_required": False, "error": None}
         except (ResearchBlocked, BudgetExceeded, RuntimeError, ValueError) as error:
             self.store.event(self.config.run_id, "research_blocked", {"trial_id": state["trial_id"], "error": str(error)})
-            return {"research_ready": False, "research_round": round_number, "error": str(error)}
+            return {"research_ready": False, "research_round": round_number, "error": str(error),
+                    "valid": False, "retryable": False, "evaluation_id": None, "evaluation_status": None}
 
     def generate(self, state):
+        # A repair proposal is not an observation of the previous executable.
+        # Keep its archived measurement, but clear its eligibility for tell.
+        unevaluated = {"valid": False, "retryable": False, "evaluation_id": None, "evaluation_status": None}
         try:
             self.policy.assert_eligible(state["trial_id"])
         except NoEligibleActions as error:
-            return {"error": str(error), "valid": False, "retryable": False}
+            return {**unevaluated, "error": str(error)}
         trial = self.trial(state)
         path = self.trial_dir(state) / f'proposal-{state["repair"]}-{state["research_round"]}.json'
         try:
             experimental = self.config.experimental_mode in ("vanilla", "ablation_no_research")
             if not experimental and not (self.trial_dir(state) / "dossier.json").exists():
-                return {"needs_research": True, "error": "needs_research: missing durable dossier", "valid": False}
+                return {**unevaluated, "needs_research": True, "error": "needs_research: missing durable dossier"}
             dossier = None if experimental else ResearchDossier.from_dict(read_json(self.trial_dir(state) / "dossier.json"))
             evidence = self.generation_evidence(state, trial)
             if not experimental and evidence["diagnostic"] and evidence["diagnostic"]["requires_targeted_research"]:
                 if evidence["diagnostic"]["diagnostic_id"] not in dossier.diagnostic_ids:
-                    return {"needs_research": True, "error": "needs_research: diagnostic lacks an applicable targeted dossier", "valid": False}
+                    return {**unevaluated, "needs_research": True, "error": "needs_research: diagnostic lacks an applicable targeted dossier"}
             source_parent = (self.store.get_candidate_source(state["candidate_id"], self.config.run_id)
                              if state.get("repair", 0) > 0 and state.get("candidate_id") else trial["parent"])
             prompt_parent = compact_candidate_evidence(trial["parent"], self.directory)
@@ -421,11 +435,11 @@ class CampaignRuntime:
                 hypothesis=data["hypothesis"], references=data["references"])
             self.store.archive_candidate(self.config.run_id, candidate_state)
             self.store.event(self.config.run_id, "generation", {"trial_id": state["trial_id"], "candidate_id": candidate_id})
-            return {"candidate_id": candidate_id, "needs_research": False, "error": None}
+            return {**unevaluated, "candidate_id": candidate_id, "needs_research": False, "error": None}
         except (ValueError, ResearchBlocked) as error:
-            return {"needs_research": "needs_research" in str(error), "error": str(error), "valid": False}
+            return {**unevaluated, "needs_research": "needs_research" in str(error), "error": str(error)}
         except (BudgetExceeded, RuntimeError) as error:
-            return {"error": str(error), "valid": False, "retryable": False}
+            return {**unevaluated, "error": str(error)}
 
     def evaluate(self, state):
         self.policy.assert_eligible(state["trial_id"])
@@ -505,12 +519,37 @@ class CampaignRuntime:
                         "evaluation_id": measurement["evaluation_id"], "status": measurement["status"]})
         retryable = measurement["status"] in ("compilation_error", "numerical_error", "memory_error", "contract_violation")
         return {"candidate_id": candidate.candidate_id, "valid": bool(measurement.get("ok")), "retryable": retryable,
+                "evaluation_id": measurement["evaluation_id"], "evaluation_status": measurement["status"],
                 "error": None if measurement.get("ok") else json.dumps(measurement)[:5000]}
 
     def integrate(self, state):
         result_path = self.trial_dir(state) / "result.json"
         if result_path.exists():
-            result = read_json(result_path)
+            raw_result = result_path.read_bytes()
+            result = json.loads(raw_result)
+            if result.get("tell", {}).get("valid") is False:
+                # An old controller may have crashed after durably writing a
+                # documentary refusal as a CUDA zero, before consuming it.
+                # Reconcile its evaluator proof without rerunning any GPU work.
+                # A consumed legacy reward is preserved, never corrected here.
+                eligible = self.prepare_result({**state, "valid": False})
+                expected = eligible.get("tell", {})
+                bound = (expected.get("valid") is False and
+                         eligible.get("candidate_id") == result.get("candidate_id"))
+                if "evaluation_id" in state:
+                    bound = bound and expected.get("evaluation_id") == result["tell"].get("evaluation_id")
+                if not bound:
+                    result_hash = hashlib.sha256(raw_result).hexdigest()
+                    refusal = self.trial_dir(state) / ("legacy-result-integration-refused-" + result_hash + ".json")
+                    if not refusal.exists():
+                        write_json(refusal, {"kind": "legacy_result_not_replayed_for_performance",
+                            "trial_id": state["trial_id"], "candidate_id": result.get("candidate_id"),
+                            "historical_result_sha256": result_hash,
+                            "scope": "Preserve historical result and any consumed reward; cancel only a still-pending trial without a new tell",
+                            "reason": "Cached invalid result lacks the current exhausted CUDA failure proof"})
+                    self.policy.suspend_or_cancel(state["trial_id"],
+                        result.get("error") or "Legacy invalid result lacks evaluator proof", consumption=result["consumption"])
+                    return {"trials_done": state.get("trials_done", 0)+1}
         else:
             result = self.prepare_result(state)
             # Complete result, promotion evidence and exact consumption become
@@ -532,9 +571,30 @@ class CampaignRuntime:
         trial = self.trial(state)
         consumption = {"trials": 1, "gpu_seconds": max(0, time.time()-trial["selected_at"])}
         result = {"candidate_id": state.get("candidate_id"), "error": state.get("error"), "consumption": consumption}
+        # Also protect old checkpoints whose retryable flag predates a failed
+        # documentary refresh. Only the current, bound evaluator receipt can
+        # contribute a reward; a guard/model/research error is not a CUDA zero.
+        if state.get("needs_research") or not state.get("research_ready") or not state.get("candidate_id"):
+            return {**result, "integration_status": "suspended_without_performance_observation"}
+        candidate = self.candidate(state["candidate_id"])
+        measurement_path = self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json'
+        measurement = read_json(measurement_path) if measurement_path.exists() else {}
+        if "evaluation_id" in state:
+            bound = bool(state["evaluation_id"] and state["evaluation_id"] == measurement.get("evaluation_id")
+                         and state.get("evaluation_status") == measurement.get("status"))
+        else:
+            # Legacy checkpoints have no explicit binding. Reconcile only an
+            # existing successful receipt, or the exact serialized CUDA error
+            # returned by evaluate(), never a later guard/model error.
+            bound = bool(measurement.get("evaluation_id") and (
+                (state.get("valid") and measurement.get("ok") is True) or
+                (state.get("retryable") and measurement.get("ok") is False
+                 and state.get("error") == json.dumps(measurement)[:5000])))
+        if not bound or measurement.get("candidate_id", candidate.candidate_id) != candidate.candidate_id:
+            return {**result, "integration_status": "suspended_without_performance_observation"}
         if state.get("valid"):
-            candidate = self.candidate(state["candidate_id"])
-            measurement = read_json(self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json')
+            if measurement.get("ok") is not True:
+                return {**result, "integration_status": "suspended_without_performance_observation"}
             incumbent = self.store.incumbent(self.config.run_id)
             incumbent_candidate = self.candidate(incumbent["candidate_id"] or "baseline")
             confirmation_path = self.trial_dir(state) / "confirmation.json"
@@ -554,8 +614,10 @@ class CampaignRuntime:
                     "consumption": consumption,
                     "state": self.store.get_candidate_source(candidate.candidate_id, self.config.run_id)}
             result["tell"] = tell
-        elif state.get("candidate_id") and state.get("retryable"):
-            tell = {"evaluation_id": uuid.uuid4().hex, "valid": False, "purpose": "tree_reward",
+        elif (state.get("retryable") and state.get("repair", 0) >= self.max_repairs
+              and measurement.get("ok") is False and measurement.get("status") in
+              ("compilation_error", "numerical_error", "memory_error", "contract_violation")):
+            tell = {"evaluation_id": measurement["evaluation_id"], "valid": False, "purpose": "tree_reward",
                     "consumption": consumption,
                     "state": self.store.get_candidate_source(state["candidate_id"], self.config.run_id)}
             result["tell"] = tell

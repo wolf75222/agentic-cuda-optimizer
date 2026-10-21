@@ -41,9 +41,6 @@ def prepare(directory, run_id, execution_config, *, series=3, launches=10, confi
     directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True)
     slurm = SlurmConfig.load(execution_config)
-    hours,minutes,seconds = (int(value) for value in slurm.walltime.split(":"))
-    if hours*3600+minutes*60+seconds > 24*3600:
-        raise ValueError("Diagnostic acceptance requires a configured Slurm walltime of at most 24 hours")
     config = CampaignConfig(run_id=run_id, backend="romeo", workload="matmul",
         max_trials=4, max_repairs_per_trial=2, autotuning_enabled=False, actions=("tiling",),
         search_sizes=(64,128), final_sizes=(96,), benchmark_series=series,

@@ -302,6 +302,132 @@ def test_final_holdout_is_one_use_and_artifact_is_exact(tmp_path):
     assert evaluator.finalize(candidate, baseline)["status"] == "finalization_incomplete"
 
 
+class FinalCaseRunner(FakeRunner):
+    """The search winner regresses on independent final inputs."""
+
+    def __init__(self, directory):
+        super().__init__(directory)
+        self.final_inputs = set()
+        self.events = []
+
+    def run(self, run_id, request):
+        self.events.append((request.mode, request.arguments[0].input_file, Path(request.source).name))
+        report = super().run(run_id, request)
+        if request.mode == "benchmark" and request.arguments[0].input_file in self.final_inputs:
+            latency = 3.0 if "fast" in Path(request.source).name else 2.0
+            report.update(latency_ms=latency, latency_samples_ms=[latency] * request.iterations)
+        return report
+
+    def run_sanitizer(self, run_id, request, tool):
+        self.events.append(("sanitizer", request.arguments[0].input_file, tool))
+        return {"ok": True, "tool": tool, "environment": self.get_device_properties(request.device)}
+
+
+def distinct_final_setup(tmp_path):
+    runner = FinalCaseRunner(tmp_path)
+    original, candidate, baseline, search = setup(tmp_path, runner, final=False,
+                                                 required_sanitizers=("memcheck", "racecheck"))
+    final = []
+    for size in (19, 31):
+        path = tmp_path / f"fresh-final-{size}.bin"
+        (np.arange(size, dtype="<f4") + 7).tofile(path)
+        runner.final_inputs.add(str(path))
+        arguments = [BufferArgument(size * 4, str(path), BufferDirection.Input),
+                     BufferArgument(size * 4, None, BufferDirection.Output)]
+        final.append(replace(search, case_id=f"fresh-final-{size}",
+                             request=replace(search.request, arguments=arguments), metadata={"n": size}))
+    evaluator = Evaluator(runner, original.contract, original.oracle,
+                          {"short": [search], "search": [search], "performance": [search], "final": final})
+    return evaluator, candidate, baseline, final
+
+
+def test_final_confirmation_uses_fresh_qualified_cases_instead_of_search_winner(tmp_path):
+    evaluator, candidate, baseline, final = distinct_final_setup(tmp_path)
+    assert evaluator.confirm(candidate, baseline)["status"] == "promoted"
+    evaluator.runner.events.clear()
+    evaluator.runner.calls.clear()
+
+    result = evaluator.finalize(candidate, baseline)
+
+    assert result["ok"] and result["status"] == "validated_gain_uncertified"
+    confirmation = result["confirmation"]
+    final_ids = {case.case_id for case in final}
+    assert confirmation["suite"] == "final" and set(confirmation["case_ids"]) == final_ids
+    assert {pair["case_id"] for pair in confirmation["pairs"]} == final_ids
+    assert confirmation["status"] == "not_improved" and not confirmation["critical_cases_ok"]
+    assert confirmation["interval"]["gain"] == pytest.approx(2 / 3)
+    events = evaluator.runner.events
+    first_timing = next(index for index, event in enumerate(events) if event[0] == "benchmark")
+    assert [event[0] for event in events[:first_timing]] == ["run"] * 8 + ["sanitizer"] * 4
+    assert all(path in evaluator.runner.final_inputs for _, path, _ in events)
+    assert len(events[first_timing:]) == len(final) * evaluator.contract.confirmation_batches * 2
+    assert {(row["tool"], row["case_id"]) for row in result["sanitizers"]} == {
+        (tool, case.case_id) for tool in evaluator.contract.required_sanitizers for case in final}
+    # The private final timing permission is consumed, including after success.
+    with pytest.raises(ValueError, match="reserved"):
+        evaluator._confirm_suite(candidate, baseline, "final")
+    count = len(events)
+    assert evaluator.finalize(candidate, baseline)["status"] == "finalization_incomplete"
+    assert len(events) == count
+
+
+@pytest.mark.parametrize("wrong_case_id", ["search", None])
+def test_final_timing_rejects_incomplete_final_correctness_receipts(tmp_path, monkeypatch, wrong_case_id):
+    evaluator, candidate, baseline, _ = distinct_final_setup(tmp_path)
+    validate = evaluator._validate
+
+    def wrong_case(item, suite):
+        receipt = validate(item, suite)
+        receipt["cases"][0]["case_id"] = wrong_case_id
+        return receipt
+
+    monkeypatch.setattr(evaluator, "_validate", wrong_case)
+    result = evaluator.finalize(candidate, baseline)
+    assert not result["ok"] and result["status"] == "finalization_incomplete"
+    assert "exact final cases" in result["error"]
+    assert all(mode == "run" for mode, _, _ in evaluator.runner.events)
+
+
+@pytest.mark.parametrize("fault", ["case", "tool", "hardware"])
+def test_final_sanitizer_identity_failure_prevents_any_final_timing(tmp_path, monkeypatch, fault):
+    evaluator, candidate, baseline, _ = distinct_final_setup(tmp_path)
+    run_sanitizer = evaluator.runner.run_sanitizer
+
+    def faulty(run_id, request, tool):
+        report = run_sanitizer(run_id, request, tool)
+        if fault == "hardware":
+            report["environment"]["uuid"] = "different-device"
+        else:
+            report["case_id" if fault == "case" else "tool"] = "wrong-identity"
+        return report
+
+    monkeypatch.setattr(evaluator.runner, "run_sanitizer", faulty)
+    result = evaluator.finalize(candidate, baseline)
+    assert not result["ok"] and result["status"] == "finalization_incomplete"
+    assert not result["sanitizers"][-1]["ok"]
+    assert all(mode != "benchmark" for mode, _, _ in evaluator.runner.events)
+    assert evaluator.finalize(candidate, baseline)["status"] == "finalization_incomplete"
+
+
+def test_failed_final_timing_consumes_final_permission_and_holdout(tmp_path, monkeypatch):
+    evaluator, candidate, baseline, _ = distinct_final_setup(tmp_path)
+    with pytest.raises(ValueError, match="reserved"):
+        evaluator._confirm_suite(candidate, baseline, "final")
+    run = evaluator.runner.run
+
+    def failed_timing(run_id, request):
+        if request.mode == "benchmark":
+            return {"ok": False, "stage": "execute", "error": "controlled timing failure"}
+        return run(run_id, request)
+
+    monkeypatch.setattr(evaluator.runner, "run", failed_timing)
+    with pytest.raises(RuntimeError, match="controlled timing failure"):
+        evaluator.finalize(candidate, baseline)
+    with pytest.raises(ValueError, match="reserved"):
+        evaluator._confirm_suite(candidate, baseline, "final")
+    assert evaluator.finalize(candidate, baseline)["status"] == "finalization_incomplete"
+
+
 def test_lazy_holdout_created_after_search_preserves_contract_hash(tmp_path):
     evaluator, candidate, baseline, case = setup(tmp_path, final=False)
     calls = []

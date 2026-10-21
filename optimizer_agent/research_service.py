@@ -525,7 +525,7 @@ class ResearchDossier:
         if not {"NVIDIA/cccl", "NVIDIA/cutlass"} <= repositories:
             raise ResearchBlocked("Both foundational CCCL and CUTLASS code must be consulted")
         source_ids = {source.source_id for source in self.sources}
-        if not self.reference_kernels and not (self.negative_search and self.original_hypothesis):
+        if not self.reference_kernels and not self.documented_negative_finding():
             raise ResearchBlocked("No applicable implementation or documented negative finding")
         if set(self.reference_kernels) - source_ids:
             raise ResearchBlocked("Unretrieved reference kernel")
@@ -565,6 +565,12 @@ class ResearchDossier:
             raise ResearchBlocked("Observed web queries/actions differ from completed tool receipts")
         return True
 
+    def documented_negative_finding(self):
+        return (isinstance(self.negative_search, list) and bool(self.negative_search)
+                and isinstance(self.original_hypothesis, str)
+                and bool(self.original_hypothesis.strip())
+                and all(isinstance(entry, str) and bool(entry.strip()) for entry in self.negative_search))
+
     def validate_proposal(self, proposal: Any) -> None:
         self.research_ready(self.workload_hash, self.strategy_family, self.environment_fingerprint)
         proposal = plain(proposal)
@@ -581,7 +587,7 @@ class ResearchDossier:
         required_pmpp_kind = "pmpp_permanent" if self.experimental_mode == "ablation_pmpp_permanent_only" else "pmpp"
         if "cuda_documentation" not in kinds or (
                 self.experimental_mode != "ablation_no_pmpp" and required_pmpp_kind not in kinds) or (
-                "code" not in kinds and not (self.negative_search and self.original_hypothesis)):
+                "code" not in kinds and not self.documented_negative_finding()):
             raise NeedsResearch("needs_research: proposal must cite PMPP, code and CUDA evidence")
 
 
@@ -876,6 +882,15 @@ they are NOT missing documentary evidence and cannot be pre-generation proofs.
 Numerical association remains a future evaluator check at the fixed tolerances.
 Do not mark an adaptation feasible if its required CUDA memory/barrier semantics
 are absent from the actually read sections or contradict the target toolchain.
+An optional runtime_evidence_context contains authenticated observations of the
+ordinary baseline on the exact named allocation, including measured resource
+limits and separately identified successful NVRTC compilations/executions.
+Use those observations only within their recorded hardware/toolchain/source
+scope. They do not establish a future candidate's correctness, performance or
+special-feature support. Unobserved VBIOS/subrevision values remain unknown;
+if a chosen feature actually requires them, retain that documentary gap.
+Do not replace an already observed ordinary runtime initialization with a demand
+for future candidate execution as pre-generation documentary evidence.
 When no reference is directly reusable, document rejected examples and an original
 standalone hypothesis supported by retrieved algorithmic ideas and CUDA semantics.
 Any unresolved documentary constraint needed by the chosen adaptation goes in

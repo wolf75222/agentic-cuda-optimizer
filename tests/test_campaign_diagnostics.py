@@ -12,7 +12,7 @@ from optimizer_agent.codex_backend import CodexResult
 from optimizer_agent.diagnostics import build_diagnostic, diagnostic_digest, verify_diagnostic
 from optimizer_agent.research_service import diagnostic_research_context, ResearchBlocked
 from optimizer_agent.pmpp_guidance import PMPP_GUIDANCE
-from tests.test_campaign_runtime import runtime_setup, selected, archive_candidate
+from tests.test_campaign_runtime import runtime_setup, selected, archive_candidate, record_measurement
 from tests.test_codex_research import proposal_payload
 
 
@@ -78,7 +78,7 @@ def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runt
     first_proposal = complete_proposal(runtime, first)
     campaign.write_json(runtime.trial_dir(first)/"proposal-0-0.json", first_proposal)
     measurement = runtime.evaluator.benchmark(candidate)
-    campaign.write_json(runtime.trial_dir(first)/"evaluation-fast.json", measurement)
+    record_measurement(runtime,first,candidate,measurement)
     runtime.evaluator.confirm = lambda candidate, incumbent: dict(evaluation_id="paired-not-improved",
         status="not_improved", ok=True, candidate_id=candidate.candidate_id, incumbent_id=incumbent.candidate_id,
         interval=[.9, 1.1])

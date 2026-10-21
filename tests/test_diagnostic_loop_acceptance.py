@@ -17,21 +17,22 @@ def test_prepare_is_service_free_keeps_configured_partition_and_excludes_quality
     monkeypatch.setattr(acceptance,"CampaignRuntime",forbidden)
     config,slurm,plan = acceptance.prepare(tmp_path,"diagnostic-plan",acceptance.REPO/"configs/romeo.json")
     configured = acceptance.SlurmConfig.load(acceptance.REPO/"configs/romeo.json")
-    assert slurm.partition == configured.partition == "short"
-    assert slurm.walltime == configured.walltime == "24:00:00"
+    assert slurm.partition == configured.partition == "long"
+    assert slurm.walltime == configured.walltime == "48:00:00"
     assert config.model == "gpt-6-luna" and config.reasoning_effort == "max"
     assert config.max_trials == 4 and config.actions == ("tiling",)
     assert plan["global_resource_caps"] is None and plan["holdout_exposure"] is False
     assert "excluded" in plan["scope"] and (tmp_path/"plan.json").is_file()
 
 
-def test_prepare_rejects_scheduler_walltime_above_24_hours(tmp_path):
+def test_prepare_preserves_long_partition_walltime_without_an_extra_helper_ceiling(tmp_path):
     config = asdict(acceptance.SlurmConfig.load(acceptance.REPO/"configs/romeo.json"))
-    config["walltime"] = "25:00:00"
-    path = tmp_path/"too-long.json"
+    config["walltime"] = "72:00:00"
+    path = tmp_path/"long.json"
     path.write_text(json.dumps(config))
-    with pytest.raises(ValueError,match="at most 24 hours"):
-        acceptance.prepare(tmp_path/"plan","too-long",path)
+    _,slurm,plan = acceptance.prepare(tmp_path/"plan","long-lease",path)
+    assert slurm.walltime == plan["slurm"]["walltime"] == "72:00:00"
+    assert plan["global_resource_caps"] is None
 
 
 def test_control_is_exact_parent_body_with_distinct_identity_and_no_fake_citations(runtime_setup):

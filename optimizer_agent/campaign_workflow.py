@@ -20,6 +20,8 @@ class CampaignState(TypedDict, total=False):
     needs_research: bool
     valid: bool
     retryable: bool
+    evaluation_id: str | None
+    evaluation_status: str | None
     error: str | None
     termination_reason: str | None
     certification_status: str | None

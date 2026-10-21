@@ -309,6 +309,7 @@ class Evaluator:
         self._validated: set[tuple[str, str]] = set()
         self._properties = None
         self._final_exposed = False
+        self._final_timing_authorized = False
 
     @property
     def contract_hash(self):
@@ -584,34 +585,49 @@ class Evaluator:
                 failure = self._ensure_valid(item)
                 if failure:
                     return failure
-            cases = self._suites["performance"]
-            result = {**self._base(candidate, "inconclusive"), "ok": True, "incumbent_id": incumbent.candidate_id,
-                      "incumbent_artifact_hash": incumbent.artifact_hash, "environment": deepcopy(self._properties),
-                      "pairs": [], "protocol": asdict(self.contract)}
-            a = {c.case_id: [] for c in cases}
-            b = {c.case_id: [] for c in cases}
-            for index in range(self.contract.confirmation_batches):
-                # Predetermined alternating AB/BA; no repeated decision until win.
-                for case in cases:
-                    order = [incumbent, candidate] if index % 2 == 0 else [candidate, incumbent]
-                    measured = [(item, self._measure_case(item, case)) for item in order]
-                    pair = {"case_id": case.case_id, "series": index, "order": [x.candidate_id for x in order], "measurements": {}}
-                    for item, row in measured:
-                        (a if item is candidate else b)[case.case_id].append(row["mean_ms"])
-                        pair["measurements"][item.candidate_id] = row
-                    result["pairs"].append(pair)
-            interval = paired_bootstrap(a, b, {c.case_id: c.weight for c in cases}, confidence=self.contract.confidence,
-                                        samples=self.contract.bootstrap_samples)
-            result["interval"] = interval
-            critical_ok = all(interval["case_gains"][c.case_id]["lower"] >= 1 / (1 + self.contract.max_critical_regression)
-                              for c in cases if c.critical)
-            result["critical_cases_ok"] = critical_ok
-            threshold = 1 + self.contract.min_relative_gain
-            if interval["lower"] > threshold and critical_ok:
-                result["status"] = "promoted"
-            elif interval["upper"] <= threshold or not critical_ok:
-                result["status"] = "not_improved"
-            return result
+            return self._confirm_suite(candidate, incumbent, "performance")
+
+    def _confirm_suite(self, candidate, incumbent, suite):
+        """Time an already qualified suite while the caller owns the GPU lease."""
+        if suite not in {"performance", "final"}:
+            raise ValueError("Unknown confirmation suite")
+        if suite == "final" and not (self._final_exposed and self._final_timing_authorized):
+            raise ValueError("Final confirmation is reserved for qualified finalize()")
+        for item in (candidate, incumbent):
+            self._guard(item)
+            if (item.artifact_hash, suite) not in self._validated:
+                raise ValueError("Confirmation requires validation on its exact suite")
+        if candidate.candidate_id == incumbent.candidate_id:
+            raise ValueError("Distinct artifacts require distinct candidate_id labels for paired confirmation")
+        cases = self._suites[suite]
+        result = {**self._base(candidate, "inconclusive"), "ok": True, "incumbent_id": incumbent.candidate_id,
+                  "incumbent_artifact_hash": incumbent.artifact_hash, "environment": deepcopy(self._properties),
+                  "pairs": [], "protocol": asdict(self.contract), "suite": suite,
+                  "case_ids": [case.case_id for case in cases]}
+        a = {c.case_id: [] for c in cases}
+        b = {c.case_id: [] for c in cases}
+        for index in range(self.contract.confirmation_batches):
+            # Predetermined alternating AB/BA; no repeated decision until win.
+            for case in cases:
+                order = [incumbent, candidate] if index % 2 == 0 else [candidate, incumbent]
+                measured = [(item, self._measure_case(item, case)) for item in order]
+                pair = {"case_id": case.case_id, "series": index, "order": [x.candidate_id for x in order], "measurements": {}}
+                for item, row in measured:
+                    (a if item is candidate else b)[case.case_id].append(row["mean_ms"])
+                    pair["measurements"][item.candidate_id] = row
+                result["pairs"].append(pair)
+        interval = paired_bootstrap(a, b, {c.case_id: c.weight for c in cases}, confidence=self.contract.confidence,
+                                    samples=self.contract.bootstrap_samples)
+        result["interval"] = interval
+        critical_ok = all(interval["case_gains"][c.case_id]["lower"] >= 1 / (1 + self.contract.max_critical_regression)
+                          for c in cases if c.critical)
+        result["critical_cases_ok"] = critical_ok
+        threshold = 1 + self.contract.min_relative_gain
+        if interval["lower"] > threshold and critical_ok:
+            result["status"] = "promoted"
+        elif interval["upper"] <= threshold or not critical_ok:
+            result["status"] = "not_improved"
+        return result
 
     def qualify_sanitizers(self, candidate, suite="performance"):
         """Fresh correctness and instrumented checks; never collect ranking data.
@@ -709,20 +725,69 @@ class Evaluator:
             if not baseline_validation["ok"]:
                 return {**self._base(candidate, "final_validation_failed"), "ok": False,
                         "validation": validation, "baseline_validation": baseline_validation}
+            cases = self._suites["final"]
+            expected_validation = {(case.case_id, repetition) for case in cases
+                                   for repetition in range(self.contract.correctness_repetitions)}
+            for item, receipt in ((candidate, validation), (baseline, baseline_validation)):
+                rows = receipt.get("cases", [])
+                complete = (isinstance(rows, list) and len(rows) == len(expected_validation)
+                            and all(isinstance(row, dict) and isinstance(row.get("case_id"), str)
+                                    and type(row.get("repetition")) is int for row in rows)
+                            and {(row["case_id"], row["repetition"]) for row in rows} == expected_validation
+                            and all(row.get("comparison", {}).get("ok") is True for row in rows))
+                if (receipt.get("suite") != "final" or receipt.get("contract_hash") != self.contract_hash
+                        or receipt.get("artifact_hash") != item.artifact_hash
+                        or not complete):
+                    return {**self._base(candidate, "finalization_incomplete"), "ok": False,
+                            "error": "Final correctness receipts do not cover the exact final cases",
+                            "validation": validation, "baseline_validation": baseline_validation}
             sanitizers = []
             for tool in self.contract.required_sanitizers:
-                for case in self._suites["final"]:
+                for case in cases:
                     if not hasattr(self.runner, "run_sanitizer"):
                         report = {"ok": False, "status": "tool_unavailable", "tool": tool}
                     else:
-                        report = self.runner.run_sanitizer(uuid.uuid4().hex, self._request(candidate, case), tool)
+                        request = self._request(candidate, case)
+                        before = deepcopy(self.runner.get_device_properties(request.device))
+                        if not self._check_environment({"environment": before}):
+                            report = {"ok": False, "status": "infrastructure_failure", "tool": tool,
+                                      "error": "Hardware/toolchain changed before final sanitizer"}
+                        else:
+                            report = deepcopy(self.runner.run_sanitizer(uuid.uuid4().hex, request, tool))
+                            after = deepcopy(self.runner.get_device_properties(request.device))
+                            report["hardware_guard"] = {"before": before, "after": after,
+                                                        "reported_environment": report.get("environment")}
+                            hardware_ok = self._check_environment({"environment": after})
+                            if "environment" in report:
+                                hardware_ok = hardware_ok and self._check_environment(report)
+                            if not hardware_ok:
+                                report.update(ok=False, status="infrastructure_failure",
+                                              error="Hardware/toolchain changed during final sanitizer")
+                    if report.get("tool", tool) != tool or report.get("case_id", case.case_id) != case.case_id:
+                        report.update(ok=False, error="Final sanitizer receipt has a different tool or case identity")
+                    report.setdefault("tool", tool)
+                    self._guard(candidate)
                     sanitizers.append({**report, "case_id": case.case_id})
                     if not report.get("ok"):
                         return {**self._base(candidate, "finalization_incomplete"), "ok": False,
-                                "validation": validation, "sanitizers": sanitizers}
-        # A new paired comparison, never reuse the search measurement cache.
-        confirmation = (self.confirm(candidate, baseline) if candidate.artifact_hash != baseline.artifact_hash
-                        else {"status": "not_improved", "reason": "baseline artifact returned"})
+                                "validation": validation, "baseline_validation": baseline_validation,
+                                "sanitizers": sanitizers}
+            expected_sanitizers = {(tool, case.case_id) for tool in self.contract.required_sanitizers for case in cases}
+            if (len(sanitizers) != len(expected_sanitizers)
+                    or {(row["tool"], row["case_id"]) for row in sanitizers} != expected_sanitizers):
+                return {**self._base(candidate, "finalization_incomplete"), "ok": False,
+                        "error": "Final sanitizer receipts do not cover the exact final cases",
+                        "validation": validation, "baseline_validation": baseline_validation, "sanitizers": sanitizers}
+            # Fresh timing uses exactly the independently validated final cases,
+            # under the same lease. Public confirm() remains a search operation.
+            self._final_timing_authorized = True
+            try:
+                confirmation = (self._confirm_suite(candidate, baseline, "final")
+                                if candidate.artifact_hash != baseline.artifact_hash
+                                else {"status": "not_improved", "reason": "baseline artifact returned",
+                                      "suite": "final", "case_ids": [case.case_id for case in cases]})
+            finally:
+                self._final_timing_authorized = False
         status = "certified" if confirmation["status"] == "promoted" else "validated_gain_uncertified"
         if candidate.artifact_hash == baseline.artifact_hash:
             status = "validated_no_gain"
