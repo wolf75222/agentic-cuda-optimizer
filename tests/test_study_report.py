@@ -876,8 +876,9 @@ def test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequ
     assert row["ok"] is False and "aucune séquence complète" in row["scope"]
 
 
-def test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals():
-    pair = {"status": "confirmed", "ok": True, "artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64,
+@pytest.mark.parametrize("status", ["confirmed", "exact_artifact_identity"])
+def test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals(status):
+    pair = {"status": status, "ok": True, "artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64,
             "interval": {"gain": .87, "lower": .84, "upper": .90, "case_gains": {"case": {"gain": .85}}}}
     original = deepcopy(pair)
     views = direct_comparison_views({"group-fixture": {"method_comparisons": {"full_vs_greedy": pair}}})
@@ -889,6 +890,48 @@ def test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_interva
     assert "0.87" not in html and "0.84" not in html
 
 
+@pytest.mark.parametrize("refusal", [
+    {"status": "artifact_identity_context_unproven", "ok": False},
+    {"status": "artifact_identity_context_unproven", "ok": True},
+    {"status": "confirmed", "gain_basis": "unproven_artifact_context", "ok": True},
+    {"status": "exact_artifact_identity", "ok": False},
+    {"gain_basis": "exact_artifact_identity", "ok": False},
+])
+@pytest.mark.parametrize("noisy_interval", [False, True])
+def test_explicit_unproven_context_cannot_be_normalized_to_an_identity_ratio(refusal, noisy_interval):
+    pair = {"artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64,
+            "paired_measurement_performed": False, "ranking_eligible": False, **refusal}
+    if noisy_interval:
+        pair["interval"] = {"gain": .87, "lower": .84, "upper": .90, "case_gains": {"case": {"gain": .85}}}
+    original = deepcopy(pair)
+    view = comparison_view(pair)
+    assert view["gain_basis"] == "unproven_artifact_context"
+    assert view["gain"] is view["lower"] is view["upper"] is None and view["case_gains"] == {}
+    assert view["source_interval_preserved"] == pair.get("interval", {}) and pair == original
+    assert view["source_status"] == pair.get("status") and view["source_ok"] == pair["ok"]
+    views = direct_comparison_views({"group-fixture": {"method_comparisons": {"full_vs_greedy": pair}}})
+    html = direct_comparison_table(views)
+    assert "contexte d’exécution non prouvé" in html and "IC non établi" in html
+    assert "inconnu" in html and "0.87" not in html and "sans intervalle : identité" not in html
+
+
+@pytest.mark.parametrize("status", ["numerical_error", "infrastructure_failure", None])
+def test_unmeasured_failure_is_unavailable_instead_of_a_paired_measurement(status):
+    pair = {"status": status, "ok": False, "artifact_hash": "a"*64, "incumbent_artifact_hash": "b"*64}
+    view = comparison_view(pair)
+    assert view["gain_basis"] == "comparison_unavailable" and view["gain"] is None
+    assert view["lower"] is view["upper"] is None
+    views = direct_comparison_views({"group-fixture": {"method_comparisons": {"full_vs_greedy": pair}}})
+    html = direct_comparison_table(views)
+    assert "comparaison indisponible" in html and "IC non établi" in html and "mesure appariée" not in html
+
+
+def test_legacy_valid_identity_stays_available_without_an_interval():
+    view = comparison_view({"status": "confirmed", "ok": True,
+                            "artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64})
+    assert view["gain_basis"] == "exact_artifact_identity" and view["gain"] == 1
+
+
 @pytest.mark.parametrize("first,second", [(None, None), ("", ""), ("source-only", "source-only"), ("a"*64, "b"*64)])
 def test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only(first, second):
     view = comparison_view({"artifact_hash": first, "incumbent_artifact_hash": second,
@@ -896,7 +939,7 @@ def test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_
     assert view["gain_basis"] == "paired_measurement" and view["gain"] == .87
 
 
-def test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot(tmp_path):
+def identity_pilot_receipt():
     receipt = frozen_receipt()
     for role in receipt["candidates"]:
         receipt["candidates"][role]["artifact_hash"] = hashlib.sha256(role.encode()).hexdigest()
@@ -907,6 +950,11 @@ def test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot(tmp_
         pair = receipt["paired_comparisons"][name]
         pair["artifact_hash"] = receipt["candidates"][role]["artifact_hash"]
         pair["incumbent_artifact_hash"] = receipt["candidates"][reference]["artifact_hash"]
+    return receipt
+
+
+def test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot(tmp_path):
+    receipt = identity_pilot_receipt()
     save(tmp_path/"comparison.json", receipt)
     pilot = frozen_pilot_summary(tmp_path/"comparison.json")
     assert pilot["receipt_verified"]
@@ -916,6 +964,35 @@ def test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot(tmp_
     html = frozen_pilot_panel(pilot, None)
     assert "ratio 1 sans intervalle statistique" in html and "0.742984" not in html
     assert plot_frozen_pilot(pilot, tmp_path).is_file()
+
+
+@pytest.mark.parametrize("refusal", [
+    {"status": "artifact_identity_context_unproven", "ok": False},
+    {"status": "artifact_identity_context_unproven", "ok": True},
+    {"status": "measured", "gain_basis": "unproven_artifact_context", "ok": True},
+    {"status": "exact_artifact_identity", "ok": False},
+])
+@pytest.mark.parametrize("noisy_interval", [False, True])
+def test_pilot_refuses_explicit_unproven_context_before_qualification_and_plot(tmp_path, refusal, noisy_interval):
+    receipt = identity_pilot_receipt()
+    pair = receipt["paired_comparisons"]["agent_vs_native_codex"]
+    pair.update(refusal, paired_measurement_performed=False, ranking_eligible=False)
+    if not noisy_interval:
+        pair.pop("interval")
+    path = tmp_path/"comparison.json"
+    save(path, receipt)
+    original = path.read_bytes()
+    pilot = frozen_pilot_summary(path)
+    assert not pilot["receipt_verified"] and any("Contexte d’exécution non prouvé" in error for error in pilot["validation_errors"])
+    derived = pilot["comparisons"]["agent_vs_native_codex"]
+    assert derived["gain_basis"] == "unproven_artifact_context"
+    assert derived["interval"]["gain"] is derived["interval"]["lower"] is derived["interval"]["upper"] is None
+    assert derived["source_interval_preserved"] == pair.get("interval", {})
+    output = tmp_path/"not-created-plot"
+    assert plot_frozen_pilot(pilot, output) is None and not output.exists()
+    html = frozen_pilot_panel(pilot, None)
+    assert "Comparaison figée non qualifiée" in html and "ratio 1 sans intervalle statistique" not in html
+    assert "0.742984" not in html and path.read_bytes() == original
 
 
 def resumed_documentary_fixture(root):

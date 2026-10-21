@@ -88,11 +88,16 @@ def comparison_view(pair):
     """Keep a legacy pair intact and derive an identity-aware presentation."""
     pair = _mapping(pair)
     interval = _mapping(pair.get("interval"))
-    exact = _hash(pair.get("artifact_hash")) and pair["artifact_hash"] == pair.get("incumbent_artifact_hash")
-    return {"gain_basis": "exact_artifact_identity" if exact else "paired_measurement",
-            "gain": 1.0 if exact else interval.get("gain"),
-            "lower": None if exact else interval.get("lower"), "upper": None if exact else interval.get("upper"),
-            "case_gains": {} if exact else interval.get("case_gains", {}),
+    identity_declared = pair.get("status") == "exact_artifact_identity" or pair.get("gain_basis") == "exact_artifact_identity"
+    unproven = (pair.get("status") == "artifact_identity_context_unproven"
+                or pair.get("gain_basis") == "unproven_artifact_context"
+                or (identity_declared and pair.get("ok") is not True))
+    exact = not unproven and _hash(pair.get("artifact_hash")) and pair["artifact_hash"] == pair.get("incumbent_artifact_hash")
+    unavailable = not exact and not unproven and not interval
+    return {"gain_basis": "unproven_artifact_context" if unproven else "exact_artifact_identity" if exact else "comparison_unavailable" if unavailable else "paired_measurement",
+            "gain": None if unproven else 1.0 if exact else interval.get("gain"),
+            "lower": None if exact or unproven else interval.get("lower"), "upper": None if exact or unproven else interval.get("upper"),
+            "case_gains": {} if exact or unproven else interval.get("case_gains", {}),
             "source_status": pair.get("status"), "source_ok": pair.get("ok"),
             "source_interval_preserved": interval,
             "artifact_hash": pair.get("artifact_hash"), "incumbent_artifact_hash": pair.get("incumbent_artifact_hash")}
@@ -110,10 +115,14 @@ def direct_comparison_table(views):
     return "<h2>Contrastes directs des groupes finaux</h2>" + table(
         ["Groupe", "Contraste", "Fondement", "Ratio", "IC95%", "Indicateur ok du reçu source"],
         [[entry["group_id"], entry["comparison"],
-          "identité exacte des artefacts" if entry["gain_basis"] == "exact_artifact_identity" else "mesure appariée",
+          {"exact_artifact_identity": "identité exacte des artefacts",
+           "unproven_artifact_context": "contexte d’exécution non prouvé",
+           "comparison_unavailable": "comparaison indisponible"}.get(entry["gain_basis"], "mesure appariée"),
           fmt(entry["gain"]), "sans intervalle : identité" if entry["gain_basis"] == "exact_artifact_identity" else
+          "IC non établi" if entry["gain_basis"] in ("unproven_artifact_context", "comparison_unavailable") else
           "["+fmt(entry["lower"])+" ; "+fmt(entry["upper"])+"]", entry["source_ok"]] for entry in views]) + (
-        "<p>Deux empreintes complètes d’artefact identiques définissent le ratio 1 sans incertitude statistique. "
+        "<p>Les comparaisons héritées avec empreintes complètes identiques gardent le ratio 1, "
+        "sauf en présence d’un refus explicite du contexte d’exécution. Ce refus conserve un ratio inconnu et un IC non établi. "
         "Les intervalles hérités bruités sont conservés dans les données sources et exclus de cette interprétation. "
         "Une identité ne qualifie ni le kernel ni la méthode. Une même source avec un lancement différent reste un autre artefact.</p>")
 
@@ -1004,11 +1013,13 @@ def frozen_pilot_summary(path):
         errors.append("La proposition structurée sans outils est mal identifiée")
     for name, (role, reference) in FROZEN_PAIRS.items():
         pair = receipt.get("paired_comparisons", {}).get(name, {})
-        interval = pair.get("interval", {})
+        interval = _mapping(pair.get("interval"))
         view = comparison_view(pair)
         values = [interval.get(key) for key in ("gain", "lower", "upper")]
         valid_interval = all(type(value) in (float, int) and math.isfinite(value) and value > 0 for value in values)
-        if view["gain_basis"] != "exact_artifact_identity" and (not valid_interval or not values[1] <= values[0] <= values[2]):
+        if view["gain_basis"] == "unproven_artifact_context":
+            errors.append("Contexte d’exécution non prouvé : " + name)
+        elif view["gain_basis"] != "exact_artifact_identity" and (not valid_interval or not values[1] <= values[0] <= values[2]):
             errors.append("Intervalle apparié manquant ou invalide : " + name)
         candidate, incumbent = candidates.get(role, {}), candidates.get(reference, {})
         if (pair.get("ok") is not True or pair.get("candidate_role") != role or pair.get("reference_role") != reference
@@ -1023,7 +1034,7 @@ def frozen_pilot_summary(path):
         result["comparisons"][name]["gain_basis"] = view["gain_basis"]
         result["comparisons"][name]["source_interval_preserved"] = interval
         result["comparisons"][name]["interval"] = ({key: view[key] for key in ("gain", "lower", "upper", "case_gains")}
-            if view["gain_basis"] == "exact_artifact_identity" else interval)
+            if view["gain_basis"] in ("exact_artifact_identity", "unproven_artifact_context") else interval)
     result["receipt_verified"] = not errors
     return result
 
