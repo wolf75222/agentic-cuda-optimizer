@@ -37,18 +37,37 @@ def slurm_state(receipt: dict) -> str:
 
 
 def transient_ssh_failure(process: subprocess.CompletedProcess) -> bool:
-    message = process.stderr.decode(errors="replace").lower()
-    if process.returncode != 255 or any(value in message for value in (
+    message = process.stderr.decode(errors="replace")
+    lowered = message.lower()
+    if process.returncode != 255 or any(value in lowered for value in (
             "permission denied", "host key verification failed", "remote host identification has changed",
             "no matching host key", "no matching key exchange", "no matching cipher", "bad configuration option")):
         return False
-    return any(value in message for value in (
-        "could not resolve hostname", "temporary failure in name resolution", "connection timed out",
-        "connection reset", "connection closed", "network is unreachable", "no route to host",
-        "connection refused", "broken pipe")) or bool(re.search(
-            r"(?m)^ssh: connect to host \S+ port \d+: (?:can(?:not|'t) assign requested address|operation timed out)\b"
-            r"|^ssh_dispatch_run_fatal: connection to \S+ port \d+: operation timed out\b"
-            r"|^timeout, server \S+ not responding\.?$", message.strip()))
+    if re.search(r"\b(?:codex|openai|model|nvcc|nvrtc|compilation|compiler)\b",lowered):
+        return False
+    lines = [line.strip() for line in message.splitlines() if line.strip()]
+    known_pq_banner = [
+        "** WARNING: connection is not using a post-quantum key exchange algorithm.",
+        '** This session may be vulnerable to "store now, decrypt later" attacks.',
+        "** The server may need to be upgraded. See https://openssh.com/pq.html",
+    ]
+    while lines:
+        if lines[:3] == known_pq_banner:
+            del lines[:3]
+        elif re.fullmatch(r"Warning: Permanently added '[^']+' \([A-Za-z0-9-]+\) to the list of known hosts\.",lines[0]):
+            lines.pop(0)
+        else:
+            break
+    diagnostic = lines[0].lower() if lines else ""
+    return bool(re.match(
+        r"ssh: (?:could not resolve hostname|temporary failure in name resolution)\b"
+        r"|ssh: connect to host \S+ port \d+: (?:can(?:not|'t) assign requested address|operation timed out|connection (?:timed out|reset|closed|refused|aborted|failure)|network is unreachable|no route to host)\b"
+        r"|ssh_dispatch_run_fatal: connection to \S+ port \d+: (?:operation timed out|can(?:not|'t) assign requested address)\b"
+        r"|timeout, server \S+ not responding\.?$"
+        r"|connection to \S+(?: port \d+)? (?:timed out|closed by remote host)\b"
+        r"|(?:kex_exchange_identification|ssh_exchange_identification): (?:read: )?connection (?:reset|closed)\b"
+        r"|client_loop: send disconnect: broken pipe\b"
+        r"|connection (?:timed out|reset|closed|refused)\b|broken pipe\b", diagnostic))
 
 
 def safe_id(value: str) -> str:

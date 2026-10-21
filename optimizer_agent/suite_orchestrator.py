@@ -63,8 +63,18 @@ def infrastructure_category(error):
     if re.search(r"(?i)\b(?:codex|openai|model|nvcc|nvrtc|compilation|compiler)\b",message):
         return None
     lines = [line.strip() for line in message.splitlines() if line.strip()]
-    while lines and lines[0].startswith(("Warning: Permanently added ", "Pseudo-terminal will not be allocated")):
-        lines.pop(0)
+    known_pq_banner = [
+        "** WARNING: connection is not using a post-quantum key exchange algorithm.",
+        '** This session may be vulnerable to "store now, decrypt later" attacks.',
+        "** The server may need to be upgraded. See https://openssh.com/pq.html",
+    ]
+    while lines:
+        if lines[:3] == known_pq_banner:
+            del lines[:3]
+        elif re.fullmatch(r"Warning: Permanently added '[^']+' \([A-Za-z0-9-]+\) to the list of known hosts\.",lines[0]):
+            lines.pop(0)
+        else:
+            break
     diagnostic = lines[0] if lines else ""
     diagnostic = re.sub(r"^BackendError:\s*", "", diagnostic)
     timeout_patterns = (
@@ -77,6 +87,7 @@ def infrastructure_category(error):
     connection_patterns = (
         r"ssh: could not resolve hostname \S+: ",
         r"ssh: connect to host \S+ port \d+: (?:can(?:not|'t) assign requested address|connection (?:refused|reset|aborted|closed|failure)|network is unreachable|no route to host)\b",
+        r"ssh_dispatch_run_fatal: connection to \S+ port \d+: can(?:not|'t) assign requested address\b",
         r"(?:kex_exchange_identification|ssh_exchange_identification): (?:read: )?(?:connection (?:reset|closed)|banner exchange: connection to )",
         r"connection to \S+(?: port \d+)? closed by remote host\.?$",
         r"client_loop: send disconnect: broken pipe\b",

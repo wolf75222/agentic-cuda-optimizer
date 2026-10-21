@@ -11,6 +11,42 @@ import execution_backend as module
 
 
 ADDRESS = b"ssh: connect to host romeo port 22: Can't assign requested address"
+PQ_BANNER = (b'** WARNING: connection is not using a post-quantum key exchange algorithm.\r\n'
+             b'** This session may be vulnerable to "store now, decrypt later" attacks.\r\n'
+             b'** The server may need to be upgraded. See https://openssh.com/pq.html\r\n')
+
+
+@pytest.mark.parametrize("diagnostic",[
+    b"ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n",
+    b"ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Operation timed out\r\n",
+    b"Connection to 194.57.105.173 port 22 timed out\r\n",
+    b"Timeout, server romeo1.univ-reims.fr not responding.\r\n",
+])
+@pytest.mark.parametrize("banner",[b'',PQ_BANNER])
+def test_actual_allocated_bootstrap_network_diagnostics_reconnect_with_exact_known_banner(diagnostic,banner):
+    assert module.transient_ssh_failure(subprocess.CompletedProcess([],255,b"",banner+diagnostic))
+    assert not module.transient_ssh_failure(subprocess.CompletedProcess([],1,b"",banner+diagnostic))
+
+
+@pytest.mark.parametrize("prefix",[
+    b'Unknown gateway banner\r\n',
+    PQ_BANNER.replace(b'may need',b'might need'),
+    PQ_BANNER.rsplit(b'** The server',1)[0],
+    b'Warning: Permanently added something unusual\r\n',
+    b'nvrtc compilation failure:\r\n'+PQ_BANNER,
+    b'Model response quoted:\r\n'+PQ_BANNER,
+])
+def test_unknown_or_application_banner_does_not_retry_a_quoted_network_diagnostic(prefix):
+    diagnostic=b"ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n"
+    assert not module.transient_ssh_failure(subprocess.CompletedProcess([],255,b"",prefix+diagnostic))
+
+
+def test_only_exact_known_host_warning_is_removed_before_transient_diagnostic():
+    warning=b"Warning: Permanently added 'romeo' (ED25519) to the list of known hosts.\r\n"
+    diagnostic=b"ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n"
+    for stderr in [warning+PQ_BANNER+diagnostic,PQ_BANNER+warning+diagnostic]:
+        assert module.transient_ssh_failure(subprocess.CompletedProcess([],255,b"",stderr))
+    assert not module.transient_ssh_failure(subprocess.CompletedProcess([],255,b"",b"'list' object has no attribute 'items'"))
 
 
 @pytest.mark.parametrize("message",[

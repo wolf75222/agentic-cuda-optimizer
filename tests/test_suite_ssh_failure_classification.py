@@ -16,6 +16,64 @@ from optimizer_agent.quality_suite import plan_suite
 from optimizer_agent.suite_orchestrator import SuiteOrchestrator, infrastructure_category, write_json
 
 
+PQ_BANNER = ('** WARNING: connection is not using a post-quantum key exchange algorithm.\r\n'
+             '** This session may be vulnerable to "store now, decrypt later" attacks.\r\n'
+             '** The server may need to be upgraded. See https://openssh.com/pq.html\r\n')
+
+
+# Literal, portable stderr fixtures from the 15 allocated bootstrap failures in
+# quality-study-v2. No CI dependency on results/, a user's path, or a live host.
+RECORDED_BOOTSTRAP_FAILURES = [
+    ('convolution.1729.full', False, "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n", 'ssh_transport_failure'),
+    ('convolution.1729.greedy_parent', True, "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n", 'ssh_transport_failure'),
+    ('convolution.1729.native_codex_vanilla', True, "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n", 'ssh_transport_failure'),
+    ('convolution.1729.no_autotuning', True, "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n", 'ssh_transport_failure'),
+    ('matmul.1729.native_codex_vanilla', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.1729.pmpp_permanent_only', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.1729.true_upstream', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.full', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.greedy_parent', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.native_codex_vanilla', True, 'Connection to 194.57.105.173 port 22 timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.no_autotuning', True, 'ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Operation timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.no_pmpp', True, 'ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Operation timed out\r\n', 'transport_timeout'),
+    ('matmul.2718.no_research', True, 'Timeout, server romeo1.univ-reims.fr not responding.\r\n', 'transport_timeout'),
+    ('matmul.2718.pmpp_permanent_only', True, 'Timeout, server romeo1.univ-reims.fr not responding.\r\n', 'transport_timeout'),
+    ('matmul.2718.true_upstream', True, 'Timeout, server romeo1.univ-reims.fr not responding.\r\n', 'transport_timeout'),
+]
+
+
+@pytest.mark.parametrize("name,banner,diagnostic,category", RECORDED_BOOTSTRAP_FAILURES,
+                         ids=[row[0] for row in RECORDED_BOOTSTRAP_FAILURES])
+def test_all_fifteen_recorded_bootstrap_stderr_fixtures_are_typed_transport(name,banner,diagnostic,category):
+    message = (PQ_BANNER if banner else '') + diagnostic
+    assert infrastructure_category(BackendError(message)) == category
+    assert infrastructure_category(message) == category
+    assert infrastructure_category(subprocess.CalledProcessError(255,["ssh","romeo"],stderr=message.encode())) == category
+
+
+@pytest.mark.parametrize("prefix", [
+    'Unknown gateway banner\r\n',
+    PQ_BANNER.replace('may need', 'might need'),
+    PQ_BANNER.rsplit('** The server',1)[0],  # Incomplete known banner.
+    'Warning: Permanently added something unusual\r\n',
+    'Compilation failed:\r\n' + PQ_BANNER,
+    'Model response quoted:\r\n' + PQ_BANNER,
+])
+def test_unknown_partial_and_application_banners_cannot_reclassify_quoted_ssh(prefix):
+    diagnostic = "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n"
+    assert infrastructure_category(prefix + diagnostic) is None
+
+
+def test_only_exact_known_host_warning_is_removed_and_attribute_error_stays_nontransport():
+    warning = "Warning: Permanently added 'romeo' (ED25519) to the list of known hosts.\r\n"
+    diagnostic = "ssh_dispatch_run_fatal: Connection to 194.57.105.173 port 22: Can't assign requested address\r\n"
+    assert infrastructure_category(warning + PQ_BANNER + diagnostic) == 'ssh_transport_failure'
+    assert infrastructure_category(PQ_BANNER + warning + diagnostic) == 'ssh_transport_failure'
+    assert infrastructure_category(AttributeError("'list' object has no attribute 'items'")) is None
+    assert infrastructure_category("'list' object has no attribute 'items'") is None
+    assert infrastructure_category(CodexError(PQ_BANNER + diagnostic)) is None
+
+
 @pytest.mark.parametrize("diagnostic,category",[
     ("ssh: Could not resolve hostname romeo: nodename nor servname provided, or not known", "ssh_transport_failure"),
     ("ssh: Could not resolve hostname romeo: Temporary failure in name resolution", "ssh_transport_failure"),
