@@ -10,6 +10,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import shlex
@@ -37,10 +38,17 @@ def slurm_state(receipt: dict) -> str:
 
 def transient_ssh_failure(process: subprocess.CompletedProcess) -> bool:
     message = process.stderr.decode(errors="replace").lower()
-    return process.returncode == 255 and any(value in message for value in (
+    if process.returncode != 255 or any(value in message for value in (
+            "permission denied", "host key verification failed", "remote host identification has changed",
+            "no matching host key", "no matching key exchange", "no matching cipher", "bad configuration option")):
+        return False
+    return any(value in message for value in (
         "could not resolve hostname", "temporary failure in name resolution", "connection timed out",
         "connection reset", "connection closed", "network is unreachable", "no route to host",
-        "connection refused", "kex_exchange_identification", "broken pipe"))
+        "connection refused", "broken pipe")) or bool(re.search(
+            r"(?m)^ssh: connect to host \S+ port \d+: (?:can(?:not|'t) assign requested address|operation timed out)\b"
+            r"|^ssh_dispatch_run_fatal: connection to \S+ port \d+: operation timed out\b"
+            r"|^timeout, server \S+ not responding\.?$", message.strip()))
 
 
 def safe_id(value: str) -> str:
@@ -67,6 +75,7 @@ class SlurmConfig:
     request_timeout: int = 300
     exclude: str = ""
     transport_mode: str = "auto"
+    reconnect_transport: bool = True
 
     def __post_init__(self):
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.@-]*", self.host):
@@ -94,6 +103,8 @@ class SlurmConfig:
             raise ValueError("Timeouts and polling interval must be positive")
         if self.transport_mode not in ("auto", "legacy", "exchange"):
             raise ValueError("transport_mode must be auto, legacy or exchange")
+        if type(self.reconnect_transport) is not bool:
+            raise ValueError("reconnect_transport must be boolean")
 
     @classmethod
     def load(cls, path: str | Path) -> "SlurmConfig":
@@ -104,8 +115,57 @@ class SlurmConfig:
 
 
 class SSHTransport:
-    def __init__(self, host: str):
+    def __init__(self, host: str, *, reconnect: bool = False, reconnect_log: str | Path | None = None):
+        if type(reconnect) is not bool:
+            raise ValueError("reconnect must be boolean")
         self.host = host
+        self.reconnect = reconnect
+        self.reconnect_log = Path(reconnect_log) if reconnect_log is not None else None
+
+    def _reconnect_event(self,event):
+        if self.reconnect_log is None:
+            return
+        self.reconnect_log.parent.mkdir(parents=True,exist_ok=True)
+        descriptor = os.open(self.reconnect_log,os.O_WRONLY | os.O_CREAT | os.O_APPEND,0o600)
+        with os.fdopen(descriptor,"a") as stream:
+            stream.write(json.dumps({"timestamp_unix":time.time(),"host":self.host,**event},allow_nan=False)+"\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+
+    def _idempotent(self,command,*,operation,resource,data=None,timeout=60,accepted=(0,),timeout_error):
+        """Replay one immutable read/publication, never a scheduler command.
+
+        Reconnect mode has no cumulative retry ceiling. Each subprocess keeps
+        its technical timeout; authentication and remote application failures
+        remain terminal. The caller's bytes/command are fixed before this loop.
+        """
+        attempt,operation_id = 0,uuid.uuid4().hex
+        fingerprint = hashlib.sha256(data).hexdigest() if data is not None else None
+        while True:
+            try:
+                process = self.run(command,data=data,timeout=timeout,check=False)
+            except subprocess.TimeoutExpired as error:
+                if not self.reconnect and attempt == 2:
+                    raise BackendError(timeout_error) from error
+                diagnostic = "SSH subprocess timed out"
+            else:
+                if process.returncode in accepted:
+                    if attempt:
+                        self._reconnect_event({"operation_id":operation_id,"operation":operation,
+                            "resource":resource,"payload_sha256":fingerprint,"status":"reconnected","attempts":attempt+1})
+                    return process,attempt+1
+                if not transient_ssh_failure(process) or (not self.reconnect and attempt == 2):
+                    self._reconnect_event({"operation_id":operation_id,"operation":operation,
+                        "resource":resource,"payload_sha256":fingerprint,"status":"failed",
+                        "attempts":attempt+1,"diagnostic":process.stderr.decode(errors="replace")[-2000:]})
+                    raise BackendError(process.stderr.decode(errors="replace")[-4000:])
+                diagnostic = process.stderr.decode(errors="replace")[-2000:]
+            delay = (1,2,5,10,30)[min(attempt,4)] if self.reconnect else 1
+            self._reconnect_event({"operation_id":operation_id,"operation":operation,"resource":resource,
+                "payload_sha256":fingerprint,"status":"waiting_for_network","failed_attempt":attempt+1,
+                "backoff_seconds":delay,"diagnostic":diagnostic})
+            time.sleep(delay)
+            attempt += 1
 
     def run(self, argv: list[str], *, data: bytes | None = None, timeout: int = 60,
             check: bool = True) -> subprocess.CompletedProcess:
@@ -138,21 +198,11 @@ try:
 finally:
     if t.exists(): t.unlink()
 """
+        data = bytes(data)
         command = ["python3", "-c", script, path, str(len(data)), hashlib.sha256(data).hexdigest()]
-        for attempt in range(3):
-            try:
-                process = self.run(command, data=data, check=False)
-            except subprocess.TimeoutExpired as error:
-                if attempt == 2:
-                    raise BackendError("Atomic SSH upload timed out after 3 identical attempts; "
-                                       "resume this request ID to reconcile, never submit duplicate execution") from error
-                time.sleep(1)
-                continue
-            if process.returncode == 0:
-                return
-            if not transient_ssh_failure(process) or attempt == 2:
-                raise BackendError(process.stderr.decode(errors="replace")[-4000:])
-            time.sleep(1)
+        self._idempotent(command,operation="atomic_write",resource=path,data=data,
+            timeout_error="Atomic SSH upload timed out after 3 identical attempts; "
+                "resume this request ID to reconcile, never submit duplicate execution")
 
     def read(self, path: str, *, optional: bool = False) -> bytes | None:
         command = ["python3", "-c",
@@ -161,22 +211,9 @@ finally:
         # Reads are safe to repeat after an uncertain connection outcome. This
         # never retries a scheduler/execution command. Atomic same-body uploads
         # use their own verified-content retry protocol above.
-        for attempt in range(3):
-            try:
-                process = self.run(command, check=False)
-            except subprocess.TimeoutExpired as error:
-                if attempt == 2:
-                    raise BackendError("Remote artifact read timed out after 3 attempts") from error
-                time.sleep(1)
-                continue
-            if optional and process.returncode == 44:
-                return None
-            if process.returncode == 0:
-                return process.stdout
-            message = process.stderr.decode(errors="replace")[-4000:]
-            if not transient_ssh_failure(process) or attempt == 2:
-                raise BackendError(message)
-            time.sleep(1)
+        process,_ = self._idempotent(command,operation="read",resource=path,
+            accepted=(0,44) if optional else (0,),timeout_error="Remote artifact read timed out after 3 attempts")
+        return None if process.returncode == 44 else process.stdout
 
     def exchange(self, directory: str, payload: dict, *, wait_seconds: float, python: str = "python3") -> dict:
         """Repeat only the same idempotent publication/collection after lost ACK.
@@ -187,24 +224,26 @@ finally:
         command = [python, f"{directory}/optimizer_agent/remote_worker.py", "exchange",
                    "--directory", directory, "--wait-seconds", str(wait_seconds)]
         data = json.dumps(payload).encode()
-        for attempt in range(3):
-            try:
-                process = self.run(command, data=data, timeout=wait_seconds + 40, check=False)
-            except subprocess.TimeoutExpired as error:
-                if attempt == 2:
-                    raise BackendError("Idempotent exchange timed out after 3 identical attempts; resume the same request ID") from error
-                time.sleep(1)
-                continue
-            if process.returncode == 0:
-                try:
-                    result = json.loads(process.stdout)
-                except ValueError as error:
-                    raise BackendError("Exchange returned malformed JSON; reconcile this same request ID") from error
-                result["ssh_attempts"] = attempt + 1
-                return result
-            if not transient_ssh_failure(process) or attempt == 2:
-                raise BackendError(process.stderr.decode(errors="replace")[-4000:])
-            time.sleep(1)
+        process,attempts = self._idempotent(command,operation="exchange",
+            resource={"directory":directory,"identity":payload.get("envelope",{}).get("identity")},
+            data=data,timeout=wait_seconds+40,
+            timeout_error="Idempotent exchange timed out after 3 identical attempts; resume the same request ID")
+        try:
+            result = json.loads(process.stdout)
+        except ValueError as error:
+            raise BackendError("Exchange returned malformed JSON; reconcile this same request ID") from error
+        result["ssh_attempts"] = attempts
+        return result
+
+    def scheduler_read(self, argv: list[str], *, check: bool = True):
+        """Reconnect scheduler observations; never retry a scheduler mutation."""
+        if not argv or argv[0] not in {"squeue","sacct"}:
+            raise ValueError("Only read-only squeue/sacct observations can reconnect")
+        # squeue can reject an already-ended job; accounting is then consulted.
+        accepted = (0,) if check else (0,1)
+        process,_ = self._idempotent(list(argv),operation="scheduler_read",resource=list(argv),
+            accepted=accepted,timeout_error="Read-only scheduler observation timed out")
+        return process
 
 
 class SlurmBackend:
@@ -216,7 +255,8 @@ class SlurmBackend:
         self.results_dir.mkdir(parents=True, exist_ok=True)
         self.session_id = safe_id(session_id or uuid.uuid4().hex)
         self.remote_dir = str(PurePosixPath(config.remote_root) / "sessions" / self.session_id)
-        self.transport = transport or SSHTransport(config.host)
+        self.transport = transport or SSHTransport(config.host,reconnect=config.reconnect_transport,
+            reconnect_log=self.results_dir/"transport-reconnect.jsonl")
         self.job_id: str | None = None
         self.hardware: dict = {}
         self.transport_capabilities: tuple[str, ...] = ()
@@ -373,13 +413,14 @@ class SlurmBackend:
             return {"state": "NOT_SUBMITTED"}
         # squeue reflects current allocation state while accounting can lag,
         # particularly during startup, requeue, and preemption.
-        active = self.transport.run(["squeue", "-h", "-j", self.job_id,
+        observe = getattr(self.transport,"scheduler_read",self.transport.run)
+        active = observe(["squeue", "-h", "-j", self.job_id,
                                      "-o", "%i|%T|%N"], check=False)
         active_rows = [line.split("|") for line in active.stdout.decode().splitlines() if line.strip()]
         active_row = next((row for row in active_rows if len(row) >= 3 and row[0] == self.job_id), None)
         if active.returncode == 0 and active_row:
             return {"job_id": self.job_id, "state": active_row[1], "nodes": active_row[2], "source": "squeue"}
-        result = self.transport.run(["sacct", "-n", "-P", "-j", self.job_id,
+        result = observe(["sacct", "-n", "-P", "-j", self.job_id,
                                      "--format=JobIDRaw,State,ExitCode,Elapsed,NodeList"])
         rows = [line.split("|") for line in result.stdout.decode().splitlines() if line.strip()]
         row = next((r for r in rows if r[0] == self.job_id), None)

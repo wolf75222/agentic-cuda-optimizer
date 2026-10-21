@@ -368,6 +368,8 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
     write_json(directory/"baseline-independent-validation.json",baseline_check)
     if not baseline_check.get("ok"):
         raise RuntimeError("Original supplied reference failed the independent oracle")
+    if callable(getattr(runner,"require_complete",None)):
+        runner.require_complete()
     backend = model_backend or CodexBackend(CodexConfig(model="gpt-6-luna",reasoning_effort="max",
         timeout_seconds=config.model_timeout_seconds,trace_dir=directory/"model"))
     transport = OriginalCodexTransport(backend,config.max_repairs_per_trial,directory/"model-transport")

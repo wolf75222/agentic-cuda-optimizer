@@ -36,7 +36,8 @@ from .research_service import ResearchService, ResearchConfig, ResearchDossier, 
 from .autotuning import Autotuner
 from .tuning_constraints import compile_constraints, ConstraintSpecificationError
 from .pmpp_guidance import PMPP_GUIDANCE
-from .diagnostics import build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary
+from .diagnostics import (build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary,
+                          compact_candidate_evidence)
 from .workload_semantics import operation_spec
 from benchmark_workloads import WorkloadSuite
 from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
@@ -158,6 +159,8 @@ class CampaignRuntime:
             write_json(baseline_path, self.baseline_measurement)
         if not self.baseline_measurement.get("ok"):
             raise RuntimeError("Baseline independent validation failed: " + json.dumps(self.baseline_measurement)[:1000])
+        if callable(getattr(runner, "require_complete", None)):
+            runner.require_complete()
         self.baseline_latencies = self.latencies(self.baseline_measurement)
         self.store = ExperimentStore(self.directory / "experiments.sqlite")
         policy_class = GreedySearchPolicy if config.experimental_mode == "ablation_no_tree" else SearchPolicy
@@ -297,7 +300,8 @@ class CampaignRuntime:
                         diagnostic["diagnostic_id"] not in dossier.diagnostic_ids):
                     refresh = True
             if not path.exists() or refresh:
-                dossier = self.research_service.prepare(self.workload_description, trial["parent"],
+                dossier = self.research_service.prepare(self.workload_description,
+                    compact_candidate_evidence(trial["parent"], self.directory),
                     {"strategy_family": trial["action"]},
                     {"environment_fingerprint": self.environment_hash, "diagnostic": diagnostic,
                      "previous_error": state.get("error")})
@@ -332,6 +336,8 @@ class CampaignRuntime:
                     return {"needs_research": True, "error": "needs_research: diagnostic lacks an applicable targeted dossier", "valid": False}
             source_parent = (self.store.get_candidate_source(state["candidate_id"], self.config.run_id)
                              if state.get("repair", 0) > 0 and state.get("candidate_id") else trial["parent"])
+            prompt_parent = compact_candidate_evidence(trial["parent"], self.directory)
+            source_parent = compact_candidate_evidence(source_parent, self.directory)
             if path.exists():
                 data = read_json(path)
             else:
@@ -351,13 +357,13 @@ class CampaignRuntime:
                             "references": [], "parameter_space": [], "parameter_bindings": [],
                             "usage": response.usage, "call_id": response.call_id}
                 elif self.config.experimental_mode == "ablation_no_research":
-                    proposal = self.generator.propose_unresearched(trial["parent"], {"strategy_family": trial["action"]},
+                    proposal = self.generator.propose_unresearched(prompt_parent, {"strategy_family": trial["action"]},
                         contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash,
                         experimental_mode="ablation_no_research", source_parent=source_parent,
                         evidence=evidence, workload=self.workload_description)
                     data = asdict(proposal)
                 else:
-                    proposal = self.generator.propose(trial["parent"], {"strategy_family": trial["action"]}, dossier,
+                    proposal = self.generator.propose(prompt_parent, {"strategy_family": trial["action"]}, dossier,
                         contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash,
                         source_parent=source_parent,
                         include_pmpp=self.config.experimental_mode != "ablation_no_pmpp",

@@ -21,6 +21,9 @@ Un groupe final ouvre une nouvelle allocation et y évalue le noyau naïf et tou
 
 `suite.sqlite` conserve les intentions avant soumission, les identités de session, les graines privées, les états et les résultats. Ce fichier doit rester hors des espaces accessibles aux générateurs et conserver ses permissions privées. Une reprise utilise la même session ; elle ne soumet pas un nouveau job lorsqu’un worker est encore actif. Des verrous par tâche protègent aussi les processus survivant à l’arrêt du contrôleur. Les résultats terminés sont authentifiés par leurs empreintes et leur reçu terminal avant réutilisation. Un artefact modifié est refusé.
 
+Les opérations de reconnexion et la reprise vérifiée avant le premier appel
+modèle sont détaillées dans [Reprise après interruption réseau](recovery_transport.fr.md).
+
 Une panne ambiguë du modèle vanilla ou une finalisation interrompue après révélation des entrées reste `recovery_required`. Le programme ne relance pas secrètement le prompt ou le test final pour obtenir un meilleur résultat. Le reçu partiel, les coûts et les diagnostics restent consultables. La commande `run` ne transforme pas automatiquement cet état en nouvelle expérience.
 
 Pour un groupe final incomplet à cause d’un incident de transport enregistré ou d’un terminal worker manquant, une récupération explicite est disponible :

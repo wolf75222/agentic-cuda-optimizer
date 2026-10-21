@@ -249,6 +249,9 @@ def run_vanilla(config, output, session_id, executable, *, service_factory=None,
     try:
         receipt["submitted"] = None  # Submission may succeed before start returns.
         metadata = service.start()
+        borrowed_runner = getattr(service,"_provided_runner",None)
+        if callable(getattr(borrowed_runner,"require_complete",None)):
+            borrowed_runner.require_complete()
         receipt.update(submitted=metadata.get("owns_worker", True),
             worker_ownership=metadata.get("worker_ownership", "owned"),
             service_endpoint=metadata["endpoint"],target_properties=metadata["properties"])

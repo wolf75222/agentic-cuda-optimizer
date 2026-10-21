@@ -14,7 +14,7 @@ def requirement_registry(spec=None):
         match = re.match(r"^#{2,3} (\d+(?:\.\d+)?)\.?\s+(.+)", line)
         if match and 1 <= int(match[1].split(".")[0]) <= 19:
             rows.append({"id": "SEC-" + match[1], "title": match[2]})
-        match = re.match(r"^\| (AC-\d+) \| (.+?) \|", line)
+        match = re.match(r"^\| ([A-Z]+-\d+) \| (.+?) \|", line)
         if match:
             rows.append({"id": match[1], "title": match[2]})
     return rows
@@ -26,6 +26,10 @@ def build_requirement_status(evidence=None):
     A source path or a planned test never establishes executed qualification.
     """
     evidence = evidence or {}
+    if "requirements" in evidence:
+        if not isinstance(evidence["requirements"],dict):
+            raise ValueError("Requirement evidence catalog must contain an ID-to-evidence mapping")
+        evidence = evidence["requirements"]
     rows = []
     for requirement in requirement_registry():
         supplied = evidence.get(requirement["id"], {})
@@ -48,6 +52,10 @@ def write_report(directory, status, *, evidence=None):
     directory = Path(directory)
     report = {**status, "requirements": build_requirement_status(evidence),
         "evidence_policy": "Une implémentation, un test local et une preuve ROMEO sont trois affirmations indépendantes. Les absences restent en attente."}
+    if isinstance(evidence,dict) and "requirements" in evidence:
+        report["requirement_evidence_catalog"] = evidence.get("evidence_catalog",{})
+        report["requirement_audit"] = {key:value for key,value in evidence.items()
+                                      if key not in {"requirements","evidence_catalog"}}
     report["remaining"] = [{"id":row["id"],"items":row["remaining"]} for row in report["requirements"] if row["remaining"]]
     write_json(directory / "report.json", report)
     summary = report["summary"]

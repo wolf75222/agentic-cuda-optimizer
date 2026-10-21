@@ -1,0 +1,323 @@
+{
+  "evaluation_id": "038361dcffde4565b9eefb427c9dc3ff",
+  "candidate_id": "baseline",
+  "artifact_hash": "a57f92480ff078e50a582464391fe4e228999eed40808d4f9259c28af149cf16",
+  "contract_hash": "99934dd352c11eeede508f1c921ee703a6fa223dde0909ea1d0090565bb2bdd5",
+  "status": "measured",
+  "ok": true,
+  "cases": {
+    "search-1": {
+      "latency_ms": 0.0036847999785095454,
+      "series": [
+        {
+          "mean_ms": 0.0037951999926008283,
+          "raw_ms": [
+            0.005504000000655651,
+            0.0046720001846551895,
+            0.003456000005826354,
+            0.004127999767661095,
+            0.00342399999499321,
+            0.003456000005826354,
+            0.004480000119656324,
+            0.00342399999499321,
+            0.004767999984323978,
+            0.0044479998759925365,
+            0.00342399999499321,
+            0.0033279999624937773,
+            0.0033919999841600657,
+            0.003103999886661768,
+            0.003456000005826354,
+            0.00342399999499321,
+            0.003936000168323517,
+            0.003295999951660633,
+            0.0035840000491589308,
+            0.0031999999191612005
+          ],
+          "report": {
+            "architecture": "sm_90",
+            "compilation_identity": {
+              "architecture": "sm_90",
+              "driver_version": 13010,
+              "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+              "key": "9a8d26724a2f1e477ae32d876f8a3c084a7281873ae25ac6a92a1e28917aa590",
+              "nvrtc_version": "12.6",
+              "options": [],
+              "source": "// Independent CPU oracle and evaluator are outside the model's writable workspace.\n// One CUDA kernel, row-major float32, full precision accumulation, no preprocessing.\nextern \"C\" __global__ void matmul(const float* a, const float* b, float* c, int n) {\n    int col = blockIdx.x * blockDim.x + threadIdx.x;\n    int row = blockIdx.y * blockDim.y + threadIdx.y;\n    if (row < n && col < n) {\n        float sum = 0.0f;\n        for (int k = 0; k < n; ++k) sum += a[row*n + k] * b[k*n + col];\n        c[row*n + col] = sum;\n    }\n}\n",
+              "toolkit_version": 12060
+            },
+            "compile_cache_hit": true,
+            "compile_ms": 0.086593,
+            "compiler_log": "",
+            "device": "NVIDIA GH200 120GB",
+            "duration_ms": 7.485808,
+            "environment": {
+              "architecture": "sm_90",
+              "compute_capability": {
+                "major": 9,
+                "minor": 0
+              },
+              "cuda_toolkit_version": 12060,
+              "device": 0,
+              "driver_version": 13010,
+              "free_memory_bytes": 101413421056,
+              "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+              "l2_cache_bytes": 62914560,
+              "max_block_dimensions": [
+                1024,
+                1024,
+                64
+              ],
+              "max_grid_dimensions": [
+                2147483647,
+                65535,
+                65535
+              ],
+              "max_registers_per_block": 65536,
+              "max_registers_per_multiprocessor": 65536,
+              "max_shared_memory_per_block_bytes": 49152,
+              "max_shared_memory_per_block_optin_bytes": 232448,
+              "max_shared_memory_per_multiprocessor_bytes": 233472,
+              "max_threads_per_block": 1024,
+              "max_threads_per_multiprocessor": 2048,
+              "multiprocessor_count": 132,
+              "name": "NVIDIA GH200 120GB",
+              "nvrtc_version": "12.6",
+              "total_memory_bytes": 102005473280,
+              "uuid": "030256aceeacca7debde79112d9593a6",
+              "warp_size": 32
+            },
+            "finished_at_unix_ms": 1792598562861,
+            "guard_outputs_poisoned": true,
+            "guard_readonly_ok": true,
+            "id": "evaluation",
+            "kernel_resources": {
+              "local_memory_bytes": 0,
+              "max_threads_per_block": 1024,
+              "registers_per_thread": 32,
+              "static_shared_memory_bytes": 0
+            },
+            "latency_ms": 0.0037951999926008283,
+            "latency_samples_ms": [
+              0.005504000000655651,
+              0.0046720001846551895,
+              0.003456000005826354,
+              0.004127999767661095,
+              0.00342399999499321,
+              0.003456000005826354,
+              0.004480000119656324,
+              0.00342399999499321,
+              0.004767999984323978,
+              0.0044479998759925365,
+              0.00342399999499321,
+              0.0033279999624937773,
+              0.0033919999841600657,
+              0.003103999886661768,
+              0.003456000005826354,
+              0.00342399999499321,
+              0.003936000168323517,
+              0.003295999951660633,
+              0.0035840000491589308,
+              0.0031999999191612005
+            ],
+            "latency_series_ms": [
+              [
+                0.005504000000655651,
+                0.0046720001846551895,
+                0.003456000005826354,
+                0.004127999767661095,
+                0.00342399999499321,
+                0.003456000005826354,
+                0.004480000119656324,
+                0.00342399999499321,
+                0.004767999984323978,
+                0.0044479998759925365,
+                0.00342399999499321,
+                0.0033279999624937773,
+                0.0033919999841600657,
+                0.003103999886661768,
+                0.003456000005826354,
+                0.00342399999499321,
+                0.003936000168323517,
+                0.003295999951660633,
+                0.0035840000491589308,
+                0.0031999999191612005
+              ]
+            ],
+            "measurement_protocol": {
+              "data_reset": "every_launch_outside_timing",
+              "estimator": "median_of_series_means",
+              "iterations": 20,
+              "scope": "cuda_events_kernel_only",
+              "series": 1,
+              "warmup": 3
+            },
+            "ok": true,
+            "outputs": [
+              {
+                "bytes": 4,
+                "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.no_autotuning/worker/run-087c20fca0544b52b97d7ba5c2545c41/outputs/output-0.bin",
+                "remote_path": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/087c20fca0544b52b97d7ba5c2545c41/results/run-evaluation/output-0.bin"
+              }
+            ],
+            "request_path": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/087c20fca0544b52b97d7ba5c2545c41/request.json",
+            "result_path": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/087c20fca0544b52b97d7ba5c2545c41/results/run-evaluation/result.json",
+            "schema_version": 3,
+            "stage": "complete",
+            "started_at_unix_ms": 1792598562853,
+            "worker_reusable": true,
+            "reservation_wall_seconds": 0.009657160378992558,
+            "persistent_native_worker": true,
+            "execution_environment": "romeo",
+            "hardware_fingerprint": {
+              "environment": "romeo",
+              "hostname": "romeo-a043",
+              "machine": "aarch64",
+              "slurm_job_id": "772657",
+              "cuda_visible_devices": "0",
+              "device_properties": {
+                "architecture": "sm_90",
+                "compute_capability": {
+                  "major": 9,
+                  "minor": 0
+                },
+                "cuda_toolkit_version": 12060,
+                "device": 0,
+                "driver_version": 13010,
+                "free_memory_bytes": 101413093376,
+                "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+                "l2_cache_bytes": 62914560,
+                "max_block_dimensions": [
+                  1024,
+                  1024,
+                  64
+                ],
+                "max_grid_dimensions": [
+                  2147483647,
+                  65535,
+                  65535
+                ],
+                "max_registers_per_block": 65536,
+                "max_registers_per_multiprocessor": 65536,
+                "max_shared_memory_per_block_bytes": 49152,
+                "max_shared_memory_per_block_optin_bytes": 232448,
+                "max_shared_memory_per_multiprocessor_bytes": 233472,
+                "max_threads_per_block": 1024,
+                "max_threads_per_multiprocessor": 2048,
+                "multiprocessor_count": 132,
+                "name": "NVIDIA GH200 120GB",
+                "nvrtc_version": "12.6",
+                "total_memory_bytes": 102005473280,
+                "uuid": "030256aceeacca7debde79112d9593a6",
+                "warp_size": 32
+              },
+              "nvidia_smi": "GPU-030256ac-eeac-ca7d-ebde-79112d9593a6, NVIDIA GH200 120GB, 590.48.01, 00000029:01:00.0",
+              "toolkit": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Wed_Oct_30_00:08:18_PDT_2024\nCuda compilation tools, release 12.6, V12.6.85\nBuild cuda_12.6.r12.6/compiler.35059454_0",
+              "compiler": "g++ (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5)",
+              "profiling_available": true,
+              "sanitizer_available": true,
+              "gpu_uuids": [
+                "GPU-030256ac-eeac-ca7d-ebde-79112d9593a6"
+              ],
+              "fingerprint_id": "145956aa0fe3efeb757e0a505b3b4ce4012e271eb3f926df1f184a347c047613"
+            },
+            "request_fingerprint": "c8d9d83be1e308e4d2e8fc94d3493091efafd32db6f683b64cdc1b2f1f99e385",
+            "slurm_job_id": "772657",
+            "worker_reservation": {
+              "clock": "time.monotonic_ns",
+              "worker_pid": 1804782,
+              "session_id": "suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a",
+              "job_id": "772657",
+              "start_monotonic_ns": 5625768190096993,
+              "end_monotonic_ns": 5625768265419302
+            },
+            "transport_receipt": {
+              "mode": "exchange_v1",
+              "ssh_roundtrips": 1,
+              "blob_uploads": 0,
+              "blob_upload_bytes": 0,
+              "blob_cache_hits": 3,
+              "controller_wall_seconds": 0.7500898749858607
+            }
+          },
+          "launch": {
+            "grid": [
+              1,
+              1,
+              1
+            ],
+            "block": [
+              16,
+              16,
+              1
+            ],
+            "shared_memory_bytes": 0
+          }
+        }
+      ],
+      "weight": 1.0,
+      "critical": false
+    }
+  },
+  "protocol": {
+    "contract_id": "quality-20261021-v2.matmul.3141.no_autotuning",
+    "version": 1,
+    "operation": "matmul",
+    "signature": "extern \"C\" __global__ void matmul(const float* a, const float* b, float* c, int n)",
+    "oracle_provenance": "Independent NumPy CPU implementation in benchmark_workloads.py, float64 accumulation with float32 outputs",
+    "benchmark_series": 7,
+    "launches_per_series": 20,
+    "warmup": 3,
+    "confidence": 0.95,
+    "min_relative_gain": 0.01,
+    "max_critical_regression": 0.05,
+    "bootstrap_samples": 2000,
+    "required_sanitizers": [
+      "memcheck",
+      "racecheck",
+      "initcheck",
+      "synccheck"
+    ],
+    "metadata_json": "{\"cache_regime\": \"warm, inputs reset before every launch\", \"environment\": {\"architecture\": \"sm_90\", \"compute_capability\": {\"major\": 9, \"minor\": 0}, \"cuda_toolkit_version\": 12060, \"driver_version\": 13010, \"harness_build_id\": \"8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab\", \"name\": \"NVIDIA GH200 120GB\", \"nvrtc_version\": \"12.6\", \"uuid\": \"030256aceeacca7debde79112d9593a6\"}, \"layout\": \"contiguous row-major square matrices\", \"mathematics\": \"c[row*n+col] = sum(k=0..n-1, a[row*n+k]*b[k*n+col])\", \"memory_policy\": {\"allocations\": \"A, B and C are distinct, disjoint device allocations; no aliasing\", \"arithmetic\": \"Full float32 arithmetic; ordinary float32 FMA is allowed; double, TF32, half and bfloat16 arithmetic are excluded\", \"input_domain\": \"Dense finite float32 values in [-1,1]; no NaN/Inf, sparsity or sentinel-input assumptions\", \"inputs\": \"A and B are read-only and checked bitwise after each launch\", \"launches\": \"Independent invocations; no persistent data, prior-output accumulation or cross-launch synchronization\", \"output\": \"C is output-only, poisoned before every launch; fully overwrite it without reading prior C\", \"shape_scalar\": \"n is positive signed int32 with physically admissible allocations; handle non-divisible tails and use sufficiently wide address arithmetic\", \"sizes\": \"A/B/C each n*n elements, contiguous row-major n by n\", \"storage\": \"Contiguous exact-sized float32 buffers; no padding, halo or auxiliary allocation\"}, \"numerical_tolerance\": {\"atol\": 0.0002, \"rtol\": 0.0002}, \"operation\": \"matmul\", \"precision\": \"float32\", \"timed_scope\": \"single CUDA kernel, CUDA Events, transfers/compilation excluded\"}",
+    "correctness_repetitions": 2,
+    "confirmation_batches": 20,
+    "nonfinite_policy": "reject",
+    "allowed_precision": null
+  },
+  "environment": {
+    "architecture": "sm_90",
+    "compute_capability": {
+      "major": 9,
+      "minor": 0
+    },
+    "cuda_toolkit_version": 12060,
+    "device": 0,
+    "driver_version": 13010,
+    "free_memory_bytes": 101413093376,
+    "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+    "l2_cache_bytes": 62914560,
+    "max_block_dimensions": [
+      1024,
+      1024,
+      64
+    ],
+    "max_grid_dimensions": [
+      2147483647,
+      65535,
+      65535
+    ],
+    "max_registers_per_block": 65536,
+    "max_registers_per_multiprocessor": 65536,
+    "max_shared_memory_per_block_bytes": 49152,
+    "max_shared_memory_per_block_optin_bytes": 232448,
+    "max_shared_memory_per_multiprocessor_bytes": 233472,
+    "max_threads_per_block": 1024,
+    "max_threads_per_multiprocessor": 2048,
+    "multiprocessor_count": 132,
+    "name": "NVIDIA GH200 120GB",
+    "nvrtc_version": "12.6",
+    "total_memory_bytes": 102005473280,
+    "uuid": "030256aceeacca7debde79112d9593a6",
+    "warp_size": 32
+  },
+  "resource_wall_seconds": 67.76342337499955
+}

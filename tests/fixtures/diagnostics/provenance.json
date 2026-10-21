@@ -1,0 +1,28 @@
+{
+  "evidence_kind": "archived GPU receipt excerpts used only for CPU diagnostic regressions; these fixtures do not execute or certify CUDA",
+  "sources": [
+    {
+      "fixture": "validation-compilation-error.json",
+      "source_relative_to_repo": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.no_autotuning/generation/trials/01M5FK86J9PKD7TMVWEDH4T9MB/evaluation-e172a7141be495733790619f.json",
+      "source_sha256": "891458925f9875fa1c5e7d5f2978de76c9043db9af2f9fad75f268331ff326fd",
+      "fixture_sha256": "4f07186d79c3951f8c9411bd2c43b90150066c820874ac4fb92044e0a87070bf",
+      "selection": "Complete decoded validation JSON, unchanged values; whitespace normalized"
+    },
+    {
+      "fixture": "benchmark-measured.json",
+      "source_relative_to_repo": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.no_autotuning/generation/baseline-measurement.json",
+      "source_sha256": "746fde54d53caf6730bc1928bddbda0d6374b8354c881aa4838a6e0f1277defd",
+      "fixture_sha256": "be7e00bc8c248275b18f7f0481e7bc7ae8a31973e271b6b0d4695536a839410f",
+      "selection": "complete top-level metadata; only search-1 and its first benchmark series retained, unchanged numeric values"
+    },
+    {
+      "fixture": "confirmed-parent.json.gz",
+      "source_relative_to_repo": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.full/generation/trials/01M5FKZE1520WKC3G4W9A3RRM1/trial.json",
+      "source_sha256": "6b51c33a0cb5cd1b64b9d1aa3508bddef2813712de0852ed737ca3f8cf39c7ef",
+      "fixture_sha256": "062e7b7b0df4a6319869fc7994f608dc196b698cfc53bf838efd90e64525dfaa",
+      "decoded_fixture_sha256": "f25510ad1bf6d3968d60f7bda38e1aa39a68a20807c18ac66ec45f0f133633ed",
+      "decoded_bytes": 2138787,
+      "selection": "Complete parent object, including full paired confirmation, extracted unchanged from decoded trial JSON; canonical key ordering and deterministic gzip encoding"
+    }
+  ]
+}

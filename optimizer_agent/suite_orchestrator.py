@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from dataclasses import asdict, replace
+from dataclasses import asdict, is_dataclass, replace
 import fcntl
 import hashlib
 import importlib.util
@@ -16,6 +16,7 @@ import json
 import multiprocessing
 import os
 from pathlib import Path
+import re
 import secrets
 import shutil
 import sqlite3
@@ -31,14 +32,97 @@ TERMINAL = {"completed", "failed", "recovery_required"}
 
 
 def infrastructure_category(error):
-    if isinstance(error, (TimeoutError, subprocess.TimeoutExpired)):
-        return "transport_timeout"
-    message = str(error)
+    """Recognize transport diagnostics, never infer infrastructure from a loss.
+
+    A generic timeout can belong to the model or compiler. Only an SSH process
+    or an explicit transport diagnostic qualifies for transport recovery.
+    """
+    if type(error).__name__ == "CodexError" or type(error).__module__.endswith("codex_backend"):
+        return None
+    if isinstance(error, subprocess.TimeoutExpired):
+        command = error.cmd
+        executable = command[0] if isinstance(command, (list, tuple)) and command else None
+        return "transport_timeout" if executable and Path(str(executable)).name == "ssh" else None
+    if isinstance(error, subprocess.CalledProcessError):
+        command = error.cmd
+        executable = command[0] if isinstance(command, (list, tuple)) and command else None
+        if not executable or Path(str(executable)).name != "ssh" or error.returncode != 255:
+            return None
+        message = error.stderr or ""
+        if isinstance(message, bytes):
+            message = message.decode(errors="replace")
+    else:
+        message = str(error)
     if message.startswith(("Atomic SSH upload timed out", "Remote artifact read timed out", "Remote request timed out")):
         return "transport_timeout"
     if message.startswith("Worker session ") and " is terminal (job " in message:
         return "worker_terminal_incomplete"
+    # Do not reinterpret a compiler/provider error quoting an SSH example as
+    # evidence of a real SSH failure. Strings from actual runner receipts have
+    # the OpenSSH diagnostic as their leading context.
+    if re.search(r"(?i)\b(?:codex|openai|model|nvcc|nvrtc|compilation|compiler)\b",message):
+        return None
+    lines = [line.strip() for line in message.splitlines() if line.strip()]
+    while lines and lines[0].startswith(("Warning: Permanently added ", "Pseudo-terminal will not be allocated")):
+        lines.pop(0)
+    diagnostic = lines[0] if lines else ""
+    diagnostic = re.sub(r"^BackendError:\s*", "", diagnostic)
+    timeout_patterns = (
+        r"ssh: connect to host \S+ port \d+: (?:connection|operation) timed out\b",
+        r"ssh_dispatch_run_fatal: connection to \S+ port \d+: operation timed out\b",
+        r"timeout, server \S+ not responding\.?$",
+        r"connection to \S+(?: port \d+)? timed out\b",
+        r"ssh (?:command |connection |transport |request )?(?:timeout|timed out)\b",
+    )
+    connection_patterns = (
+        r"ssh: could not resolve hostname \S+: ",
+        r"ssh: connect to host \S+ port \d+: (?:can(?:not|'t) assign requested address|connection (?:refused|reset|aborted|closed|failure)|network is unreachable|no route to host)\b",
+        r"(?:kex_exchange_identification|ssh_exchange_identification): (?:read: )?(?:connection (?:reset|closed)|banner exchange: connection to )",
+        r"connection to \S+(?: port \d+)? closed by remote host\.?$",
+        r"client_loop: send disconnect: broken pipe\b",
+        r"ssh: (?:temporary failure in name resolution|connection failure)\b",
+    )
+    if any(re.match(pattern,diagnostic,re.IGNORECASE) for pattern in timeout_patterns):
+        return "transport_timeout"
+    if any(re.match(pattern,diagnostic,re.IGNORECASE) for pattern in connection_patterns):
+        return "ssh_transport_failure"
     return None
+
+
+def _local_session_job(task, backend):
+    """Authenticate a local submission acknowledgement without network access.
+
+    This only restores journal provenance. A missing in-memory job is never
+    attached or made executable here; recovery authenticates the remote owner.
+    """
+    results_dir = getattr(backend,"results_dir",None)
+    if results_dir is None or not (Path(results_dir)/"slurm-session.json").exists():
+        return None
+    record = read_json(Path(results_dir)/"slurm-session.json")
+    if not isinstance(record,dict) or record.get("uncertain") or "job_ids" in record:
+        raise ValueError("Local submission acknowledgement is ambiguous")
+    job = record.get("job_id")
+    if isinstance(job,bool) or not isinstance(job,(str,int)) or not re.fullmatch(r"[1-9][0-9]*",str(job)):
+        raise ValueError("Local submission acknowledgement has invalid scheduler job ID")
+    if (record.get("session_id") != task["session"] or getattr(backend,"session_id",None) != task["session"]
+            or not isinstance(getattr(backend,"remote_dir",None),str) or not backend.remote_dir
+            or record.get("remote_dir") != backend.remote_dir):
+        raise ValueError("Local submission acknowledgement session/directory ownership mismatch")
+    config = getattr(backend,"config",None)
+    saved_config = dict(record.get("config", {})) if isinstance(record.get("config"), dict) else None
+    # This controller-only liveness option did not exist in historical leases.
+    # It cannot change GPU resources, inputs, kernels or measurement protocols.
+    if saved_config is not None and "reconnect_transport" not in saved_config and hasattr(config, "reconnect_transport"):
+        saved_config["reconnect_transport"] = config.reconnect_transport
+    if not is_dataclass(config) or saved_config != json.loads(json.dumps(asdict(config))):
+        raise ValueError("Local submission acknowledgement configuration ownership mismatch")
+    current = getattr(backend,"job_id",None)
+    if ((task.get("job_id") is not None and str(task["job_id"]) != str(job))
+            or (current is not None and str(current) != str(job))):
+        raise ValueError("Local submission acknowledgement and journal/backend job ownership mismatch")
+    if getattr(backend,"historical_only",False) and current is None:
+        raise ValueError("Failed historical attachment cannot be authenticated from a local acknowledgement alone")
+    return str(job)
 
 
 def _walk(value):
@@ -299,7 +383,7 @@ def observed_metrics(directory, result):
             evaluated[identity] = {"artifact_or_candidate_id":identity,"valid":response.get("ok"),
                                   "status":response.get("result",{}).get("status")}
     requests = []
-    for path in sorted((directory / "request-receipts").glob("*.json")):
+    for path in sorted((directory / "request-receipts").rglob("*.json")):
         requests.append(read_json(path))
     reports = [row.get("report", {}) for row in requests]
     known_validity = [row for row in evaluated.values() if type(row["valid"]) is bool]
@@ -416,7 +500,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
     transport_failures = [row for qualification in qualifications.values() for row in _walk(qualification)
                           if infrastructure_category(row.get("error", ""))]
     if transport_failures:
-        proof.update(infrastructure_category="transport_timeout", infrastructure_interrupted=True,
+        proof.update(infrastructure_category=infrastructure_category(transport_failures[0]["error"]), infrastructure_interrupted=True,
                      qualifications=qualifications, evaluation_finished=False)
         write_json(directory / "group-result.pending.json", proof)
         return proof
@@ -507,6 +591,18 @@ class SuiteOrchestrator:
             except BlockingIOError:
                 return
             try:
+                preparation_dirs = [self._directory(task)]
+                if task.get("attempt",0):
+                    preparation_dirs.append(self._directory({**task,"attempt":task["attempt"]-1}))
+                for prepared_dir in preparation_dirs:
+                    intent_path = prepared_dir / "bootstrap-recovery.json"
+                    if intent_path.exists():
+                        intent = read_json(intent_path)
+                        if (intent.get("phase") == "prepared" and intent.get("task_id") == task["id"]
+                                and task["session"] in {intent.get("previous_session"),intent.get("new_session")}):
+                            # An interrupted local preparation must finish its
+                            # own transaction before any scheduler/model work.
+                            return
                 self._execute_task(task)
             finally:
                 fcntl.flock(file, fcntl.LOCK_UN)
@@ -569,7 +665,21 @@ class SuiteOrchestrator:
             if result is None:
                 backend.wait_until_ready()
                 ready_at = time.time()
-                recording = RecordingRunner(backend.runner(), directory / "request-receipts")
+                replay = directory / "bootstrap-replay-manifest.json"
+                recording_dir = directory / "request-receipts"
+                if replay.exists():
+                    recording_dir /= "recovered"
+                recording = RecordingRunner(backend.runner(), recording_dir)
+                if replay.exists():
+                    from .bootstrap_replay import BootstrapReplayRunner
+                    recovery = read_json(directory / "bootstrap-recovery.json")
+                    if (recovery.get("previous_session") != task["session"]
+                            or str(recovery.get("previous_job_id")) != str(backend.job_id)
+                            or hashlib.sha256(replay.read_bytes()).hexdigest() != recovery.get("replay_manifest_sha256")):
+                        raise ValueError("Bootstrap replay must retain its authenticated allocation and manifest")
+                    recording = BootstrapReplayRunner(recording, replay, backend.hardware,
+                                                       directory / "bootstrap-replay-audit",
+                                                       defer_request_files=entry["mode"] == "native_codex_vanilla")
                 if kind == "generation":
                     kwargs = {"resume": task["state"] == "running"}
                     if self.generate is generation_adapter:
@@ -603,11 +713,24 @@ class SuiteOrchestrator:
             self.journal.update(task["id"], state="completed" if result["execution_complete"] else "recovery_required",
                                 result=result, finished=time.time())
         except Exception as error:
+            owned_job, ownership_error, journal_job = None, None, task.get("job_id")
+            if backend is not None:
+                try:
+                    current_task = next(row for row in self.journal.tasks(kind) if row["id"] == task["id"])
+                    journal_job = current_task.get("job_id")
+                    owned_job = _local_session_job(current_task,backend)
+                except (ValueError,TypeError,OSError) as ownership_failure:
+                    ownership_error = str(ownership_failure)
+            if owned_job is not None:
+                self.journal.update(task["id"],job_id=owned_job)
+                journal_job = owned_job
             failure = {"status": "failed", "error": str(error), "traceback": traceback.format_exc(),
                 "session_id": task["session"],
-                "job_id": str(backend.job_id) if backend is not None and backend.job_id is not None else None,
+                "job_id": owned_job, "journal_job_id": journal_job,
                 "execution_complete": False, "partial_result": result, "infrastructure_category": infrastructure_category(error)}
-            if backend is not None and getattr(backend, "job_id", None):
+            if ownership_error:
+                failure["job_ownership_error"] = ownership_error
+            if backend is not None and getattr(backend, "job_id", None) and not ownership_error:
                 try:
                     if not attached_status or attached_status.get("terminal") is not True:
                         backend.close()
@@ -616,6 +739,14 @@ class SuiteOrchestrator:
                     failure["cleanup_error"] = str(close_error)
             write_json(directory / "failure.json", failure)
             self.journal.update(task["id"], state="recovery_required", result=result or failure, error=str(error), finished=time.time())
+
+    def recover_bootstrap(self, task_id, reason):
+        from .bootstrap_recovery import recover_pre_model
+        return recover_pre_model(self, task_id, reason)
+
+    def resume_bootstrap_preparation(self, task_id):
+        from .bootstrap_recovery import resume_preparation
+        return resume_preparation(self, task_id)
 
     def recover_final(self, task_id, reason):
         """Explicit new independent attempt after a proven infrastructure loss.
@@ -646,7 +777,7 @@ class SuiteOrchestrator:
             prior_decisions = [{key: row.get(key) for key in ("evaluation_id", "status", "interval", "artifact_hash", "incumbent_artifact_hash")}
                 for row in records if row.get("interval") and row.get("status") in {"promoted", "not_improved", "inconclusive"}]
             categories = {row.get("infrastructure_category") for row in records}
-            if not categories & {"transport_timeout", "worker_terminal_incomplete"}:
+            if not categories & {"transport_timeout", "ssh_transport_failure", "worker_terminal_incomplete"}:
                 raise ValueError("No qualified transport/worker infrastructure incident was recorded")
             if not task.get("job_id"):
                 raise ValueError("Unknown scheduler ownership must be resolved before a new allocation")

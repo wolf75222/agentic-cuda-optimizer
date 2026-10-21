@@ -1,0 +1,159 @@
+{
+  "evaluation_id": "cbbe9cf65b574f818eebb009f572a169",
+  "candidate_id": "e172a7141be495733790619f",
+  "artifact_hash": "d95471c27b9ecf36ffa47770091fdb48dc832fc4beb8e16dcf17eba80d998335",
+  "contract_hash": "99934dd352c11eeede508f1c921ee703a6fa223dde0909ea1d0090565bb2bdd5",
+  "status": "compilation_error",
+  "ok": false,
+  "suite": "short",
+  "cases": [
+    {
+      "case_id": "search-1",
+      "seed": 3141,
+      "repetition": 0,
+      "launch": {
+        "grid": [
+          1,
+          1,
+          1
+        ],
+        "block": [
+          32,
+          8,
+          1
+        ],
+        "shared_memory_bytes": 3072
+      },
+      "report": {
+        "architecture": "sm_90",
+        "compile_cache_hit": false,
+        "compile_ms": 7.688236,
+        "compiler_log": "NVRTC_ERROR_COMPILATION\n/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/kernel.cu(1): catastrophic error: cannot open source file \"math.h\"\n  #include <math.h>\n                   ^\n\n1 catastrophic error detected in the compilation of \"/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/kernel.cu\".\nCompilation terminated.\n",
+        "device": "NVIDIA GH200 120GB",
+        "duration_ms": 11.199288,
+        "environment": {
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "cuda_toolkit_version": 12060,
+          "device": 0,
+          "driver_version": 13010,
+          "free_memory_bytes": 101413421056,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+          "l2_cache_bytes": 62914560,
+          "max_block_dimensions": [
+            1024,
+            1024,
+            64
+          ],
+          "max_grid_dimensions": [
+            2147483647,
+            65535,
+            65535
+          ],
+          "max_registers_per_block": 65536,
+          "max_registers_per_multiprocessor": 65536,
+          "max_shared_memory_per_block_bytes": 49152,
+          "max_shared_memory_per_block_optin_bytes": 232448,
+          "max_shared_memory_per_multiprocessor_bytes": 233472,
+          "max_threads_per_block": 1024,
+          "max_threads_per_multiprocessor": 2048,
+          "multiprocessor_count": 132,
+          "name": "NVIDIA GH200 120GB",
+          "nvrtc_version": "12.6",
+          "total_memory_bytes": 102005473280,
+          "uuid": "030256aceeacca7debde79112d9593a6",
+          "warp_size": 32
+        },
+        "error": "NVRTC_ERROR_COMPILATION\n/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/kernel.cu(1): catastrophic error: cannot open source file \"math.h\"\n  #include <math.h>\n                   ^\n\n1 catastrophic error detected in the compilation of \"/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/kernel.cu\".\nCompilation terminated.\n",
+        "finished_at_unix_ms": 1792599265589,
+        "id": "evaluation",
+        "latency_ms": null,
+        "ok": false,
+        "outputs": [],
+        "request_path": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/request.json",
+        "result_path": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions/suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a/requests/4058f2042293463c886c42561c7a16dc/results/run-evaluation/result.json",
+        "schema_version": 3,
+        "stage": "compile",
+        "started_at_unix_ms": 1792599265578,
+        "worker_reusable": true,
+        "reservation_wall_seconds": 0.013680722564458847,
+        "persistent_native_worker": true,
+        "execution_environment": "romeo",
+        "hardware_fingerprint": {
+          "environment": "romeo",
+          "hostname": "romeo-a043",
+          "machine": "aarch64",
+          "slurm_job_id": "772657",
+          "cuda_visible_devices": "0",
+          "device_properties": {
+            "architecture": "sm_90",
+            "compute_capability": {
+              "major": 9,
+              "minor": 0
+            },
+            "cuda_toolkit_version": 12060,
+            "device": 0,
+            "driver_version": 13010,
+            "free_memory_bytes": 101413093376,
+            "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+            "l2_cache_bytes": 62914560,
+            "max_block_dimensions": [
+              1024,
+              1024,
+              64
+            ],
+            "max_grid_dimensions": [
+              2147483647,
+              65535,
+              65535
+            ],
+            "max_registers_per_block": 65536,
+            "max_registers_per_multiprocessor": 65536,
+            "max_shared_memory_per_block_bytes": 49152,
+            "max_shared_memory_per_block_optin_bytes": 232448,
+            "max_shared_memory_per_multiprocessor_bytes": 233472,
+            "max_threads_per_block": 1024,
+            "max_threads_per_multiprocessor": 2048,
+            "multiprocessor_count": 132,
+            "name": "NVIDIA GH200 120GB",
+            "nvrtc_version": "12.6",
+            "total_memory_bytes": 102005473280,
+            "uuid": "030256aceeacca7debde79112d9593a6",
+            "warp_size": 32
+          },
+          "nvidia_smi": "GPU-030256ac-eeac-ca7d-ebde-79112d9593a6, NVIDIA GH200 120GB, 590.48.01, 00000029:01:00.0",
+          "toolkit": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Wed_Oct_30_00:08:18_PDT_2024\nCuda compilation tools, release 12.6, V12.6.85\nBuild cuda_12.6.r12.6/compiler.35059454_0",
+          "compiler": "g++ (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5)",
+          "profiling_available": true,
+          "sanitizer_available": true,
+          "gpu_uuids": [
+            "GPU-030256ac-eeac-ca7d-ebde-79112d9593a6"
+          ],
+          "fingerprint_id": "145956aa0fe3efeb757e0a505b3b4ce4012e271eb3f926df1f184a347c047613"
+        },
+        "request_fingerprint": "39232b5f4d6117c9f597a22d4f01b33c31b2738dea07093d15db52b4b6f8c85a",
+        "slurm_job_id": "772657",
+        "worker_reservation": {
+          "clock": "time.monotonic_ns",
+          "worker_pid": 1804782,
+          "session_id": "suite-gen-2f27effc35edb0ac8d50a0b07df6ba8a",
+          "job_id": "772657",
+          "start_monotonic_ns": 5626470914199513,
+          "end_monotonic_ns": 5626470997817395
+        },
+        "transport_receipt": {
+          "mode": "exchange_v1",
+          "ssh_roundtrips": 1,
+          "blob_uploads": 1,
+          "blob_upload_bytes": 2311,
+          "blob_cache_hits": 2,
+          "controller_wall_seconds": 0.7903485420101788
+        }
+      }
+    }
+  ],
+  "attempt_id": "246510d422074390ba73e9d50cb9d56a"
+}
