@@ -1,6 +1,7 @@
 """Evaluator policy tests; actual CUDA evidence is produced by the ROMEO run."""
 from dataclasses import replace
 import hashlib
+import json
 from pathlib import Path
 import threading
 import time
@@ -23,7 +24,8 @@ class FakeRunner:
 
     def get_device_properties(self, device):
         return {"architecture": "sm_90", "uuid": "fake", "max_threads_per_block": 1024,
-                "max_shared_memory_per_block_bytes": 49152, "driver_version": 12000, "nvrtc_version": "12.0"}
+                "max_shared_memory_per_block_bytes": 49152, "driver_version": 12000, "nvrtc_version": "12.0",
+                "cuda_toolkit_version":12000,"harness_build_id":"cpu-test-harness"}
 
     def run(self, run_id, request):
         self.calls.append((run_id, request))
@@ -140,6 +142,142 @@ def test_confirmation_alternates_pairs_and_uses_new_samples(tmp_path):
     assert result["status"] == "promoted"
     assert result["interval"]["lower"] == pytest.approx(2)
     assert [p["order"] for p in result["pairs"]] == [["baseline", "fast"], ["fast", "baseline"]] * 2
+
+
+def test_exact_artifact_confirmation_has_no_measured_interval_or_gpu_runs(tmp_path):
+    evaluator, _, baseline, _ = setup(tmp_path)
+    alias_source = tmp_path / "baseline-copy.cu"
+    alias_source.write_bytes(baseline.source.read_bytes())
+    alias = Candidate("baseline", alias_source, baseline.kernel, baseline.launch_rule)
+    for candidate in (alias, baseline):
+        result = evaluator.confirm(candidate, baseline)
+        assert result["ok"] and result["status"] == "exact_artifact_identity"
+        assert result["pairs"] == [] and "interval" not in result
+        assert result["paired_measurement_performed"] is False
+        assert result["correctness_qualification_inferred"] is False
+        assert result["ranking_eligible"] is False
+    assert not evaluator.runner.calls
+
+
+def test_qualification_context_initializes_hardware_with_a_provided_scheduler(tmp_path,monkeypatch):
+    evaluator,_,baseline,_ = setup(tmp_path,final=False)
+    evaluator.scheduler = GPUScheduler(tmp_path/"provided-scheduler","cpu-test-device")
+    properties = evaluator.runner.get_device_properties(0)
+    monkeypatch.setattr(evaluator.runner,"get_device_properties",lambda device:properties)
+    assert evaluator._properties is None
+    context = evaluator.qualification_context(baseline)
+    assert context["key"] and evaluator._properties == properties
+    properties["driver_version"] += 1
+    assert evaluator._properties["driver_version"] != properties["driver_version"]
+    with pytest.raises(RuntimeError,match="hardware/toolchain identity changed"):
+        evaluator.qualification_context(baseline)
+    assert not evaluator.runner.calls
+
+
+def test_provided_scheduler_does_not_freeze_hardware_before_contract_guard(tmp_path):
+    original,_,baseline,case = setup(tmp_path,final=False)
+    evaluator = Evaluator(original.runner,replace(original.contract,metadata_json=json.dumps({
+        "target_environment":{"uuid":"a-different-expected-device"}})),original.oracle,
+        {"short":[case],"search":[case],"performance":[case]},
+        scheduler=GPUScheduler(tmp_path/"provided-scheduler","cpu-test-device"))
+    with pytest.raises(RuntimeError,match="environment differs from contract"):
+        evaluator.qualification_context(baseline)
+    assert evaluator._properties is None and not evaluator.runner.calls
+
+
+def test_distinct_artifacts_with_colliding_labels_fail_before_gpu_runs(tmp_path):
+    evaluator, candidate, baseline, _ = setup(tmp_path)
+    candidate = Candidate("baseline", candidate.source, candidate.kernel, candidate.launch_rule)
+    with pytest.raises(ValueError, match="Distinct artifacts require distinct candidate_id"):
+        evaluator.confirm(candidate, baseline)
+    assert not evaluator.runner.calls
+
+
+def test_qualification_context_binds_launch_parameters_contract_cases_and_suite(tmp_path):
+    evaluator, candidate, _, case = setup(tmp_path, final=False)
+    original = evaluator.qualification_context(candidate, "search")["key"]
+    assert original
+    assert evaluator.qualification_context(candidate, "performance")["key"] != original
+    changed_launch = Candidate("launch", candidate.source, candidate.kernel, LaunchRule(block=(128,1,1)))
+    changed_parameters = Candidate("parameters", candidate.source, candidate.kernel, candidate.launch_rule, {"tile":16})
+    assert evaluator.qualification_context(changed_launch, "search")["key"] != original
+    assert evaluator.qualification_context(changed_parameters, "search")["key"] != original
+    for contract, cases in ((replace(evaluator.contract, min_relative_gain=.02), [case]),
+                            (replace(evaluator.contract, required_sanitizers=("memcheck",)), [case]),
+                            (evaluator.contract, [replace(case, seed=72)]),
+                            (evaluator.contract, [replace(case, request=replace(case.request,compiler_options=["--fmad=false"]))])):
+        other = Evaluator(evaluator.runner, contract, evaluator.oracle,
+                          {"short":cases,"search":cases,"performance":cases})
+        assert other.qualification_context(candidate, "search")["key"] != original
+    assert not evaluator.runner.calls
+
+
+def test_qualification_context_tracks_quoted_dependency_bytes(tmp_path):
+    evaluator, candidate, _, _ = setup(tmp_path)
+    header = tmp_path/"helper.h"
+    header.write_text("#define HELPER 1\n")
+    candidate.source.write_text('#include "helper.h"\n'+candidate.source.read_text())
+    candidate = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule)
+    first = evaluator.qualification_context(candidate)
+    header.write_text("#define HELPER 2\n")
+    second = evaluator.qualification_context(candidate)
+    assert first["identity"] != second["identity"]
+    assert first["key"] is None and second["key"] is None
+    assert not evaluator.runner.calls
+
+
+def test_qualification_alias_identity_rechecks_source_inputs_and_environment(tmp_path, monkeypatch):
+    evaluator, candidate, baseline, case = setup(tmp_path)
+    evaluator.qualification_context(candidate)
+    properties = evaluator.runner.get_device_properties(0)
+    monkeypatch.setattr(evaluator.runner,"get_device_properties",lambda device:{**properties,"uuid":"changed"})
+    with pytest.raises(RuntimeError, match="hardware/toolchain identity changed"):
+        evaluator.qualification_context(candidate)
+    with pytest.raises(RuntimeError, match="hardware/toolchain identity changed"):
+        evaluator.confirm(baseline, baseline)
+    monkeypatch.setattr(evaluator.runner,"get_device_properties",lambda device:dict(properties))
+    candidate.source.write_text(candidate.source.read_text()+"\n// mutated")
+    with pytest.raises(ValueError, match="source changed"):
+        evaluator.qualification_context(candidate)
+    Path(case.request.arguments[0].input_file).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="input changed"):
+        evaluator.qualification_context(baseline)
+    assert not evaluator.runner.calls
+
+
+def test_path_or_time_sensitive_source_cannot_reuse_qualification(tmp_path):
+    evaluator, candidate, _, _ = setup(tmp_path)
+    candidate.source.write_text(candidate.source.read_text()+"\n#define FILE_NAME __FILE__\n")
+    candidate = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule)
+    assert evaluator.qualification_context(candidate)["key"] is None
+    comparison = evaluator.confirm(candidate,candidate)
+    assert comparison["status"] == "artifact_identity_context_unproven" and not comparison["ok"]
+    assert comparison["pairs"] == [] and "interval" not in comparison
+    assert not evaluator.runner.calls
+
+
+@pytest.mark.parametrize("mechanism", ["token_paste", "compiler_macro"])
+def test_indirect_path_builtins_disable_reuse_without_rejecting_source(tmp_path,mechanism):
+    evaluator, candidate, _, case = setup(tmp_path,final=False)
+    if mechanism == "token_paste":
+        candidate.source.write_text("#define CAT(a,b) a##b\n#define LOCATION CAT(__FI,LE__)\n"+candidate.source.read_text())
+        candidate = Candidate(candidate.candidate_id,candidate.source,candidate.kernel,candidate.launch_rule)
+    else:
+        case = replace(case,request=replace(case.request,compiler_options=["-DLOCATION=__FILE__"]))
+        evaluator = Evaluator(evaluator.runner,evaluator.contract,evaluator.oracle,
+                              {"short":[case],"search":[case],"performance":[case]})
+    assert evaluator.qualification_context(candidate)["key"] is None
+    assert evaluator.validate(candidate)["ok"]  # The ordinary validation remains available.
+
+
+@pytest.mark.parametrize("missing", ["uuid","architecture","driver_version","nvrtc_version","cuda_toolkit_version","harness_build_id"])
+def test_partial_worker_identity_disables_qualification_reuse(tmp_path,monkeypatch,missing):
+    evaluator,candidate,_,_ = setup(tmp_path)
+    properties = evaluator.runner.get_device_properties(0)
+    properties.pop(missing)
+    monkeypatch.setattr(evaluator.runner,"get_device_properties",lambda device:dict(properties))
+    assert evaluator.qualification_context(candidate)["key"] is None
+    assert not evaluator.runner.calls
 
 
 def test_bootstrap_resamples_complete_series_and_critical_regression(tmp_path):

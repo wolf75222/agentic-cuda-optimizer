@@ -53,3 +53,37 @@ def test_report_retains_measured_regressions_and_unknown_denominator():
     assert row["certified"] == 0 and row["final_measured"] == 1
     assert row["regressions"] == 1 and row["unmeasured_or_failed"] == 11
     assert row["geometric_mean_all_measured_gain"] == .8
+
+
+def test_correct_artifact_without_a_proven_comparison_does_not_qualify_the_study():
+    entry = plan_suite(CampaignConfig(run_id="identity"), seeds=(1, 2))["entries"][0]
+    plan = {"entries":[entry], "modes":[entry["mode"]], "workloads":[entry["workload"]]}
+    result = {"qualified":True, "status":"final_comparison_identity_unproven",
+              "gain_basis":"unproven_artifact_context"}
+    groups = {entry["group_id"]:{"execution_complete":True,"all_modes_available":True,
+                                "candidates":{entry["mode"]:result}}}
+    summary = summarize_suite(plan, {}, groups)
+    assert summary["complete"] and not summary["scientific_qualified"]
+    assert summary["rows"][0]["gain"] is None
+    assert summary["rows"][0]["gain_basis"] == "unproven_artifact_context"
+    result.update(status="validated_no_gain", gain_basis="exact_baseline_artifact")
+    summary = summarize_suite(plan, {}, groups)
+    assert summary["scientific_qualified"]
+    assert summary["rows"][0]["gain"] == 1 and summary["rows"][0]["lower"] is None
+    assert summary["rows"][0]["gain_basis"] == "exact_baseline_artifact"
+
+
+def test_unproven_or_missing_predeclared_direct_pair_prevents_study_qualification():
+    full = plan_suite(CampaignConfig(run_id="pairs"), seeds=(1,2))["entries"][0]
+    other = {**full,"mode":"native_codex_vanilla"}
+    plan = {"entries":[full,other],"modes":["full","native_codex_vanilla"],"workloads":[full["workload"]]}
+    result = {"qualified":True,"status":"validated_no_gain"}
+    group = {"execution_complete":True,"all_modes_available":True,
+        "candidates":{"full":result,"native_codex_vanilla":result}}
+    for contrasts in ({}, {"full_vs_native_codex_vanilla":{"ok":False,"status":"artifact_identity_context_unproven"}}):
+        group["method_comparisons"] = contrasts
+        summary = summarize_suite(plan, {}, {full["group_id"]:group})
+        assert summary["complete"] and all(row["final_qualified"] for row in summary["rows"])
+        assert not summary["direct_comparisons_qualified"] and not summary["scientific_qualified"]
+    group["method_comparisons"] = {"full_vs_native_codex_vanilla":{"ok":True,"status":"exact_artifact_identity"}}
+    assert summarize_suite(plan, {}, {full["group_id"]:group})["scientific_qualified"]

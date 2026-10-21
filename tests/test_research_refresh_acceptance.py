@@ -17,7 +17,7 @@ def bootstrap_fixture(directory):
     """Declared invented CPU receipt for structural guards, never live evidence."""
     config = campaign.CampaignConfig(run_id="explicit-cpu-fixture", search_sizes=(8,), final_sizes=(11,),
         benchmark_series=1, launches_per_series=1, required_sanitizers=(), profile=False)
-    props = {"name":"explicit CPU fixture", "uuid":"fixture-archived-gpu", "architecture":"sm_90",
+    props = {"name":"explicit CPU fixture", "uuid":"0123456789abcdef0123456789abcdef", "architecture":"sm_90",
              "driver_version":12060, "nvrtc_version":"12.6", "cuda_toolkit_version":12060,
              "harness_build_id":"explicit-fixture-build"}
     env = campaign.device_identity(props)
@@ -49,11 +49,18 @@ def bootstrap_fixture(directory):
               "environment":env,"contract_hash":contract_hash,"baseline_latencies_ms":campaign.CampaignRuntime.latencies(baseline)}
     manifest = {"run_id":config.run_id,"config":config.to_dict(),"certification_status":"generation_complete",
                 "environment":env,"contract_hash":contract_hash,"baseline_latencies_ms":campaign.CampaignRuntime.latencies(baseline)}
+    hardware = {"environment":"romeo","slurm_job_id":"12345","device_properties":props,
+        "hostname":"explicit-cpu-fixture","machine":"aarch64",
+        "nvidia_smi":"GPU-01234567-89ab-cdef-0123-456789abcdef, explicit CPU fixture, 590.48.01, 0000:00:00.0",
+        "gpu_uuids":["GPU-01234567-89ab-cdef-0123-456789abcdef"],
+        "toolkit":"Explicit CPU fixture nvcc12.6","compiler":"Explicit CPU fixture compiler"}
+    hardware["fingerprint_id"] = campaign.digest({key:hardware[key] for key in
+        ("machine","device_properties","nvidia_smi","toolkit","compiler")})
     for name,value in {"result.json":result,"generation/manifest.json":manifest,
         "generation/config.json":config.to_dict(),"generation/environment.json":env,
         "generation/contract.json":{"contract":asdict(contract),"contract_hash":contract_hash},
         "generation/baseline-measurement.json":baseline,
-        "worker/hardware.json":{"slurm_job_id":"12345","device_properties":props},
+        "worker/hardware.json":hardware,
         "worker/slurm-session.json":{"job_id":"12345","session_id":"explicit-fixture-session"}}.items():
         campaign.write_json(directory/name,value)
     return directory
@@ -332,3 +339,151 @@ def test_run_intent_is_durable_before_initialization_failure_and_prevents_duplic
     with pytest.raises(ValueError,match="Existing intent"):
         acceptance.run_acceptance(output,"cpu-intent",origin,result_sha256=original["result.json"])
     assert original == {name:acceptance.sha(origin/name) for name in acceptance.BOOTSTRAP_FILES}
+
+
+def failed_resumption_fixture(tmp_path,monkeypatch):
+    """All model/search activity is explicitly simulated CPU fixture data."""
+    from optimizer_agent.research_service import ResearchBlocked
+    bootstrap = bootstrap_fixture(tmp_path/"bootstrap")
+    control = {"block_targeted":True,"prompts":[]}
+    schema = {"type":"object","additionalProperties":False,
+              "properties":{"explicit_cpu_fixture":{"type":"boolean"}},"required":["explicit_cpu_fixture"]}
+    def research(service,workload,parent,action,evidence):
+        service.backend.generate_json("Explicit CPU fixture search, no network",schema,purpose="research")
+        service.backend.generate_json("Explicit CPU fixture synthesis, no sources claimed live",schema,purpose="proposal")
+        diagnostic = evidence.get("diagnostic")
+        if diagnostic and control["block_targeted"]:
+            campaign.write_json(service.directory/"fixture-targeted-blocked.json",{
+                "retrieval_status":"blocked","error":"Explicit CPU fixture missing compatibility evidence"})
+            raise ResearchBlocked("Explicit CPU fixture missing compatibility evidence")
+        target = service.directory/("fixture-initial" if not diagnostic else "fixture-renewed")
+        target.mkdir(parents=True)
+        dossier = research_fixtures.ResearchTests().make_dossier(target)
+        dossier.research_id = target.name
+        dossier.workload_hash = workload["contract_hash"]
+        dossier.environment_fingerprint = evidence["environment_fingerprint"]
+        dossier.strategy_family = action["strategy_family"]
+        if diagnostic:
+            dossier.diagnostic_ids = [diagnostic["diagnostic_id"]]
+            dossier.covered_techniques.append("register_blocking")
+        return dossier
+    def popen(command,**options):
+        current_schema = campaign.read_json(Path(command[command.index("--output-schema")+1]))
+        class Process:
+            returncode=0
+            def communicate(self,prompt,timeout):
+                if control.get("inject_source_artifact") and len(control["prompts"]) >= 7:
+                    path = control.pop("inject_source_artifact")
+                    if control.get("inject_symlink_target"):
+                        path.symlink_to(control["inject_symlink_target"],target_is_directory=True)
+                    else:path.write_text("Explicit CPU negative fixture: unexpected artifact in immutable source")
+                if "parent_id" in current_schema.get("properties",{}):
+                    context=json.loads(prompt.split("Context:\n",1)[1]);payload=research_fixtures.proposal_payload()
+                    techniques=["shared_tiling"]
+                    if "explicit refusal control" in prompt or "Now propose the transformation requiring" in prompt:
+                        techniques.append("register_blocking")
+                    payload.update(parent_id=context["parent"]["candidate_id"],
+                        source_parent_id=context["effective_source_parent"]["candidate_id"],
+                        contract_hash=context["contract"]["contract_hash"],strategy_family=context["action"]["strategy_family"],
+                        source=context["effective_source_parent"]["source"]+f"\n// explicit CPU fixture variation{len(control['prompts'])}\n",
+                        kernel=context["contract"]["operation"],techniques=techniques,
+                        references=list(current_schema["properties"]["references"]["items"]["enum"]))
+                else:payload={"explicit_cpu_fixture":True}
+                control["prompts"].append(prompt)
+                return "\n".join(json.dumps(row) for row in [
+                    {"type":"item.completed","item":{"type":"agent_message","text":json.dumps(payload)}},
+                    {"type":"turn.completed","usage":{"input_tokens":2,"output_tokens":3}}]),""
+        return Process()
+    monkeypatch.setattr(acceptance.ResearchService,"prepare",research)
+    monkeypatch.setattr(acceptance,"controller_provenance",lambda *args:{"HEAD":"explicit-cpu-fixture", "dirty_state":[],
+        "sources":{"scripts/run_research_refresh_acceptance.py":acceptance.sha(Path(acceptance.__file__))}})
+    monkeypatch.setattr("optimizer_agent.codex_backend.subprocess.Popen",popen)
+    source=tmp_path/"incomplete"
+    old=acceptance.run_acceptance(source,"explicit-cpu-original",bootstrap,
+        result_sha256=acceptance.sha(bootstrap/"result.json"),executable="explicit-fixture-never-executed")
+    assert old["ok"] is False and old["error"].startswith("Actual targeted research blocked:")
+    assert len(old["model_calls"])==7 and len(control["prompts"])==7
+    return source,control
+
+
+def resume_pins(source):
+    return {"receipt_sha256":acceptance.sha(source/acceptance.RECEIPT),
+            "manifest_sha256":acceptance.sha(source/"proof-sha256.json")}
+
+
+def test_resumption_replays_guards_and_only_runs_fresh_research_and_final_proposal(tmp_path,monkeypatch):
+    (tmp_path/".git").mkdir()  # Evidence checkout differs from acceptance.REPO/controller.
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch)
+    pins=resume_pins(source);old_hashes={str(p.relative_to(source)):acceptance.sha(p) for p in source.rglob('*') if p.is_file()}
+    control["block_targeted"]=False
+    result=acceptance.run_resumption_acceptance(tmp_path/"resumed","explicit-cpu-resume",source,
+        **pins,executable="explicit-fixture-never-executed")
+    assert result["ok"] is True, result.get("error")
+    assert result["status"]=="documentary_research_refresh_resumption_acceptance_passed"
+    assert result["resumption"]["evidence_repository"]==str(tmp_path)
+    assert result["resumption"]["source_receipt"]["path_base"]=="repository"
+    assert result["resumption"]["source_receipt"]["path"]=="incomplete/"+acceptance.RECEIPT
+    assert len(result["checks"])==17 and all(result["checks"].values())
+    assert len(result["inherited_model_calls"])==7 and len(result["model_calls"])==3
+    assert len(control["prompts"])==10
+    assert result["new_usage_delta"]["model_calls"]==3 and result["new_usage_delta"]["model_tokens"]==15
+    assert result["new_gpu_requests_attempted"]==0 and result["bootstrap_files_unchanged"] is True
+    assert result["resume_source_unchanged"] is True
+    assert old_hashes=={str(p.relative_to(source)):acceptance.sha(p) for p in source.rglob('*') if p.is_file()}
+    before=campaign.read_json(source/"events.json");after=campaign.read_json(tmp_path/"resumed/events.json")
+    assert after[:len(before)]==before
+    assert [e["kind"] for e in after[len(before):]]==["model","model","research","model","generation"]
+    assert acceptance.sha(tmp_path/"resumed/source-evidence/previous-receipt.json")==pins["receipt_sha256"]
+    with pytest.raises(ValueError,match="Existing resume intent"):
+        acceptance.run_resumption_acceptance(tmp_path/"resumed","no-repeat",source,**pins)
+    assert len(control["prompts"])==10
+
+
+def test_resumption_blocked_again_stays_incomplete_without_repeating_initial_stages(tmp_path,monkeypatch):
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch)
+    result=acceptance.run_resumption_acceptance(tmp_path/"resumed","explicit-cpu-resume-blocked",source,
+        **resume_pins(source),executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["status"]=="incomplete"
+    assert result["error"].startswith("Actual resumed targeted research blocked:")
+    assert len(result["model_calls"])==2 and len(control["prompts"])==9
+    assert result["resume_source_unchanged"] is True and result["new_gpu_requests_attempted"]==0
+
+
+@pytest.mark.parametrize("defect",["receipt_pin","manifest_pin","source_file","extra_file","wrong_phase"])
+def test_resumption_refuses_missing_or_changed_evidence_before_any_new_call(tmp_path,monkeypatch,defect):
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch);pins=resume_pins(source)
+    if defect=="receipt_pin":pins["receipt_sha256"]="0"*64
+    elif defect=="manifest_pin":pins["manifest_sha256"]="0"*64
+    elif defect=="source_file":
+        p=source/"events.json";p.write_text(p.read_text()+" ")
+    elif defect=="extra_file":(source/"unmanifested.json").write_text('{}')
+    else:
+        p=source/acceptance.RECEIPT;d=campaign.read_json(p);d["error"]="Different unobserved failure";campaign.write_json(p,d)
+        pins["receipt_sha256"]=acceptance.sha(p)
+    with pytest.raises(ValueError):
+        acceptance.run_resumption_acceptance(tmp_path/"refused","no-new-call",source,**pins)
+    assert len(control["prompts"])==7 and not (tmp_path/"refused/run-intent.json").exists()
+
+
+def test_resumption_plan_validates_without_invoking_a_service(tmp_path,monkeypatch):
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch);pins=resume_pins(source)
+    def forbidden(*args,**kwargs):raise AssertionError("Plan must not construct a backend")
+    monkeypatch.setattr(acceptance,"CodexBackend",forbidden)
+    assert acceptance.main(["--plan","--resume-from",str(source),"--resume-receipt-sha256",pins["receipt_sha256"],
+        "--resume-proof-manifest-sha256",pins["manifest_sha256"],"--output",str(tmp_path/"plan")])==0
+    assert len(control["prompts"])==7 and not (tmp_path/"plan/run-intent.json").exists()
+
+
+@pytest.mark.parametrize("symlink",[False,True])
+def test_resumption_source_inventory_drift_prevents_success_claim(tmp_path,monkeypatch,symlink):
+    source,control=failed_resumption_fixture(tmp_path,monkeypatch);pins=resume_pins(source)
+    control["block_targeted"]=False
+    control["inject_source_artifact"]=source/"unexpected-during-model"
+    if symlink:
+        target=tmp_path/"explicit-fixture-target";target.mkdir()
+        control["inject_symlink_target"]=target
+    result=acceptance.run_resumption_acceptance(tmp_path/"resumed","explicit-cpu-source-drift",source,
+        **pins,executable="explicit-fixture-never-executed")
+    assert result["ok"] is False and result["status"]=="incomplete"
+    assert result["resume_source_unchanged"] is False and result["checks"]["resume_source_unchanged"] is False
+    assert result["new_gpu_requests_attempted"]==0

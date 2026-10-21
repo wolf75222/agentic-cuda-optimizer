@@ -89,6 +89,29 @@ def test_known_method_consumption_and_unknown_native_tokens_are_not_conflated(tm
     assert "no feedback" in metrics["first_useful_gain_scope"]
 
 
+@pytest.mark.parametrize("decision,ok,status,metric_status",[
+    ("exact_artifact_identity",True,"identity_observed","no_confirmed_gain"),
+    ("artifact_identity_context_unproven",False,"identity_context_unproven","unknown_identity_context")])
+def test_identity_receipts_are_not_counted_as_paired_confirmations_or_incidents(tmp_path,decision,ok,status,metric_status):
+    value,evaluator = observer(tmp_path,[{"ok":ok,"status":decision,"pairs":[],"paired_measurement_performed":False},
+                                         {"ok":True,"status":"not_improved"}])
+    receipt = value.observe(candidate(),evidence_id="actual-method-benchmark")
+    assert receipt["status"] == status and receipt["decision"] == decision
+    assert "interval" not in receipt["confirmation"] and receipt["confirmation"]["pairs"] == []
+    assert value.observe(candidate(),evidence_id="another-method-benchmark") == receipt
+    metrics = value.snapshot()["metrics"]
+    assert metrics["first_useful_gain_status"] == metric_status
+    assert metrics["observer_confirmations_completed"] == 0
+    assert metrics["observer_identity_observations"] == (1 if ok else 0)
+    assert metrics["observer_identity_context_unproven"] == (0 if ok else 1)
+    assert metrics["time_to_first_useful_gain_seconds"] is None
+    # A completed identity/known-unknown context does not poison the worker or
+    # cause a retry until victory; a new artifact can still be observed.
+    value.observe(candidate("different-artifact"),evidence_id="next-method-benchmark")
+    assert evaluator.calls == 2
+    assert value.snapshot()["metrics"]["observer_confirmations_completed"] == 1
+
+
 def test_crash_recovery_reads_first_gain_without_instantiating_evaluator_or_remeasurement(tmp_path):
     value,evaluator = observer(tmp_path,[{"ok":True,"status":"promoted"}],usage_provider=lambda:{
         "model_tokens":None,"model_calls":None,"method_gpu_evaluation_wall_seconds":1.5})

@@ -268,17 +268,48 @@ def test_native_gain_observer_is_private_fresh_once_and_keeps_midturn_tokens_unk
         assert first["ok"] and "first_useful_gain" not in json.dumps(first)
         state = value.gain_observer.snapshot()
         receipt = next(iter(state["observations"].values()))
-        assert receipt["decision"] == "not_improved"
+        assert receipt["decision"] == "exact_artifact_identity" and receipt["status"] == "identity_observed"
+        assert receipt["confirmation"]["pairs"] == [] and "interval" not in receipt["confirmation"]
         requests = state["metrics"]["observer_gpu_requests"]
-        assert requests > 0
+        assert requests == 0 and receipt["observer_cuda_event_kernel_seconds"] == 0
         second = http(value,"benchmark",{"source":"kernel.cu","launch":"launch.json"})
         assert second["result"]["evaluation_id"] != first["result"]["evaluation_id"]
         metrics = value.observer_metrics()
         assert metrics["observer_gpu_requests"] == requests
+        assert metrics["observer_confirmations_completed"] == 0
+        assert metrics["observer_identity_observations"] == 1
         assert metrics["method_consumption"]["method_gpu_evaluation_calls"] == 3
         assert metrics["method_consumption"]["model_tokens"] is None
         assert metrics["combined_method_and_observer_gpu_wall_seconds"] > metrics["observer_wall_seconds"]
         assert "first_useful_gain" not in json.dumps(http(value,"properties"))
+
+
+def test_native_unproven_identity_stays_unknown_and_does_not_stop_method_benchmarks(tmp_path):
+    class IncompleteIdentityRunner(SimulatedRunner):
+        def get_device_properties(self,device):
+            properties = super().get_device_properties(device)
+            properties.pop("harness_build_id")
+            return properties
+    runner = IncompleteIdentityRunner(tmp_path/"runner")
+    config = module.CampaignConfig(run_id="native-observer-unknown",workload="scan",search_sizes=(8,),
+        benchmark_series=1,launches_per_series=2,confirmation_batches=2,warmup=0)
+    with module.VanillaGPUService(config,tmp_path/"proof",tmp_path/"child","native-observer-unknown",
+            runner=runner,observe_first_gain=True) as value:
+        (value.child_workspace/"kernel.cu").write_text(module.baseline_source(config))
+        (value.child_workspace/"launch.json").write_text(json.dumps(value.description["baseline_launch_rule"]))
+        first = http(value,"benchmark",{"source":"kernel.cu","launch":"launch.json"})
+        assert first["ok"] and "first_useful_gain" not in json.dumps(first)
+        receipt = next(iter(value.gain_observer.snapshot()["observations"].values()))
+        assert receipt["status"] == "identity_context_unproven"
+        assert receipt["decision"] == "artifact_identity_context_unproven"
+        second = http(value,"benchmark",{"source":"kernel.cu","launch":"launch.json"})
+        assert second["ok"] and second["result"]["evaluation_id"] != first["result"]["evaluation_id"]
+        metrics = value.observer_metrics()
+        assert metrics["first_useful_gain_status"] == "unknown_identity_context"
+        assert metrics["observer_gpu_requests"] == 0 and metrics["observer_confirmations_completed"] == 0
+        assert metrics["observer_identity_observations"] == 0 and metrics["observer_identity_context_unproven"] == 1
+        assert metrics["method_consumption"]["method_gpu_evaluation_calls"] == 3
+        assert metrics["time_to_first_useful_gain_seconds"] is None
 
 
 def test_observer_infrastructure_incident_preserves_measurement_then_stops_native_gpu(tmp_path,monkeypatch):

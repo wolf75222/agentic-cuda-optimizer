@@ -521,9 +521,37 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         "input_hashes": inputs, "shapes": list(config.search_sizes), "candidates": results,
         "baseline": candidate_receipt(baseline), "generation_scores_used": False, "execution_complete": False}
     # All independent validations and sanitizers precede every ranking call.
-    qualifications = {}
+    qualifications, qualification_memo = {}, {}
     for mode, candidate in candidates.items():
-        qualifications[mode] = evaluator.qualify_sanitizers(candidate, suite="search")
+        # Scope this memo to this invocation, GPU, immutable cases and contract.
+        # Every alias still checks source/launch/parameters, input bytes and
+        # current hardware before referring to the original full evidence.
+        context = evaluator.qualification_context(candidate, suite="search")
+        previous = qualification_memo.get(context["key"]) if context["key"] else None
+        if previous:
+            original_mode, original = previous
+            evidence_path = directory / "qualification" / (original_mode + ".json")
+            evidence_bytes = evidence_path.read_bytes()
+            if _hash(json.loads(evidence_bytes)) != _hash(original):
+                raise ValueError("Qualification evidence changed before alias reuse")
+            qualifications[mode] = {"evaluation_id": original["evaluation_id"], "candidate_id": candidate.candidate_id,
+                "artifact_hash": candidate.artifact_hash, "contract_hash": evaluator.contract_hash, "suite": "search",
+                "ok": original.get("ok") is True, "status": original["status"],
+                "required_sanitizers": original.get("required_sanitizers", []), "qualification_context": context,
+                "qualification_execution": "alias_of_same_group_evidence", "fresh_gpu_runs": 0,
+                "ranking_eligible": False, "instrumented_timings_excluded": True,
+                "qualification_evidence_ref": {"path": "qualification/" + original_mode + ".json",
+                    "sha256": hashlib.sha256(evidence_bytes).hexdigest(), "digest_encoding": "raw file bytes",
+                    "canonical_sha256": _hash(original),
+                    "evaluation_id": original["evaluation_id"], "artifact_hash": original["artifact_hash"]}}
+        else:
+            qualifications[mode] = {**evaluator.qualify_sanitizers(candidate, suite="search"),
+                "qualification_context": context, "qualification_execution": "fresh"}
+            qualification = qualifications[mode]
+            if (context["key"] and qualification.get("evaluation_id")
+                    and qualification.get("artifact_hash") == candidate.artifact_hash
+                    and qualification.get("contract_hash") == evaluator.contract_hash and qualification.get("suite") == "search"):
+                qualification_memo[context["key"]] = mode, qualification
         write_json(directory / "qualification" / (mode + ".json"), qualifications[mode])
     transport_failures = [row for qualification in qualifications.values() for row in _walk(qualification)
                           if infrastructure_category(row.get("error", ""))]
@@ -550,7 +578,14 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
             "sanitizer_qualification": qualification, "status": "final_validation_failed"}
         if result["qualified"] and baseline_ok:
             if candidate.artifact_hash == baseline.artifact_hash:
-                result["status"] = "validated_no_gain"
+                baseline_context = qualifications["baseline"]["qualification_context"]
+                candidate_context = qualification["qualification_context"]
+                if baseline_context["key"] and baseline_context["key"] == candidate_context["key"]:
+                    result["status"] = "validated_no_gain"
+                    result["gain_basis"] = "exact_baseline_artifact"
+                else:
+                    result["status"] = "final_comparison_identity_unproven"
+                    result["gain_basis"] = "unproven_artifact_context"
             else:
                 confirmation = evaluator.confirm(candidate, baseline)
                 result["confirmation"] = confirmation
@@ -561,6 +596,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
                     result["confirmation_completed_at_unix"]-generation_started
                     if confirmation.get("status") == "promoted" and generation_started is not None else None)
                 result["status"] = "certified" if confirmation.get("status") == "promoted" else "validated_gain_uncertified"
+                result["gain_basis"] = "paired_measurement"
                 if not confirmation.get("ok"):
                     result["status"] = "final_measurement_failed"
                     result["qualified"] = False

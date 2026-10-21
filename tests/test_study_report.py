@@ -3,6 +3,8 @@ import json
 import hashlib
 from copy import deepcopy
 import subprocess
+from pathlib import Path
+import shutil
 
 import pytest
 
@@ -12,6 +14,11 @@ from scripts.report_study_fr import checkout_source_identity, ci_qualifies_check
 from scripts.report_study_fr import gpu_lease_consumption
 from scripts.report_study_fr import study_aggregate_table, study_campaign_table
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
+from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
+    UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
+from scripts.report_study_fr import ORIGINAL_CAMPAIGN, FINAL_DIRECTORY, FIRST_GROUP
+from scripts.report_study_fr import comparison_view, direct_comparison_views, direct_comparison_table, plot
+from scripts.report_study_fr import RESEARCH_REFRESH_RESUMED, REFRESH_RESUMPTION_CHECKS
 from optimizer_agent.suite_report import write_report, method_outcome_cells
 
 
@@ -40,7 +47,10 @@ def method_outcome_summary():
         "confirmation": {"interval": {"gain": gain, "lower": gain-.01, "upper": gain+.01}}}
         for mode, gain in zip(modes, [1.25, 1.1, .9])}
     return summarize_suite(plan, manifests, {"shared": {"execution_complete": True,
-        "all_modes_available": True, "candidates": candidates}})
+        "all_modes_available": True, "candidates": candidates,
+        "method_comparisons": {"full_vs_"+other:{"ok":True,"status":"inconclusive",
+            "interval":{"gain":1.1/gain,"lower":1.1/gain-.01,"upper":1.1/gain+.01}}
+            for other,gain in (("true_upstream",1.25),("native_codex_vanilla",.9))}}})
 
 
 def test_html_separates_failed_method_from_qualified_measured_fallback():
@@ -534,3 +544,512 @@ def test_tuning_constraint_control_remains_pending_until_success_is_explicit(tmp
     save(tmp_path/relative, {"status":"started"})
     present = next(r for r in control_receipts(tmp_path) if r["path"]==relative)
     assert present["available"] is True and present["ok"] is None and present["status"]=="started"
+
+
+def linked_report_fixture(root, name, value):
+    """Invented CPU fixture receipts, never production evidence."""
+    path = root/name
+    save(path, value)
+    return {"path": name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
+def original_execution_fixture(root):
+    upstream = [{"path": "optimizer_agent/fixture-"+str(n)+".py", "sha256": format(n, "064x"), "matches_git_blob": True}
+                for n in range(16)]
+    adapters = [{"path": name, "sha256": format(n+20, "064x"), "matches_executed_frozen_source": True}
+                for n,name in enumerate(("upstream_original.py", "frozen_launch.py", "codex_backend.py", "gain_observer.py"))]
+    calls = []
+    for index in range(10):
+        call_id = format(index+1, "032x")
+        usage = {"input_tokens": 100, "cached_input_tokens": 80, "output_tokens": 20}
+        ref = linked_report_fixture(root, ORIGINAL_CAMPAIGN+"/generation/model-transport/intents/"+"a"*64+"/0/cli/"+call_id+".json", {
+            "call_id": call_id, "status": "completed", "model": "gpt-6-luna", "reasoning_effort": "max", "usage": usage})
+        calls.append({**ref, "call_id": call_id, "requested_model": "gpt-6-luna", "reasoning_effort": "max", "usage": usage})
+    source = linked_report_fixture(root, ORIGINAL_CAMPAIGN+"/generation/frozen-original.cu", {"invented_fixture_source": True})
+    terminal = {"job_id": "123", "state": "COMPLETED", "exit_code": "0:0"}
+    usage = {"model_calls": 10, "input_tokens": 1000, "cached_input_tokens": 800,
+             "output_tokens": 200, "model_tokens": 1200, "gain_observer_wall_seconds": 12.5}
+    candidate = {"candidate_id": "initial-0", "artifact_hash": "a"*64, "source_hash": source["sha256"]}
+    manifest = {"method": "true_upstream_original", "generation_complete": True, "method_status": "completed",
+        "upstream": {"commit": UPSTREAM_COMMIT, "source_hashes": {item["path"]: item["sha256"] for item in upstream}},
+        "adapter_source_hashes": {item["path"]: item["sha256"] for item in adapters}, "usage": usage, "candidate": candidate}
+    value = {"schema_version": 1, "kind": "actual_pinned_original_generation", "ok": True,
+        "source_controller": "e"*40, "job_id": "123", "session_id": "suite-fixture", "worker_terminal": terminal,
+        "upstream_commit": UPSTREAM_COMMIT, "upstream_source_checks": upstream, "adapter_checks": adapters,
+        "completed_cli_calls": calls, "usage": usage, "candidate": {"candidate_id": "initial-0", "artifact_hash": "a"*64, "source": source},
+        "original_manifest": linked_report_fixture(root, ORIGINAL_CAMPAIGN+"/generation/manifest.json", manifest),
+        "result": linked_report_fixture(root, ORIGINAL_CAMPAIGN+"/result.json", {**manifest, "job_id": "123",
+            "session_id": "suite-fixture", "worker_terminal": terminal}),
+        "history": linked_report_fixture(root, ORIGINAL_CAMPAIGN+"/generation/history.json", [{"iteration": n,
+            "case_runs": [{"validation_ok": True} for _ in range(7)]} for n in range(4)]),
+        "checks": {name: True for name in ("actual_original_workflow_completed", "all_28_search_case_runs_valid",
+            "all_upstream_sources_match_pinned_git", "all_adapter_bytes_match_frozen_controller",
+            "all_ten_cli_receipts_completed", "candidate_artifact_recomputed")}}
+    save(root/ORIGINAL_EXECUTION, value)
+    return value
+
+
+def test_original_actual_generation_links_are_presented_without_final_success_or_attested_model(tmp_path):
+    value = original_execution_fixture(tmp_path)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == ORIGINAL_EXECUTION)
+    assert row["ok"] is True and all(row["authentication_checks"].values())
+    assert row["final_qualified"] is False and row["new_gpu_execution"] is False
+    assert row["source_head"] == value["source_controller"] and row["upstream_commit"] == UPSTREAM_COMMIT
+    html = execution_evidence_panel([row])
+    assert "1200 tokens observés" in html and "10 invocations CLI" in html
+    assert "observateur séparé 12.5 s" in html and "ne remplacent pas une comparaison finale" in html
+    assert "poids fournisseur restent non attestés" in row["scope"]
+
+
+@pytest.mark.parametrize("change", ["linked_file", "pinned_revision", "missing_adapter", "bad_terminal", "failed_method", "missing_check"])
+def test_original_source_or_cli_or_method_failures_cannot_be_relabelled_completed(tmp_path, change):
+    value = original_execution_fixture(tmp_path)
+    if change == "linked_file":
+        save(tmp_path/value["completed_cli_calls"][0]["path"], {"status": "failed"})
+    elif change == "pinned_revision":
+        value["upstream_commit"] = "f"*40
+    elif change == "missing_adapter":
+        value["adapter_checks"].pop()
+    elif change == "bad_terminal":
+        value["worker_terminal"]["state"] = "RUNNING"
+    elif change == "missing_check":
+        value["checks"].pop("candidate_artifact_recomputed")
+    else:
+        # A valid retained artifact can survive method failure; the execution
+        # control must not reclassify that failure from a generic stage flag.
+        result = json.loads((tmp_path/value["result"]["path"]).read_text())
+        result.update(method_status="failed", generation_complete=True, candidate_fallback={"retained": True})
+        value["result"] = linked_report_fixture(tmp_path, value["result"]["path"], result)
+    save(tmp_path/ORIGINAL_EXECUTION, value)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == ORIGINAL_EXECUTION)
+    assert row["available"] is True and row["ok"] is False and row["final_qualified"] is False
+    assert row["usage"] == {}
+
+
+def common_freeze_fixture(root):
+    naive_ref = linked_report_fixture(root, FINAL_DIRECTORY+"/sealed-inputs/baseline.cu", {"invented_fixture_source": "naive"})
+    naive = {"source_path": naive_ref["path"], "source_sha256": naive_ref["sha256"], "artifact_sha256": "a"*64}
+    methods = []
+    for index,mode in enumerate(LABELS):
+        different = mode == "native_codex_vanilla"
+        body = {"invented_fixture_source": "native" if different else "naive"}
+        source = linked_report_fixture(root, FINAL_DIRECTORY+"/frozen/"+mode+"/kernel.cu", body)
+        campaign = "results/quality-study-v2/campaigns/"+FIRST_GROUP+"."+mode
+        source_name = {"true_upstream": "frozen-original.cu", "native_codex_vanilla": "evidence/kernel.cu"}.get(mode, "best.cu")
+        gen_source = linked_report_fixture(root, campaign+"/generation/"+source_name, body)
+        artifact = "b"*64 if mode == "true_upstream" else "c"*64 if different else "a"*64
+        candidate = {"candidate_id": mode, "artifact_hash": artifact, "source_hash": source["sha256"]}
+        job,session = str(200+index), "fixture-"+mode
+        result = linked_report_fixture(root, campaign+"/result.json", {
+            "candidate": candidate, "job_id": job, "session_id": session, "execution_complete": True})
+        methods.append({"method": mode, "candidate_id": mode, "artifact_sha256": artifact,
+            "frozen_source": source, "generation_source": gen_source, "generation_result": result,
+            "generation_job_id": job, "generation_session_id": session,
+            "same_source_as_naive": not different, "same_artifact_as_naive": artifact == naive["artifact_sha256"],
+            "checks": {name: True for name in FREEZE_METHOD_CHECKS}})
+    value = {"schema_version": 1, "kind": "read_only_common_final_candidate_freeze_audit",
+        "freeze_identity_checks_pass": True, "errors": [], "naive": naive, "methods": methods,
+        "frozen_candidates": linked_report_fixture(root, FINAL_DIRECTORY+"/frozen-candidates.json", {"fixture_only": True}),
+        "worker": {"job_id": "456", "session_id": "suite-final-fixture",
+            "hardware_receipt": linked_report_fixture(root, FINAL_DIRECTORY+"/worker/hardware.json", {"slurm_job_id": "456", "environment": "romeo"}),
+            "session_receipt": linked_report_fixture(root, FINAL_DIRECTORY+"/worker/slurm-session.json", {"job_id": "456", "session_id": "suite-final-fixture"})},
+        "source_observation": {"HEAD": "d"*40},
+        "checks": {name: True for name in ("all_eight_generation_to_frozen_identity_checks_pass",
+            "all_observed_files_unchanged_before_receipt", "frozen_has_exact_eight_methods_plus_naive",
+            "naive_load_candidate_accepts_artifact", "naive_source_matches_static_convolution", "worker_identity_checks_pass")}}
+    save(root/COMMON_FINAL_FREEZE, value)
+    return value
+
+
+def test_final_freeze_aliases_are_identities_not_eight_distinct_kernels_or_gains(tmp_path):
+    value = common_freeze_fixture(tmp_path)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == COMMON_FINAL_FREEZE)
+    assert row["ok"] is True and all(row["authentication_checks"].values())
+    assert row["final_qualified"] is False and row["new_gpu_execution"] is False
+    assert row["source_head"] is None and row["audit_source_head"] == value["source_observation"]["HEAD"]
+    assert sum(r["same_artifact_as_naive"] for r in row["artifact_aliases"]) == 6
+    html = execution_evidence_panel([row])
+    assert html.count("identique au naïf") == 6
+    assert "même source, lancement/paramètres distincts" in html and "source distincte" in html
+    assert "aucune différence de performance" in html
+
+
+@pytest.mark.parametrize("change", ["same_source_flag", "same_artifact_flag", "method_check", "worker_job", "changed_frozen_copy"])
+def test_frozen_identity_links_and_alias_declarations_fail_closed(tmp_path, change):
+    value = common_freeze_fixture(tmp_path)
+    if change == "same_source_flag":
+        value["methods"][0]["same_source_as_naive"] = False
+    elif change == "same_artifact_flag":
+        value["methods"][0]["same_artifact_as_naive"] = False
+    elif change == "method_check":
+        value["methods"][0]["checks"].pop("artifact_hash_matches_generation")
+    elif change == "worker_job":
+        value["worker"]["job_id"] = "other"
+    else:
+        save(tmp_path/value["methods"][0]["frozen_source"]["path"], {"source": "changed"})
+    save(tmp_path/COMMON_FINAL_FREEZE, value)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == COMMON_FINAL_FREEZE)
+    assert row["ok"] is False and row["artifact_aliases"] == []
+
+
+def refresh_documentary_fixture(root):
+    directory = root/RESEARCH_REFRESH
+    directory = directory.parent
+    files = {}
+    def artifact(name, value):
+        reference = linked_report_fixture(directory, name, value)
+        files[name] = reference["sha256"]
+    calls = []
+    for index in range(4):
+        call_id = format(index+1, "032x")
+        calls.append({"call_id": call_id})
+        artifact("campaign/model/"+call_id+".json", {"call_id": call_id, "status": "completed", "model": "gpt-6-luna", "reasoning_effort": "max"})
+    artifact("plan.json", {"kind": "documentary_research_refresh_acceptance"})
+    artifact("run-intent.json", {"run_id": "fixture-documentary", "source_provenance": {"HEAD": "e"*40}, "new_gpu_requests": 0})
+    artifact("events.json", [])
+    artifact("campaign/acceptance-controls/invocations.json", [])
+    artifact("campaign/acceptance-evidence/initial-dossier.json", {"research_id": "initial", "receipt_version": 2, "covered_techniques": ["tiling"]})
+    artifact("campaign/trials/fixture-trial/dossier.json", {"research_id": "renewed", "receipt_version": 2,
+        "covered_techniques": ["tiling", "warp_shuffle"], "diagnostic_ids": ["diag-fixture"]})
+    artifact("campaign/acceptance-evidence/blocked-refusal.json", {"technique": "warp_shuffle", "call_id": calls[2]["call_id"],
+        "checks": {name: True for name in ("needs_research_returned", "exact_semantic_guard_reason", "model_actually_declared_control_technique",
+            "no_new_generation_event", "no_new_candidate_or_source_change", "no_accepted_proposal_file")}})
+    proof = linked_report_fixture(directory, "proof-sha256.json", {"schema_version": 1, "hash_algorithm": "sha256", "files": files})
+    value = {"schema_version": 1, "kind": "documentary_research_refresh_acceptance", "run_id": "fixture-documentary",
+        "ok": True, "status": "documentary_research_refresh_acceptance_passed", "checks": {name: True for name in REFRESH_CHECKS},
+        "new_gpu_requests": 0, "new_gpu_requests_attempted": 0, "hardware_currently_observed": False,
+        "bootstrap_files_unchanged": True, "source_provenance": {"HEAD": "e"*40}, "proof_manifest": proof,
+        "initial_call_id": calls[0]["call_id"], "compatible_call_id": calls[1]["call_id"],
+        "blocked_call_id": calls[2]["call_id"], "final_call_id": calls[3]["call_id"], "model_calls": calls,
+        "initial_research_id": "initial", "renewed_research_id": "renewed", "diagnostic_id": "diag-fixture", "uncovered_technique": "warp_shuffle",
+        "initial_dossier_sha256": files["campaign/acceptance-evidence/initial-dossier.json"],
+        "renewed_dossier_sha256": files["campaign/trials/fixture-trial/dossier.json"], "historical_bootstrap": {"job_id": "old-job"}}
+    save(root/RESEARCH_REFRESH, value)
+    return value
+
+
+def test_absent_documentary_result_is_pending_or_unknown_never_gpu_success(tmp_path):
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == RESEARCH_REFRESH)
+    assert row["ok"] is None and row["job_id"] is None and not row["available"]
+    assert "en attente" in row["status"] and row["new_gpu_execution"] is False
+    save((tmp_path/RESEARCH_REFRESH).parent/"run-intent.json", {"started": True})
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == RESEARCH_REFRESH)
+    assert "en cours ou interrompu" in row["status"] and row["ok"] is None
+
+
+def test_documentary_control_success_is_limited_to_authenticated_json_subset(tmp_path):
+    refresh_documentary_fixture(tmp_path)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == RESEARCH_REFRESH)
+    assert row["ok"] is True and all(row["authentication_checks"].values())
+    assert row["job_id"] is None and row["historical_bootstrap_job_id"] == "old-job"
+    assert row["new_gpu_execution"] is False and row["final_qualified"] is False
+    assert row["database_or_final_inputs_read"] is False
+    assert all(name.endswith(".json") for name in row["verified_json_subset"])
+    assert "sans compilation, benchmark, sanitizer" in row["scope"]
+
+
+def test_documentary_authentication_never_opens_manifest_databases_rng_or_numeric_inputs(tmp_path, monkeypatch):
+    value = refresh_documentary_fixture(tmp_path)
+    directory = (tmp_path/RESEARCH_REFRESH).parent
+    proof = json.loads((directory/"proof-sha256.json").read_text())
+    forbidden = ("campaign/checkpoints.sqlite3", "campaign/search.pkl", "private/final-input.bin")
+    proof["files"].update({name: "a"*64 for name in forbidden})
+    value["proof_manifest"] = linked_report_fixture(directory, "proof-sha256.json", proof)
+    save(tmp_path/RESEARCH_REFRESH, value)
+    read = Path.read_bytes
+    def checked_read(path):
+        assert not any(str(path).endswith(name) for name in forbidden)
+        return read(path)
+    monkeypatch.setattr(Path, "read_bytes", checked_read)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == RESEARCH_REFRESH)
+    assert row["ok"] is True and row["database_or_final_inputs_read"] is False
+    assert not set(forbidden).intersection(row["verified_json_subset"])
+
+
+@pytest.mark.parametrize("change", ["missing_check", "new_gpu", "current_hardware", "same_dossier", "changed_proof", "changed_model_call", "incomplete"])
+def test_documentary_partial_or_unverified_proof_never_becomes_acquired(tmp_path, change):
+    value = refresh_documentary_fixture(tmp_path)
+    if change == "missing_check":
+        value["checks"].pop("uncovered_technique_blocked_before_candidate")
+    elif change == "new_gpu":
+        value["new_gpu_requests_attempted"] = 1
+    elif change == "current_hardware":
+        value["hardware_currently_observed"] = True
+    elif change == "same_dossier":
+        value["renewed_research_id"] = value["initial_research_id"]
+    elif change == "changed_proof":
+        save((tmp_path/RESEARCH_REFRESH).parent/"proof-sha256.json", {"files": {}})
+    elif change == "changed_model_call":
+        save((tmp_path/RESEARCH_REFRESH).parent/("campaign/model/"+value["initial_call_id"]+".json"), {"status": "failed"})
+    else:
+        value.update(ok=False, status="incomplete")
+    save(tmp_path/RESEARCH_REFRESH, value)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == RESEARCH_REFRESH)
+    assert row["available"] is True and row["ok"] is False and row["final_qualified"] is False
+    assert row["verified_json_subset"] == []
+
+
+@pytest.mark.parametrize("relative", [ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH])
+@pytest.mark.parametrize("malformed", [[1], 17, "scalar", None])
+def test_malformed_control_root_cannot_crash_or_qualify_other_receipts(tmp_path, relative, malformed):
+    save(tmp_path/relative, malformed)
+    rows = control_receipts(tmp_path)
+    row = next(r for r in rows if r["path"] == relative)
+    assert row["ok"] is False and "invalide" in row["status"]
+    assert len(rows) > 10 and row["authentication_error"]
+
+
+@pytest.mark.parametrize("fixture,relative,field", [
+    (original_execution_fixture, ORIGINAL_EXECUTION, "checks"),
+    (original_execution_fixture, ORIGINAL_EXECUTION, "candidate"),
+    (original_execution_fixture, ORIGINAL_EXECUTION, "usage"),
+    (original_execution_fixture, ORIGINAL_EXECUTION, "upstream_source_checks"),
+    (common_freeze_fixture, COMMON_FINAL_FREEZE, "checks"),
+    (common_freeze_fixture, COMMON_FINAL_FREEZE, "methods"),
+    (common_freeze_fixture, COMMON_FINAL_FREEZE, "naive"),
+    (refresh_documentary_fixture, RESEARCH_REFRESH, "checks"),
+    (refresh_documentary_fixture, RESEARCH_REFRESH, "proof_manifest"),
+    (refresh_documentary_fixture, RESEARCH_REFRESH, "model_calls")])
+@pytest.mark.parametrize("malformed", [[1], 19])
+def test_nested_list_or_scalar_fields_fail_closed_without_global_report_loss(tmp_path, fixture, relative, field, malformed):
+    value = fixture(tmp_path)
+    value[field] = malformed
+    save(tmp_path/relative, value)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == relative)
+    assert row["ok"] is False and row.get("final_qualified") is not True
+
+
+@pytest.mark.parametrize("malformed", [[1], 23])
+def test_hash_matched_linked_manifest_must_still_be_expected_json_object(tmp_path, malformed):
+    value = original_execution_fixture(tmp_path)
+    value["original_manifest"] = linked_report_fixture(tmp_path, ORIGINAL_CAMPAIGN+"/generation/manifest.json", malformed)
+    save(tmp_path/ORIGINAL_EXECUTION, value)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == ORIGINAL_EXECUTION)
+    assert row["ok"] is False
+
+
+@pytest.mark.parametrize("role", ["original_source", "original_result", "frozen_source", "generation_source", "worker_hardware", "proof_manifest"])
+@pytest.mark.parametrize("forbidden_name", ["protected.sqlite3", "input.bin", "holdout-reveal.json"])
+def test_new_control_links_are_role_whitelisted_before_any_protected_read(tmp_path, monkeypatch, role, forbidden_name):
+    original = original_execution_fixture(tmp_path)
+    frozen = common_freeze_fixture(tmp_path)
+    refresh = refresh_documentary_fixture(tmp_path)
+    protected = tmp_path/FINAL_DIRECTORY/"private"/forbidden_name
+    protected.parent.mkdir(parents=True, exist_ok=True)
+    protected.write_text("Invented forbidden fixture, not final study data")
+    reference = {"path": str(protected.relative_to(tmp_path)), "sha256": "a"*64}
+    relative = ORIGINAL_EXECUTION if role.startswith("original") else RESEARCH_REFRESH if role == "proof_manifest" else COMMON_FINAL_FREEZE
+    if role == "original_source": original["candidate"]["source"] = reference
+    elif role == "original_result": original["result"] = reference
+    elif role == "frozen_source": frozen["methods"][0]["frozen_source"] = reference
+    elif role == "generation_source": frozen["methods"][0]["generation_source"] = reference
+    elif role == "worker_hardware": frozen["worker"]["hardware_receipt"] = reference
+    else: refresh["proof_manifest"] = reference
+    for path, value in ((ORIGINAL_EXECUTION, original), (COMMON_FINAL_FREEZE, frozen), (RESEARCH_REFRESH, refresh)):
+        save(tmp_path/path, value)
+    read_bytes, read_text = Path.read_bytes, Path.read_text
+    def checked_bytes(path):
+        assert path.resolve() != protected.resolve(), "forbidden bytes opened before authorization"
+        return read_bytes(path)
+    def checked_text(path, *args, **kwargs):
+        assert path.resolve() != protected.resolve(), "forbidden JSON opened before authorization"
+        return read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_bytes", checked_bytes)
+    monkeypatch.setattr(Path, "read_text", checked_text)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == relative)
+    assert row["ok"] is False
+
+
+def test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequence(tmp_path):
+    rows = control_receipts(tmp_path)
+    for row in rows:
+        if row["path"] in (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH):
+            assert "prévu" in row["scope"] and "aucun" in row["scope"].lower()
+    html = execution_evidence_panel(rows)
+    assert "Le protocole prévoit" in html
+    assert "Le reçu documentaire authentifie" not in html and "Ce contrôle utilise de vrais appels" not in html
+    value = refresh_documentary_fixture(tmp_path)
+    value.update(ok=False, status="incomplete")
+    save(tmp_path/RESEARCH_REFRESH, value)
+    rows = control_receipts(tmp_path)
+    row = next(r for r in rows if r["path"] == RESEARCH_REFRESH)
+    assert row["ok"] is False and "aucune séquence complète" in row["scope"]
+
+
+def test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals():
+    pair = {"status": "confirmed", "ok": True, "artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64,
+            "interval": {"gain": .87, "lower": .84, "upper": .90, "case_gains": {"case": {"gain": .85}}}}
+    original = deepcopy(pair)
+    views = direct_comparison_views({"group-fixture": {"method_comparisons": {"full_vs_greedy": pair}}})
+    assert pair == original and views[0]["gain_basis"] == "exact_artifact_identity"
+    assert views[0]["gain"] == 1 and views[0]["lower"] is views[0]["upper"] is None
+    assert views[0]["source_interval_preserved"] == pair["interval"] and views[0]["case_gains"] == {}
+    html = direct_comparison_table(views)
+    assert "identité exacte des artefacts" in html and "sans intervalle : identité" in html
+    assert "0.87" not in html and "0.84" not in html
+
+
+@pytest.mark.parametrize("first,second", [(None, None), ("", ""), ("source-only", "source-only"), ("a"*64, "b"*64)])
+def test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only(first, second):
+    view = comparison_view({"artifact_hash": first, "incumbent_artifact_hash": second,
+                            "source_hash": "a"*64, "interval": {"gain": .87, "lower": .84, "upper": .90}})
+    assert view["gain_basis"] == "paired_measurement" and view["gain"] == .87
+
+
+def test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot(tmp_path):
+    receipt = frozen_receipt()
+    for role in receipt["candidates"]:
+        receipt["candidates"][role]["artifact_hash"] = hashlib.sha256(role.encode()).hexdigest()
+    receipt["candidates"]["native_codex"]["artifact_hash"] = receipt["candidates"]["agent"]["artifact_hash"]
+    receipt["candidates"]["native_codex"]["source"] = receipt["candidates"]["agent"]["source"]
+    receipt["candidates"]["native_codex"]["source_hash"] = receipt["candidates"]["agent"]["source_hash"]
+    for name, (role, reference) in FROZEN_PAIRS.items():
+        pair = receipt["paired_comparisons"][name]
+        pair["artifact_hash"] = receipt["candidates"][role]["artifact_hash"]
+        pair["incumbent_artifact_hash"] = receipt["candidates"][reference]["artifact_hash"]
+    save(tmp_path/"comparison.json", receipt)
+    pilot = frozen_pilot_summary(tmp_path/"comparison.json")
+    assert pilot["receipt_verified"]
+    direct = pilot["comparisons"]["agent_vs_native_codex"]
+    assert direct["gain_basis"] == "exact_artifact_identity" and direct["interval"]["lower"] is None
+    assert direct["source_interval_preserved"]["gain"] == .742984
+    html = frozen_pilot_panel(pilot, None)
+    assert "ratio 1 sans intervalle statistique" in html and "0.742984" not in html
+    assert plot_frozen_pilot(pilot, tmp_path).is_file()
+
+
+def resumed_documentary_fixture(root):
+    """Synthetic archive continuation; no live model/GPU activity in tests."""
+    old = refresh_documentary_fixture(root)
+    old_root, new_root = (root/name for name in (str(Path(RESEARCH_REFRESH).parent), str(Path(RESEARCH_REFRESH_RESUMED).parent)))
+    for index in (5, 6, 7):
+        call_id = format(index, "032x")
+        old["model_calls"].append({"call_id": call_id})
+        linked_report_fixture(old_root, "campaign/model/"+call_id+".json", {"call_id": call_id,
+            "status": "completed", "model": "gpt-6-luna", "reasoning_effort": "max"})
+    old.update(ok=False, status="incomplete")
+    old_proof = {"schema_version": 1, "hash_algorithm": "sha256", "files": {
+        str(path.relative_to(old_root)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in old_root.rglob("*.json") if path.name not in ("proof-sha256.json", "research-refresh-acceptance.json")}}
+    old["proof_manifest"] = linked_report_fixture(old_root, "proof-sha256.json", old_proof)
+    save(root/RESEARCH_REFRESH, old)
+    shutil.copytree(old_root, new_root)
+    for source, target in (("research-refresh-acceptance.json", "previous-receipt.json"),
+            ("proof-sha256.json", "previous-proof.json"), ("events.json", "previous-events.json"),
+            ("campaign/trials/fixture-trial/dossier.json", "previous-dossier.json")):
+        destination = new_root/"source-evidence"/target
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(old_root/source, destination)
+    new = deepcopy(old)
+    new.update(run_id="fixture-resumed", kind="documentary_research_refresh_resumption_acceptance", ok=True,
+        status="documentary_research_refresh_resumption_acceptance_passed", inherited_model_calls=old["model_calls"],
+        model_calls=[], source_provenance={"HEAD": "f"*40}, new_usage_delta={"model_calls": 3, "model_tokens": 900})
+    for index in (8, 9, 10):
+        call_id = format(index, "032x")
+        new["model_calls"].append({"call_id": call_id})
+        linked_report_fixture(new_root, "campaign/model/"+call_id+".json", {"call_id": call_id,
+            "status": "completed", "model": "gpt-6-luna", "reasoning_effort": "max"})
+    new["final_call_id"] = new["model_calls"][0]["call_id"]
+    new["renewed_research_id"] = "resumed-renewed"
+    dossier = {"research_id": "resumed-renewed", "receipt_version": 2, "covered_techniques": ["tiling", "warp_shuffle"],
+               "diagnostic_ids": ["diag-fixture"]}
+    new["renewed_dossier_sha256"] = linked_report_fixture(new_root, "campaign/trials/fixture-trial/dossier.json", dossier)["sha256"]
+    linked_report_fixture(new_root, "resume-state.json", {"kind": "derived_from_archived_public_prefix"})
+    linked_report_fixture(new_root, "campaign/hardware-evidence-context.json", {"driver_api_raw": 13010, "driver_package": "590.48.01"})
+    linked_report_fixture(new_root, "campaign/acceptance-controls-resume/invocations.json", [])
+    linked_report_fixture(new_root, "run-intent.json", {"run_id": new["run_id"], "source_provenance": new["source_provenance"], "new_gpu_requests": 0})
+    new["checks"].update({name: True for name in REFRESH_RESUMPTION_CHECKS})
+    new["resumption"] = {"source_directory": str(Path(RESEARCH_REFRESH).parent),
+        "source_receipt": {"path": RESEARCH_REFRESH, "path_base": "repository",
+                           "sha256": hashlib.sha256((root/RESEARCH_REFRESH).read_bytes()).hexdigest()},
+        "source_proof_manifest": {"path": str(Path(RESEARCH_REFRESH).parent/"proof-sha256.json"), "path_base": "repository",
+                                 "sha256": hashlib.sha256((old_root/"proof-sha256.json").read_bytes()).hexdigest()},
+        "inherited_completed_model_calls": 7, "no_initial_proposal_or_diagnostic_replay": True,
+        "state_derivation": "Explicit synthetic fixture derivation, never an historical checkpoint"}
+    new_proof = {"schema_version": 1, "hash_algorithm": "sha256", "files": {
+        str(path.relative_to(new_root)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in new_root.rglob("*.json") if path.name not in ("proof-sha256.json", "research-refresh-acceptance.json")}}
+    new["proof_manifest"] = linked_report_fixture(new_root, "proof-sha256.json", new_proof)
+    save(root/RESEARCH_REFRESH_RESUMED, new)
+    return old, new
+
+
+def test_resumed_documentary_authority_preserves_incomplete_original_and_separates_new_calls(tmp_path):
+    old, new = resumed_documentary_fixture(tmp_path)
+    original_bytes = (tmp_path/RESEARCH_REFRESH).read_bytes()
+    rows = control_receipts(tmp_path)
+    previous = next(r for r in rows if r["path"] == RESEARCH_REFRESH)
+    resumed = next(r for r in rows if r["path"] == RESEARCH_REFRESH_RESUMED)
+    assert previous["ok"] is False and resumed["ok"] is True
+    assert all(resumed["authentication_checks"].values())
+    assert resumed["inherited_model_call_count"] == 7 and resumed["observed_new_model_call_count"] == 3
+    assert resumed["declared_new_ledger_usage_delta"] == new["new_usage_delta"]
+    assert "non réconcilié" in resumed["new_usage_delta_scope"]
+    assert resumed["new_gpu_execution"] is False and resumed["database_or_final_inputs_read"] is False
+    assert (tmp_path/RESEARCH_REFRESH).read_bytes() == original_bytes
+    html = execution_evidence_panel(rows)
+    assert "Autorité séparée de reprise AC-02" in html and "7 anciens appels hérités" in html
+    assert "3 nouveaux appels observés" in html and "Le reçu initial incomplet garde son statut" in html
+
+
+def test_missing_resumption_is_an_independent_unknown_result(tmp_path):
+    old = refresh_documentary_fixture(tmp_path)
+    old.update(ok=False, status="incomplete")
+    save(tmp_path/RESEARCH_REFRESH, old)
+    rows = control_receipts(tmp_path)
+    resumed = next(r for r in rows if r["path"] == RESEARCH_REFRESH_RESUMED)
+    assert resumed["ok"] is None and resumed["available"] is False
+    assert "en attente" in resumed["status"] and "aucune séquence complète" in resumed["scope"]
+    assert "ne permettent pas de conclure" in execution_evidence_panel(rows)
+
+
+@pytest.mark.parametrize("change", ["missing_check", "overlapping_calls", "altered_inherited_calls", "wrong_old_pin", "current_hardware", "incomplete"])
+def test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls(tmp_path, change):
+    old, new = resumed_documentary_fixture(tmp_path)
+    if change == "missing_check": new["checks"].pop("resume_no_old_model_call_repeated")
+    elif change == "overlapping_calls": new["model_calls"][0]["call_id"] = new["inherited_model_calls"][0]["call_id"]
+    elif change == "altered_inherited_calls": new["inherited_model_calls"][0]["usage"] = {"model_tokens": 0}
+    elif change == "wrong_old_pin": new["resumption"]["source_receipt"]["sha256"] = "a"*64
+    elif change == "current_hardware": new["hardware_currently_observed"] = True
+    else: new.update(ok=False, status="incomplete")
+    save(tmp_path/RESEARCH_REFRESH_RESUMED, new)
+    rows = control_receipts(tmp_path)
+    assert next(r for r in rows if r["path"] == RESEARCH_REFRESH)["ok"] is False
+    resumed = next(r for r in rows if r["path"] == RESEARCH_REFRESH_RESUMED)
+    assert resumed["ok"] is False and resumed["observed_new_model_call_count"] is None
+
+
+def test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval():
+    summary = method_outcome_summary()
+    row = summary["rows"][0]
+    row.update(gain_basis="exact_baseline_artifact", gain=1, lower=.9, upper=1.1)
+    html = study_campaign_table(summary)
+    assert "Origine du ratio" in html and "identité exacte avec le naïf" in html
+    assert "identité exacte, sans IC" in html and "[0.9 ; 1.1]" not in html
+    assert "Ratios disponibles (mesures/identités)" in study_aggregate_table(summary)
+    assert "Ratio géométrique (mesures/identités)" in study_aggregate_table(summary)
+
+
+@pytest.mark.parametrize("directory_link", [False, True])
+def test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload(tmp_path, monkeypatch, directory_link):
+    value = original_execution_fixture(tmp_path)
+    expected = tmp_path/ORIGINAL_CAMPAIGN/"generation/frozen-original.cu"
+    protected = tmp_path/"private/input.bin"
+    protected.parent.mkdir()
+    protected.write_text("Invented forbidden fixture")
+    expected.unlink()
+    if directory_link:
+        original_generation = expected.parent
+        shutil.rmtree(original_generation)
+        original_generation.symlink_to(protected.parent, target_is_directory=True)
+        protected.rename(protected.parent/expected.name)
+        protected = protected.parent/expected.name
+    else:
+        expected.symlink_to(protected)
+    read = Path.read_bytes
+    def checked(path):
+        assert path.resolve() != protected.resolve(), "private payload opened through an authorized-looking role"
+        return read(path)
+    monkeypatch.setattr(Path, "read_bytes", checked)
+    row = next(r for r in control_receipts(tmp_path) if r["path"] == ORIGINAL_EXECUTION)
+    assert row["ok"] is False

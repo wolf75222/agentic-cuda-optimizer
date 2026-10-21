@@ -88,6 +88,7 @@ def summarize_suite(plan, manifests, groups=None):
             generation_method_error=generation.get("method_error"),
             candidate_fallback=generation.get("candidate_fallback"),
             status=result.get("status", "pending_common_final" if generation else "missing"),
+            gain_basis=result.get("gain_basis", "paired_measurement" if interval else None),
             gain=interval.get("gain"), lower=interval.get("lower"), upper=interval.get("upper"),
             case_gains=interval.get("case_gains", {}),
             model_tokens=usage.get("model_tokens"), model_calls=usage.get("model_calls"),
@@ -102,6 +103,7 @@ def summarize_suite(plan, manifests, groups=None):
             final_terminal=group.get("worker_terminal"), final_environment=group.get("environment"))
         if result.get("status") == "validated_no_gain":
             row["gain"] = 1.0
+            row["gain_basis"] = "exact_baseline_artifact"
         row["regression"] = row["gain"] is not None and row["gain"] < 1
         row["final_qualified"] = bool(result.get("qualified"))
         rows.append(row)
@@ -132,6 +134,16 @@ def summarize_suite(plan, manifests, groups=None):
                 "seeds": [{"seed": row["seed"], "gain": row["gain"], "status": row["status"]} for row in subset]}
     expected_groups = {entry.get("group_id") for entry in plan["entries"]}
     complete = all(groups.get(key, {}).get("execution_complete") and groups.get(key, {}).get("all_modes_available") for key in expected_groups)
+    direct_comparisons_qualified = True
+    for key in expected_groups:
+        modes = {entry["mode"] for entry in plan["entries"] if entry.get("group_id") == key}
+        expected_pairs = {"full_vs_" + mode for mode in modes - {"full"}} if "full" in modes else set()
+        if {"pmpp_permanent_only", "no_pmpp"} <= modes:
+            expected_pairs.add("pmpp_permanent_only_vs_no_pmpp")
+        contrasts = groups.get(key, {}).get("method_comparisons", {})
+        direct_comparisons_qualified &= all(contrasts.get(name, {}).get("ok") is True for name in expected_pairs)
     return {"schema_version": 2, "rows": rows, "aggregates": aggregates,
-            "complete": complete, "scientific_qualified": complete and all(r["final_qualified"] for r in rows),
+            "direct_comparisons_qualified": direct_comparisons_qualified,
+            "complete": complete, "scientific_qualified": complete and all(
+                r["final_qualified"] and r["gain"] is not None for r in rows) and direct_comparisons_qualified,
             "claim": "Only shared final experiments support quality comparisons; implementation or unit tests alone do not establish GPU performance."}

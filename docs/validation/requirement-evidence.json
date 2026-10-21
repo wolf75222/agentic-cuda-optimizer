@@ -125,7 +125,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "partial_generations_resumed_no_common_final",
+      "state": "eleven_generations_closed_first_common_final_active",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -133,9 +133,11 @@
         "study_v2_greedy_parent_transport_failure",
         "study_v2_transport_drain",
         "study_v2_full_first_proposal",
-        "study_v2_greedy_parent_first_proposal"
+        "study_v2_greedy_parent_first_proposal",
+        "study_v2_eleven_completed_generations",
+        "common_final_convolution_1729_freeze"
       ],
-      "remaining": "DeuxGEMMfull/greedy3141 ont terminé génération,avec gains de recherche uniquement.144générations/18groupes non terminés;original réel etnativev2 sansqualificationfinalecommune."
+      "remaining": "11/144générations terminées :8convolution1729 et3GEMM3141, véritableoriginal/nativev2/PMPP présents. Finale774017 active ; gel seul acquis,0/18finales communes acquises. Aucun gain final ni égalité de budgets globaux revendiqué."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -155,9 +157,13 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 79,
-    "latest_local_junit_entries": 1067,
-    "latest_local_testcase_nodes": 1062
+    "evidence_entries": 88,
+    "latest_local_junit_entries": 1212,
+    "latest_local_testcase_nodes": 1207,
+    "study_v2_completed_generation_receipts": 11,
+    "study_v2_planned_generations": 144,
+    "study_v2_common_finals_acquired_at_observation": 0,
+    "study_v2_planned_common_finals": 18
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -5685,6 +5691,390 @@
       "kind": "implementation_source",
       "HEAD_before_commit": "b84575ba156ddb9b93056e6670e66e75d3293401",
       "scope": "Reviewed working content; tested source hashes identical before/after coherent CPU suite. Existence alone is not a GPU execution."
+    },
+    "ci_0013118": {
+      "path": "work/live/ci-0013118.json",
+      "sha256": "8d0b41ff26885560cead05c5388d4b440131b7c53f29d539f6cc77b7a2c7d96a",
+      "bytes": 1993,
+      "kind": "github_ci_result",
+      "headSha": "001311831139f387c0b520bc7caaf4823d957796",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39657971702",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39657971702/job/119423171267"
+        }
+      ],
+      "scope": "CI GitHub archivée terminée avec succès au SHA exact0013118 (pytest et compileall). Les1062tests+5sous-tests et139empreintes avant/après appartiennent au reçu local distinct. Aucune activité modèle/GPU, finale commune ou validation de changements documentaires ultérieurs déduite."
+    },
+    "study_v2_eleven_completed_generations": {
+      "kind": "read_only_generation_receipt_inventory",
+      "observed_at_utc": "2026-10-21T19:18:24.762954+00:00",
+      "status": "eleven_generation_attempts_closed_no_common_final",
+      "completed_generation_receipts": 11,
+      "planned_generations": 144,
+      "planned_common_finals": 18,
+      "records": [
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/result.json",
+          "sha256": "d2ad390d9cf88d4891abb335189190da417ce498075e3cc07e1eb54fc4e0f9c5",
+          "mode": "full",
+          "job_id": "771747",
+          "session_id": "suite-gen-922260caf84d772754ff26b9bac862db",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "771747",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.greedy_parent/result.json",
+          "sha256": "3219af9d5beac0041e3bff3f3048924ce11d3243e1e72891dfbad2349d741113",
+          "mode": "greedy_parent",
+          "job_id": "771749",
+          "session_id": "suite-gen-03c1af25e31ac57672a0fbffa22a420d",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "771749",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.native_codex_vanilla/result.json",
+          "sha256": "290a4fb797357473d40fe3c7e9a23a38f426ce0eeff79ec0a54159061b7abb46",
+          "mode": "native_codex_vanilla",
+          "job_id": "771750",
+          "session_id": "suite-gen-c9f3607e1cdd12b798c2e0b25e0f7226",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "771750",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "04cb023c5ce0102a8e661eb3299fd0cb139873ce72e00ccf90add1884a49ecd4",
+          "read_isolation_required": true,
+          "read_isolation_preflight_ok": true,
+          "read_isolation_scope": "model tool filesystem isolation; trusted CLI/controller can read schema/auth"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/result.json",
+          "sha256": "01bf49fd7fc57ad62dc9183aee2e33a7afdaba85e99768dbd0b4e2cb74bd424a",
+          "mode": "no_autotuning",
+          "job_id": "771748",
+          "session_id": "suite-gen-93ba0b996e973866caedcfc8034d7754",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "771748",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_pmpp/result.json",
+          "sha256": "83b3cb36a52698aa6e6c93516e0591892734799aff181030e81b633308a58f5c",
+          "mode": "no_pmpp",
+          "job_id": "773801",
+          "session_id": "suite-gen-391aef7062119472e0795b17b7e496bf",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "773801",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": "completed",
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_research/result.json",
+          "sha256": "1ac5878d54274c9350a73c4f05fd888aabd29a9b733f267baed03bc828fe9d08",
+          "mode": "no_research",
+          "job_id": "773804",
+          "session_id": "suite-gen-987f33b7bdb23c62d9c68a596f302477",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "773804",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": "completed",
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.pmpp_permanent_only/result.json",
+          "sha256": "1f7cd94d259c38d1e071f0c44ff925bdc6ba83948718495e44aa105eb437f2fa",
+          "mode": "pmpp_permanent_only",
+          "job_id": "773803",
+          "session_id": "suite-gen-72fdc57854d909bd8e7391679e366357",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "773803",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": "completed",
+          "candidate_artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.true_upstream/result.json",
+          "sha256": "4f90cee76042ecb6e689ff883ce87740b88211cffc7dc7e248d50ff072e2f28c",
+          "mode": "true_upstream",
+          "job_id": "773802",
+          "session_id": "suite-gen-39abe67f78356cd84cbd61c222bd8df4",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "773802",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": "completed",
+          "candidate_artifact_hash": "7a1432a694ca265c2960c47d16f809dbb0a6b361bea1bdd4fd96b75a5e133ceb"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.full/result.json",
+          "sha256": "ecd2a31626e48fa269a8f3c62b05867637d5c5d9372019129dd272347187ddde",
+          "mode": "full",
+          "job_id": "772656",
+          "session_id": "suite-gen-d08daea7d32681025eb5aee61c69ce4c",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "772656",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "f93ff9d51addd500afe1e132b7ffa35823aec4f3917c3ce1adbdfaab755196ab"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.greedy_parent/result.json",
+          "sha256": "8a6e1fd45a4d217b3f64174de6afc54a9e4ea417ea49c11986fdf6c6414861cc",
+          "mode": "greedy_parent",
+          "job_id": "772658",
+          "session_id": "suite-gen-5a351bf112c638481794a6a38c9bf4d5",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "772658",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "b64231bf458bdfb5bc6cb26b8a33ff88e2a74eb4cfdf0b51a042bc67c740c550"
+        },
+        {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.native_codex_vanilla/result.json",
+          "sha256": "66b422312eb4a0adaa6f1de2e54456fee1d4b4308ad05ae6084e0735168785d5",
+          "mode": "native_codex_vanilla",
+          "job_id": "772659",
+          "session_id": "suite-gen-256e16613d440954a89d903981967965",
+          "generation_complete": true,
+          "execution_complete": true,
+          "worker_terminal": {
+            "job_id": "772659",
+            "terminal": true,
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          "method_status": null,
+          "candidate_artifact_hash": "f0eae9a1d1914e1f79795c8ba75628be73b6219562721f6c44f97b9bd2302a53",
+          "read_isolation_required": true,
+          "read_isolation_preflight_ok": true,
+          "read_isolation_scope": "model tool filesystem isolation; trusted CLI/controller can read schema/auth"
+        }
+      ],
+      "scope": "Inventaire dans ce catalogue des11result.json immuables lus :8modes convolution1729 et3modes GEMM3141 (full,greedy_parent,native_codex_vanilla), tous avecgeneration_complete/execution_complete etterminalCOMPLETED0:0 cohérent aujob du résultat. Ce comptage ne signifie ni11méthodes réussies ni11gains. Les méthodes/PMPP etartefacts retenus restent distincts ; aucune finale ni coût agrégé recomposé ici."
+    },
+    "common_final_convolution_1729_freeze": {
+      "path": "work/live/common-final-convolution-1729-freeze-audit.json",
+      "sha256": "0445e3ca92b488b716e3abfa3fc803cc92e65c6bba76284bca919d4bd8707f6e",
+      "bytes": 20586,
+      "kind": "read_only_common_final_artifact_identity_audit",
+      "status": "frozen_only_final_pending",
+      "job_id": "774017",
+      "session_id": "suite-final-3150a58059588a303afa1c18fcabcac6",
+      "gpu_uuid": "GPU-fcafe4e5-d6b9-7865-1234-563f110a0865",
+      "audit_source_HEAD": "001311831139f387c0b520bc7caaf4823d957796",
+      "freeze_identity_checks_pass": true,
+      "method_count": 8,
+      "naive_count": 1,
+      "final_measurement_acquired": false,
+      "final_qualification_acquired": false,
+      "scope": "Gel authentifié naïf+8méthodes, sources/kernel/lancements/paramètres/artifacts conformes aux8résultats de génération et load_candidate. Six méthodes conservent le même artifact que le naïf ; original même source mais lancement différent ; native source distincte. Hardware/ack/job/session/UUID cohérents sur774017. Finale encore active au constat communiqué ; aucun résultat final, input numérique, holdout privé, base ou graine lu. Ce reçu ne qualifie aucune performance."
+    },
+    "ac02_documentary_refusal_stage": {
+      "path": "results/research-refresh-ac02-20261021/campaign/acceptance-evidence/blocked-refusal.json",
+      "sha256": "ecb01f52378626c5cea2a6ebd306a8dd37cc4af6a11384c463c992fe580d0a53",
+      "bytes": 837,
+      "kind": "actual_local_model_semantic_refusal",
+      "status": "six_refusal_checks_passed_full_sequence_pending",
+      "technique": "register_blocking",
+      "call_id": "a80e52b8ec48409e9a610fdded783c34",
+      "checks": {
+        "needs_research_returned": true,
+        "exact_semantic_guard_reason": true,
+        "model_actually_declared_control_technique": true,
+        "no_new_generation_event": true,
+        "no_new_candidate_or_source_change": true,
+        "no_accepted_proposal_file": true
+      },
+      "scope": "Étape réelle de refus sémantique AC02 : technique register_blocking déclarée par Codex, needs_research, aucun nouveau candidat/source/événement de génération/proposition acceptée. Le diagnostic a été produit puis la recherche ciblée a bloqué sur une preuve documentaire matérielle manquante ; ancienne autorité terminée incomplete, sept CLI acquis au total, zéro nouveau GPU. Aucun dossier renouvelé applicable ni séquence complète déduit."
+    },
+    "ac02_documentary_run_pending": {
+      "path": "results/research-refresh-ac02-20261021/research-refresh-acceptance.json",
+      "sha256": "b260de2a19daf7a9c23064019c113b4940a0fdeb7dfb69cd3f20a757c30cf37d",
+      "available": true,
+      "kind": "actual_documentary_acceptance_incomplete",
+      "status": "incomplete",
+      "controller_exec_session": "9454",
+      "observed_at_utc": "2026-10-21T19:43:12.181056+00:00",
+      "completed_stage_evidence": [
+        "ac02_documentary_refusal_stage"
+      ],
+      "scope": "Ancienne autorité documentaire9454 au0013118 propre, terminée naturellement incomplete :7CLI acquis et refus register_blocking conservé ; refresh bloqué par preuve officielle manquante liant le champ driver13010 à CUDA12.6 sur cette plateforme. Aucun nouveau candidat après ce refus, aucune mesure ni GPU nouveau ; aucune séquence AC02 complète acquise. Ce statut terminal historique n’est pas le statut de la nouvelle reprise isolée.",
+      "bytes": 19551,
+      "ok": false,
+      "model_call_count": 7,
+      "new_gpu_requests": 0,
+      "new_gpu_requests_attempted": 0,
+      "source_HEAD": "001311831139f387c0b520bc7caaf4823d957796",
+      "source_dirty_state": [],
+      "proof_manifest": {
+        "path": "results/research-refresh-ac02-20261021/proof-sha256.json",
+        "sha256": "28c06ce27cbc643447af4d3cddc3766bfcd7556a20a8937901ec023155ca69ee"
+      },
+      "failure_reason": "Actual targeted research blocked: research_blocked: Research lacks successful live search or required evidence: missing_evidence=[\"Official producer/API encoding and platform-specific compatibility evidence connecting driver value 13010 to CUDA 12.6 runtime compatibility. The supplied relea\"]; unsatisfied_applicability=[\"CUDA 12.6 runtime/toolkit compatibility with the reported target driver is established.\"]",
+      "catalog_id_note": "Identifiant historique conservé depuis le constat en cours ; ancienne autorité maintenant terminée incomplète."
+    },
+    "ac02_documentary_resumption_pending": {
+      "path": "results/research-refresh-ac02-resumed-20261021/research-refresh-acceptance.json",
+      "sha256": null,
+      "available": false,
+      "kind": "pending_isolated_documentary_resumption",
+      "status": "prepared_not_acquired",
+      "observed_at_utc": "2026-10-21T19:43:12.181056+00:00",
+      "previous_authority_evidence": "ac02_documentary_run_pending",
+      "previous_authority_sha256": "b260de2a19daf7a9c23064019c113b4940a0fdeb7dfb69cd3f20a757c30cf37d",
+      "scope": "Nouvelle reprise isolée préparée, non lancée selon le constat du contrôleur ; autorité finale absente. Les gardes restent inchangées et la précédente autorité incomplete est conservée. Préparation, code et tests ciblés ne qualifient aucune nouvelle séquence documentaire, GPU ou finale."
+    },
+    "ac02_historical_hardware_annex": {
+      "path": "work/live/research-refresh-hardware-context.json",
+      "sha256": "c810c536235c5398ffb7c4b229b6c6130eb94c9aba44d30f72b0cc7b2145279f",
+      "bytes": 2169,
+      "kind": "authenticated_historical_hardware_context",
+      "job_id": "771748",
+      "session_id": "suite-gen-93ba0b996e973866caedcfc8034d7754",
+      "gpu_uuid": "8db3b4275a1963926a561d1e203924ce",
+      "hardware_currently_observed": false,
+      "nvidia_driver_package_version": "590.48.01",
+      "native_reported_versions": {
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060
+      },
+      "source_receipts": {
+        "hardware.json": {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/worker/hardware.json",
+          "sha256": "f7beab62f23b45ef245582d6b9f9807cb06e6256fadeea62930e299fa120a11a"
+        },
+        "slurm-session.json": {
+          "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.no_autotuning/worker/slurm-session.json",
+          "sha256": "b2fe2a5e9918ca8b19f60de883172c47a771a37abc8040dc10c49e5e3f52667e"
+        }
+      },
+      "scope": "Annexe historique liée au worker771748 : API CUDA driver_version13010, package NVIDIA590.48.01 et NVRTC12.6 sont des champs distincts. Les hashes hardware/ACK ont été revérifiés localement ; aucune requête GPU actuelle, modification du fingerprint/contrat, condition satisfaite artificiellement ou décision de compatibilité fournie par cette annexe."
+    },
+    "ac02_toolchain_reader_preflight": {
+      "path": "work/live/toolchain-reader-preflight/preflight.json",
+      "sha256": "e3af980dd65b4b4669fed7804ed1e451b728b21e02e16638248ddc26dc0a82ea",
+      "bytes": 7753,
+      "kind": "existing_actual_http_reader_preflight",
+      "model_calls": 0,
+      "gpu_requests": 0,
+      "sources": [
+        {
+          "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__VERSION.html",
+          "content_sha256": "7ae80641a3b73726667dda5c3ce2ae35a26c772977502501b0a7a4c1c1843ad8",
+          "read_characters": 5509,
+          "provided_characters": 5641,
+          "passage_sha256": [
+            "a9f9eac1a300f558dd993ef98681e58533e55018202b30298ba60940ea6d642b"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-toolkit-release-notes/index.html#cuda-toolkit-major-component-versions",
+          "content_sha256": "5d20470f5cb8608bf9f1ee434b314b5b93ffc96857b7652352d3ba5274bf49d2",
+          "read_characters": 7914,
+          "provided_characters": 8083,
+          "passage_sha256": [
+            "2efb85ea444fb99295ed9fbdad2b53e190e29e1965ffe93b9adac9da08299459"
+          ]
+        },
+        {
+          "url": "https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html",
+          "content_sha256": "b07e04eedefee03faf62d1a27141f0cc80cc44655769280b2099c7dd8269f2ee",
+          "read_characters": 6518,
+          "provided_characters": 6650,
+          "passage_sha256": [
+            "d04c1ca3cc150c9fb4dd9ba7c0f61f71d26d3e0d11e0e066828c869c8df3f6a3"
+          ]
+        }
+      ],
+      "provided_characters_total": 20374,
+      "scope": "Préflight lecteurHTTP réel acquis antérieurement : trois sources NVIDIA officielles,20374caractères fournis au lecteur avec hashes corps/passages. Lecture API CUDA12.6, release notes12.6 et compatibilitémineure ; aucune synthèse modèle, nouveau dossier applicable ou conclusion de compatibilité automatiquement acquise. Cet audit relit seulement le reçu, sans téléchargement ni corps HTML."
+    },
+    "local_identity_research_release": {
+      "kind": "complete_local_cpu_service_fixture_suite",
+      "receipt": {
+        "path": "work/live/identity-research-release-local.json",
+        "sha256": "603aa84ae0b742573a0bc3db9f56db1436e13f0f3aef5b22ff47f208c1563286"
+      },
+      "junit": {
+        "path": "work/live/identity-research-release-v2-tests.xml",
+        "sha256": "05f70fd598ab6694f1816b8749cf5f09851faa30f87d9ec04111af256b02310d"
+      },
+      "source_before": {
+        "path": "work/live/identity-research-release-v2-source-before.json",
+        "sha256": "d8fbc1b49fc7572e7fed652ff2ade73d8be6ebbc3c8d3c92675296170d67654e"
+      },
+      "tests_passed": 1207,
+      "subtests_passed": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 93.0,
+      "source_files_unchanged_during_tests": 180,
+      "scope": "Coherent complete local suite covering artifact identity, aliases, injected scheduler observer regression, authenticated hardware annex and isolated documentary resumption. These two documentary files were updated after tests; Python source/test bytes are unchanged. No model, GPU or optimizer quality inferred; new exact-SHA CI pending."
     }
   },
   "requirements": {
@@ -5890,12 +6280,14 @@
         "evidence": [
           "gemm_agent_final",
           "rpc_transport",
-          "true_original_first_generation_773802"
+          "true_original_first_generation_773802",
+          "study_v2_eleven_completed_generations",
+          "common_final_convolution_1729_freeze"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "First actual original generation acquired; independent common final comparison remains pending."
+        "Première génération du véritable original773802 acquise ;11générations terminées au total. Finale commune convolution1729 active774017, comparaison finale encore non acquise."
       ]
     },
     "SEC-3": {
@@ -5964,12 +6356,13 @@
         "evidence": [
           "diagnostic_loop",
           "autotuning",
-          "true_original_first_generation_773802"
+          "true_original_first_generation_773802",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Workflow actuel complet après panne réseau non acquis."
+        "Onze générations terminées dans deux familles ; workflow complet, reprise intégrale et18finales communes non acquis."
       ]
     },
     "SEC-3.1": {
@@ -6038,12 +6431,13 @@
           "diagnostic_loop",
           "gemm_agent_final",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Démarrage complet v2 acquis sur deux GEMM; retours/reprise et toutes familles non qualifiés."
+        "Onze générations terminées dans deux familles ; boucle ciblée réelle acquise dans les campagnes citées. Six familles et reprise intégrale non qualifiées."
       ]
     },
     "SEC-3.2": {
@@ -6323,12 +6717,13 @@
         "evidence": [
           "final_isolation",
           "frozen_gemm",
-          "native_read_isolation_cpu"
+          "native_read_isolation_cpu",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Génération native v2 avec barrière nouvelle non exercée; probeCPU distinct acquis."
+        "Deux générations native v2 terminées (convolution1729, GEMM3141), read_isolation_required=true et préflightok dans leurs reçus ; aucune qualification finale commune v2 déduite."
       ]
     },
     "SEC-5": {
@@ -6468,7 +6863,8 @@
           "local_release",
           "ci_45407a2",
           "local_ac02_renderer_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -6478,7 +6874,7 @@
           "test_campaign_workflow": 5,
           "test_campaign_runtime": 18
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
       },
       "romeo_executed": {
         "ok": true,
@@ -6528,7 +6924,8 @@
           "local_release",
           "ci_45407a2",
           "local_ac02_renderer_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -6536,7 +6933,7 @@
           "test_campaign_diagnostics": 6,
           "test_diagnostic_loop_acceptance": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
       },
       "romeo_executed": {
         "ok": true,
@@ -6553,7 +6950,7 @@
         "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
       },
       "remaining": [
-        "Réutilisation compatible et introduction d’une technique non couverte:scénario réel complet AC02 encore manquant."
+        "Ancienne séquence documentaire9454 terminée incomplete après refus acquis et refresh bloqué ; nouvelle reprise isolée sans autorité finale. Réutilisation/technique non couverte complète encore non acquise."
       ]
     },
     "SEC-5.4": {
@@ -6598,12 +6995,13 @@
         "evidence": [
           "diagnostic_loop",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Ablations permanent seul/consultations ciblées/sans PMPP non exécutées; aucun livre intégral prétendu."
+        "Générations des modes full,pmpp_permanent_only etno_pmpp terminées surconvolution1729 ; comparaisons finales etautres cohortes encore non acquises. Aucun livre intégral prétendu."
       ]
     },
     "SEC-6": {
@@ -7150,12 +7548,13 @@
           "gemm_agent_final",
           "gemm_structured_final",
           "frozen_gemm",
-          "final_isolation"
+          "final_isolation",
+          "common_final_convolution_1729_freeze"
         ],
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Étudev2 sans finale commune; statuts acquis seulement pour artefacts exacts cités."
+        "Finale commune convolution1729 active774017, gel naïf+8méthodes authentifié ; aucune nouvelle mesure ou qualification finale acquise. Les statuts historiques restent attachés aux artefacts cités."
       ]
     },
     "SEC-8": {
@@ -7591,7 +7990,8 @@
           "local_release",
           "ci_45407a2",
           "local_ac02_renderer_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -7610,7 +8010,7 @@
           "test_gpu_autotuning_acceptance": 2,
           "test_gpu_contract_acceptance": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
       },
       "romeo_executed": {
         "ok": false,
@@ -7625,7 +8025,7 @@
         "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
       },
       "remaining": [
-        "Interfaces et première chaîne modèle v2 réelle acquises; réutilisation/retourtechnique complète et correction de taille du contexte restent à exercer."
+        "Interfaces et premières chaînes modèle v2 réelles acquises ; ancienne autorité documentaire9454 incomplete, nouvelle reprise isolée préparée. Contexte matériel et tests CPU ciblés ne qualifient pas un dossier renouvelé ni tous domaines."
       ]
     },
     "SEC-11": {
@@ -7656,7 +8056,8 @@
           "local_release",
           "ci_45407a2",
           "local_unscored_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -7664,7 +8065,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -7777,7 +8178,8 @@
           "local_release",
           "ci_45407a2",
           "local_unscored_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -7785,7 +8187,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -7963,7 +8365,8 @@
           "local_unscored_release",
           "local_ac02_renderer_release",
           "search_tree_renderer_local",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -7979,7 +8382,7 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -7999,7 +8402,8 @@
         "evidence": [
           "reconstructed_native_finalist",
           "frozen_gemm",
-          "diagnostic_loop"
+          "diagnostic_loop",
+          "common_final_convolution_1729_freeze"
         ],
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
@@ -8250,12 +8654,14 @@
           "frozen_gemm",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "true_original_first_generation_773802"
+          "true_original_first_generation_773802",
+          "study_v2_eleven_completed_generations",
+          "common_final_convolution_1729_freeze"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Étude partielle:premiers GEMM full/greedy3141 generation_complete avec promotions de recherche; aucune finale commune acquise. Achever144générations/18groupes et qualifier véritable original/nativev2; publier coûts, taux, dispersion et tous échecs."
+        "Étude partielle :11/144générations terminées (8convolution1729,3GEMM3141), dont véritable original773802, nativev2 et modesPMPP. Finale commune774017 active, gel seul acquis ;0/18finales communes acquises. Achever cohortes, coûts, taux, dispersion et échecs ; aucun gain final déduit."
       ]
     },
     "SEC-17": {
@@ -8515,7 +8921,8 @@
           "local_release",
           "ci_45407a2",
           "local_ac02_renderer_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -8523,7 +8930,7 @@
           "test_campaign_diagnostics": 6,
           "test_diagnostic_loop_acceptance": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred."
       },
       "romeo_executed": {
         "ok": false,
@@ -8537,7 +8944,7 @@
         "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
       },
       "remaining": [
-        "Dossier initial de famille tiling réel acquis; pas de séquence réelle complète nouvelle famille → ajustement compatible → technique non couverte → retour recherche."
+        "Ancienne autorité documentaire9454 terminée incomplete (7CLI, zéro GPU) : refus register_blocking acquis, refresh bloqué par preuve de compatibilité documentaire manquante. Nouvelle reprise isolée préparée sans reçu final ; séquence AC02 complète non acquise."
       ],
       "expected_result": "Recherche effective pour la famille, réutilisation autorisée pour l’ajustement ; proposition non couverte bloquée et renvoyée à la recherche."
     },
@@ -8628,12 +9035,13 @@
         "status": "verified",
         "applicable": true,
         "evidence": [
-          "diagnostic_loop"
+          "diagnostic_loop",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "AblationsPMPP encore en attente; aucun livre intégral ni pagination inventés."
+        "Provenance PMPP historique acquise ; générations des modes permanentseul/sansPMPP convolution1729 terminées, mais effet comparé final encore non acquis. Aucun livre intégral ni pagination inventés."
       ],
       "expected_result": "Provenance exacte ; aucun accès fictif au livre intégral ; principes présents dans le diagnostic et la proposition."
     },
@@ -9355,7 +9763,8 @@
           "local_release",
           "ci_45407a2",
           "local_unscored_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_campaign_runtime": 18,
@@ -9371,7 +9780,7 @@
           "test_worker_reservations": 2,
           "test_backend_readonly": 49
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -9453,12 +9862,13 @@
         "status": "verified",
         "applicable": true,
         "evidence": [
-          "final_isolation"
+          "final_isolation",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Formes admissibles/échecfinal sans générateur acquis; modèle natif v2 avec isolation nouvelle non exercé."
+        "Formes admissibles/échecfinal historique sans générateur acquis. Deux générations native v2 avec préflight de barrière requis ont terminé ; finale commune774017 encore active, aucun nouveau scénario d’échec final acquis."
       ],
       "expected_result": "Lancement calculé par la règle figée sans rappel du modèle ; échec explicite, sans boucle de génération alimentée secrètement par le jeu final."
     },
@@ -9489,7 +9899,8 @@
           "local_release",
           "ci_45407a2",
           "local_unscored_release",
-          "local_recovery_export_release"
+          "local_recovery_export_release",
+          "ci_0013118"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -9497,7 +9908,7 @@
           "test_gpu_reconstructed_acceptance": 14,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Latest coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -9588,9 +9999,10 @@
           "native_vanilla",
           "diagnostic_loop",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
         "Processus et orchestration locaux; poids modèle hébergés par fournisseur. Démarrage lecteurv2 réel acquis; autres déclencheurs et étude complète restent en attente."
@@ -9638,12 +10050,13 @@
         "applicable": true,
         "evidence": [
           "rpc_transport",
-          "gpu_safety_context"
+          "gpu_safety_context",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Des tâches initiales ont échouéSSH/DNS; deux nouvelles générationsGEMM ont ensuite terminé. La reprise complète et la disponibilité réseau présente ne se déduisent pas de ces reçus."
+        "Onze générations terminées après des pannesSSH/DNS historiques ; finale commune774017 active avecidentité locale vérifiée. La reprise intégrale144/18 et la disponibilité réseau présente ne se déduisent pas de ces reçus."
       ]
     },
     "USER-PROFILE": {
@@ -9746,12 +10159,13 @@
           "diagnostic_loop",
           "gemm_agent_final",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Démarrage complet v2 acquis sur deux GEMM; retours/reprise et toutes familles non qualifiés."
+        "Onze générations terminées dans deux familles ; boucle ciblée réelle acquise dans les campagnes citées. Six familles et reprise intégrale non qualifiées."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -9961,12 +10375,13 @@
         "evidence": [
           "diagnostic_loop",
           "study_v2_full_first_proposal",
-          "study_v2_greedy_parent_first_proposal"
+          "study_v2_greedy_parent_first_proposal",
+          "study_v2_eleven_completed_generations"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Ablations permanent seul/consultations ciblées/sans PMPP non exécutées; aucun livre intégral prétendu."
+        "Générations des modes full,pmpp_permanent_only etno_pmpp terminées surconvolution1729 ; comparaisons finales etautres cohortes encore non acquises. Aucun livre intégral prétendu."
       ],
       "derived_from": "SEC-5.4"
     },
@@ -10254,12 +10669,14 @@
           "frozen_gemm",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "true_original_first_generation_773802"
+          "true_original_first_generation_773802",
+          "study_v2_eleven_completed_generations",
+          "common_final_convolution_1729_freeze"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
       },
       "remaining": [
-        "Étude partielle:premiers GEMM full/greedy3141 generation_complete avec promotions de recherche; aucune finale commune acquise. Achever144générations/18groupes et qualifier véritable original/nativev2; publier coûts, taux, dispersion et tous échecs."
+        "Étude partielle :11/144générations terminées (8convolution1729,3GEMM3141), dont véritable original773802, nativev2 et modesPMPP. Finale commune774017 active, gel seul acquis ;0/18finales communes acquises. Achever cohortes, coûts, taux, dispersion et échecs ; aucun gain final déduit."
       ],
       "derived_from": "SEC-16"
     }
@@ -10412,6 +10829,32 @@
         "true_original_first_generation_773802"
       ],
       "scope": "New priority/fresh-row guard, on-disk provenance epochs, CUDA field semantics and historical source export tested CPU. Actual original generation independently authenticated; new dispatch/helper/full export not yet executed."
+    },
+    {
+      "observed_at_utc": "2026-10-21T19:18:24.762954+00:00",
+      "kind": "exact_ci_eleven_generations_and_pending_common_final_documentary_ac02",
+      "source_HEAD": "001311831139f387c0b520bc7caaf4823d957796",
+      "checkout_clean_before_doc_edits": true,
+      "evidence": [
+        "ci_0013118",
+        "study_v2_eleven_completed_generations",
+        "common_final_convolution_1729_freeze",
+        "ac02_documentary_refusal_stage",
+        "ac02_documentary_run_pending"
+      ],
+      "scope": "Spécification644lignes et registre entier relus. Actualisation de preuves existantes :CIexacte réussie,11générations terminées, gel final seul et refusAC02 partiel. Aucun statut de phase rehaussé, aucun gain final ni nouvelle qualification ; aucune base/graine/entréeprivée lue, aucun test/modèle/SSH/GPU relancé."
+    },
+    {
+      "observed_at_utc": "2026-10-21T19:43:12.181056+00:00",
+      "kind": "initial_documentary_ac02_incomplete_isolated_resumption_not_acquired",
+      "evidence": [
+        "ac02_documentary_run_pending",
+        "ac02_documentary_refusal_stage",
+        "ac02_documentary_resumption_pending",
+        "ac02_historical_hardware_annex",
+        "ac02_toolchain_reader_preflight"
+      ],
+      "scope": "Ancienne autorité terminée naturellement incomplete préservée,7CLI/zéroGPU ; reprise isolée préparée sans résultat acquis. Annexe historique et préflightHTTP existants relus seulement. Les correctifs postérieurs à0013118 ont des tests CPU ciblés ; suite complète/CI de ces nouveaux octets non encore acquise au constat. Aucun statut de phase rehaussé, nouvelle activité ou fichier de preuve modifié."
     }
   ]
 }

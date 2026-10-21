@@ -9,13 +9,15 @@ edits a returned payload or a dossier to obtain the expected refusal/refresh.
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
+from contextlib import closing
+from dataclasses import asdict, replace
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
 import shutil
+import sqlite3
 import statistics
 import sys
 from tempfile import TemporaryDirectory
@@ -28,9 +30,10 @@ sys.path.insert(0, str(REPO))
 from optimizer_agent.campaign import (CampaignRuntime, RecordedCodex, WorkloadSuite, Candidate,
     Evaluator, LaunchRule, WorkloadContract, device_identity, digest, read_json, write_json)
 from optimizer_agent.campaign_config import CampaignConfig
-from optimizer_agent.codex_backend import CandidateGenerator, CodexBackend, CodexConfig, default_codex_executable
+from optimizer_agent.codex_backend import CandidateGenerator, CodexBackend, CodexConfig, Proposal, default_codex_executable
 from optimizer_agent.experiment_store import ExperimentStore
-from optimizer_agent.research_service import ResearchConfig, ResearchDossier, ResearchService
+from optimizer_agent.research_service import ResearchConfig, ResearchDossier, ResearchService, NeedsResearch
+from optimizer_agent.diagnostics import verify_diagnostic
 from optimizer_agent.search_policy import SearchPolicy
 from use_harness import BufferArgument
 from optimizer_agent.workload_semantics import operation_spec
@@ -462,6 +465,200 @@ def exercise(runtime, controls, *, uncovered_technique=None):
                                     "2": "uncovered request then genuinely covered proposal after research"}}
 
 
+def inspect_resume_source(directory, *, receipt_sha256, manifest_sha256):
+    """Authenticate only the observed seven-call targeted-research refusal.
+
+    The v1 control did not serialize its last in-memory state. Its exact phase
+    is reconstructed from the pinned event sequence, SQL rows and CLI receipts;
+    no successful research/applicability condition is assigned by this adapter.
+    """
+    directory = Path(directory).resolve()
+    if not receipt_sha256 or not manifest_sha256:
+        raise ValueError("Resume requires explicit receipt and proof-manifest SHA256 pins")
+    receipt_path, manifest_path = directory / RECEIPT, directory / "proof-sha256.json"
+    if sha(receipt_path) != receipt_sha256 or sha(manifest_path) != manifest_sha256:
+        raise ValueError("Resume receipt/proof-manifest differs from its explicit pin")
+    receipt, manifest = read_json(receipt_path), read_json(manifest_path)
+    if (receipt.get("kind") != "documentary_research_refresh_acceptance"
+            or receipt.get("status") != "incomplete" or receipt.get("ok") is not False
+            or not str(receipt.get("error", "")).startswith("Actual targeted research blocked: ")
+            or receipt.get("new_gpu_requests_attempted") != 0 or receipt.get("bootstrap_files_unchanged") is not True
+            or receipt.get("proof_manifest") != {"path":"proof-sha256.json", "sha256":manifest_sha256}):
+        raise ValueError("Resume supports only the completed targeted-research refusal, with zero GPU requests")
+    files = manifest.get("files", {})
+    if (manifest.get("hash_algorithm") != "sha256" or not isinstance(files, dict) or not files
+            or set(manifest.get("excluded_paths", [])) != {RECEIPT, "proof-sha256.json"}):
+        raise ValueError("Unsupported resume proof manifest")
+    for name, expected in files.items():
+        path = directory / name
+        if (Path(name).is_absolute() or ".." in Path(name).parts or not path.is_file()
+                or path.is_symlink() or not path.resolve().is_relative_to(directory) or sha(path) != expected):
+            raise ValueError("Resume source artifact is missing, unsafe or changed: " + name)
+    actual = {str(path.relative_to(directory)) for path in directory.rglob("*") if path.is_file()}
+    if (actual != set(files) | {RECEIPT, "proof-sha256.json"}
+            or any(path.is_symlink() for path in directory.rglob("*"))):
+        raise ValueError("Resume source contains unmanifested artifacts or symlinks")
+    intent = read_json(directory / "run-intent.json")
+    if not intent.get("source_provenance") or intent["source_provenance"] != receipt.get("source_provenance"):
+        raise ValueError("Resume source-controller provenance differs between intent and receipt")
+    origin = inspect_bootstrap(intent["bootstrap"], receipt["historical_bootstrap"]["file_hashes"]["result.json"])
+    if (origin["hashes"] != receipt["historical_bootstrap"]["file_hashes"]
+            or intent.get("bootstrap_hashes") != origin["hashes"]
+            or intent.get("internal_campaign_run_id") != origin["config"].run_id):
+        raise ValueError("Resume bootstrap identity differs from the authenticated original")
+    events = read_json(directory / "events.json")
+    kinds = [event["kind"] for event in events]
+    expected_kinds = ["campaign_initialized", "checkpoint", "selection", "selection", "model", "model",
+        "research", "model", "generation", "model", "generation", "model", "diagnostic", "model", "model", "research_blocked"]
+    if kinds != expected_kinds or receipt["error"] != "Actual targeted research blocked: " + events[-1]["payload"]["error"]:
+        raise ValueError("Resume phase is not the observed initial/reuse/refusal/diagnostic/research-blocked sequence")
+    db_path = directory / "campaign/experiments.sqlite"
+    if any(db_path.with_name(db_path.name + suffix).exists() for suffix in ("-wal", "-shm")):
+        raise ValueError("Resume requires a settled archived SQLite database")
+    with closing(sqlite3.connect(db_path.as_uri()+"?mode=ro&immutable=1", uri=True)) as db:
+        db.row_factory = sqlite3.Row
+        db_events = [dict(row, payload=json.loads(row["payload"])) for row in db.execute("SELECT * FROM events ORDER BY event_id")]
+        trials = [dict(row) for row in db.execute("SELECT * FROM trials")]
+        candidates = [dict(row, payload=json.loads(row["payload"])) for row in db.execute("SELECT * FROM candidates")]
+        forbidden = sum(db.execute("SELECT count(*) FROM " + table).fetchone()[0]
+                        for table in ("evaluations", "reward_claims", "integration_events"))
+        uncertain = [row for row in db.execute("SELECT amount FROM reservations WHERE actual IS NULL")
+                     if json.loads(row["amount"]).get("model_calls", 0)]
+    if (db_events != events or len(trials) != 1 or trials[0]["status"] != "pending"
+            or trials[0]["result"] is not None or forbidden or uncertain or len(candidates) != 3):
+        raise ValueError("Resume SQLite/events/pending-trial state is incompatible or uncertain")
+    trial_id = trials[0]["trial_id"]
+    if any(event["payload"].get("trial_id", trial_id) != trial_id for event in events):
+        raise ValueError("Resume events name more than one trial")
+    invocations = read_json(directory / "campaign/acceptance-controls/invocations.json")
+    expected_stages = ["research_service", "research_service", "initial-compatible", "compatible-adjustment",
+                       "uncovered-technique", "research_service", "research_service"]
+    calls = receipt.get("model_calls", [])
+    if (len(calls) != 7 or [row.get("stage") for row in invocations] != expected_stages
+            or [row.get("kernel_proposal") for row in invocations] != [False,False,True,True,True,False,False]
+            or any(row.get("status") != "completed" for row in invocations)
+            or [row.get("call_id") for row in invocations] != [row.get("call_id") for row in calls]
+            or [event["payload"].get("call_id") for event in events if event["kind"] == "model"] != [row["call_id"] for row in calls]
+            or len({row["call_id"] for row in calls}) != 7):
+        raise ValueError("Resume needs the seven completed, distinct original CLI receipts in exact order")
+    traces = []
+    for call, invocation in zip(calls, invocations):
+        call_id = call["call_id"]
+        if len(call_id) != 32 or any(char not in "0123456789abcdef" for char in call_id):
+            raise ValueError("Unsafe original model call identity")
+        trace = read_json(directory / "campaign/model" / (call_id + ".json"))
+        if (trace.get("call_id") != call_id or trace.get("status") != "completed" or trace.get("returncode") != 0
+                or trace.get("purpose") != invocation.get("purpose")
+                or trace.get("usage") != call["usage"] or trace.get("model") != "gpt-6-luna"
+                or trace.get("reasoning_effort") != "max"
+                or digest(trace.get("payload")) != invocation.get("returned_payload_sha256")):
+            raise ValueError("Original completed CLI payload/usage identity differs")
+        traces.append(trace)
+    initial_path = directory / "campaign/acceptance-evidence/initial-dossier.json"
+    dossier_path = directory / "campaign/trials" / trial_id / "dossier.json"
+    if sha(initial_path) != sha(dossier_path):
+        raise ValueError("The blocked refresh must still retain the exact initial dossier")
+    initial_dict = read_json(initial_path)
+    prompt_dossier_matches = []
+    for invocation in invocations[2:5]:
+        prompt_path = Path(invocation["outgoing_prompt"])
+        if (not prompt_path.resolve().is_relative_to(directory) or sha(prompt_path) != invocation["outgoing_prompt_sha256"]
+                or read_json(directory / "run-intent.json")["run_id"] != receipt["run_id"]):
+            raise ValueError("Original controlled prompt is not bound to this source")
+        context = json.loads(prompt_path.read_text().split("Context:\n", 1)[1])
+        if context["research"] != initial_dict:
+            raise ValueError("The three original controls did not use the exact same dossier")
+        prompt_dossier_matches.append(context["research"] == initial_dict)
+    blocked = read_json(directory / "campaign/acceptance-evidence/blocked-refusal.json")
+    if (not blocked.get("checks") or not all(value is True for value in blocked["checks"].values())
+            or blocked.get("call_id") != calls[4]["call_id"]
+            or blocked.get("raw_payload_sha256") != digest(traces[4]["payload"])
+            or blocked.get("runtime_update", {}).get("needs_research") is not True):
+        raise ValueError("Original semantic refusal lacks its exact completed payload")
+    generations = [event["payload"]["candidate_id"] for event in events if event["kind"] == "generation"]
+    diagnostic = next(event["payload"] for event in events if event["kind"] == "diagnostic")
+    state = {"run_id":origin["config"].run_id, "initialized":True, "trials_done":0,
+        "trial_id":trial_id, "candidate_id":generations[1], "repair":2, "research_round":2,
+        "research_ready":False, "needs_research":True, "valid":False, "retryable":False,
+        "error":events[-1]["payload"]["error"], "termination_reason":None,
+        "diagnostic_id":diagnostic["diagnostic_id"], "research_refresh_required":True}
+    return {"directory":directory, "receipt":receipt, "manifest":manifest, "intent":intent, "origin":origin,
+        "source_hashes":{**files, RECEIPT:receipt_sha256, "proof-sha256.json":manifest_sha256},
+        "events":events, "calls":calls, "invocations":invocations, "traces":traces,
+        "state":state, "candidate_ids":generations, "technique":blocked["technique"],
+        "initial_dossier":initial_dict, "initial_dossier_sha256":sha(initial_path),
+        "dossier_reuse_verified":all(prompt_dossier_matches) and sha(initial_path) == sha(dossier_path)
+            and [row["stage"] for row in invocations[2:4]] == ["initial-compatible","compatible-adjustment"]}
+
+
+def validate_resume_runtime(runtime, prepared):
+    """Replay actual admission/diagnostic guards before any resumed model call."""
+    state, ids = prepared["state"], prepared["candidate_ids"]
+    if runtime.store.events(runtime.config.run_id) != prepared["events"]:
+        raise ValueError("Reconstructed runtime changed the original event prefix")
+    trial = runtime.trial(state)
+    if (trial["action"] != prepared["intent"]["family"] or trial["parent"]["candidate_id"] != "baseline"
+            or trial["trial_id"] != state["trial_id"]):
+        raise ValueError("Resume changed the selected original trial/parent/family")
+    initial = ResearchDossier.from_dict(prepared["initial_dossier"])
+    ready = initial.research_ready(runtime.contract_hash, trial["action"], runtime.environment_hash)
+    proposals = []
+    for repair, candidate_id in enumerate(ids):
+        data = read_json(runtime.trial_dir(state) / f"proposal-{repair}-1.json")
+        parsed = Proposal.from_dict(data, parent_id="baseline", source_parent_id="baseline" if repair == 0 else ids[0],
+            contract_hash=runtime.contract_hash, family=trial["action"])
+        initial.validate_proposal(parsed)
+        raw = prepared["traces"][2+repair]["payload"]
+        provider = Proposal.from_payload(raw, parent_id="baseline", source_parent_id=parsed.source_parent_id,
+            contract_hash=runtime.contract_hash, family=trial["action"])
+        if any(asdict(parsed)[key] != asdict(provider)[key] for key in asdict(provider) if key not in ("usage", "call_id")):
+            raise ValueError("Persisted proposal differs from its exact provider payload")
+        candidate = runtime.candidate(candidate_id)
+        stored = runtime.store.get_candidate_source(candidate_id, runtime.config.run_id)
+        expected_id = digest({"source":data["source"], "launch":data["launch_rule"], "parameters":data["parameters"],
+                              "trial_id":state["trial_id"], "repair":repair})[:24]
+        if (candidate_id != expected_id or candidate.source.read_text() != data["source"]
+                or candidate.kernel != data["kernel"] or digest(asdict(candidate.launch_rule)) != digest(data["launch_rule"])
+                or candidate.artifact_hash != stored.get("artifact_hash")
+                or candidate.parameters != data["parameters"] or data["call_id"] != prepared["calls"][2+repair]["call_id"]):
+            raise ValueError("Original candidate source/parameters/identity differ")
+        proposals.append(data)
+    blocked = read_json(runtime.directory / "acceptance-evidence/blocked-refusal.json")
+    current_files = {path.name:sha(path) for path in (runtime.directory / "candidates").glob("*.cu")}
+    if (current_files != blocked["candidates_before"] or (runtime.trial_dir(state) / "proposal-2-1.json").exists()
+            or list(runtime.trial_dir(state).glob("evaluation-*.json")) or (runtime.trial_dir(state) / "result.json").exists()):
+        raise ValueError("The blocked request was followed by a candidate, measurement or integration")
+    rejected = Proposal.from_payload(prepared["traces"][4]["payload"], parent_id="baseline", source_parent_id=ids[1],
+        contract_hash=runtime.contract_hash, family=trial["action"])
+    try:
+        initial.validate_proposal(rejected)
+    except NeedsResearch as error:
+        semantic_refusal = "uncovered technique" in str(error)
+        if not semantic_refusal:
+            raise ValueError("The original payload fails a different research guard") from error
+    else:
+        raise ValueError("The original uncovered payload is admitted; refuse resumption")
+    diagnostic = verify_diagnostic(read_json(runtime.directory / "diagnostics" / (state["diagnostic_id"] + ".json")),
+        runtime.directory, contract_hash=runtime.contract_hash, environment_fingerprint=runtime.environment_hash)
+    markers = list(runtime.trial_dir(state).glob("diagnostic-*.json"))
+    if (len(markers) != 1 or read_json(markers[0]) != diagnostic
+            or diagnostic.get("trial_id") != state["trial_id"] or diagnostic.get("candidate_id") != ids[1]
+            or not diagnostic.get("requires_targeted_research")
+            or prepared["technique"] not in diagnostic["proposal_hypothesis"].get("techniques", [])):
+        raise ValueError("Original immutable targeted diagnostic linkage differs")
+    return {"initial_ready":ready, "initial":initial, "proposals":proposals, "diagnostic":diagnostic,
+        "semantic_refusal_verified":semantic_refusal and prepared["technique"] in rejected.techniques
+            and prepared["technique"] not in initial.covered_techniques
+            and current_files == blocked["candidates_before"]}
+
+
+def resume_hardware_context(origin):
+    from optimizer_agent.hardware_research_context import archived_hardware_research_context
+    return archived_hardware_research_context(origin["directory"] / "worker", origin["properties"],
+        expected_job_id=origin["job_id"], expected_session_id=origin["session_id"],
+        expected_receipt_hashes={name:origin["hashes"]["worker/"+name] for name in ("hardware.json", "slurm-session.json")})
+
+
 def prepare(directory, run_id, bootstrap=None, *, family="tiling", result_sha256=None):
     directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True)
@@ -548,6 +745,149 @@ def run_acceptance(directory, run_id, bootstrap, *, result_sha256, family="tilin
     return receipt
 
 
+def prepare_resumption(directory, run_id, source, *, receipt_sha256, manifest_sha256):
+    directory, source = Path(directory).resolve(), Path(source).resolve()
+    if directory.is_relative_to(source) or source.is_relative_to(directory):
+        raise ValueError("Resume output and its immutable source must be separate directories")
+    prepared = inspect_resume_source(source, receipt_sha256=receipt_sha256, manifest_sha256=manifest_sha256)
+    directory.mkdir(parents=True, exist_ok=True)
+    write_json(directory / "plan.json", {"schema_version":1, "kind":"documentary_research_refresh_resumption_acceptance",
+        "run_id":run_id, "submitted":False, "model_invoked":False, "new_gpu_requests":0,
+        "source_directory":str(source), "source_receipt_sha256":receipt_sha256,
+        "source_proof_manifest_sha256":manifest_sha256,
+        "state_derivation":"Only the observed targeted-research refusal; reconstructed from pinned SQL/events/CLI/diagnostic artifacts, not an old serialized checkpoint",
+        "inherited_completed_model_calls":len(prepared["calls"]),
+        "resume_phases":["fresh normal targeted research with authenticated historical hardware annex", "new covered proposal"],
+        "prohibited_replays":["initialize", "select", "initial research", "first three proposals", "diagnose"],
+        "scope":"Documentary acceptance; no new GPU request, measurement, integration, finalization or section16 claim"})
+    return prepared
+
+
+def run_resumption_acceptance(directory, run_id, source, *, receipt_sha256, manifest_sha256, executable=None):
+    directory = Path(directory).resolve()
+    if any((directory / name).exists() for name in ("run-intent.json", "campaign", RECEIPT)):
+        raise ValueError("Existing resume intent/evidence requires reconciliation; never repeat uncertain calls")
+    prepared = prepare_resumption(directory, run_id, source, receipt_sha256=receipt_sha256, manifest_sha256=manifest_sha256)
+    source, origin = prepared["directory"], prepared["origin"]
+    config = CampaignConfig.load(source / "campaign/config.json")
+    # Frozen controllers can run from another checkout while the immutable
+    # evidence stays in the primary repository. Keep these identities distinct.
+    evidence_repository = next((parent for parent in (source, *source.parents) if (parent / ".git").exists()), REPO)
+    def source_ref(name, value):
+        path = source / name
+        return {"path":str(path.relative_to(evidence_repository)) if path.is_relative_to(evidence_repository) else str(path),
+                "sha256":value, "path_base":"repository" if path.is_relative_to(evidence_repository) else "absolute"}
+    resumption = {"source_directory":str(source.relative_to(evidence_repository)) if source.is_relative_to(evidence_repository) else str(source),
+        "evidence_repository":str(evidence_repository),
+        "source_receipt":source_ref(RECEIPT, receipt_sha256),
+        "source_proof_manifest":source_ref("proof-sha256.json", manifest_sha256),
+        "inherited_completed_model_calls":len(prepared["calls"]),
+        "state_derivation":"Reconstructed targeted-research refusal from pinned16event sequence, settled SQLite, seven completed calls, two accepted proposals, exact semantic refusal and immutable diagnostic; no old serialized state is claimed",
+        "no_initial_proposal_or_diagnostic_replay":True}
+    intent = {"schema_version":1, "kind":"before_documentary_resumption", "run_id":run_id,
+        "internal_campaign_run_id":config.run_id, "resumption":resumption, "new_gpu_requests":0,
+        "source_provenance":controller_provenance(REPO, __file__, source / "campaign/config.json")}
+    with (directory / "run-intent.json").open("x") as stream:
+        json.dump(intent, stream, indent=2); stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
+    receipt = {"schema_version":1, "kind":"documentary_research_refresh_resumption_acceptance", "run_id":run_id,
+        "ok":False, "status":"incomplete", "scope":"Isolated documentary resumption, historical hardware target, no GPU measurement or optimizer-quality claim",
+        "source_provenance":intent["source_provenance"], "resumption":resumption,
+        "historical_bootstrap":prepared["receipt"]["historical_bootstrap"],
+        "inherited_model_calls":prepared["calls"], "hardware_currently_observed":False, "new_gpu_requests":0}
+    runner, runtime, controls = ArchivedPropertiesOnlyRunner(origin["properties"]), None, None
+    try:
+        shutil.copytree(source / "campaign", directory / "campaign")
+        for old_name, new_name in ((RECEIPT,"previous-receipt.json"), ("proof-sha256.json","previous-proof.json"),
+                ("events.json","previous-events.json"), ("campaign/acceptance-evidence/initial-dossier.json","previous-dossier.json")):
+            target = directory / "source-evidence" / new_name
+            target.parent.mkdir(exist_ok=True); shutil.copyfile(source / old_name, target)
+        state = dict(prepared["state"])
+        write_json(directory / "resume-state.json", {"phase":"targeted_research_blocked_reconstructed", "state":state,
+            "derivation":resumption["state_derivation"], "source_receipt":resumption["source_receipt"],
+            "source_events_sha256":prepared["source_hashes"]["events.json"]})
+        campaign_dir = directory / "campaign"
+        backend = CodexBackend(CodexConfig(executable=executable or default_codex_executable(), model="gpt-6-luna",
+            reasoning_effort="max", timeout_seconds=config.model_timeout_seconds, trace_dir=campaign_dir / "model"))
+        controls = PromptControls(backend, campaign_dir / "acceptance-controls-resume")
+        runtime = DocumentaryRuntime(config, runner, campaign_dir, model_backend=controls, origin=origin)
+        validated = validate_resume_runtime(runtime, prepared)
+        before_environment = (digest(runtime.environment), runtime.contract_hash)
+        context = resume_hardware_context(origin)
+        runtime.workload_description["hardware_evidence_context"] = context
+        write_json(campaign_dir / "hardware-evidence-context.json", context)
+        if before_environment != (digest(runtime.environment), runtime.contract_hash):
+            raise ValueError("Historical hardware annex changed the immutable contract/environment")
+        state.update(runtime.research(state))
+        if not state.get("research_ready"):
+            raise RuntimeError("Actual resumed targeted research blocked: " + str(state.get("error")))
+        dossier_path = runtime.trial_dir(state) / "dossier.json"
+        renewed = ResearchDossier.from_dict(read_json(dossier_path))
+        diagnostic, technique = validated["diagnostic"], prepared["technique"]
+        if (renewed.research_id == validated["initial"].research_id
+                or diagnostic["diagnostic_id"] not in renewed.diagnostic_ids or technique not in renewed.covered_techniques):
+            raise RuntimeError("Actual resumed dossier does not cover the exact blocked technique/diagnostic")
+        final = generate_control(runtime, controls, state, "newly-covered-proposal",
+            "Now propose the transformation requiring " + repr(technique) + " only if this renewed dossier genuinely covers it. "
+            "Declare the technique and cite actual renewed source IDs. Preserve the normal parent, ABI and contract guards.")
+        if technique not in final["techniques"]:
+            raise RuntimeError("Resumed final proposal omitted the newly covered technique")
+        events = runtime.store.events(config.run_id); suffix = events[len(prepared["events"]):]
+        first, second = validated["proposals"]
+        checks = {"new_family_real_applicable_dossier":validated["initial_ready"] is True,
+            "compatible_adjustment_exact_dossier_reuse_without_research":prepared["dossier_reuse_verified"],
+            "compatible_adjustment_uses_previous_source_parent":second["source_parent_id"] == prepared["candidate_ids"][0],
+            "compatible_proposal_changes_source_launch_or_parameters":any(first[key] != second[key] for key in ("source","launch_rule","parameters")),
+            "uncovered_technique_blocked_before_candidate":validated["semantic_refusal_verified"],
+            "diagnostic_contains_exact_blocked_technique":technique in diagnostic["proposal_hypothesis"]["techniques"],
+            "targeted_new_dossier_covers_technique":technique in renewed.covered_techniques,
+            "targeted_dossier_links_immutable_diagnostic":diagnostic["diagnostic_id"] in renewed.diagnostic_ids,
+            "new_covered_proposal_admitted":bool(state.get("candidate_id") and technique in final["techniques"]),
+            "only_three_admitted_generation_events":sum(event["kind"] == "generation" for event in events) == 3,
+            "no_trial_integration_or_measurement":not list(runtime.trial_dir(state).glob("evaluation-*.json")) and not (runtime.trial_dir(state) / "result.json").exists(),
+            "no_final_holdout_exposed":not (runtime.directory / "holdout-exposed.json").exists(),
+            "resume_original_prefix_unchanged":events[:len(prepared["events"])] == prepared["events"],
+            "resume_no_old_model_call_repeated":not ({call.call_id for call in controls.calls} & {call["call_id"] for call in prepared["calls"]}),
+            "resume_no_new_selection_or_diagnostic":not any(event["kind"] in ("checkpoint","selection","diagnostic") for event in suffix),
+            "resume_hardware_context_bound":context.get("job_id") == origin["job_id"] and context.get("session_id") == origin["session_id"] and context.get("hardware_currently_observed") is False,
+            "resume_source_unchanged":False}
+        receipt.update(checks=checks, initial_research_id=validated["initial"].research_id,
+            initial_dossier_sha256=prepared["initial_dossier_sha256"], renewed_research_id=renewed.research_id,
+            renewed_dossier_sha256=sha(dossier_path), diagnostic_id=diagnostic["diagnostic_id"], uncovered_technique=technique,
+            initial_call_id=first["call_id"], compatible_call_id=second["call_id"], blocked_call_id=prepared["calls"][4]["call_id"],
+            final_call_id=final["call_id"], admitted_candidates=prepared["candidate_ids"]+[state["candidate_id"]],
+            checks_scope="First compatible/reuse/refusal/diagnostic checks revalidated from immutable inherited evidence; fresh research/final checks executed by the unchanged runtime now")
+        receipt["ok"] = all(value for key,value in checks.items() if key != "resume_source_unchanged")
+    except Exception as error:
+        receipt.update(error=str(error), traceback=traceback.format_exc())
+    finally:
+        source_inventory = list(source.rglob("*"))
+        unchanged = (not any(path.is_symlink() for path in source_inventory)
+            and {str(path.relative_to(source)) for path in source_inventory if path.is_file()} == set(prepared["source_hashes"])
+            and all((source / name).is_file() and sha(source / name) == expected for name,expected in prepared["source_hashes"].items()))
+        bootstrap_unchanged = all((origin["directory"] / name).is_file() and sha(origin["directory"] / name) == expected
+                                  for name,expected in origin["hashes"].items())
+        receipt.update(resume_source_unchanged=unchanged, bootstrap_files_unchanged=bootstrap_unchanged,
+                       new_gpu_requests_attempted=len(runner.gpu_attempts))
+        if "checks" in receipt:receipt["checks"]["resume_source_unchanged"] = unchanged
+        receipt["ok"] &= unchanged and bootstrap_unchanged and not runner.gpu_attempts
+        receipt["model_calls"] = [{"call_id":call.call_id,"usage":call.usage,"elapsed_seconds":call.elapsed_seconds} for call in controls.calls] if controls else []
+        if runtime:
+            write_json(directory / "events.json", runtime.store.events(config.run_id))
+            receipt["ledger_usage"] = runtime.store.budget_state(config.run_id)
+            inherited = prepared["receipt"]["ledger_usage"].get("spent", {})
+            current = receipt["ledger_usage"].get("spent", {})
+            receipt["new_usage_delta"] = {key:current.get(key,0)-inherited.get(key,0) for key in set(current)|set(inherited)}
+            receipt["ledger_scope"] = "Combined cloned ledger retains old7calls; new_usage_delta and model_calls describe only actual resumed consumption. No old GPU cost is newly charged."
+        receipt["status"] = "documentary_research_refresh_resumption_acceptance_passed" if receipt["ok"] else "incomplete"
+        excluded = [RECEIPT,"proof-sha256.json"]
+        write_json(directory / "proof-sha256.json", {"schema_version":1,"hash_algorithm":"sha256","excluded_paths":excluded,
+            "scope":"Owned isolated resumption artifacts, including unchanged inherited copies; no self-reference",
+            "files":{str(path.relative_to(directory)):sha(path) for path in sorted(directory.rglob("*")) if path.is_file() and str(path.relative_to(directory)) not in excluded}})
+        receipt["proof_manifest"] = reference(directory / "proof-sha256.json", directory)
+        write_json(directory / RECEIPT, receipt)
+    return receipt
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
@@ -557,23 +897,43 @@ def main(argv=None):
     parser.add_argument("--run-id", default="research-refresh-" + uuid.uuid4().hex[:12])
     parser.add_argument("--bootstrap-campaign", type=Path)
     parser.add_argument("--bootstrap-result-sha256")
-    parser.add_argument("--family", choices=("tiling", "coalescing", "work_per_thread"), default="tiling")
+    parser.add_argument("--resume-from", type=Path, help="Explicitly resume only an authenticated targeted-research refusal into a new directory")
+    parser.add_argument("--resume-receipt-sha256")
+    parser.add_argument("--resume-proof-manifest-sha256")
+    parser.add_argument("--family", choices=("tiling", "coalescing", "work_per_thread"))
     parser.add_argument("--uncovered-technique", choices=TECHNIQUES)
     parser.add_argument("--codex-executable")
     args = parser.parse_args(argv)
     directory = args.output or REPO / "results/research-refresh-acceptance" / args.run_id
+    if args.resume_from:
+        if args.bootstrap_campaign or args.bootstrap_result_sha256 or args.family or args.uncovered_technique:
+            parser.error("Resume inherits the original bootstrap/family/technique; do not override them")
+        if args.run:
+            receipt = run_resumption_acceptance(directory, args.run_id, args.resume_from,
+                receipt_sha256=args.resume_receipt_sha256, manifest_sha256=args.resume_proof_manifest_sha256,
+                executable=args.codex_executable)
+            print(json.dumps({key:receipt.get(key) for key in ("ok","status","checks","new_gpu_requests_attempted")},indent=2))
+            return 0 if receipt["ok"] else 1
+        if (Path(directory) / "run-intent.json").exists():
+            raise ValueError("Existing resume evidence cannot be replanned")
+        prepare_resumption(directory, args.run_id, args.resume_from,
+            receipt_sha256=args.resume_receipt_sha256, manifest_sha256=args.resume_proof_manifest_sha256)
+        print(json.dumps({"status":"local_resumption_plan_only","model_invoked":False,"new_gpu_requests":0,"plan":str(Path(directory)/"plan.json")},indent=2))
+        return 0
+    if args.resume_receipt_sha256 or args.resume_proof_manifest_sha256:
+        parser.error("Resume SHA256 pins require --resume-from")
     if args.run:
         if not args.bootstrap_campaign:
             parser.error("--run requires --bootstrap-campaign and its --bootstrap-result-sha256")
         receipt = run_acceptance(directory, args.run_id, args.bootstrap_campaign,
-            result_sha256=args.bootstrap_result_sha256, family=args.family,
+            result_sha256=args.bootstrap_result_sha256, family=args.family or "tiling",
             uncovered_technique=args.uncovered_technique, executable=args.codex_executable)
         print(json.dumps({k: receipt.get(k) for k in ("ok", "status", "checks", "new_gpu_requests_attempted")}, indent=2))
         return 0 if receipt["ok"] else 1
     if (Path(directory) / "run-intent.json").exists():
         raise ValueError("Existing execution evidence cannot be replanned")
     _, plan = prepare(directory, args.run_id, args.bootstrap_campaign,
-                      family=args.family, result_sha256=args.bootstrap_result_sha256)
+                      family=args.family or "tiling", result_sha256=args.bootstrap_result_sha256)
     print(json.dumps({"status": "local_plan_only", "model_invoked": False, "new_gpu_requests": 0,
                       "plan": str(Path(directory) / "plan.json"), "bootstrap": plan["bootstrap_directory"]}, indent=2))
     return 0

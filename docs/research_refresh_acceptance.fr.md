@@ -41,3 +41,32 @@ Les instructions de contrôle sont ajoutées et archivées **avant** les appels 
 L’autorité finale est `research-refresh-acceptance.json`. Elle référence le manifeste `proof-sha256.json`, les appels et leur consommation observée, ainsi que les pièces du bootstrap historique. Les prompts exacts figurent dans `campaign/acceptance-controls/`, et les traces CLI dans `campaign/model/`.
 
 Un modèle qui n’obéit pas au contrôle, une couverture documentaire insuffisante ou une garde refusée laisse le statut **`incomplete`**. Ne pas contourner le refus. `run-intent.json` est créé exclusivement et synchronisé avant les appels : sa présence interdit une relance automatique, même après perte de réponse ou interruption. Inspecter et réconcilier les traces existantes avant de décider d’un nouveau contrôle indépendant ; ne pas supprimer l’intention pour rejouer un appel incertain.
+
+## Reprendre le refus documentaire observé
+
+La reprise explicite supporte uniquement le point où les trois premières propositions et leur diagnostic sont achevés, puis où la recherche ciblée est refusée. Elle authentifie les sept appels CLI terminés, leurs payloads, les deux candidats admis, le refus sémantique, le diagnostic et les événements SQLite. L’ancien helper n’ayant pas sérialisé son dernier état en mémoire, `resume-state.json` décrit sa reconstruction à partir de ces pièces ; aucune garde de recherche réussie n’est déduite de cette reconstruction.
+
+L’ancienne autorité reste `incomplete` et son dossier reste inchangé. L’exemple suivant épingle le refus réel du contrôle `research-refresh-ac02-20261021` :
+
+```sh
+ac02_resume_source=results/research-refresh-ac02-20261021
+ac02_resume_output=results/research-refresh-ac02-resumed-20261021
+ac02_failed_sha=b260de2a19daf7a9c23064019c113b4940a0fdeb7dfb69cd3f20a757c30cf37d
+ac02_proof_sha=28c06ce27cbc643447af4d3cddc3766bfcd7556a20a8937901ec023155ca69ee
+
+.venv/bin/python scripts/run_research_refresh_acceptance.py --plan \
+  --run-id research-refresh-ac02-resumed-20261021 \
+  --resume-from "$ac02_resume_source" --resume-receipt-sha256 "$ac02_failed_sha" \
+  --resume-proof-manifest-sha256 "$ac02_proof_sha" --output "$ac02_resume_output"
+
+.venv/bin/python scripts/run_research_refresh_acceptance.py --run \
+  --run-id research-refresh-ac02-resumed-20261021 \
+  --resume-from "$ac02_resume_source" --resume-receipt-sha256 "$ac02_failed_sha" \
+  --resume-proof-manifest-sha256 "$ac02_proof_sha" --output "$ac02_resume_output"
+```
+
+La nouvelle intention précède les appels. Une copie isolée conserve les anciens événements, dossiers et traces ; seuls une nouvelle recherche ciblée puis une proposition couverte sont autorisés. Ni la sélection, ni les propositions antérieures, ni le diagnostic ne sont réémis. Un nouveau refus laisse la reprise `incomplete`, sans nouvel essai automatique.
+
+Une annexe authentifiée de l’allocation historique joint la ligne `nvidia-smi` au contexte de recherche : paquet pilote `590.48.01`, valeur API CUDA brute `13010` et toolkit `12.6` restent distincts. Ses références SHA et liens job/session/UUID sont vérifiés par `archived_hardware_research_context`. Cette annexe ne modifie aucun environnement, fingerprint ou contrat et ne satisfait aucune condition de compatibilité ; la recherche doit lire les documents officiels et passer les gardes normales.
+
+Le nouveau reçu possède le type `documentary_research_refresh_resumption_acceptance` et lie l’ancienne autorité et son manifeste. `inherited_model_calls` conserve les sept appels antérieurs ; `model_calls` et `new_usage_delta` décrivent la consommation nouvelle, tandis que le ledger copié conserve l’historique. Les anciennes instructions restent dans `campaign/acceptance-controls/`, les nouvelles dans `campaign/acceptance-controls-resume/`. Aucun score ou coût GPU historique ne devient une nouvelle mesure.

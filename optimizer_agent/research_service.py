@@ -642,6 +642,25 @@ def cuda_documentation_requests(workload: dict) -> list[dict]:
                  section_or_locator="Current guide overview; detailed semantics require separately opened sources")]
 
 
+def cuda_toolchain_documentation_requests(workload: dict) -> list[dict]:
+    """Actually read version encoding and compatibility, never mark them satisfied."""
+    environment = workload.get("environment", {})
+    if not isinstance(environment, dict) or "driver_version" not in environment:
+        return []
+    semantics = cuda_documentation_requests(workload)
+    match = re.search(r"/archive/(\d+\.\d+\.0)/", semantics[0]["url"])
+    if not match:
+        return []
+    base = "https://docs.nvidia.com/cuda/archive/" + match[1]
+    urls = [
+        (base + "/cuda-driver-api/group__CUDA__VERSION.html", "Complete version-management page: cuDriverGetVersion API version and integer encoding"),
+        (base + "/cuda-toolkit-release-notes/index.html#cuda-toolkit-major-component-versions", "Versioned toolkit components, supported platforms and driver compatibility"),
+        ("https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html", "Complete minor-version compatibility page, backward compatibility and PTX caveats"),
+    ]
+    return [dict(kind="cuda_documentation", url=url, repository="", file="", symbol="",
+                 section_or_locator=locator) for url, locator in urls]
+
+
 def observed_web_queries(events: list[dict]) -> list[str]:
     return observed_web_activity(events)["queries"]
 
@@ -746,6 +765,7 @@ Context: {json.dumps({'workload': workload, 'parent': parent, 'action': action,
                              symbol=symbol, section_or_locator="full source")
                         for url, repository, file, symbol in FOUNDATION_CODE]
             requests += cuda_documentation_requests(workload)
+            requests += cuda_toolchain_documentation_requests(workload)
             requests += [request for request in search.payload["sources"]
                          if (self.config.include_pmpp or request["kind"] != "pmpp") and
                          not (self.config.pmpp_permanent_only and is_external_pmpp(request["url"], request["kind"]))]

@@ -53,13 +53,19 @@ def _metrics(state,method_usage,has_runner):
     known_wall = sum(row.get("observer_wall_seconds",0) for row in rows)
     observer_wall = known_wall if all("observer_wall_seconds" in row for row in rows) else None
     method_gpu = method_usage.get("method_gpu_evaluation_wall_seconds")
+    identities = sum(row.get("decision") == "exact_artifact_identity" or row["status"] == "identity_observed" for row in rows)
+    unproven = sum(row.get("decision") == "artifact_identity_context_unproven" or row["status"] == "identity_context_unproven" for row in rows)
     return {
         "time_to_first_useful_gain_seconds":first["elapsed_seconds"] if first else None,
         "model_tokens_to_first_useful_gain":first["consumption"].get("model_tokens") if first else None,
         "model_calls_to_first_useful_gain":first["consumption"].get("model_calls") if first else None,
         "first_useful_gain_status":"observed" if first else "unknown_incident" if any(
-            row["status"] in {"pending","unknown_interrupted","metric_unavailable"} for row in rows) else "no_confirmed_gain",
-        "observer_artifacts":len(rows),"observer_confirmations_completed":sum(row["status"] == "completed" for row in rows),
+            row["status"] in {"pending","unknown_interrupted","metric_unavailable"} for row in rows) else
+            "unknown_identity_context" if unproven else "no_confirmed_gain",
+        "observer_artifacts":len(rows),"observer_confirmations_completed":sum(row["status"] == "completed"
+            and row.get("decision") not in {"exact_artifact_identity","artifact_identity_context_unproven"}
+            and row.get("confirmation",{}).get("paired_measurement_performed") is not False for row in rows),
+        "observer_identity_observations":identities,"observer_identity_context_unproven":unproven,
         "observer_wall_seconds":observer_wall,"observer_wall_seconds_known_lower_bound":known_wall,
         "observer_gpu_requests":sum(row["observer_gpu_requests"] for row in rows
             if row.get("observer_gpu_requests") is not None) if has_runner else None,
@@ -157,7 +163,7 @@ class GainObserver:
                     raise ValueError("Observer contract/baseline/start identity changed")
             else:
                 self._save({"identity":self.identity,"observations":{},"first_useful_gain":None,
-                    "observer_policy":"One paired decision per artifact; no feedback to generation or original selection",
+                    "observer_policy":"At most one identity or paired comparison decision per artifact; no feedback to generation or original selection",
                     "certification":"Search observer only; no final qualification"})
             assert_observer_available(self.directory)
 
@@ -193,7 +199,7 @@ class GainObserver:
         return {"observer_gpu_requests":len(calls) if self.runner else None,
             "observer_request_wall_seconds":sum(call["wall_seconds"] for call in calls) if self.runner else None,
             "observer_cuda_event_kernel_seconds":sum(sum(series) for series in samples)/1000
-                if samples and all(isinstance(series,list) for series in samples) else None}
+                if samples and all(isinstance(series,list) for series in samples) else 0.0 if self.runner and not calls else None}
 
     def observe(self,candidate,*,evidence_id):
         artifact = candidate.artifact_hash
@@ -226,7 +232,10 @@ class GainObserver:
                 if isinstance(error,Exception):
                     raise ObserverInfrastructureError("Independent gain observation unavailable; GPU activity must stop: "+str(error)) from error
                 raise
-            receipt.update(status="completed" if result.get("ok") is True else "not_qualified",
+            observation_status = ("identity_observed" if result.get("status") == "exact_artifact_identity" else
+                "identity_context_unproven" if result.get("status") == "artifact_identity_context_unproven" else
+                "completed" if result.get("ok") is True else "not_qualified")
+            receipt.update(status=observation_status,
                 decision=result.get("status"),confirmation=result,ended_at_unix=time.time(),
                 observer_wall_seconds=time.monotonic()-started,consumption_at_observation=self._usage())
             receipt.update(self._request_costs(call_offset))

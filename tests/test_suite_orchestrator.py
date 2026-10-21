@@ -205,7 +205,7 @@ def test_explicit_recovery_requires_recorded_incident_and_terminal_owned_job(tmp
 def test_group_seals_all_candidates_then_validates_everything_before_timing(tmp_path,monkeypatch,pmpp_contrast):
     import optimizer_agent.campaign as campaign
     order = []
-    expected_qualifications = 5 if pmpp_contrast else 3
+    expected_qualifications = 2  # The generated fixture sources are exact aliases.
     class Runner:
         def get_device_properties(self,device):
             return {"uuid":"GPU-fixed","architecture":"sm_90"}
@@ -219,7 +219,10 @@ def test_group_seals_all_candidates_then_validates_everything_before_timing(tmp_
         def qualify_sanitizers(self,candidate,suite):
             assert suite == "search"
             order.append("qualify:"+candidate.candidate_id)
-            return {"ok":True}
+            return {"ok":True,"status":"sanitizer_qualified","evaluation_id":"cpu-"+candidate.candidate_id,
+                    "artifact_hash":candidate.artifact_hash,"contract_hash":self.contract_hash,"suite":suite}
+        def qualification_context(self,candidate,suite):
+            return {"key":candidate.artifact_hash,"identity":{"suite":suite}}
         def benchmark(self,candidate):
             assert len([row for row in order if row.startswith("qualify")]) == expected_qualifications
             order.append("measure:baseline")

@@ -39,6 +39,7 @@ from .pmpp_guidance import PMPP_GUIDANCE
 from .diagnostics import (build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary,
                           compact_candidate_evidence)
 from .workload_semantics import operation_spec
+from .hardware_research_context import runner_hardware_research_context
 from benchmark_workloads import WorkloadSuite
 from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
 from execution_backend import SlurmBackend, SlurmConfig
@@ -204,6 +205,9 @@ class CampaignRuntime:
             "gemm_semantics": "C=A*B, alpha=1, beta=0, no transpose/strides/bias" if config.workload == "matmul" else None,
             "search_sizes": list(config.search_sizes), "shape_domain": "all positive n; tails required",
             "atol": 2e-4, "rtol": 2e-4, "single_kernel": True, "environment": self.environment}
+        hardware_context = runner_hardware_research_context(runner, self.environment)
+        if hardware_context is not None:
+            self.workload_description["hardware_evidence_context"] = hardware_context
 
     @staticmethod
     def latencies(measurement):

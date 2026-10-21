@@ -370,7 +370,7 @@ class Evaluator:
 
     def _check_environment(self, report):
         actual = report.get("environment")
-        if not isinstance(actual, dict):
+        if not isinstance(actual, dict) or not isinstance(self._properties, dict):
             return False
         keys = ("uuid", "architecture", "driver_version", "nvrtc_version", "cuda_toolkit_version", "harness_build_id")
         return all(actual.get(k) == self._properties.get(k) for k in keys if k in self._properties)
@@ -486,6 +486,66 @@ class Evaluator:
         return {"mean_ms": statistics.fmean(raw), "raw_ms": list(raw), "report": report,
                 "launch": {k: getattr(request, k) for k in ("grid", "block", "shared_memory_bytes")}}
 
+    def qualification_context(self, candidate, suite="performance"):
+        """Bind one group's qualification reuse, rechecking inputs and hardware.
+
+        This never validates or instruments a kernel. Source locations are
+        excluded only for path-independent builds; compiler/dependency bytes,
+        launches, cases and the immutable evaluator contract remain bound.
+        """
+        self._guard(candidate)
+        cases = self._suites.get(suite, [])
+        if suite == "final" or not cases:
+            raise ValueError("Qualification reuse requires an existing non-final suite")
+        with self._reservation("qualification identity"):
+            actual = deepcopy(self.runner.get_device_properties(cases[0].request.device))
+            if not isinstance(actual, dict):
+                raise RuntimeError("infrastructure_failure: qualification hardware/toolchain identity is missing")
+            expected = json.loads(self.contract.metadata_json).get("target_environment", {})
+            if any(actual.get(key) != value for key, value in expected.items()):
+                raise RuntimeError("infrastructure_failure: qualification environment differs from contract")
+            # An injected scheduler does not initialize a hardware snapshot.
+            # Freeze the actual worker observation only after the contract guard.
+            if self._properties is None:
+                self._properties = deepcopy(actual)
+            if not self._check_environment({"environment": actual}):
+                raise RuntimeError("infrastructure_failure: qualification hardware/toolchain identity changed")
+            names = ("uuid", "gpu_uuid", "architecture", "compute_capability", "driver_version", "nvrtc_version",
+                     "cuda_toolkit_version", "harness_build_id")
+            environment = {name: actual[name] for name in names if name in actual}
+            required_identity = ("uuid", "architecture", "driver_version", "nvrtc_version", "cuda_toolkit_version", "harness_build_id")
+            builds = []
+            reusable = all(actual.get(key) not in (None, "") for key in required_identity)
+            reusable = reusable and actual.get("harness_build_id") != "unidentified-build-cache-disabled"
+            for case in cases:
+                request = self._request(candidate, case)
+                toolchain = {key: actual[key] for key in ("driver_version", "nvrtc_version", "cuda_toolkit_version", "harness_build_id") if key in actual}
+                manifest = compilation_manifest(candidate.source, dependencies=request.dependencies,
+                    options=request.compiler_options, architecture=actual.get("architecture", "unknown"),
+                    toolchain=toolchain or {"unidentified_toolchain": True})
+                files = {}
+                for path, digest in manifest["files"].items():
+                    dependency = Path(path)
+                    files["<source>" if dependency == candidate.source else path] = digest
+                    # Conservatively avoid preprocessing/path-dependent builds.
+                    # This includes token-pasted builtins, not only literal ones.
+                    if re.search(r"\b__(?:FILE|BASE_FILE|DATE|TIME|TIMESTAMP)__\b|##|^\s*#",
+                                 dependency.read_text(), re.MULTILINE):
+                        reusable = False
+                builds.append({"files": files, "options": manifest["options"], "abi": manifest["abi"],
+                    "architecture": manifest["architecture"], "toolchain": manifest["toolchain"],
+                    "launch": {key: getattr(request, key) for key in ("grid", "block", "shared_memory_bytes")}})
+                # Options can inject macros or implicit headers. Their builds
+                # remain admissible; only qualification reuse is disabled.
+                reusable = reusable and not request.compiler_options
+            identity = {"artifact_hash": candidate.artifact_hash, "contract_hash": self.contract_hash,
+                "environment": environment, "suite": suite, "suite_hash": content_hash([asdict(case) for case in cases]),
+                "input_hashes": dict(self._input_hashes), "required_sanitizers": list(self.contract.required_sanitizers),
+                "builds": builds}
+            self._guard(candidate)
+            return {"key": content_hash(identity) if reusable else None, "identity": identity,
+                    "scope": "Only reusable within the same final-group invocation; no validation or GPU kernel executed"}
+
     def benchmark(self, candidate, protocol=None):
         if protocol is not None:
             raise ValueError("Measurement protocol is frozen in WorkloadContract")
@@ -504,6 +564,21 @@ class Evaluator:
     def confirm(self, candidate, incumbent, protocol=None):
         if protocol is not None:
             raise ValueError("Confirmation protocol is frozen in WorkloadContract")
+        self._guard(candidate)
+        self._guard(incumbent)
+        if candidate.artifact_hash == incumbent.artifact_hash:
+            candidate_context = self.qualification_context(candidate)
+            incumbent_context = self.qualification_context(incumbent)
+            proven = bool(candidate_context["key"] and candidate_context["key"] == incumbent_context["key"])
+            return {**self._base(candidate, "exact_artifact_identity" if proven else "artifact_identity_context_unproven"), "ok": proven,
+                "incumbent_id": incumbent.candidate_id, "incumbent_artifact_hash": incumbent.artifact_hash,
+                "environment": deepcopy(self._properties), "pairs": [], "protocol": asdict(self.contract),
+                "identity_context": candidate_context, "paired_measurement_performed": False,
+                "ranking_eligible": False, "correctness_qualification_inferred": False,
+                "reason": ("Exact frozen artifact and bound execution context" if proven else "Source artifact matches but execution-context identity is unproven")
+                    + "; no performance gain or interval measured"}
+        if candidate.candidate_id == incumbent.candidate_id:
+            raise ValueError("Distinct artifacts require distinct candidate_id labels for paired confirmation")
         with self._reservation("paired confirmation"):
             for item in (candidate, incumbent):
                 failure = self._ensure_valid(item)

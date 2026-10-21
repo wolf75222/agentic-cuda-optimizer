@@ -70,6 +70,13 @@ def test_failed_finalization_retains_nonzero_exit(tmp_path,monkeypatch):
     assert invoke_compare(tmp_path,monkeypatch,result) == 1
 
 
+def test_exact_artifact_identity_is_not_presented_as_a_measured_direct_comparison(tmp_path,monkeypatch):
+    direct = measured_direct()
+    direct.update(status="exact_artifact_identity",pairs=[],paired_measurement_performed=False)
+    direct.pop("interval")
+    assert invoke_compare(tmp_path,monkeypatch,pilot_result(direct)) == 1
+
+
 @pytest.mark.parametrize("missing",["required_sanitizers","sanitizer_qualification"])
 def test_missing_sanitizer_qualification_is_nonzero(tmp_path,monkeypatch,missing):
     direct = measured_direct()

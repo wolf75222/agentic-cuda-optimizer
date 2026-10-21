@@ -29,7 +29,35 @@ FROZEN_RECEIPT = "results/gemm-frozen-final-20261021/comparison.json"
 DIAGNOSTIC_V2_AUDIT = "work/live/research-convolution-diagnostic-b9bda60.json"
 POLICY_AUTHORITY = "results/policy-controls-20261021/search-policy-acceptance.json"
 PARENT_OBSERVATION = "results/policy-controls-20261021/selected-parent-observation.json"
+ORIGINAL_EXECUTION = "work/live/true-upstream-first-generation-ef057b3.json"
+COMMON_FINAL_FREEZE = "work/live/common-final-convolution-1729-freeze-audit.json"
+RESEARCH_REFRESH = "results/research-refresh-ac02-20261021/research-refresh-acceptance.json"
+RESEARCH_REFRESH_RESUMED = "results/research-refresh-ac02-resumed-20261021/research-refresh-acceptance.json"
+FIRST_GROUP = "quality-20261021-v2.convolution.1729"
+ORIGINAL_CAMPAIGN = "results/quality-study-v2/campaigns/" + FIRST_GROUP + ".true_upstream"
+FINAL_DIRECTORY = "results/quality-study-v2/final-groups/" + FIRST_GROUP
+UPSTREAM_COMMIT = "1e9464da54dfc651337a97c3643bfeefec712bc1"
+REFRESH_CHECKS = (
+    "new_family_real_applicable_dossier", "compatible_adjustment_exact_dossier_reuse_without_research",
+    "compatible_adjustment_uses_previous_source_parent", "compatible_proposal_changes_source_launch_or_parameters",
+    "uncovered_technique_blocked_before_candidate", "diagnostic_contains_exact_blocked_technique",
+    "targeted_new_dossier_covers_technique", "targeted_dossier_links_immutable_diagnostic",
+    "new_covered_proposal_admitted", "only_three_admitted_generation_events",
+    "no_trial_integration_or_measurement", "no_final_holdout_exposed")
+FREEZE_METHOD_CHECKS = (
+    "artifact_hash_matches_generation", "candidate_identity_matches", "copied_source_bytes_identical",
+    "distinct_copied_source_path", "frozen_candidate_source_sha_matches", "generation_candidate_source_sha_matches",
+    "generation_reports_execution_complete", "kernel_matches_generation", "launch_rule_matches_generation",
+    "load_candidate_accepts_frozen", "load_candidate_accepts_generation", "normalized_launch_rules_match",
+    "parameters_match_generation", "source_hash_matches_generation")
+REFRESH_RESUMPTION_CHECKS = (
+    "resume_original_prefix_unchanged", "resume_no_old_model_call_repeated", "resume_no_new_selection_or_diagnostic",
+    "resume_hardware_context_bound", "resume_source_unchanged")
 PROOF_PATHS = (
+    ("Véritable agent original — première génération ROMEO", ORIGINAL_EXECUTION),
+    ("Gel du premier groupe final — identités et aliases", COMMON_FINAL_FREEZE),
+    ("AC-02 — renouvellement documentaire réel", RESEARCH_REFRESH),
+    ("AC-02 — reprise documentaire isolée", RESEARCH_REFRESH_RESUMED),
     ("Autotuning réel", "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json"),
     ("Précision, cache et reconstruction", "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json"),
     ("Diagnostic et nouvelle recherche", "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json"),
@@ -54,6 +82,40 @@ def fmt(value, digits=3):
     return f"{value:.{digits}g}" if isinstance(value, (int, float)) and math.isfinite(value) else "inconnu"
 
 
+def comparison_view(pair):
+    """Keep a legacy pair intact and derive an identity-aware presentation."""
+    pair = _mapping(pair)
+    interval = _mapping(pair.get("interval"))
+    exact = _hash(pair.get("artifact_hash")) and pair["artifact_hash"] == pair.get("incumbent_artifact_hash")
+    return {"gain_basis": "exact_artifact_identity" if exact else "paired_measurement",
+            "gain": 1.0 if exact else interval.get("gain"),
+            "lower": None if exact else interval.get("lower"), "upper": None if exact else interval.get("upper"),
+            "case_gains": {} if exact else interval.get("case_gains", {}),
+            "source_status": pair.get("status"), "source_ok": pair.get("ok"),
+            "source_interval_preserved": interval,
+            "artifact_hash": pair.get("artifact_hash"), "incumbent_artifact_hash": pair.get("incumbent_artifact_hash")}
+
+
+def direct_comparison_views(final_groups):
+    return [{"group_id": group_id, "comparison": name, **comparison_view(pair)}
+            for group_id, group in _mapping(final_groups).items() if isinstance(group, dict)
+            for name, pair in _mapping(group.get("method_comparisons")).items()]
+
+
+def direct_comparison_table(views):
+    if not views:
+        return ""
+    return "<h2>Contrastes directs des groupes finaux</h2>" + table(
+        ["Groupe", "Contraste", "Fondement", "Ratio", "IC95%", "Indicateur ok du reçu source"],
+        [[entry["group_id"], entry["comparison"],
+          "identité exacte des artefacts" if entry["gain_basis"] == "exact_artifact_identity" else "mesure appariée",
+          fmt(entry["gain"]), "sans intervalle : identité" if entry["gain_basis"] == "exact_artifact_identity" else
+          "["+fmt(entry["lower"])+" ; "+fmt(entry["upper"])+"]", entry["source_ok"]] for entry in views]) + (
+        "<p>Deux empreintes complètes d’artefact identiques définissent le ratio 1 sans incertitude statistique. "
+        "Les intervalles hérités bruités sont conservés dans les données sources et exclus de cette interprétation. "
+        "Une identité ne qualifie ni le kernel ni la méthode. Une même source avec un lancement différent reste un autre artefact.</p>")
+
+
 def table(headers, rows):
     return "<div class='scroll'><table><thead><tr>" + "".join("<th>" + escape(str(h)) + "</th>" for h in headers) + "</tr></thead><tbody>" + "".join(
         "<tr>" + "".join("<td>" + escape(str(x)) + "</td>" for x in row) + "</tr>" for row in rows) + "</tbody></table></div>"
@@ -67,8 +129,8 @@ def study_aggregate_table(summary):
              fmt(value["gain_stddev_between_campaigns"])]
             for mode, value in summary["aggregates"].items()]
     return table(["Méthode", "Prévus", "Méthodes réussies", "Méthodes échouées",
-                  "Statuts méthode inconnus", "Artefacts mesurés", "Artefacts qualifiés",
-                  "Régressions", "Absents/échecs sans mesure", "Gain géométrique mesuré",
+                  "Statuts méthode inconnus", "Ratios disponibles (mesures/identités)", "Artefacts qualifiés (mesures/identités)",
+                  "Régressions", "Absents/échecs sans mesure", "Ratio géométrique (mesures/identités)",
                   "Dispersion entre campagnes"], rows)
 
 
@@ -76,11 +138,14 @@ def study_campaign_table(summary):
     from optimizer_agent.suite_report import method_outcome_cells
     rows = [[FAMILIES.get(row["workload"], row["workload"]), row["seed"],
              LABELS.get(row["mode"], row["mode"]), *method_outcome_cells(row), row["status"],
-             fmt(row.get("gain")), "["+fmt(row.get("lower"))+" ; "+fmt(row.get("upper"))+"]",
+             {"exact_baseline_artifact": "identité exacte avec le naïf", "exact_artifact_identity": "identité exacte d’artefact",
+              "paired_measurement": "mesure appariée", "unproven_artifact_context": "contexte d’artefact non prouvé"}.get(row.get("gain_basis"), "non renseignée"),
+             fmt(1.0 if row.get("gain_basis") in ("exact_artifact_identity", "exact_baseline_artifact") else row.get("gain")), "identité exacte, sans IC" if row.get("gain_basis") in ("exact_artifact_identity", "exact_baseline_artifact") else
+             "["+fmt(row.get("lower"))+" ; "+fmt(row.get("upper"))+"]",
              fmt(row.get("model_tokens"), 9), fmt(row.get("model_calls")), fmt(row.get("wall_seconds")),
              row.get("artifact_hash") or "absent"] for row in summary["rows"]]
     return table(["Famille", "Graine", "Méthode", "Statut méthode", "Défaillance méthode",
-                  "Candidat de repli", "Statut final de l’artefact", "Gain final mesuré", "IC95%",
+                  "Candidat de repli", "Statut final de l’artefact", "Origine du ratio", "Ratio final", "IC95%",
                   "Tokens", "Appels CLI", "Durée génération (s)", "Artefact"], rows)
 
 
@@ -120,27 +185,329 @@ def ci_qualifies_checkout(ci, source):
                 ci.get("conclusion") == "success" and ci.get("status") == "completed")
 
 
-def _linked_receipt_verified(repo, reference):
-    if not isinstance(reference, dict) or not reference.get("path") or not reference.get("sha256"):
+def _mapping(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _records(value):
+    return value if isinstance(value, list) and all(isinstance(item, dict) for item in value) else []
+
+
+def _hash(value, length=64):
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{"+str(length)+"}", value) is not None
+
+
+def _linked_receipt_verified(repo, reference, *, suffix=None, within=None, exact=None):
+    """Authorize type and location before opening any bytes for authentication."""
+    if not isinstance(reference, dict) or not isinstance(reference.get("path"), str) or not _hash(reference.get("sha256")):
         return False
-    path = (Path(repo)/reference["path"]).resolve()
-    return bool(path.is_relative_to(Path(repo).resolve()) and path.is_file() and
+    relative = Path(reference["path"])
+    if relative.is_absolute() or (suffix and relative.suffix != suffix):
+        return False
+    repo = Path(repo).resolve()
+    unresolved = repo/relative
+    # An authorized role must be the regular file at that location, not a
+    # symlink (including a parent directory) to a private but in-repo payload.
+    for component in (unresolved, *unresolved.parents):
+        if component == repo:
+            break
+        if component.is_symlink():
+            return False
+    path = unresolved.resolve()
+    allowed = (repo/within).resolve() if within else repo
+    return bool(allowed.is_relative_to(repo) and path.is_relative_to(allowed) and
+                (exact is None or path == (repo/exact).resolve()) and path.is_file() and
                 hashlib.sha256(path.read_bytes()).hexdigest() == reference["sha256"])
+
+
+def _verified_json(repo, reference, default=None, *, within=None, exact=None, expected_type=dict):
+    """Only open a declared, hash-matched JSON link inside its evidence root."""
+    if not _linked_receipt_verified(repo, reference, suffix=".json", within=within, exact=exact):
+        return default
+    try:
+        value = load(Path(repo)/reference["path"], default)
+        return value if isinstance(value, expected_type) else default
+    except (ValueError, OSError):
+        return default
+
+
+def _required_checks(value, names):
+    checks = _mapping(_mapping(value).get("checks"))
+    return all(checks.get(name) is True for name in names)
+
+
+def _original_execution_control(repo, value):
+    """Recheck archived execution links; never turn search results into finals."""
+    result = _verified_json(repo, value.get("result"), exact=ORIGINAL_CAMPAIGN+"/result.json") or {}
+    manifest = _verified_json(repo, value.get("original_manifest"), exact=ORIGINAL_CAMPAIGN+"/generation/manifest.json") or {}
+    history = _records(_verified_json(repo, value.get("history"), [], exact=ORIGINAL_CAMPAIGN+"/generation/history.json", expected_type=list))
+    upstream, adapters, calls = (_records(value.get(key)) for key in ("upstream_source_checks", "adapter_checks", "completed_cli_calls"))
+    candidate, terminal = (_mapping(value.get(key)) for key in ("candidate", "worker_terminal"))
+    checks = {
+        "receipt_kind": value.get("kind") == "actual_pinned_original_generation" and value.get("schema_version") == 1,
+        "archived_execution_checks": value.get("ok") is True and _required_checks(value, (
+            "actual_original_workflow_completed", "all_28_search_case_runs_valid", "all_upstream_sources_match_pinned_git",
+            "all_adapter_bytes_match_frozen_controller", "all_ten_cli_receipts_completed", "candidate_artifact_recomputed")),
+        "owned_terminal": bool(value.get("job_id") and value.get("session_id") and
+            str(terminal.get("job_id")) == str(value["job_id"]) and terminal.get("state") == "COMPLETED" and
+            terminal.get("exit_code") == "0:0" and result.get("job_id") == value["job_id"] and
+            result.get("session_id") == value["session_id"] and result.get("worker_terminal") == terminal),
+        "executed_method_completed": all(record.get("method") == "true_upstream_original" and
+            record.get("generation_complete") is True and record.get("method_status") == "completed"
+            for record in (result, manifest)),
+        "pinned_original_sources": bool(len(upstream) == 16 and value.get("upstream_commit") == UPSTREAM_COMMIT and
+            all(record.get("upstream", {}).get("commit") == UPSTREAM_COMMIT for record in (result, manifest)) and
+            len({entry.get("path") for entry in upstream}) == 16 and all(
+                entry.get("matches_git_blob") is True and _hash(entry.get("sha256")) and
+                all(record.get("upstream", {}).get("source_hashes", {}).get(entry.get("path")) == entry["sha256"]
+                    for record in (result, manifest)) for entry in upstream)),
+        "adapter_hashes_linked": bool({entry.get("path") for entry in adapters} ==
+            {"upstream_original.py", "frozen_launch.py", "codex_backend.py", "gain_observer.py"} and all(
+                entry.get("matches_executed_frozen_source") is True and
+                _hash(entry.get("sha256")) and all(
+                    record.get("adapter_source_hashes", {}).get(entry.get("path")) == entry["sha256"]
+                    for record in (result, manifest)) for entry in adapters)),
+        "four_search_iterations_seven_valid_cases": isinstance(history, list) and len(history) == 4 and
+            [entry.get("iteration") for entry in history] == [0, 1, 2, 3] and all(
+                len(entry.get("case_runs", [])) == 7 and all(run.get("validation_ok") is True
+                    for run in entry["case_runs"]) for entry in history),
+        "retained_candidate_linked": bool(_linked_receipt_verified(repo, candidate.get("source"), suffix=".cu", exact=ORIGINAL_CAMPAIGN+"/generation/frozen-original.cu") and all(
+            record.get("candidate", {}).get("candidate_id") == candidate.get("candidate_id") and
+            record.get("candidate", {}).get("artifact_hash") == candidate.get("artifact_hash") and
+            record.get("candidate", {}).get("source_hash") == candidate.get("source", {}).get("sha256")
+            for record in (result, manifest))),
+    }
+    cli_prefix = ORIGINAL_CAMPAIGN+"/generation/model-transport/intents"
+    call_records = [_verified_json(repo, call, within=cli_prefix) or {} if
+        _hash(call.get("call_id"), 32) and isinstance(call.get("path"), str) and
+        re.fullmatch(re.escape(cli_prefix)+r"/[0-9a-f]{64}/[0-9]+/cli/"+call["call_id"]+r"\.json", call["path"])
+        else {} for call in calls]
+    usage = _mapping(value.get("usage"))
+    checks["ten_unique_completed_cli_receipts"] = bool(len(calls) == 10 and
+        len({call.get("call_id") for call in calls}) == 10 and all(
+            record.get("call_id") == call.get("call_id") and record.get("status") == "completed" and
+            record.get("model") == call.get("requested_model") == "gpt-6-luna" and
+            record.get("reasoning_effort") == call.get("reasoning_effort") == "max" and
+            record.get("usage") == call.get("usage") for call, record in zip(calls, call_records)))
+    checks["observed_usage_linked"] = (all(type(usage.get(key)) is int for key in ("input_tokens", "output_tokens")) and usage.get("model_calls") == 10 and
+        usage.get("model_tokens") == usage.get("input_tokens", 0) + usage.get("output_tokens", 0) and
+        all(record.get("usage") == usage for record in (result, manifest)) and all(
+        all(type(record.get("usage", {}).get(key)) is int for record in call_records) and
+        usage.get(key) == sum(record["usage"][key] for record in call_records)
+        for key in ("input_tokens", "cached_input_tokens", "output_tokens")))
+    verified = all(checks.values())
+    return {"ok": verified if value else None, "authentication_checks": checks,
+        "status": "génération originale ROMEO authentifiée — finale distincte" if verified else
+                  "preuve originale incomplète ou liens non authentifiés" if value else "en attente — original non authentifié",
+        "source_head": value.get("source_controller"), "upstream_commit": value.get("upstream_commit"),
+        "usage": usage if verified else {}, "new_gpu_execution": False, "final_qualified": False,
+        "scope": "Workflow original épinglé, 16 empreintes de sources et 4 adapters liés aux manifests ; "
+                 "28 cas SEARCH et 10 invocations CLI archivées. Liens SHA revérifiés sans nouvelle exécution. "
+                 "Itération 0 fournie, puis 3 propositions ; paramètres/outils adaptés à Codex et ROMEO. "
+                 "Le modèle gpt-6-luna et l’effort max sont demandés, les poids fournisseur restent non attestés. "
+                 "L’observateur est extérieur à la méthode et son surcoût reste séparé. Aucun gain final ni succès global déduit."
+                 if verified else "Protocole prévu : authentifier l’exécution du workflow original épinglé et ses liens SEARCH. "
+                 "Preuves absentes, partielles ou non authentifiées ; aucune génération ni finale réussie déduite."}
+
+
+def _common_freeze_control(repo, value):
+    naive, worker = (_mapping(value.get(key)) for key in ("naive", "worker"))
+    methods = _records(value.get("methods"))
+    naive_source = {"path": naive.get("source_path"), "sha256": naive.get("source_sha256")}
+    hardware = _verified_json(repo, worker.get("hardware_receipt"), exact=FINAL_DIRECTORY+"/worker/hardware.json") or {}
+    session = _verified_json(repo, worker.get("session_receipt"), exact=FINAL_DIRECTORY+"/worker/slurm-session.json") or {}
+    checks = {
+        "receipt_kind": value.get("kind") == "read_only_common_final_candidate_freeze_audit" and value.get("schema_version") == 1,
+        "archived_freeze_checks": value.get("freeze_identity_checks_pass") is True and not value.get("errors") and
+            _required_checks(value, ("all_eight_generation_to_frozen_identity_checks_pass",
+                "all_observed_files_unchanged_before_receipt", "frozen_has_exact_eight_methods_plus_naive",
+                "naive_load_candidate_accepts_artifact", "naive_source_matches_static_convolution", "worker_identity_checks_pass")),
+        "naive_source_link": _linked_receipt_verified(repo, naive_source, suffix=".cu", exact=FINAL_DIRECTORY+"/sealed-inputs/baseline.cu"),
+        "naive_artifact_identity": _hash(naive.get("artifact_sha256")),
+        "frozen_manifest_link": _linked_receipt_verified(repo, value.get("frozen_candidates"), suffix=".json", exact=FINAL_DIRECTORY+"/frozen-candidates.json"),
+        "eight_declared_methods": len(methods) == 8 and {entry.get("method") for entry in methods} == set(LABELS),
+        "worker_links": bool(worker.get("job_id") and worker.get("session_id") and
+            str(hardware.get("slurm_job_id")) == str(worker["job_id"]) and hardware.get("environment") == "romeo" and
+            str(session.get("job_id")) == str(worker["job_id"]) and session.get("session_id") == worker["session_id"]),
+    }
+    aliases = []
+    for entry in methods:
+        method = entry.get("method", "unknown")
+        if method not in LABELS:
+            checks["unknown_method"] = False
+            continue
+        campaign = "results/quality-study-v2/campaigns/"+FIRST_GROUP+"."+method
+        source_name = {"true_upstream": "frozen-original.cu", "native_codex_vanilla": "evidence/kernel.cu"}.get(method, "best.cu")
+        result = _verified_json(repo, entry.get("generation_result"), exact=campaign+"/result.json") or {}
+        candidate = _mapping(result.get("candidate"))
+        frozen_source = _mapping(entry.get("frozen_source"))
+        same_source = _hash(naive.get("source_sha256")) and frozen_source.get("sha256") == naive["source_sha256"]
+        same_artifact = _hash(naive.get("artifact_sha256")) and entry.get("artifact_sha256") == naive["artifact_sha256"]
+        checks[method] = bool(_required_checks(entry, FREEZE_METHOD_CHECKS) and
+            _linked_receipt_verified(repo, frozen_source, suffix=".cu", exact=FINAL_DIRECTORY+"/frozen/"+method+"/kernel.cu") and
+            _linked_receipt_verified(repo, entry.get("generation_source"), suffix=".cu", exact=campaign+"/generation/"+source_name) and
+            bool(result) and
+            candidate.get("candidate_id") == entry.get("candidate_id") and
+            candidate.get("artifact_hash") == entry.get("artifact_sha256") and
+            candidate.get("source_hash") == frozen_source.get("sha256") and
+            result.get("job_id") == entry.get("generation_job_id") and
+            result.get("session_id") == entry.get("generation_session_id") and result.get("execution_complete") is True and
+            entry.get("same_source_as_naive") is same_source and entry.get("same_artifact_as_naive") is same_artifact)
+        aliases.append({"mode": method, "same_source_as_naive": same_source, "same_artifact_as_naive": same_artifact,
+                        "artifact_hash": entry.get("artifact_sha256"), "source_sha256": frozen_source.get("sha256")})
+    verified = all(checks.values())
+    return {"ok": verified if value else None, "authentication_checks": checks,
+        "status": "identités gelées authentifiées — qualification finale distincte" if verified else
+                  "gel incomplet ou liens non authentifiés" if value else "en attente — aucun gel authentifié",
+        "job_id": worker.get("job_id"), "terminal": {}, "source_head": None,
+        "audit_source_head": _mapping(value.get("source_observation")).get("HEAD"),
+        "artifact_aliases": aliases if verified else [], "new_gpu_execution": False, "final_qualified": False,
+        "scope": "Audit local du gel du naïf et des huit entrées méthode ; aucun input final numérique ni graine privée lu. "
+                 "Les copies de fichiers ne créent pas huit kernels distincts. Un artefact exact partagé reste une identité, "
+                 "sans gain ni régression statistique entre ses labels, même si un ancien reçu donne des temps bruités. "
+                 "Même source avec lancement différent signifie un artefact différent. Les reçus worker sont historiques ; "
+                 "cet audit n’atteste ni terminal Slurm actuel, ni validation, sanitizers ou mesure finale."
+                 if verified else "Protocole prévu : authentifier les neuf identités gelées et les aliases du naïf. "
+                 "Preuves absentes, partielles ou non authentifiées ; aucun gel, worker ou résultat final qualifié déduit."}
+
+
+def _research_refresh_control(repo, value, path, *, resumed=False):
+    """Authenticate explicit documentary proof files, without reading a database."""
+    root = path.parent
+    proof = _verified_json(root, value.get("proof_manifest"), exact="proof-sha256.json") or {}
+    files = _mapping(proof.get("files"))
+    # This is deliberately a declared JSON subset: no SQLite, pickle, RNG or
+    # numerical input is opened by the reporting authentication pass.
+    required = ["plan.json", "run-intent.json", "events.json", "campaign/acceptance-controls/invocations.json",
+                "campaign/acceptance-evidence/initial-dossier.json", "campaign/acceptance-evidence/blocked-refusal.json"]
+    call_ids = [value.get(key) for key in ("initial_call_id", "compatible_call_id", "blocked_call_id", "final_call_id")]
+    new_calls = _records(value.get("model_calls"))
+    inherited_calls = _records(value.get("inherited_model_calls")) if resumed else []
+    calls = inherited_calls + new_calls
+    if resumed:
+        required += ["resume-state.json", "campaign/acceptance-controls-resume/invocations.json",
+                     "campaign/hardware-evidence-context.json",
+                     "source-evidence/previous-receipt.json", "source-evidence/previous-proof.json",
+                     "source-evidence/previous-events.json", "source-evidence/previous-dossier.json"]
+    valid_call_ids = bool(calls) and all(_hash(call.get("call_id"), 32) for call in calls)
+    required += ["campaign/model/"+call["call_id"]+".json" for call in calls if
+                 _hash(call.get("call_id"), 32)]
+    renewed = [name for name in files if isinstance(name, str) and re.fullmatch(r"campaign/trials/[A-Za-z0-9_-]+/dossier\.json", name)]
+    required += renewed
+    list_files = {"events.json", "campaign/acceptance-controls/invocations.json",
+                  "source-evidence/previous-events.json", "campaign/acceptance-controls-resume/invocations.json"}
+    linked = {name: _verified_json(root, {"path": name, "sha256": files.get(name)}, expected_type=list if name in list_files else dict) for name in required}
+    initial_name = "campaign/acceptance-evidence/initial-dossier.json"
+    initial = linked.get(initial_name) or {}
+    renewed_dossier = linked.get(renewed[0]) or {} if len(renewed) == 1 else {}
+    refusal = linked.get("campaign/acceptance-evidence/blocked-refusal.json") or {}
+    intent = linked.get("run-intent.json") or {}
+    technique, diagnostic_id = value.get("uncovered_technique"), value.get("diagnostic_id")
+    checks = {
+        "receipt_kind": value.get("schema_version") == 1 and value.get("kind") == (
+            "documentary_research_refresh_resumption_acceptance" if resumed else "documentary_research_refresh_acceptance"),
+        "explicit_documentary_success": value.get("ok") is True and value.get("status") == (
+            "documentary_research_refresh_resumption_acceptance_passed" if resumed else "documentary_research_refresh_acceptance_passed"),
+        "required_controls": _required_checks(value, REFRESH_CHECKS),
+        "no_new_gpu_or_current_hardware_claim": value.get("new_gpu_requests") == 0 and
+            value.get("new_gpu_requests_attempted") == 0 and value.get("hardware_currently_observed") is False,
+        "historical_bootstrap_preserved": value.get("bootstrap_files_unchanged") is True,
+        "run_intent_identity": bool(intent.get("run_id") == value.get("run_id") and
+            intent.get("source_provenance") == value.get("source_provenance") and intent.get("new_gpu_requests") == 0),
+        "proof_manifest_json_subset": proof.get("schema_version") == 1 and proof.get("hash_algorithm") == "sha256" and
+            len(renewed) == 1 and all(item is not None for item in linked.values()),
+        "actual_control_calls_linked": bool(valid_call_ids and all(_hash(call_id, 32) for call_id in call_ids) and len(set(call_ids)) == 4 and
+            set(call_ids).issubset({call.get("call_id") for call in calls}) and all(
+                all((linked.get("campaign/model/"+call.get("call_id", "")+".json") or {}).get(key) == expected
+                    for key, expected in (("call_id", call.get("call_id")), ("status", "completed"),
+                                          ("model", "gpt-6-luna"), ("reasoning_effort", "max")))
+                for call in calls)),
+        "distinct_dossiers": bool(value.get("initial_research_id") and value.get("renewed_research_id") and
+            value["initial_research_id"] != value["renewed_research_id"] and diagnostic_id and technique and
+            initial.get("research_id") == value["initial_research_id"] and
+            renewed_dossier.get("research_id") == value["renewed_research_id"] and
+            initial.get("receipt_version") == renewed_dossier.get("receipt_version") == 2 and
+            technique not in initial.get("covered_techniques", []) and technique in renewed_dossier.get("covered_techniques", []) and
+            diagnostic_id in renewed_dossier.get("diagnostic_ids", []) and
+            files.get(initial_name) == value.get("initial_dossier_sha256") and
+            len(renewed) == 1 and files.get(renewed[0]) == value.get("renewed_dossier_sha256")),
+        "semantic_refusal_linked": bool(refusal.get("technique") == technique and refusal.get("call_id") == value.get("blocked_call_id") and
+            _required_checks(refusal, ("needs_research_returned", "exact_semantic_guard_reason", "model_actually_declared_control_technique",
+                "no_new_generation_event", "no_new_candidate_or_source_change", "no_accepted_proposal_file"))),
+    }
+    if resumed:
+        resumption = _mapping(value.get("resumption"))
+        original = _verified_json(repo, resumption.get("source_receipt"), exact=RESEARCH_REFRESH) or {}
+        old_proof = _verified_json(repo, resumption.get("source_proof_manifest"), exact=str(Path(RESEARCH_REFRESH).parent/"proof-sha256.json")) or {}
+        old_files = _mapping(old_proof.get("files"))
+        old_dossiers = [name for name in old_files if isinstance(name, str) and re.fullmatch(r"campaign/trials/[A-Za-z0-9_-]+/dossier\.json", name)]
+        old_ids, new_ids = [call.get("call_id") for call in inherited_calls], [call.get("call_id") for call in new_calls]
+        checks.update({
+            "resumption_required_checks": _required_checks(value, REFRESH_RESUMPTION_CHECKS),
+            "original_incomplete_authority_preserved": bool(
+                original.get("kind") == "documentary_research_refresh_acceptance" and original.get("ok") is False and
+                original.get("status") == "incomplete" and resumption.get("source_directory") == str(Path(RESEARCH_REFRESH).parent) and
+                _mapping(resumption.get("source_receipt")).get("path_base") == "repository" and
+                _mapping(resumption.get("source_proof_manifest")).get("path_base") == "repository" and
+                old_proof.get("schema_version") == 1 and old_proof.get("hash_algorithm") == "sha256" and
+                _mapping(original.get("proof_manifest")).get("sha256") == _mapping(resumption.get("source_proof_manifest")).get("sha256") and
+                files.get("source-evidence/previous-receipt.json") == _mapping(resumption.get("source_receipt")).get("sha256") and
+                files.get("source-evidence/previous-proof.json") == _mapping(resumption.get("source_proof_manifest")).get("sha256")),
+            "seven_completed_calls_inherited_without_repetition": bool(
+                resumption.get("inherited_completed_model_calls") == 7 and inherited_calls == original.get("model_calls") and
+                len(old_ids) == len(set(old_ids)) == 7 and bool(new_ids) and len(new_ids) == len(set(new_ids)) and
+                set(old_ids).isdisjoint(new_ids) and resumption.get("no_initial_proposal_or_diagnostic_replay") is True and
+                all(_hash(call_id, 32) and files.get("campaign/model/"+call_id+".json") ==
+                    old_files.get("campaign/model/"+call_id+".json") for call_id in old_ids)),
+            "copied_prefix_json_links_preserved": bool(len(old_dossiers) == 1 and all(
+                files.get(name) == old_files.get(name) and _hash(files.get(name)) for name in (
+                    "campaign/acceptance-evidence/initial-dossier.json", "campaign/acceptance-evidence/blocked-refusal.json",
+                    "campaign/acceptance-controls/invocations.json")) and
+                files.get("source-evidence/previous-events.json") == old_files.get("events.json") and
+                files.get("source-evidence/previous-dossier.json") == old_files.get(old_dossiers[0])),
+            "final_call_new_and_initial_controls_inherited": bool(all(_hash(call_id, 32) for call_id in call_ids) and
+                set(call_ids[:3]).issubset(old_ids) and call_ids[3] in new_ids),
+        })
+    verified = all(checks.values())
+    pending = (root/"run-intent.json").is_file()
+    return {"ok": verified if value else None, "authentication_checks": checks,
+        "status": ("AC-02 reprise documentaire vérifiée — sans nouveau GPU" if resumed else "AC-02 documentaire vérifié — sans nouveau GPU") if verified else
+                  "AC-02 documentaire incomplet ou liens non authentifiés" if value else
+                  "en cours ou interrompu — résultat encore inconnu" if pending else "en attente — aucun résultat documentaire",
+        "job_id": None, "terminal": {}, "historical_bootstrap_job_id": value.get("historical_bootstrap", {}).get("job_id"),
+        "new_gpu_execution": False, "final_qualified": False,
+        "verified_json_subset": required if verified else [], "database_or_final_inputs_read": False,
+        "resumption": value.get("resumption") if resumed else None,
+        "observed_new_model_call_count": len(new_calls) if verified else None,
+        "inherited_model_call_count": len(inherited_calls) if verified and resumed else None,
+        "declared_new_ledger_usage_delta": value.get("new_usage_delta") if verified and resumed else None,
+        "new_usage_delta_scope": "Delta déclaré par le ledger du contrôle ; usage fournisseur non réconcilié ici, aucun prix déduit" if resumed else None,
+        "scope": ("Reprise isolée : sept appels précédents hérités sans répétition, nouveaux appels distincts ; "
+                 "ancien reçu incomplet conservé comme autorité séparée, état de reprise dérivé explicitement des preuves publiques. "
+                 "Le contexte matériel documentaire conserve API CUDA et package pilote séparés, sans compatibilité forcée. "
+                 if resumed and verified else "") + ("Contrôle documentaire conduit par de vrais appels Codex/web : dossier neuf, variation compatible sans recherche, "
+                 "technique non couverte refusée, diagnostic, recherche ciblée, dossier renouvelé et proposition admise. "
+                 "Les gardes normales restent actives. Le manifeste SHA et son sous-ensemble JSON déclaré sont vérifiés ; "
+                 "les bases/checkpoints et inputs numériques ne sont pas lus. Le bootstrap ROMEO est historique, "
+                 "sans compilation, benchmark, sanitizer, nouveau GPU ni qualification de l’optimiseur §16."
+                 if verified else "Protocole documentaire prévu : dossier initial, variation compatible, refus d’une technique non couverte, "
+                 "diagnostic, recherche ciblée et proposition après renouvellement. Le reçu est absent, incomplet ou non authentifié ; "
+                 "aucune séquence complète, proposition admise, nouvelle exécution GPU ou qualification §16 déduite.")}
 
 
 def _diagnostic_v2_control(repo, value):
     """Check the archived audit's links, without repeating research or GPU work."""
-    chains = value.get("chains") or []
+    chains = _records(value.get("chains"))
     checks = {"audit_kind": value.get("kind") == "actual_convolution_diagnostic_targeted_research_read_only_audit",
               "three_measured_chains": value.get("all_three_chains_measured") is True and len(chains) == 3,
               "three_declared_modes": {c.get("mode") for c in chains} == {"full", "greedy_parent", "no_autotuning"},
               "launch_source_identified": bool(re.fullmatch(r"[0-9a-f]{40}", value.get("controller_launch_source", "")))}
-    versions = value.get("relevant_source_versions") or {}
+    versions = _mapping(value.get("relevant_source_versions"))
     checks["frozen_source_hashes"] = bool(versions) and all(
-        re.fullmatch(r"[0-9a-f]{64}", v.get("frozen_sha256", "")) and
+        isinstance(v, dict) and _hash(v.get("frozen_sha256")) and
         v.get("frozen_sha256") == v.get("launch_sha256") for v in versions.values())
     for chain in chains:
-        diagnostic, dossier, proposal, measurement, trial = (chain.get(key) or {} for key in
+        diagnostic, dossier, proposal, measurement, trial = (_mapping(chain.get(key)) for key in
             ("diagnostic", "targeted_dossier", "next_proposal", "measurement", "next_trial"))
         linked = [diagnostic, dossier, proposal, measurement, measurement.get("candidate_source"),
                   dossier.get("supplied_content"), dossier.get("web_events")]
@@ -178,9 +545,16 @@ def control_receipts(repo):
     receipts = []
     for name, relative in PROOF_PATHS:
         path = Path(repo) / relative
-        value = load(path, {})
-        terminal = value.get("terminal") or value.get("worker_terminal") or {}
-        provenance = value.get("source_provenance") or value.get("execution_source") or {}
+        malformed = None
+        try:
+            raw_value = load(path, {})
+            if not isinstance(raw_value, dict):
+                malformed = "Le reçu doit être un objet JSON"
+            value = _mapping(raw_value)
+        except (ValueError, OSError) as error:
+            value, malformed = {}, type(error).__name__
+        terminal = _mapping(value.get("terminal") or value.get("worker_terminal"))
+        provenance = _mapping(value.get("source_provenance") or value.get("execution_source"))
         row = {"label": name, "path": relative,
             "receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
             "status": value.get("status", "reçu disponible" if value else "en attente"),
@@ -191,29 +565,83 @@ def control_receipts(repo):
             "sources_unchanged": value.get("sources_unchanged"), "available": path.is_file(),
             "scope": value.get("scope", value.get("evidence_kind")),
             "criteria_checks": value.get("criteria_checks")}
-        if relative == DIAGNOSTIC_V2_AUDIT:
-            row.update(_diagnostic_v2_control(repo, value))
+        authenticators = {ORIGINAL_EXECUTION: lambda: _original_execution_control(repo, value),
+            COMMON_FINAL_FREEZE: lambda: _common_freeze_control(repo, value),
+            RESEARCH_REFRESH: lambda: _research_refresh_control(repo, value, path),
+            RESEARCH_REFRESH_RESUMED: lambda: _research_refresh_control(repo, value, path, resumed=True),
+            DIAGNOSTIC_V2_AUDIT: lambda: _diagnostic_v2_control(repo, value)}
+        if relative in authenticators:
+            try:
+                row.update(authenticators[relative]())
+            except (TypeError, AttributeError, KeyError, IndexError, ValueError) as error:
+                # Unknown nested JSON shapes are invalid evidence, not a reason
+                # to lose the report or silently qualify the remaining fields.
+                malformed = "Structure de preuve invalide : "+type(error).__name__
         elif relative == PARENT_OBSERVATION:
-            authority = value.get("authority") or {}
-            primary = authority.get("primary_receipt") or {}
-            primary_path = path.parent/primary.get("path", "")
+            authority = _mapping(value.get("authority"))
+            primary = _mapping(authority.get("primary_receipt"))
             row.update(ok=None, authority=authority,
-                authority_receipt_verified=bool(primary_path.is_file() and primary.get("sha256") and
-                    hashlib.sha256(primary_path.read_bytes()).hexdigest() == primary["sha256"]),
+                authority_receipt_verified=_linked_receipt_verified(path.parent, primary, suffix=".json", exact=Path(POLICY_AUTHORITY).name),
                 scope="Observation secondaire d’un parent réellement plus lent, entrée générateur exacte. "
                       "Aucune nouvelle mesure. Le contrôle strict prédéclaré AC-05 et l’autorité du helper restent faux ; "
                       "cette observation ne les requalifie pas.")
         elif relative == POLICY_AUTHORITY and value:
-            mark = lambda criterion: "acquis" if value.get("criteria_checks", {}).get(criterion) is True else (
-                "faux" if value.get("criteria_checks", {}).get(criterion) is False else "inconnu")
+            mark = lambda criterion: "acquis" if _mapping(value.get("criteria_checks")).get(criterion) is True else (
+                "faux" if _mapping(value.get("criteria_checks")).get(criterion) is False else "inconnu")
             row["scope"] = (f"Autorité du contrôle statique : AC-05 {mark('AC-05')}, AC-06 {mark('AC-06')}, "
                             f"AC-10 {mark('AC-10')}. Le statut du helper reste distinct du terminal Slurm. Hors cohortes §16.")
         elif "diagnostic-loop-v2-20261021/" in relative and value:
             row["scope"] = ("Helper 773095 incomplet : diagnostic, recherche ciblée et proposition acceptée ; "
                             "compilation math.h échouée, sans exécution/mesure/intégration du quatrième candidat. "
                             "Le terminal Slurm COMPLETED ne valide pas la boucle.")
+        if malformed:
+            row.update(ok=False, status="reçu invalide — aucune qualification déduite", authentication_error=malformed,
+                       scope="Preuve JSON absente de la forme attendue ; aucune exécution réussie ni séquence complète déduite.",
+                       artifact_aliases=[], verified_json_subset=[], final_qualified=False)
         receipts.append(row)
     return receipts
+
+
+def execution_evidence_panel(receipts):
+    """Identity and documentary controls remain separate from measured scores."""
+    by_path = {row["path"]: row for row in receipts}
+    original = by_path.get(ORIGINAL_EXECUTION, {})
+    frozen = by_path.get(COMMON_FINAL_FREEZE, {})
+    refresh = by_path.get(RESEARCH_REFRESH, {})
+    resumed = by_path.get(RESEARCH_REFRESH_RESUMED, {})
+    html = "<h2>Original exécuté, gel des candidats et contrôle documentaire</h2>"
+    html += "<p>"+escape(original.get("status", "Original : inconnu"))+". "
+    if original.get("ok") is True:
+        usage = original["usage"]
+        html += (f"Job {escape(str(original['job_id']))}, commit original <code>{UPSTREAM_COMMIT}</code> : "
+                 f"{fmt(usage.get('model_tokens'), 9)} tokens observés, {fmt(usage.get('model_calls'))} invocations CLI ; "
+                 f"observateur séparé {fmt(usage.get('gain_observer_wall_seconds'))} s. ")
+    html += "La génération et les cas SEARCH ne remplacent pas une comparaison finale commune.</p>"
+    html += "<p>"+escape(frozen.get("status", "Gel : inconnu"))+". "
+    html += ("Un gel authentifié prouve l’identité des artefacts ; il ne prouve ni succès des méthodes, "
+             "ni qualification ou gain final. Les identités exactes ne constituent aucune différence de performance.</p>")
+    aliases = frozen.get("artifact_aliases", [])
+    if aliases:
+        rows = [[LABELS.get(entry["mode"], entry["mode"]),
+                 "identique au naïf" if entry["same_artifact_as_naive"] else
+                 "même source, lancement/paramètres distincts" if entry["same_source_as_naive"] else "source distincte",
+                 entry["artifact_hash"]] for entry in aliases]
+        html += table(["Méthode gelée", "Relation au noyau naïf", "Identité complète de l’artefact"], rows)
+    refresh_scope = ("Le reçu documentaire authentifie des appels Codex/web et le renouvellement complet du dossier. "
+                     if refresh.get("ok") is True else
+                     "Le protocole prévoit de vrais appels Codex/web ; les preuves disponibles ne permettent pas d’en déduire la séquence complète. ")
+    html += ("<p>"+escape(refresh.get("status", "AC-02 : résultat inconnu"))+". "+refresh_scope+
+             "Aucune nouvelle exécution GPU, compilation, mesure ou qualification §16 n’en est déduite. "
+             "Un reçu absent ou incomplet reste inconnu ou incomplet.</p>")
+    html += "<p>Autorité séparée de reprise AC-02 : "+escape(resumed.get("status", "résultat encore inconnu"))+". "
+    if resumed.get("ok") is True:
+        html += (f"{fmt(resumed.get('inherited_model_call_count'))} anciens appels hérités et préservés, "
+                 f"{fmt(resumed.get('observed_new_model_call_count'))} nouveaux appels observés ; "
+                 "aucun appel initial ou diagnostic rejoué. Le reçu initial incomplet garde son statut. ")
+    else:
+        html += "Les preuves ne permettent pas de conclure au renouvellement complet par la reprise ; le reçu initial garde son statut. "
+    html += "Ce contrôle reste documentaire : aucun nouveau GPU ni résultat de performance §16.</p>"
+    return html
 
 
 def _receipt_snapshot(path):
@@ -454,9 +882,10 @@ def frozen_pilot_summary(path):
     for name, (role, reference) in FROZEN_PAIRS.items():
         pair = receipt.get("paired_comparisons", {}).get(name, {})
         interval = pair.get("interval", {})
+        view = comparison_view(pair)
         values = [interval.get(key) for key in ("gain", "lower", "upper")]
         valid_interval = all(type(value) in (float, int) and math.isfinite(value) and value > 0 for value in values)
-        if not valid_interval or not values[1] <= values[0] <= values[2]:
+        if view["gain_basis"] != "exact_artifact_identity" and (not valid_interval or not values[1] <= values[0] <= values[2]):
             errors.append("Intervalle apparié manquant ou invalide : " + name)
         candidate, incumbent = candidates.get(role, {}), candidates.get(reference, {})
         if (pair.get("ok") is not True or pair.get("candidate_role") != role or pair.get("reference_role") != reference
@@ -468,7 +897,10 @@ def frozen_pilot_summary(path):
             errors.append("Environnement différent du GPU final commun : " + name)
         result["comparisons"][name] = {key: pair.get(key) for key in (
             "evaluation_id", "status", "candidate_role", "reference_role", "gain_direction", "critical_cases_ok")}
-        result["comparisons"][name]["interval"] = interval
+        result["comparisons"][name]["gain_basis"] = view["gain_basis"]
+        result["comparisons"][name]["source_interval_preserved"] = interval
+        result["comparisons"][name]["interval"] = ({key: view[key] for key in ("gain", "lower", "upper", "case_gains")}
+            if view["gain_basis"] == "exact_artifact_identity" else interval)
     result["receipt_verified"] = not errors
     return result
 
@@ -486,10 +918,15 @@ def plot_frozen_pilot(pilot, output):
     ax.scatter(1, 0, marker="D", color="#71828d", s=35)
     ax.annotate("1 : référence", (1, 0), xytext=(8, 8), textcoords="offset points", fontsize=9)
     for y, role in enumerate(("agent", "single_prompt", "native_codex"), 1):
-        interval = pilot["comparisons"][role + "_vs_baseline"]["interval"]
+        pair = pilot["comparisons"][role + "_vs_baseline"]
+        interval = pair["interval"]
         gain, low, high = (interval[key] for key in ("gain", "lower", "upper"))
-        ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color=colors[role], capsize=4)
-        ax.annotate(f"{gain:.3f} [{low:.3f} ; {high:.3f}]", (gain, y), xytext=(0, 12),
+        exact = pair.get("gain_basis") == "exact_artifact_identity"
+        if exact:
+            ax.scatter(gain, y, marker="D", color=colors[role])
+        else:
+            ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color=colors[role], capsize=4)
+        ax.annotate("1 : identité exacte" if exact else f"{gain:.3f} [{low:.3f} ; {high:.3f}]", (gain, y), xytext=(0, 12),
                     textcoords="offset points", fontsize=9, ha="center")
     ax.set_yticks(range(4), list(FROZEN_ROLES.values()))
     ax.invert_yaxis()
@@ -502,8 +939,12 @@ def plot_frozen_pilot(pilot, output):
                   for case, interval in direct.get("case_gains", {}).items()]
     for y, (_, interval) in enumerate(intervals):
         gain, low, high = (interval[key] for key in ("gain", "lower", "upper"))
-        direct_ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color="#6c62a5", capsize=4)
-        direct_ax.annotate(f"{gain:.3f}", (gain, y), xytext=(0, 10), textcoords="offset points", ha="center", fontsize=9)
+        exact = pilot["comparisons"]["agent_vs_native_codex"].get("gain_basis") == "exact_artifact_identity"
+        if exact:
+            direct_ax.scatter(gain, y, marker="D", color="#6c62a5")
+        else:
+            direct_ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color="#6c62a5", capsize=4)
+        direct_ax.annotate("1 : identité exacte" if exact else f"{gain:.3f}", (gain, y), xytext=(0, 10), textcoords="offset points", ha="center", fontsize=9)
     direct_ax.set_yticks(range(len(intervals)), [name for name, _ in intervals])
     direct_ax.invert_yaxis()
     direct_ax.set_ylim(len(intervals)-.4, -.65)
@@ -529,14 +970,24 @@ def frozen_pilot_panel(pilot, figure):
         pair = pilot["comparisons"][role + "_vs_baseline"]
         interval = pair["interval"]
         rows.append([FROZEN_ROLES[role], fmt(interval["gain"], 6),
+                     "identité exacte, sans IC" if pair.get("gain_basis") == "exact_artifact_identity" else
                      "[" + fmt(interval["lower"], 6) + " ; " + fmt(interval["upper"], 6) + "]", pair["status"]])
     direct = pilot["comparisons"]["agent_vs_native_codex"]["interval"]
+    direct_sentence = ("Le contraste direct est une identité exacte d’artefacts : ratio 1 sans intervalle statistique. "
+        "Les mesures héritées bruitées sont conservées comme données sources, sans différence de performance déduite. "
+        if pilot["comparisons"]["agent_vs_native_codex"].get("gain_basis") == "exact_artifact_identity" else
+        f"Le ratio direct CLI natif/agent brut vaut {fmt(direct['gain'], 6)} [{fmt(direct['lower'], 6)} ; {fmt(direct['upper'], 6)}] ; un ratio inférieur à1 favorise le CLI natif. ")
+    agent_pair = pilot["comparisons"]["agent_vs_baseline"]
+    agent_sentence = ("L’agent brut et le naïf partagent exactement le même artefact : identité 1 sans intervalle. "
+        if agent_pair.get("gain_basis") == "exact_artifact_identity" else
+        f"Le gain géométrique de l’agent brut face au naïf vaut {fmt(agent_pair['interval']['gain'], 6)}" +
+        (" : la régression reste visible. " if agent_pair["interval"]["gain"] < 1 else ". "))
     return (heading + "<p>Ce pilote compare le naïf, le kernel brut de l’agent amélioré, une proposition structurée sans outils et le véritable Codex CLI vanilla natif. "
             "Il ne contient aucun agent original upstream et n’entre pas dans les cohortes de l’étude §16. Les kernels bruts sont conservés, sans substitution par le meilleur parent retenu.</p>"
             + (f"<img src='{escape(figure.name)}' alt='Pilote GEMM : quatre artefacts bruts et comparaison directe agent contre Codex CLI natif'>" if figure else "")
             + table(["Artefact face au naïf", "Gain", "IC95% apparié", "Statut du reçu"], rows)
-            + f"<p>Le gain géométrique de l’agent brut face au naïf vaut {fmt(pilot['comparisons']['agent_vs_baseline']['interval']['gain'], 6)} : la régression reste visible. "
-            + f"Le ratio direct CLI natif/agent brut vaut {fmt(direct['gain'], 6)} [{fmt(direct['lower'], 6)} ; {fmt(direct['upper'], 6)}] ; un ratio inférieur à1 favorise le CLI natif. "
+            + "<p>" + agent_sentence
+            + direct_sentence
             + "Ce ratio provient de ses propres paires AB/BA et n’est pas déduit des deux gains agrégés.</p>"
             + f"<p>Sources figées avant révélation des nouvelles tailles {escape(', '.join(map(str, pilot['shapes'])))} ; quatre validations complètes et quatre qualifications aux sanitizers. "
             + f"Mesures neuves sur une allocation GH200 commune, job <code>{escape(str(pilot['job_id']))}</code>, terminal COMPLETED 0:0. "
@@ -558,16 +1009,19 @@ def plot(summary, output):
             selected = [row for row in rows if row["workload"] == operation and row["mode"] == mode and row.get("gain")]
             for index, row in enumerate(selected):
                 offset = (index-(len(selected)-1)/2)*.10
-                y = row["gain"]
+                exact = row.get("gain_basis") in ("exact_artifact_identity", "exact_baseline_artifact")
+                y = 1.0 if exact else row["gain"]
                 ax.scatter(x+offset, y, color=color, s=40, zorder=3)
-                if row.get("lower") and row.get("upper"):
+                if exact:
+                    ax.annotate("identité", (x+offset, y), xytext=(0, 6), textcoords="offset points", ha="center", fontsize=8)
+                elif row.get("lower") and row.get("upper"):
                     ax.vlines(x+offset, row["lower"], row["upper"], color=color, alpha=.65)
         ax.axhline(1, color="#71828d", linestyle="--", linewidth=1)
         ax.set_xticks(range(3), ("Amélioré", "Original", "Vanilla"))
         ax.set_title(title)
         ax.set_ylabel("Latence naïve / latence retenue")
         ax.grid(axis="y", alpha=.15)
-    fig.suptitle("ROMEO : résultats finaux par campagne, intervalles appariés à 95 %")
+    fig.suptitle("ROMEO : identités exactes et mesures finales, intervalles appariés à 95 %")
     target = output / "comparaison-methodes-romeo.png"
     fig.savefig(target, dpi=180)
     plt.close(fig)
@@ -607,6 +1061,7 @@ def main():
     report["ci_evidence"] = {"receipt": ci, "exact_checkout_qualified": ci_ok,
                              "policy": "Successful completed CI on HEAD qualifies only a clean source checkout"}
     report["control_receipts"] = control_receipts(REPO)
+    report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"))
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
                  value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis",
@@ -647,10 +1102,12 @@ Les limites techniques et les durées obligatoires de Slurm restent enregistrée
 Le vanilla reçoit un seul prompt et dispose de ses outils de compilation et benchmark. Le parent glouton constitue une ablation supplémentaire.
 Le protocole déclaré couvre {len(plan['workloads'])} opérations, {len(plan['seeds'])} graines et {len(plan['modes'])} modes : {planned_generations} générations et {planned_groups} groupes finaux. Chaque groupe fige toutes les sources avant de créer de nouvelles données sur le domaine de tailles déclaré.</p>
 <p>Les contrastes PMPP prévus séparent la consultation ciblée (méthode complète face au guide permanent seul) et le guide permanent (guide seul face au mode sans PMPP).</p>
+{execution_evidence_panel(report['control_receipts'])}
 <p>Chaque groupe compare ses artefacts sur un même GPU réservé, avec oracle CPU indépendant, toutes les sorties, quatre sanitizers,
 puis confirmations AB/BA et bootstrap des séries. Les chronométrages d'allocations différentes ne sont jamais regroupés.
 Les mesures locales ne remplacent aucune performance ROMEO. Les points et intervalles ci-dessous montrent les campagnes individuelles ; un gain supérieur à1 favorise le candidat face au naïf.</p>
-{chart_html}{study_aggregate_table(summary)}
+<p>Les identités exactes d’artefact donnent un ratio déterministe 1 sans intervalle. Plusieurs labels pour ce même artefact ne sont pas plusieurs mesures indépendantes.</p>
+{chart_html}{study_aggregate_table(summary)}{direct_comparison_table(report['direct_comparison_views'])}
 <p>{escape(report['method_outcome_policy'])} Les points représentent l’artefact retenu, y compris un candidat de repli.</p>
 <p>Les agrégats incluent les retours au noyau naïf et les régressions mesurées. Les absences ne reçoivent aucun gain inventé.
 Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain universel ni de supériorité sur cuBLAS.</p>
