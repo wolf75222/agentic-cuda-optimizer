@@ -151,3 +151,8 @@ The [specification](docs/spec.md) is preserved as requirements. [Acceptance cove
 Portable exports and reconstruction are documented in [portable_exports.md](docs/portable_exports.md). Declarative tuning restrictions are described in [tuning_constraints.fr.md](docs/tuning_constraints.fr.md). The section16 first-gain observer is separate from method selection and model feedback; see [gain_observer.fr.md](docs/gain_observer.fr.md).
 
 The French requirement-by-requirement audit distinguishes implementation, local tests, ROMEO execution and outstanding work: [SPEC_AUDIT.fr.md](docs/SPEC_AUDIT.fr.md). Observed receipts, including regressions and failed attempts, are indexed in [evidence-index.json](docs/validation/evidence-index.json).
+
+The separate [documentary AC-02 control](docs/research_refresh_acceptance.fr.md)
+exercises real Codex/web research, compatible dossier reuse and rejection of an
+uncovered technique against an authenticated historical target. It makes no new
+GPU request and creates no performance or certification claim.

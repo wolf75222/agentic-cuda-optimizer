@@ -35,9 +35,25 @@ common final evaluation uses fresh data on the declared fixed shape domain.
 `max_trials` maps to upstream `max_iterations`: iteration zero is the supplied
 initial implementation, followed by at most `max_trials` proposals. Repairs
 consume these original iterations. `max_repairs_per_trial` maps to original
-`max_retries`; upstream's guard of `8 * (max_retries + 1)` model/tool calls for
-each proposal remains part of that algorithm. No global resource ceiling is
-added. The configured per-request Codex timeout is a transport timeout.
+`max_retries`, which controls invalid proposal/launch-response retries, not an
+additional number of CUDA repair iterations. Upstream's guard of
+`8 * (max_retries + 1)` model turns in one proposal or launch-planning conversation
+remains part of that algorithm; tools execute between those turns. Its
+`model_calls` state resets with each new conversation and is not a campaign-wide
+CLI-call total. No global resource ceiling is added. The configured per-request
+Codex timeout is a transport timeout.
+
+For example, `max_trials=3` permits `candidate-0` (the supplied initial source)
+and at most `candidate-1`, `candidate-2`, `candidate-3`: four recorded candidate
+evaluations if all stages are reached. The separate correctness reference is
+not another generated optimization proposal. The improved optimizer also
+measures its supplied baseline outside its three TreeQuest trials, but may
+perform local repairs and autotuning configurations within each trial. The
+same numeric setting therefore does not equalize generated variants, GPU
+launches, model turns, tokens or elapsed time. Upstream early stopping and
+repair routing remain unchanged. Search ranking and measurement protocols stay
+method-specific; only the subsequent common final evaluation applies the same
+independent qualification and timing procedure to all frozen artifacts.
 
 A SQLite checkpointer preserves the original graph state. Completed model and
 harness requests have durable receipts reused when the same interrupted graph
@@ -60,6 +76,14 @@ adapter source identities, original summary, independent search validation,
 actual model token receipts and raw original harness receipt references. Its
 `generation_complete` does not certify GPU performance. The grouped evaluator
 qualifies all frozen modes together on fresh data and a common new GPU.
+
+When the independent first-gain observer is enabled, it adds common-evaluator
+measurements outside the original graph. Its results never enter the original
+messages, selection or stopping decisions. Its GPU and wall-time overhead is
+recorded separately and in the combined consumption; it is not free research
+work or a replacement for the original ranking. CLI consumption is counted from
+the distinct invocation receipts, including intent-scoped traces, without
+adding their transport acknowledgements a second time.
 
 An external method failure remains `method_status=failed`, with its recorded
 error, even when a valid retained best can be exported. `candidate_fallback`

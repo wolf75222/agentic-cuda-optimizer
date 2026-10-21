@@ -11,14 +11,17 @@ from dataclasses import asdict, fields, is_dataclass
 from datetime import datetime, timezone
 import fcntl
 import hashlib
+import io
 import json
 import math
 import os
 from pathlib import Path, PurePosixPath
 import pickle
+import re
 import sqlite3
 import subprocess
 import sys
+import tarfile
 import tempfile
 import zipfile
 
@@ -30,6 +33,7 @@ if str(REPO/"optimizer_agent") not in sys.path:
     sys.path.append(str(REPO/"optimizer_agent"))
 UPSTREAM_COMMIT = "1e9464da54dfc651337a97c3643bfeefec712bc1"
 TERMINAL_TASK_STATES = {"completed", "failed", "recovery_required"}
+ORIGINAL_BRIDGE_FILES = ("upstream_original.py", "frozen_launch.py", "codex_backend.py", "gain_observer.py")
 
 
 def encoded(value):
@@ -169,7 +173,7 @@ def _source_snapshot(writer,repo):
         if actual.is_file() and not actual.is_symlink():
             member = writer.add_file("source/untracked/"+relative,actual)
             source["untracked_sources"][relative] = {"path":member,"sha256":writer.files[member]["sha256"]}
-    for name in ("upstream_original.py","frozen_launch.py","codex_backend.py","evaluation.py",
+    for name in (*ORIGINAL_BRIDGE_FILES,"evaluation.py",
                  "benchmark_workloads.py","use_harness.py","portable_export.py"):
         path = repo/"optimizer_agent"/name
         if path.is_file():
@@ -191,6 +195,129 @@ def _source_snapshot(writer,repo):
     except (subprocess.CalledProcessError,ValueError) as error:
         source["upstream_original"] = {"commit":UPSTREAM_COMMIT,"status":"unavailable","error":str(error)}
     return source
+
+
+def _historical_adapter_archives(writer,repo):
+    """Authenticate captured historical bytes, without inferring their execution.
+
+    source.json is an observed receipt, not an externally precommitted digest.
+    Its complete file map and the TAR bytes must agree with one local pinned
+    Git commit. No archive members are extracted or executed.
+    """
+    prefixes = sorted({name.rsplit("/",1)[0] for name in writer.files
+        if name.startswith("evidence/controller-sources/") and name.endswith(("/source.json","/source.tar.gz"))})
+    validated,rejected = [],[]
+    for prefix in prefixes:
+        try:
+            parts = PurePosixPath(prefix).parts
+            if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}",parts[-1]):
+                raise ValueError("Historical source directory is not a full pinned Git revision")
+            revision = parts[-1]
+            metadata_member,archive_member = prefix+"/source.json",prefix+"/source.tar.gz"
+            if metadata_member not in writer.files or archive_member not in writer.files:
+                raise ValueError("Historical source requires both source.json and source.tar.gz")
+            metadata_bytes = writer.archive.read(metadata_member)
+            archive_bytes = writer.archive.read(archive_member)
+            metadata = json.loads(metadata_bytes)
+            if not isinstance(metadata,dict) or metadata.get("head") != revision or metadata.get("dirty") != []:
+                raise ValueError("Historical source head/directory mismatch or checkout not recorded clean")
+            if metadata.get("archive_sha256") != digest(archive_bytes):
+                raise ValueError("Historical source TAR checksum mismatch")
+            if _git(repo,"rev-parse",revision+"^{commit}").decode().strip() != revision:
+                raise ValueError("Historical source Git commit mismatch")
+            object_format = _git(repo,"rev-parse","--show-object-format").decode().strip()
+            if object_format not in {"sha1","sha256"}:
+                raise ValueError("Unsupported historical Git object format")
+            git_files = {}
+            for entry in _git(repo,"ls-tree","-r","-z",revision).split(b"\0"):
+                if not entry:
+                    continue
+                identity,name = entry.split(b"\t",1)
+                mode,kind,object_id = identity.decode().split()
+                if mode not in {"100644","100755"} or kind != "blob":
+                    raise ValueError("Historical Git tree contains a non-regular source member")
+                git_files[name.decode()] = object_id
+            hashes = metadata.get("source_hashes")
+            if (not isinstance(hashes,dict) or set(hashes) != set(git_files)
+                    or any(not isinstance(value,str) or not re.fullmatch(r"[0-9a-f]{64}",value) for value in hashes.values())):
+                raise ValueError("Historical source manifest does not cover the exact pinned Git tree")
+            seen,actual_hashes = set(),{}
+            with tarfile.open(fileobj=io.BytesIO(archive_bytes),mode="r:gz") as incoming:
+                for member in incoming:
+                    path = _safe_member(member.name)
+                    name = str(path)
+                    if name in seen:
+                        raise ValueError("Duplicate historical TAR member: "+name)
+                    seen.add(name)
+                    if member.isdir():
+                        if not any(item.startswith(name+"/") for item in git_files):
+                            raise ValueError("Unexpected historical TAR directory: "+name)
+                        continue
+                    if not member.isreg() or name not in git_files:
+                        raise ValueError("Historical TAR contains a link or unexpected non-regular member: "+name)
+                    data = incoming.extractfile(member).read()
+                    blob_id = hashlib.new(object_format,b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+                    if blob_id != git_files[name] or digest(data) != hashes[name]:
+                        raise ValueError("Historical TAR/manifest/pinned Git bytes mismatch: "+name)
+                    actual_hashes[name] = digest(data)
+            if set(actual_hashes) != set(git_files):
+                raise ValueError("Historical TAR does not contain the complete pinned Git tree")
+            bridge_hashes = {name:actual_hashes.get("optimizer_agent/"+name) for name in ORIGINAL_BRIDGE_FILES}
+            if not all(bridge_hashes.values()):
+                raise ValueError("Historical source is missing a required original bridge file")
+            validated.append({"git_revision":revision,"source_metadata":metadata_member,
+                "source_metadata_sha256":digest(metadata_bytes),"archive":archive_member,
+                "archive_sha256":digest(archive_bytes),"adapter_source_hashes":bridge_hashes,
+                "verified_git_file_count":len(actual_hashes),"recorded_status":metadata.get("status"),
+                "authentication":"Complete captured TAR and observed source manifest agree with the pinned local Git tree",
+                "metadata_digest_scope":"SHA-256 of the source.json bytes included in this export; no external precommitment claimed"})
+        except (OSError,ValueError,KeyError,TypeError,UnicodeDecodeError,tarfile.TarError,subprocess.CalledProcessError) as error:
+            rejected.append({"path":prefix.removeprefix("evidence/"),"error":str(error)})
+    return {"validated":validated,"rejected":rejected}
+
+
+def _recorded_bridge_sources(writer,repo,study,documents,source,errors):
+    """Resolve only the recorded adapter files; never choose an execution SHA."""
+    source["recorded_bridge_hash_checks"] = []
+    source["recorded_bridge_source_bindings"] = []
+    historical = None
+    for path,document in documents:
+        if not isinstance(document,dict) or document.get("method") != "true_upstream_original":
+            continue
+        relative = str(path.relative_to(study))
+        receipt_sha = writer.files["evidence/"+relative]["sha256"]
+        expected = document.get("adapter_source_hashes")
+        valid = (isinstance(expected,dict) and set(expected) == set(ORIGINAL_BRIDGE_FILES)
+            and all(isinstance(value,str) and re.fullmatch(r"[0-9a-f]{64}",value) for value in expected.values()))
+        binding = {"receipt":relative,"receipt_sha256":receipt_sha,"controller_revision":None,
+            "scope":"Exact recorded adapter bytes only; task-to-controller revision is not established",
+            "current_adapter_bytes_match":False,"historical_adapter_bytes_resolved":False,
+            "adapter_bytes_resolved":False,"matching_historical_archives":[]}
+        source["recorded_bridge_source_bindings"].append(binding)
+        if not valid:
+            errors.append({"path":relative,"error":"Original source receipt requires the exact four SHA-256 adapter_source_hashes"})
+            continue
+        checks = []
+        for name,recorded in expected.items():
+            actual = source["bridge"].get(name,{}).get("sha256")
+            checks.append({"receipt":relative,"receipt_sha256":receipt_sha,"file":name,
+                "recorded_sha256":recorded,"archived_sha256":actual,"matches":actual == recorded,
+                "current_matches":actual == recorded})
+        binding["current_adapter_bytes_match"] = all(check["current_matches"] for check in checks)
+        if not binding["current_adapter_bytes_match"]:
+            if historical is None:
+                historical = _historical_adapter_archives(writer,repo)
+                source["historical_controller_source_archives"] = historical
+                errors.extend(historical["rejected"])
+            binding["matching_historical_archives"] = [item for item in historical["validated"]
+                if item["adapter_source_hashes"] == expected]
+            binding["historical_adapter_bytes_resolved"] = bool(binding["matching_historical_archives"])
+        binding["adapter_bytes_resolved"] = binding["current_adapter_bytes_match"] or binding["historical_adapter_bytes_resolved"]
+        for check in checks:
+            check["historical_adapter_bytes_resolved"] = binding["historical_adapter_bytes_resolved"]
+        source["recorded_bridge_hash_checks"].extend(checks)
+        if not binding["adapter_bytes_resolved"]:
+            errors.append({"path":relative,"error":"Recorded original adapter bytes differ from the current bridge and have no authenticated historical source archive"})
 
 
 def _walk(value):
@@ -520,15 +647,7 @@ def export_study(directory,output,*,repo_dir=REPO):
         requires_original = any(row.get("method") == "true_upstream_original" for _,value in documents for row in _walk(value))
         if requires_original and source["upstream_original"].get("status") == "unavailable":
             errors.append({"error":"Pinned original source object is unavailable"})
-        source["recorded_bridge_hash_checks"] = []
-        for path,document in documents:
-            if isinstance(document,dict) and document.get("method") == "true_upstream_original":
-                for name,expected in document.get("adapter_source_hashes",{}).items():
-                    actual = source["bridge"].get(name,{}).get("sha256")
-                    check = {"receipt":str(path.relative_to(study)),"file":name,"recorded_sha256":expected,"archived_sha256":actual,"matches":actual == expected}
-                    source["recorded_bridge_hash_checks"].append(check)
-                    if not check["matches"]:
-                        errors.append({"path":str(path.relative_to(study)),"error":"Current bridge differs from recorded execution source: "+name})
+        _recorded_bridge_sources(writer,repo,study,documents,source,errors)
         source["head_after_export"] = _git(repo,"rev-parse","HEAD").decode().strip()
         source["dirty_after_export"] = bool(_git(repo,"status","--porcelain=v1","-z"))
         source_changed = source["head_after_export"] != source["head"] or digest(_git(repo,"diff","--binary","HEAD")) != source["working_tree_patch_sha256"]

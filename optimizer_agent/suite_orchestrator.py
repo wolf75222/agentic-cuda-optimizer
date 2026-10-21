@@ -13,6 +13,7 @@ import fcntl
 import hashlib
 import importlib.util
 import json
+import math
 import multiprocessing
 import os
 from pathlib import Path
@@ -269,6 +270,12 @@ class SuiteJournal:
         with self.connection() as db:
             rows = db.execute("SELECT * FROM tasks" + (" WHERE kind=?" if kind else "") + " ORDER BY id", (kind,) if kind else ()).fetchall()
         return [{**dict(row), "payload": json.loads(row["payload"]), "result": json.loads(row["result"]) if row["result"] else None} for row in rows]
+
+    def task(self, key):
+        with self.connection() as db:
+            row = db.execute("SELECT * FROM tasks WHERE id=?", (key,)).fetchone()
+        return ({**dict(row), "payload": json.loads(row["payload"]),
+                 "result": json.loads(row["result"]) if row["result"] else None} if row else None)
 
     def update(self, key, **values):
         allowed = {"state", "job_id", "result", "error", "started", "finished", "session", "attempt"}
@@ -586,6 +593,7 @@ class SuiteOrchestrator:
         self.plan, self.directory, self.concurrency = plan, Path(directory).resolve(), concurrency
         self.journal = SuiteJournal(self.directory, plan)
         self.backend_factory, self.generate, self.qualify = backend_factory, generate, qualify
+        self._controller_epoch = None
 
     def _backend(self, task, config, directory):
         if self.backend_factory:
@@ -604,6 +612,95 @@ class SuiteOrchestrator:
         if (self.directory / "superseded-by.json").exists():
             raise ValueError("This study is superseded; retain its receipts and use the replacement study directory")
 
+    def _dispatch_key(self, task):
+        """Prefer locally authenticated recovery work, without inferring queue state.
+
+        These read-only hints never authorize execution. Remote ownership,
+        replay contents and recovery guards remain checked by the worker.
+        Missing or ambiguous local proof merely loses its extra priority.
+        """
+        def timestamp(*values):
+            return next((float(value) for value in values if type(value) in (int, float)
+                         and math.isfinite(value) and value >= 0), math.inf)
+
+        def record(path):
+            raw = path.read_bytes()
+            value = json.loads(raw)
+            if not isinstance(value, dict):
+                raise ValueError("Dispatch proof must be an object")
+            return value, raw
+
+        def committed(value):
+            return (value.get("schema_version") == 1 and value.get("phase") == "committed"
+                    and value.get("task_id") == task["id"])
+
+        directory = self._directory(task)
+        attempt = task.get("attempt", 0)
+        if task["kind"] == "generation":
+            try:
+                audit, _ = record(directory / "bootstrap-recovery.json")
+                replay_path = directory / "bootstrap-replay-manifest.json"
+                replay, replay_bytes = record(replay_path)
+                ack, _ = record(directory / "worker" / "slurm-session.json")
+                ack_config = ack.get("config", {})
+                hardware = replay.get("hardware", {})
+                root = ack_config.get("remote_root") if isinstance(ack_config, dict) else None
+                if (task["state"] == "running" and re.fullmatch(r"[1-9][0-9]*", str(task.get("job_id")))
+                        and committed(audit) and audit.get("same_live_allocation") is True
+                        and audit.get("previous_session") == task["session"]
+                        and str(audit.get("previous_job_id")) == str(task["job_id"])
+                        and audit.get("replay_manifest") == str(replay_path.resolve())
+                        and audit.get("replay_manifest_sha256") == hashlib.sha256(replay_bytes).hexdigest()
+                        and replay.get("schema_version") == 1
+                        and replay.get("kind") == "pre_model_bootstrap_prefix"
+                        and replay.get("receipt_directory") == str((directory / "request-receipts").resolve())
+                        and replay.get("manifest_hash") == _hash({k:v for k,v in replay.items() if k != "manifest_hash"})
+                        and isinstance(hardware, dict)
+                        and str(hardware.get("slurm_job_id")) == str(task["job_id"])
+                        and replay.get("hardware_hash") == _hash(hardware)
+                        and isinstance(replay.get("entries"), list) and replay["entries"]
+                        and not ack.get("uncertain") and "job_ids" not in ack
+                        and ack.get("session_id") == task["session"]
+                        and str(ack.get("job_id")) == str(task["job_id"])
+                        and isinstance(root, str) and root
+                        and ack.get("remote_dir") == root.rstrip("/") + "/sessions/" + task["session"]):
+                    return (0, timestamp(task.get("started"), audit.get("created_at_unix")), task["id"], attempt)
+            except (OSError, ValueError, TypeError, KeyError):
+                pass
+            try:
+                source_recovery = task["payload"].get("source_recovery", {})
+                marker_path = directory / "generation" / "unscored-rehost.json"
+                intent, intent_bytes = record(self.directory / "unscored-rehost-intents" / (task["id"] + ".json"))
+                marker, marker_bytes = record(marker_path)
+                context_id = source_recovery.get("context_id")
+                if (source_recovery.get("kind") == "unscored_performance_context_transfer"
+                        and source_recovery.get("fresh_research_required") is True
+                        and isinstance(context_id, str) and context_id
+                        and source_recovery.get("marker_path") == str(marker_path.resolve())
+                        and committed(intent) and committed(marker) and intent_bytes == marker_bytes
+                        and intent.get("kind") == source_recovery["kind"]
+                        and intent.get("context_id") == context_id
+                        and intent.get("new_session") == task["session"]
+                        and intent.get("new_attempt") == attempt
+                        and intent.get("marker_path") == str(marker_path.resolve())
+                        and intent.get("new_generation") == str(marker_path.parent.resolve())):
+                    return (1, timestamp(intent.get("created_at_unix")), task["id"], attempt)
+            except (OSError, ValueError, TypeError, KeyError, AttributeError):
+                pass
+            if attempt:
+                try:
+                    audit, _ = record(self._directory({**task, "attempt": attempt-1}) / "bootstrap-recovery.json")
+                    if (task["state"] == "pending" and committed(audit)
+                            and audit.get("same_live_allocation") is False
+                            and audit.get("new_session") == task["session"]
+                            and audit.get("new_attempt") == attempt):
+                        return (2, timestamp(audit.get("created_at_unix")), task["id"], attempt)
+                except (OSError, ValueError, TypeError, KeyError):
+                    pass
+        return (2 if task["state"] == "running" else 3,
+                timestamp(task.get("started")) if task["state"] == "running" else math.inf,
+                task["id"], attempt)
+
     def _task(self, task):
         # Spawned workers can outlive a killed controller. Their own lock
         # prevents a resumed controller from dispatching the same generation
@@ -616,6 +713,14 @@ class SuiteOrchestrator:
             except BlockingIOError:
                 return
             try:
+                # A future may wait while an older surviving worker finishes.
+                # Use fresh state under the task lock, retaining the enqueued
+                # immutable identity; never retry its newly recorded failure.
+                fresh = self.journal.task(task["id"])
+                if (fresh is None or fresh["state"] not in {"pending", "running"}
+                        or any(fresh.get(key) != task.get(key) for key in ("kind", "session", "attempt", "payload"))):
+                    return
+                task = fresh
                 rehost_intent = self.directory / "unscored-rehost-intents" / (task["id"]+".json")
                 if rehost_intent.exists():
                     intent = read_json(rehost_intent)
@@ -633,6 +738,8 @@ class SuiteOrchestrator:
                             # An interrupted local preparation must finish its
                             # own transaction before any scheduler/model work.
                             return
+                from .dispatch_attestation import capture_dispatch_attestation
+                capture_dispatch_attestation(self.directory, task=task, controller_epoch=self._controller_epoch)
                 self._execute_task(task)
             finally:
                 fcntl.flock(file, fcntl.LOCK_UN)
@@ -907,6 +1014,8 @@ class SuiteOrchestrator:
             # LangGraph stores and model transports isolated between methods.
             pool = ThreadPoolExecutor if self.backend_factory else ProcessPoolExecutor
             options = {} if self.backend_factory else {"mp_context": multiprocessing.get_context("spawn")}
+            from .dispatch_attestation import capture_dispatch_attestation
+            self._controller_epoch = capture_dispatch_attestation(self.directory)
             with pool(max_workers=self.concurrency, **options) as workers:
                 # Stable sessions recover active work; known failures are retained.
                 for kind in ("generation", "final"):
@@ -914,7 +1023,8 @@ class SuiteOrchestrator:
                     if kind == "final":
                         generations = {r["id"]: r for r in self.journal.tasks("generation")}
                         tasks = [r for r in tasks if all(generations[e["config"]["run_id"]]["state"] in TERMINAL for e in r["payload"])]
-                    futures = [workers.submit(self._task, row) for row in tasks if row["state"] in {"pending", "running"}]
+                    futures = [workers.submit(self._task, row) for row in sorted(tasks, key=self._dispatch_key)
+                               if row["state"] in {"pending", "running"}]
                     for future in as_completed(futures):
                         future.result()
                         write_json(self.directory / "status.json", self.status())

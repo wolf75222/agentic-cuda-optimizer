@@ -27,7 +27,14 @@ or qualify the new environment.
 The ZIP retains the exact git archive of HEAD, observed dirty state, a binary
 working-tree patch, supported untracked repository source files, and current
 bridge source bytes. Current bridge hashes are checked against original-agent
-execution receipts when available. A mismatch makes the export partial.
+execution receipts, including `gain_observer.py`. A current mismatch is retained
+in the audit. The four recorded adapter files may instead be resolved together
+from a historical `controller-sources/<commit>/source.tar.gz`: its complete file
+map, observed source manifest and TAR contents must match that pinned local Git
+tree. Missing, altered or ambiguous file identities keep the export partial.
+All compatible archives are listed; the exporter does not choose an execution
+revision from identical adapter bytes. This resolves the recorded source files,
+and leaves an unknown task-to-controller revision explicitly unknown.
 The original-agent source snapshot is separately authenticated against Git
 commit 1e9464da54dfc651337a97c3643bfeefec712bc1 and archived byte for byte.
 

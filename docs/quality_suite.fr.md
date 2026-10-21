@@ -15,11 +15,34 @@ Préparer le protocole ne soumet aucun job :
 
 Les travailleurs GPU indépendants sont au nombre de 2 à 4. Chaque processus utilise sa propre allocation et ses propres modèles, corpus, caches de résultats et fichiers LangGraph. Le nombre de travailleurs est un réglage de concurrence. Aucun plafond global de tokens, coût, appels ou durée cumulée n’est ajouté. Les itérations, réparations, configurations locales et paramètres de mesure sont fixés par le fichier de configuration. Les consommations effectivement observées peuvent différer entre méthodes ; le rapport ne prétend pas égaliser leurs coûts.
 
+Le même nombre `max_trials=3` ne désigne pas trois évaluations GPU totales. L’original conserve intégralement son workflow au commit `1e9464d` : `max_iterations=3` autorise l’initial fourni à l’itération 0, puis au plus trois propositions aux itérations 1, 2 et 3. Une réparation après échec CUDA consomme une de ces itérations ; un arrêt anticipé peut réduire leur nombre. Sa référence de correction est évaluée séparément. L’optimiseur amélioré mesure lui aussi son noyau initial hors des trois trials TreeQuest, mais peut effectuer jusqu’à deux réparations locales par trial et explorer les configurations d’autotuning déclarées, selon le plan. Un trial suspendu sans candidat ne constitue pas une évaluation CUDA réussie.
+
+Les unités de coût restent donc distinctes : sources candidates, trials, réparations, configurations, requêtes du harness, lancements GPU et appels CLI. Les répétitions et classements de recherche de l’original restent ceux de son algorithme ; ils ne sont pas remplacés par les séries et confirmations de recherche de l’optimiseur amélioré. Le compteur amont `model_calls` est propre à une conversation de proposition ou de planification de lancement ; le total des appels CLI vient des reçus d’invocation dédupliqués. L’observateur indépendant du premier gain, lorsqu’il est activé, ajoute des mesures sans retour vers les décisions de la méthode et conserve ses coûts séparés et combinés. Cette comparaison porte sur les méthodes complètes et leurs coûts observés ; elle n’impose pas une égalité artificielle des ressources consommées.
+
 Toutes les méthodes reçoivent le même domaine fixe : tailles de recherche complétées par 1, 17 et 63. L’original conserve son tableau exact de lancements par taille. Aucun extrapolateur n’est ajouté à son algorithme. Chaque famille et graine dispose d’une graine finale privée engagée par SHA-256 avant la génération. Seule son empreinte est publiée avant la fermeture des générateurs. Les données finales sont créées après le gel des sources de toutes les méthodes, sur ces mêmes tailles avec de nouvelles entrées, conformément à la section 4.3.
 
 Un groupe final ouvre une nouvelle allocation et y évalue le noyau naïf et tous les artefacts figés. L’oracle CPU est indépendant. Tous les candidats passent d’abord la correction et les quatre outils Compute Sanitizer sur tous les cas finaux ; seules les sorties qualifiées sont chronométrées. Les confirmations AB/BA et leur bootstrap suivent les paramètres préengagés. Les comparaisons directes `full` contre l’original, Codex vanilla et chaque ablation sont également fixées avant génération. Les résultats intermédiaires de chaque génération sont conservés mais exclus des gains finaux section 16. Les temps bruts d’allocations différentes ne sont pas mélangés.
 
 `suite.sqlite` conserve les intentions avant soumission, les identités de session, les graines privées, les états et les résultats. Ce fichier doit rester hors des espaces accessibles aux générateurs et conserver ses permissions privées. Une reprise utilise la même session ; elle ne soumet pas un nouveau job lorsqu’un worker est encore actif. Des verrous par tâche protègent aussi les processus survivant à l’arrêt du contrôleur. Les résultats terminés sont authentifiés par leurs empreintes et leur reçu terminal avant réutilisation. Un artefact modifié est refusé.
+
+Le prochain dispatch privilégie les préfixes de reprise liés à une allocation
+possédée, puis les transferts de contexte non encore scoré, les autres reprises
+et enfin les tâches neuves. Cette priorité repose sur les reçus locaux liés par
+empreintes ; elle ne prétend pas que le job est toujours actif. Les gardes du
+worker vérifient encore l'allocation et chaque preuve avant réutilisation.
+L'identité et l'état du journal sont relus sous le verrou de tâche : une ancienne
+future ne relance pas une tâche désormais terminée, en échec ou changée de session.
+
+Les nouveaux dispatchs conservent des observations de provenance dans
+`dispatch-attestations/` : contrôleur avant création du pool, puis tâche avant
+toute action modèle, SSH ou Slurm. Les epochs sont publiées sans écrasement par
+l'API, avec chaîne de hashes vérifiée ; elles conservent PID, identité de tâche,
+hash du payload, HEAD/dirty et empreintes des sources observées sur disque.
+Elles n'attestent ni le bytecode en mémoire ni les poids du fournisseur.
+Une reprise avec une autre version ajoute une epoch ; les exécutions anciennes
+sans reçu ne reçoivent pas de provenance inventée. Le hash du payload est publié
+sans son contenu ni les graines privées. Cette chaîne locale n'est pas une ancre
+externe contre un acteur capable de réécrire le répertoire.
 
 Les opérations de reconnexion et la reprise vérifiée avant le premier appel
 modèle sont détaillées dans [Reprise après interruption réseau](recovery_transport.fr.md).

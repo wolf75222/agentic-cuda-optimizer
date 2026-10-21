@@ -1,11 +1,15 @@
 """No scheduler, CUDA or model calls: exercise portable bytes and SQLite WAL."""
 from dataclasses import asdict
 import fcntl
+import gzip
+import hashlib
+import io
 import json
 from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+import tarfile
 import zipfile
 
 import pytest
@@ -14,6 +18,67 @@ from optimizer_agent.evaluation import Candidate, LaunchRule
 from optimizer_agent.experiment_store import ExperimentStore
 from optimizer_agent.portable_export import export_study,reconstruct_candidate,sqlite_backup
 from optimizer_agent.search_policy import SearchPolicy
+
+
+BRIDGE_FILES = ("upstream_original.py","frozen_launch.py","codex_backend.py","gain_observer.py")
+
+
+def git(repo,*args):
+    return subprocess.check_output(["git","-C",str(repo),*args])
+
+
+def commit_bridge(repo,label):
+    subprocess.run(["git","-C",str(repo),"add","."],check=True)
+    subprocess.run(["git","-C",str(repo),"-c","user.name=Unit Test","-c","user.email=unit@example.invalid",
+        "commit","-qm",label],check=True)
+    return git(repo,"rev-parse","HEAD").decode().strip()
+
+
+@pytest.fixture
+def original_bridge(repo,monkeypatch):
+    from optimizer_agent import portable_export
+    (repo/"optimizer_agent").mkdir()
+    for name in BRIDGE_FILES:
+        (repo/"optimizer_agent"/name).write_text("# Original recorded bridge: "+name+"\n")
+    revision = commit_bridge(repo,"recorded bridge")
+    monkeypatch.setattr(portable_export,"UPSTREAM_COMMIT",revision)
+    hashes = {name:hashlib.sha256((repo/"optimizer_agent"/name).read_bytes()).hexdigest() for name in BRIDGE_FILES}
+    return repo,revision,hashes
+
+
+def historical_source(root,repo,revision,*,mutate=None,metadata_changes=None):
+    """Real local Git bytes; no execution or external controller attestation."""
+    raw = git(repo,"archive","--format=tar",revision)
+    if mutate:
+        with tarfile.open(fileobj=io.BytesIO(raw),mode="r:") as incoming:
+            members = [(member,incoming.extractfile(member).read() if member.isreg() else None) for member in incoming]
+        buffer = io.BytesIO()
+        with tarfile.open(fileobj=buffer,mode="w:") as outgoing:
+            mutate(outgoing,members)
+        raw = buffer.getvalue()
+    payload = gzip.compress(raw,mtime=0)
+    hashes = {name:hashlib.sha256(git(repo,"show",revision+":"+name)).hexdigest()
+        for name in git(repo,"ls-tree","-r","--name-only",revision).decode().splitlines()}
+    metadata = {"head":revision,"dirty":[],"source_hashes":hashes,"archive_sha256":hashlib.sha256(payload).hexdigest(),
+        "status":"frozen_clean_committed_controller_source"}
+    metadata.update(metadata_changes or {})
+    folder = root/"controller-sources"/revision
+    folder.mkdir(parents=True,exist_ok=True)
+    (folder/"source.tar.gz").write_bytes(payload)
+    write(folder/"source.json",metadata)
+    return folder
+
+
+def original_manifest(root,hashes):
+    path = root/"campaigns"/"original"/"generation"/"manifest.json"
+    write(path,{"method":"true_upstream_original","status":"completed","adapter_source_hashes":hashes})
+    return path
+
+
+def change_current_bridge(repo):
+    for name in BRIDGE_FILES:
+        (repo/"optimizer_agent"/name).write_text("# Current bridge differs: "+name+"\n")
+    return commit_bridge(repo,"new bridge")
 
 
 def write(path,value):
@@ -316,3 +381,155 @@ def test_v2_reference_text_is_omitted_but_exact_receipts_and_rehydration_metadat
     reconstruction = json.loads((tmp_path/"restored/reconstruction.json").read_text())
     assert reconstruction["generation_resume"]["guard_ready"] is False
     assert reconstruction["generation_resume"]["rehydration_required"] is True
+
+
+def test_real_like_original_receipt_includes_all_four_current_bridge_files(study,original_bridge,tmp_path):
+    root,_,_ = study
+    repo,revision,hashes = original_bridge
+    receipt = original_manifest(root,hashes)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "complete",manifest["errors"]
+    checks = manifest["source"]["recorded_bridge_hash_checks"]
+    assert {row["file"] for row in checks} == set(BRIDGE_FILES)
+    assert all(row["matches"] and row["current_matches"] for row in checks)
+    binding, = manifest["source"]["recorded_bridge_source_bindings"]
+    assert binding["current_adapter_bytes_match"] and binding["adapter_bytes_resolved"]
+    assert not binding["historical_adapter_bytes_resolved"]
+    assert binding["controller_revision"] is None
+    assert binding["receipt_sha256"] == hashlib.sha256(receipt.read_bytes()).hexdigest()
+    with zipfile.ZipFile(tmp_path/"output/study-evidence.zip") as archive:
+        assert archive.read("source/bridge-working-tree/optimizer_agent/gain_observer.py") == (repo/"optimizer_agent/gain_observer.py").read_bytes()
+
+
+def test_authenticated_historical_adapter_bytes_resolve_mismatch_without_claiming_execution_revision(study,original_bridge,tmp_path):
+    root,_,_ = study
+    repo,first,hashes = original_bridge
+    first_folder = historical_source(root,repo,first)
+    # A different controller commit can have exactly the same adapter files.
+    # Both must remain visible; neither is asserted as the execution controller.
+    (repo/"README.md").write_text("Second controller, same adapter bytes\n")
+    second = commit_bridge(repo,"same adapter, different controller")
+    second_folder = historical_source(root,repo,second)
+    current = change_current_bridge(repo)
+    receipt = original_manifest(root,hashes)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "complete",manifest["errors"]
+    assert manifest["source"]["head"] == current
+    checks = manifest["source"]["recorded_bridge_hash_checks"]
+    assert all(not row["matches"] and not row["current_matches"] and row["historical_adapter_bytes_resolved"] for row in checks)
+    binding, = manifest["source"]["recorded_bridge_source_bindings"]
+    assert not binding["current_adapter_bytes_match"]
+    assert binding["historical_adapter_bytes_resolved"] and binding["adapter_bytes_resolved"]
+    assert binding["controller_revision"] is None
+    assert "task-to-controller revision is not established" in binding["scope"]
+    assert {row["git_revision"] for row in binding["matching_historical_archives"]} == {first,second}
+    assert binding["receipt_sha256"] == hashlib.sha256(receipt.read_bytes()).hexdigest()
+    with zipfile.ZipFile(tmp_path/"output/study-evidence.zip") as archive:
+        assert hashlib.sha256(archive.read("evidence/"+binding["receipt"])).hexdigest() == binding["receipt_sha256"]
+        for row in binding["matching_historical_archives"]:
+            assert hashlib.sha256(archive.read(row["source_metadata"])).hexdigest() == row["source_metadata_sha256"]
+            assert hashlib.sha256(archive.read(row["archive"])).hexdigest() == row["archive_sha256"]
+            assert row["verified_git_file_count"] == 5
+            assert row["adapter_source_hashes"] == hashes
+            assert "no external precommitment" in row["metadata_digest_scope"]
+    assert first_folder.is_dir() and second_folder.is_dir()
+
+
+@pytest.mark.parametrize("failure",[
+    "absent","missing_metadata","missing_archive","dirty","wrong_head","unknown_git",
+    "archive_checksum","manifest_file_checksum","manifest_missing_path","git_mismatch",
+    "missing_member","duplicate","symlink","hardlink","traversal","absolute",
+])
+def test_bad_historical_archive_cannot_resolve_recorded_adapter_bytes(study,original_bridge,tmp_path,failure):
+    root,_,_ = study
+    repo,revision,hashes = original_bridge
+    original_manifest(root,hashes)
+    target = "optimizer_agent/upstream_original.py"
+
+    def mutate(outgoing,members):
+        for member,data in members:
+            if failure == "missing_member" and member.name == target:
+                continue
+            if failure == "git_mismatch" and member.name == target:
+                data = b"changed bytes, no corresponding Git commit\n"
+                member.size = len(data)
+            outgoing.addfile(member,io.BytesIO(data) if data is not None else None)
+        if failure in {"duplicate","symlink","hardlink","traversal","absolute"}:
+            member = tarfile.TarInfo({"traversal":"../escape.py","absolute":"/escape.py"}.get(failure,target if failure == "duplicate" else "linked.py"))
+            if failure in {"symlink","hardlink"}:
+                member.type = tarfile.SYMTYPE if failure == "symlink" else tarfile.LNKTYPE
+                member.linkname = target
+            outgoing.addfile(member,io.BytesIO(b"") if member.isreg() else None)
+
+    if failure != "absent":
+        changed_tar = failure in {"git_mismatch","missing_member","duplicate","symlink","hardlink","traversal","absolute"}
+        folder = historical_source(root,repo,revision,mutate=mutate if changed_tar else None)
+        metadata = json.loads((folder/"source.json").read_text())
+        if failure == "missing_metadata":
+            (folder/"source.json").unlink()
+        elif failure == "missing_archive":
+            (folder/"source.tar.gz").unlink()
+        elif failure == "archive_checksum":
+            (folder/"source.tar.gz").write_bytes((folder/"source.tar.gz").read_bytes()+b"tampered")
+        elif failure in {"dirty","wrong_head","manifest_file_checksum","manifest_missing_path","git_mismatch","unknown_git"}:
+            if failure == "dirty":
+                metadata["dirty"] = [" M optimizer_agent/upstream_original.py"]
+            elif failure == "wrong_head":
+                metadata["head"] = "f"*40
+            elif failure == "manifest_missing_path":
+                del metadata["source_hashes"][target]
+            elif failure == "unknown_git":
+                metadata["head"] = "f"*40
+            else:
+                metadata["source_hashes"][target] = hashlib.sha256(b"changed bytes, no corresponding Git commit\n").hexdigest() if failure == "git_mismatch" else "0"*64
+            write(folder/"source.json",metadata)
+            if failure == "unknown_git":
+                folder.rename(folder.parent/("f"*40))
+    change_current_bridge(repo)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial"
+    binding, = manifest["source"]["recorded_bridge_source_bindings"]
+    assert binding["controller_revision"] is None
+    assert not binding["historical_adapter_bytes_resolved"] and not binding["adapter_bytes_resolved"]
+    assert any("no authenticated historical" in row["error"] for row in manifest["errors"])
+    if failure != "absent":
+        assert manifest["source"]["historical_controller_source_archives"]["rejected"]
+
+
+@pytest.mark.parametrize("failure",["missing_required","unknown_file","invalid_digest"])
+def test_original_receipt_requires_closed_four_file_hash_map(study,original_bridge,tmp_path,failure):
+    root,_,_ = study
+    repo,revision,hashes = original_bridge
+    malformed = dict(hashes)
+    if failure == "missing_required":
+        del malformed["gain_observer.py"]
+    elif failure == "unknown_file":
+        malformed["../arbitrary.py"] = "0"*64
+    else:
+        malformed["gain_observer.py"] = "not-a-sha256"
+    original_manifest(root,malformed)
+    historical_source(root,repo,revision)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial"
+    assert any("exact four" in row["error"] for row in manifest["errors"])
+    binding, = manifest["source"]["recorded_bridge_source_bindings"]
+    assert not binding["adapter_bytes_resolved"]
+
+
+def test_historical_files_cannot_be_mixed_between_controller_snapshots(study,original_bridge,tmp_path):
+    root,_,_ = study
+    repo,revision,hashes = original_bridge
+    original_manifest(root,hashes)
+    (repo/"optimizer_agent/upstream_original.py").write_text("# Different first file\n")
+    first = commit_bridge(repo,"only three recorded adapter files")
+    historical_source(root,repo,first)
+    (repo/"optimizer_agent/upstream_original.py").write_bytes(git(repo,"show",revision+":optimizer_agent/upstream_original.py"))
+    (repo/"optimizer_agent/gain_observer.py").write_text("# Different fourth file\n")
+    second = commit_bridge(repo,"other three recorded adapter files")
+    historical_source(root,repo,second)
+    change_current_bridge(repo)
+    manifest = export_study(root,tmp_path/"output",repo_dir=repo)
+    assert manifest["status"] == "partial"
+    assert len(manifest["source"]["historical_controller_source_archives"]["validated"]) == 2
+    binding, = manifest["source"]["recorded_bridge_source_bindings"]
+    assert not binding["historical_adapter_bytes_resolved"] and not binding["matching_historical_archives"]
