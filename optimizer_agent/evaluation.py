@@ -85,11 +85,13 @@ class Candidate:
     parameters: dict = field(default_factory=dict)
     _source_hash: str = field(init=False, repr=False)
     _parameters_json: str = field(init=False, repr=False)
+    _launch_rule_json: str = field(init=False, repr=False)
 
     def __post_init__(self):
         object.__setattr__(self, "source", Path(self.source).resolve())
         object.__setattr__(self, "_source_hash", hashlib.sha256(self.source.read_bytes()).hexdigest())
         object.__setattr__(self, "_parameters_json", json.dumps(self.parameters, sort_keys=True, allow_nan=False))
+        object.__setattr__(self, "_launch_rule_json", json.dumps(asdict(self.launch_rule), sort_keys=True, allow_nan=False))
 
     @property
     def artifact_hash(self) -> str:
@@ -102,6 +104,8 @@ class Candidate:
             raise ValueError("Candidate source changed after freezing")
         if json.dumps(self.parameters, sort_keys=True, allow_nan=False) != self._parameters_json:
             raise ValueError("Candidate parameters changed after freezing")
+        if json.dumps(asdict(self.launch_rule), sort_keys=True, allow_nan=False) != self._launch_rule_json:
+            raise ValueError("Candidate launch rule changed after freezing")
 
 
 @dataclass(frozen=True)
