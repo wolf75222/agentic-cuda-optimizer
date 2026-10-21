@@ -168,6 +168,52 @@ def study_campaign_table(summary):
                   "Tokens", "Appels CLI", "Durée génération (s)", "Artefact"], rows)
 
 
+def case_comparison_table(summary, direct_views):
+    """Expose case intervals without inventing samples for identities or absences."""
+    rows = []
+    comparisons = [(row.get("group_id"), LABELS.get(row["mode"], row["mode"]) + " / naïf", row)
+                   for row in summary["rows"]]
+    comparisons += [(entry["group_id"], entry["comparison"], entry) for entry in direct_views]
+    for group, contrast, value in comparisons:
+        basis = value.get("gain_basis")
+        if "final_qualified" in value:
+            qualified = value["final_qualified"]
+            qualification = "oui" if qualified is True else "non" if qualified is False else "inconnue"
+            status = str(value.get("status") or "inconnu") + "; artefact qualifié : " + qualification
+        else:
+            source_ok = value.get("source_ok")
+            ok_label = "vrai" if source_ok is True else "faux" if source_ok is False else "inconnu"
+            status = str(value.get("source_status") or "inconnu") + "; indicateur ok du reçu : " + ok_label
+        prefix = [group, contrast, status]
+        if basis in ("exact_baseline_artifact", "exact_artifact_identity"):
+            rows.append(prefix + ["ensemble des cas", "1", "sans intervalle : identité", "identité exacte"])
+            continue
+        cases = _mapping(value.get("case_gains")) if basis == "paired_measurement" else {}
+        if not cases:
+            reason = "contexte d’exécution non prouvé" if basis == "unproven_artifact_context" else "mesure par cas indisponible"
+            rows.append(prefix + ["non établi", "inconnu", "IC non établi", reason])
+            continue
+        for case, interval in cases.items():
+            interval = _mapping(interval)
+            gain, lower, upper = (interval.get(key) for key in ("gain", "lower", "upper"))
+            finite = all(isinstance(number, (int, float)) and not isinstance(number, bool) and
+                         math.isfinite(number) and number > 0 for number in (gain, lower, upper))
+            if not finite or lower > upper:
+                rows.append(prefix + [case, "inconnu", "IC non établi", "intervalle incomplet ou incohérent"])
+                continue
+            interpretation = ("IC entièrement sous 1" if upper < 1 else
+                              "IC entièrement au-dessus de 1" if lower > 1 else "IC recouvre 1")
+            rows.append(prefix + [case, fmt(gain, 6), "["+fmt(lower, 6)+" ; "+fmt(upper, 6)+"]", interpretation])
+    return ("<details><summary>Ratios et intervalles par cas final</summary>" +
+            "<p>Chaque ratio divise la latence de la référence par celle du candidat. Les contrastes directs "
+            "proviennent de leurs propres paires ; ils ne sont pas déduits des gains face au naïf. "
+            "Ces IC à 95 % sont individuels, sans correction pour comparaisons multiples. "
+            "Un IC recouvrant 1 ne démontre pas une différence. Le contrôle de non-régression des cas critiques "
+            "reste distinct et suit le contrat figé. Les mesures partielles restent visibles avec le statut du reçu ; "
+            "un intervalle ne qualifie ni l’artefact ni la méthode. Les absences et identités ne créent aucune série mesurée.</p>" +
+            table(["Groupe", "Candidat / référence", "Statut du reçu / qualification", "Cas", "Ratio", "IC95% individuel", "Lecture de l’intervalle"], rows) + "</details>")
+
+
 def audit_table(path):
     lines = Path(path).read_text().splitlines()
     rows = [[cell.strip() for cell in line.strip().strip("|").split("|")]
@@ -1407,6 +1453,7 @@ puis confirmations AB/BA et bootstrap des séries. Les chronométrages d'allocat
 Les mesures locales ne remplacent aucune performance ROMEO. Les points et intervalles ci-dessous montrent les campagnes individuelles ; un gain supérieur à1 favorise le candidat face au naïf.</p>
 <p>Les identités exactes d’artefact donnent un ratio déterministe 1 sans intervalle. Plusieurs labels pour ce même artefact ne sont pas plusieurs mesures indépendantes.</p>
 {chart_html}{study_aggregate_table(summary)}{direct_comparison_table(report['direct_comparison_views'])}
+{case_comparison_table(summary, report['direct_comparison_views'])}
 <p>{escape(report['method_outcome_policy'])} Les points représentent l’artefact retenu, y compris un candidat de repli.</p>
 <p>Les agrégats incluent les retours au noyau naïf et les régressions mesurées. Les absences ne reçoivent aucun gain inventé.
 Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain universel ni de supériorité sur cuBLAS.</p>

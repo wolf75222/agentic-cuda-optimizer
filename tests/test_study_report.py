@@ -12,7 +12,7 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
     frozen_pilot_panel, plot_frozen_pilot, FROZEN_ROLES, FROZEN_PAIRS)
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
-from scripts.report_study_fr import study_aggregate_table, study_campaign_table
+from scripts.report_study_fr import study_aggregate_table, study_campaign_table, case_comparison_table
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
@@ -931,6 +931,65 @@ def test_legacy_valid_identity_stays_available_without_an_interval():
     view = comparison_view({"status": "confirmed", "ok": True,
                             "artifact_hash": "a"*64, "incumbent_artifact_hash": "a"*64})
     assert view["gain_basis"] == "exact_artifact_identity" and view["gain"] == 1
+
+
+def test_case_table_exposes_regression_intervals_and_uses_independent_direct_pairs():
+    summary = {"rows": [{"group_id": "convolution.1729", "mode": "true_upstream", "gain_basis": "paired_measurement",
+        "case_gains": {"final-1": {"gain": .91, "lower": .85, "upper": .95},
+                       "final-17": {"gain": .99, "lower": .96, "upper": 1.03}}}]}
+    views = direct_comparison_views({"convolution.1729": {"method_comparisons": {"full_vs_original": {
+        "artifact_hash": "a"*64, "incumbent_artifact_hash": "b"*64, "ok": True,
+        "interval": {"gain": 1.11, "lower": 1.02, "upper": 1.20,
+                     "case_gains": {"final-1": {"gain": 1.12, "lower": 1.03, "upper": 1.21}}}}}}})
+    original = deepcopy((summary, views))
+    html = case_comparison_table(summary, views)
+    assert "0.91" in html and "[0.85 ; 0.95]" in html and "IC entièrement sous 1" in html
+    assert "[0.96 ; 1.03]" in html and "IC recouvre 1" in html
+    assert "full_vs_original" in html and "[1.03 ; 1.21]" in html and "IC entièrement au-dessus de 1" in html
+    assert "sans correction pour comparaisons multiples" in html and "propres paires" in html
+    assert (summary, views) == original
+
+
+@pytest.mark.parametrize("basis", ["exact_baseline_artifact", "exact_artifact_identity", "unproven_artifact_context", "comparison_unavailable", None, "unknown_legacy_basis"])
+def test_case_table_never_turns_identity_or_unproven_context_into_measured_cases(basis):
+    cases = {"old-noisy-case": {"gain": .734567, "lower": .70, "upper": .79}}
+    row = {"group_id": "group", "mode": "full", "gain_basis": basis,
+           "case_gains": cases}
+    original = deepcopy(row)
+    html = case_comparison_table({"rows": [row]}, [])
+    assert "old-noisy-case" not in html and "0.734567" not in html and row == original
+    if basis in ("exact_baseline_artifact", "exact_artifact_identity"):
+        assert "sans intervalle : identité" in html and "ensemble des cas" in html
+    else:
+        assert "IC non établi" in html and "inconnu" in html and "sans intervalle : identité" not in html
+
+
+@pytest.mark.parametrize("interval", [None, {}, {"gain": 1, "lower": .9},
+    {"gain": float("nan"), "lower": .9, "upper": 1.1},
+    {"gain": 1, "lower": 1.2, "upper": 1.1}, {"gain": True, "lower": .9, "upper": 1.1}])
+def test_case_table_keeps_incomplete_or_invalid_intervals_unknown(interval):
+    html = case_comparison_table({"rows": [{"group_id": "<group>", "mode": "full", "gain_basis": "paired_measurement",
+        "case_gains": {"<case>": interval}}]}, [])
+    assert "IC non établi" in html and "intervalle incomplet ou incohérent" in html
+    assert "&lt;case&gt;" in html and "&lt;group&gt;" in html and "<case>" not in html
+
+
+def test_case_table_does_not_require_percentile_bootstrap_interval_to_contain_point_estimate():
+    html = case_comparison_table({"rows": [{"group_id": "group", "mode": "full", "gain_basis": "paired_measurement",
+        "case_gains": {"final-1": {"gain": 1.01, "lower": .90, "upper": .99}}}]}, [])
+    assert "1.01" in html and "[0.9 ; 0.99]" in html and "IC entièrement sous 1" in html
+
+
+def test_case_table_displays_partial_measurement_failure_and_artifact_qualification_separately():
+    cases = {"final-1": {"gain": 1.12, "lower": 1.03, "upper": 1.21}}
+    summary = {"rows": [{"group_id": "group", "mode": "full", "status": "final_measurement_failed",
+        "final_qualified": False, "generation_method_status": "completed", "gain_basis": "paired_measurement", "case_gains": cases}]}
+    views = [{"group_id": "group", "comparison": "full_vs_original", "source_status": "infrastructure_failure",
+              "source_ok": False, "gain_basis": "paired_measurement", "case_gains": cases}]
+    html = case_comparison_table(summary, views)
+    assert "final_measurement_failed; artefact qualifié : non" in html
+    assert "infrastructure_failure; indicateur ok du reçu : faux" in html
+    assert html.count("[1.03 ; 1.21]") == 2 and "un intervalle ne qualifie ni l’artefact ni la méthode" in html
 
 
 @pytest.mark.parametrize("first,second", [(None, None), ("", ""), ("source-only", "source-only"), ("a"*64, "b"*64)])

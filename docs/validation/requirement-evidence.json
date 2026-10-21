@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T21:41:29.435576+00:00",
+  "generated_at_utc": "2026-10-21T22:23:22.807677+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -86,6 +86,28 @@
       "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
       "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
       "scope": "Historical initial checkout identity retained above; changed source bytes separately pinned in source_current entries. Latest coherent local suite and exact published CI are not inferred here."
+    },
+    "latest_published_release_observation": {
+      "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "observed_at_utc": "2026-10-21T22:06:38.277890+00:00",
+      "ci_evidence": "ci_dfd93d0",
+      "local_test_evidence": "local_research_cache_final_suite_release",
+      "standalone_final_evidence": "standalone_final_suite_dfd93d0_774520",
+      "catalog_integrity_evidence": "catalog_integrity_dfd93d0",
+      "scope": "Publication, CI, suite locale et contrôle ROMEO ont chacun leur reçu et leur portée ; aucun achèvement AC-02 ou §16 déduit. Les snapshots source_current gardent leurs métadonnées de capture historiques ; aucun changement futur du renderer n’est couvert par la CI DFD."
+    },
+    "latest_renderer_snapshot_observation": {
+      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "focused_test_evidence": "local_report_per_case_v2_dfd93d0",
+      "scope": "Source du renderer modifiée après DFD ; ancienne capture DFD et sa CI conservées. Les 206 tests ciblés ne constituent pas une nouvelle suite complète et ne certifient aucune nouvelle mesure GPU."
+    },
+    "latest_observed_metrics_snapshot_observation": {
+      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "source_evidence": "source_current:optimizer_agent/suite_orchestrator.py",
+      "focused_test_evidence": "local_observed_metrics_fix_dfd93d0",
+      "historical_annotation_evidence": "historical_observed_metrics_view_dfd93d0",
+      "scope": "Correction prospective du bilan et annotation hors ligne seulement. Aucun ancien résultat, manifeste ou contrôleur DFD réécrit ; aucune reprise des campagnes pour ce motif."
     }
   },
   "policy": {
@@ -95,7 +117,8 @@
     "meaning_of_romeo_verified": "Seulement le scénario cité sur ses propres versions;jamais tous les workloads ni HEAD courant.",
     "source_path_is_not_test_evidence": true,
     "test_result_is_not_gpu_certification": true,
-    "link_or_body_hash_is_not_model_read_proof": true
+    "link_or_body_hash_is_not_model_read_proof": true,
+    "historical_source_hashes_are_not_replaced_by_current_head": true
   },
   "user_overrides": [
     {
@@ -118,19 +141,20 @@
   "priority_gaps": [
     {
       "id": "PASSAGES_V2_LIVE",
-      "state": "production_targeted_diagnostic_v2_research_proposal_search_measurement_acquired",
+      "state": "production_v2_loop_and_exact_complementary_documentary_admission_acquired",
       "evidence": [
         "study_v2_full_first_proposal",
         "study_v2_greedy_parent_first_proposal",
         "diagnostic_loop",
         "diagnostic_loop_v2",
-        "convolution_targeted_diagnostic_b9bda60"
+        "convolution_targeted_diagnostic_b9bda60",
+        "ac02_third_resumption_execution_audit"
       ],
-      "remaining": "Boucle ciblée v2 acquise en production convolution 1729 full/greedy_parent/no_autotuning au b9bda60 ; ni AC-02 complet ni finales §16 acquis. Le helper 773095 séparé reste incomplet après math.h, sans relance."
+      "remaining": "Boucle ciblée de production b9bda60 et contrôle documentaire DFD à 14 appels CLI acquis séparément. L’admission AC-02 ne valide pas le nouveau candidat sur GPU ; contextes publics recherche/synthèse incomplets et étude §16 à terminer. Le helper historique 773095 conserve son échec math.h."
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "sixteen_generations_first_common_final_acquired_four_55_generations_active",
+      "state": "twenty_generations_first_common_final_observed_after_natural_55_drain",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -143,9 +167,10 @@
         "common_final_convolution_1729_freeze",
         "common_final_convolution_1729_terminal",
         "study_v2_fifteen_completed_generations_55_dispatch",
-        "section16_protocol_review_55"
+        "section16_protocol_review_55",
+        "study_v2_twenty_completed_generations_55_drain"
       ],
-      "remaining": "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
+      "remaining": "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Six alias historiques ne fournissent pas de contrastes mesurés distincts."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -165,10 +190,10 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 154,
+    "evidence_entries": 164,
     "latest_local_junit_entries": 1453,
     "latest_local_testcase_nodes": 1440,
-    "study_v2_completed_generation_receipts": 16,
+    "study_v2_completed_generation_receipts": 20,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
@@ -1931,7 +1956,14 @@
       "current_hash_at_finish": "862625395052b11bc30d2b06469a968a6f9a14d01ea5d95d93d6bd076a376e12",
       "sha256_in_frozen_study_source": "6a97fc5d23893cde1d862a7366fb596af99dea8cb47825a0c477ffd0648e53a7",
       "matches_frozen_study_source": false,
-      "matches_current_working_content": false
+      "matches_current_working_content": false,
+      "historical_byte_recovery": {
+        "status": "not_recovered_from_git_or_available_public_source_snapshots",
+        "audited_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+        "evidence": "catalog_integrity_dfd93d0",
+        "original_sha256_preserved": true,
+        "scope": "Capture dirty historique de l’audit initial, non reconstruite parmi les révisions Git et snapshots publics disponibles. Les anciens booléens décrivent leur observation datée ; ils ne décrivent pas le HEAD DFD. Aucun contenu courant substitué au pin historique."
+      }
     },
     "source:optimizer_agent/search_policy.py": {
       "kind": "implementation_source",
@@ -2120,7 +2152,14 @@
       "current_hash_at_finish": "9c8d0977c1409fbb878c0e6af34cabb90bd6bb386ee1fdc97f70816bf8c65200",
       "sha256_in_frozen_study_source": "1868894962fc5b453ff2d9450ad3ddf1261e502717a1df4d68a7cd5ac4b64c40",
       "matches_frozen_study_source": false,
-      "matches_current_working_content": false
+      "matches_current_working_content": false,
+      "historical_byte_recovery": {
+        "status": "not_recovered_from_git_or_available_public_source_snapshots",
+        "audited_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+        "evidence": "catalog_integrity_dfd93d0",
+        "original_sha256_preserved": true,
+        "scope": "Capture dirty historique de l’audit initial, non reconstruite parmi les révisions Git et snapshots publics disponibles. Les anciens booléens décrivent leur observation datée ; ils ne décrivent pas le HEAD DFD. Aucun contenu courant substitué au pin historique."
+      }
     },
     "source:optimizer_agent/remote_worker.py": {
       "kind": "implementation_source",
@@ -2393,7 +2432,14 @@
       "current_hash_at_finish": "b089762436673eb4efef34e34506f78ea2d9690dda18a3f38da9e0284e692bf2",
       "sha256_in_frozen_study_source": "a2ddd13437286a61a63feb05b2d977d77aee79dbfae8f30924f75691cdba49c5",
       "matches_frozen_study_source": false,
-      "matches_current_working_content": false
+      "matches_current_working_content": false,
+      "historical_byte_recovery": {
+        "status": "not_recovered_from_git_or_available_public_source_snapshots",
+        "audited_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+        "evidence": "catalog_integrity_dfd93d0",
+        "original_sha256_preserved": true,
+        "scope": "Capture dirty historique de l’audit initial, non reconstruite parmi les révisions Git et snapshots publics disponibles. Les anciens booléens décrivent leur observation datée ; ils ne décrivent pas le HEAD DFD. Aucun contenu courant substitué au pin historique."
+      }
     },
     "source:optimizer_agent/suite_report.py": {
       "kind": "implementation_source",
@@ -7592,11 +7638,11 @@
     "source_current:optimizer_agent/suite_orchestrator.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/suite_orchestrator.py",
-      "sha256": "3a812515aed00b6333d3326a80db188743d1f256b71397a38273e3ab51e8dcc0",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+      "sha256": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6",
+      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "observed_at_utc": "2026-10-21T22:23:22.807677+00:00",
+      "scope": "Correction postérieure à DFD limitée à la liste unknown_metrics, fondée sur les valeurs déjà calculées et leurs noms exacts. Aucun autre calcul de coût, mesure ou classement modifié. 63 tests CPU ciblés ; pas de nouvelle suite complète ou CI de ces octets. Le contrôleur figé DFD et son ancien snapshot restent inchangés.",
       "definitions": [
         {
           "name": "infrastructure_category",
@@ -7656,15 +7702,99 @@
         },
         {
           "name": "RecordingRunner",
-          "line": 508
+          "line": 510
         },
         {
           "name": "evaluate_group",
-          "line": 528
+          "line": 530
         },
         {
           "name": "SuiteOrchestrator",
-          "line": 670
+          "line": 672
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/suite_orchestrator.py",
+          "sha256": "3a812515aed00b6333d3326a80db188743d1f256b71397a38273e3ab51e8dcc0",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "infrastructure_category",
+              "line": 36
+            },
+            {
+              "name": "_local_session_job",
+              "line": 105
+            },
+            {
+              "name": "_walk",
+              "line": 141
+            },
+            {
+              "name": "_hash",
+              "line": 151
+            },
+            {
+              "name": "write_json",
+              "line": 155
+            },
+            {
+              "name": "read_json",
+              "line": 163
+            },
+            {
+              "name": "write_native_preflight",
+              "line": 167
+            },
+            {
+              "name": "config_from_dict",
+              "line": 212
+            },
+            {
+              "name": "candidate_receipt",
+              "line": 220
+            },
+            {
+              "name": "load_candidate",
+              "line": 227
+            },
+            {
+              "name": "SuiteJournal",
+              "line": 249
+            },
+            {
+              "name": "_script",
+              "line": 345
+            },
+            {
+              "name": "generation_adapter",
+              "line": 352
+            },
+            {
+              "name": "observed_metrics",
+              "line": 427
+            },
+            {
+              "name": "RecordingRunner",
+              "line": 508
+            },
+            {
+              "name": "evaluate_group",
+              "line": 528
+            },
+            {
+              "name": "SuiteOrchestrator",
+              "line": 670
+            }
+          ],
+          "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+          "publication_evidence": "ci_dfd93d0",
+          "identity_evidence": "catalog_integrity_dfd93d0"
         }
       ]
     },
@@ -8251,11 +8381,11 @@
     "source_current:scripts/report_study_fr.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/report_study_fr.py",
-      "sha256": "fc99699d818e5f6c70a99f6d3fbe6862833a779e17721bbe6b477ddc4fc7cbd9",
-      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+      "sha256": "2078201b249ea707afbad9300d92c68d8b8aa2ca884d43936b90c6809865c5c1",
+      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
-      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+      "observed_at_utc": "2026-10-21T22:12:46.726866+00:00",
+      "scope": "Snapshot postérieur à DFD, avec définitions AST exactes. Présentation par cas/statuts et contexte inconnu testés par 206 tests du seul module ; pas de nouvelle suite complète, CI publiée ou exécution ROMEO de ces octets. Snapshot DFD préservé séparément.",
       "definitions": [
         {
           "name": "load",
@@ -8290,112 +8420,272 @@
           "line": 156
         },
         {
-          "name": "audit_table",
+          "name": "case_comparison_table",
           "line": 171
         },
         {
+          "name": "audit_table",
+          "line": 217
+        },
+        {
           "name": "checkout_source_identity",
-          "line": 178
+          "line": 224
         },
         {
           "name": "ci_qualifies_checkout",
-          "line": 202
+          "line": 248
         },
         {
           "name": "_mapping",
-          "line": 207
-        },
-        {
-          "name": "_records",
-          "line": 211
-        },
-        {
-          "name": "_hash",
-          "line": 215
-        },
-        {
-          "name": "_linked_receipt_verified",
-          "line": 219
-        },
-        {
-          "name": "_verified_json",
-          "line": 242
-        },
-        {
-          "name": "_required_checks",
           "line": 253
         },
         {
+          "name": "_records",
+          "line": 257
+        },
+        {
+          "name": "_hash",
+          "line": 261
+        },
+        {
+          "name": "_linked_receipt_verified",
+          "line": 265
+        },
+        {
+          "name": "_verified_json",
+          "line": 288
+        },
+        {
+          "name": "_required_checks",
+          "line": 299
+        },
+        {
           "name": "_original_execution_control",
-          "line": 258
+          "line": 304
         },
         {
           "name": "_common_freeze_control",
-          "line": 332
+          "line": 378
         },
         {
           "name": "_standalone_final_control",
-          "line": 393
+          "line": 439
         },
         {
           "name": "_accepted_eleven_source_checks",
-          "line": 412
+          "line": 458
         },
         {
           "name": "_research_refresh_control",
-          "line": 527
+          "line": 573
         },
         {
           "name": "_diagnostic_v2_control",
-          "line": 771
-        },
-        {
-          "name": "control_receipts",
           "line": 817
         },
         {
+          "name": "control_receipts",
+          "line": 863
+        },
+        {
           "name": "execution_evidence_panel",
-          "line": 881
+          "line": 927
         },
         {
           "name": "_receipt_snapshot",
-          "line": 942
+          "line": 988
         },
         {
           "name": "_reported_tokens",
-          "line": 947
+          "line": 993
         },
         {
           "name": "_elapsed_seconds",
-          "line": 968
+          "line": 1014
         },
         {
           "name": "gpu_lease_consumption",
-          "line": 986
+          "line": 1032
         },
         {
           "name": "project_consumption",
-          "line": 1040
+          "line": 1086
         },
         {
           "name": "frozen_pilot_summary",
-          "line": 1132
+          "line": 1178
         },
         {
           "name": "plot_frozen_pilot",
-          "line": 1205
+          "line": 1251
         },
         {
           "name": "frozen_pilot_panel",
-          "line": 1261
+          "line": 1307
         },
         {
           "name": "plot",
-          "line": 1294
+          "line": 1340
         },
         {
           "name": "main",
-          "line": 1328
+          "line": 1374
+        }
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "fc99699d818e5f6c70a99f6d3fbe6862833a779e17721bbe6b477ddc4fc7cbd9",
+          "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+          "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "audit_table",
+              "line": 171
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 178
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 202
+            },
+            {
+              "name": "_mapping",
+              "line": 207
+            },
+            {
+              "name": "_records",
+              "line": 211
+            },
+            {
+              "name": "_hash",
+              "line": 215
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 219
+            },
+            {
+              "name": "_verified_json",
+              "line": 242
+            },
+            {
+              "name": "_required_checks",
+              "line": 253
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 258
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 332
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 393
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 412
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 527
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 771
+            },
+            {
+              "name": "control_receipts",
+              "line": 817
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 881
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 942
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 947
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 968
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 986
+            },
+            {
+              "name": "project_consumption",
+              "line": 1040
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1132
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1205
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1261
+            },
+            {
+              "name": "plot",
+              "line": 1294
+            },
+            {
+              "name": "main",
+              "line": 1328
+            }
+          ],
+          "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+          "publication_evidence": "ci_dfd93d0",
+          "identity_evidence": "catalog_integrity_dfd93d0"
         }
       ]
     },
@@ -8458,6 +8748,1283 @@
       },
       "source_files_unchanged_during_tests": 187,
       "scope": "Complete coherent local suite:1440tests+13subtests. Two first-run fixture failures preserved and corrected without weakening research guards. Only SPEC_AUDIT and this registry updated after testing; executable/test/config bytes unchanged. Publication and new exact-SHA CI pending; no new model/GPU execution inferred."
+    },
+    "ci_dfd93d0": {
+      "path": "work/live/ci-dfd93d0.json",
+      "sha256": "81986f135e115a41017f4eee6214d486e6ff536d124e7718fbea17817ebb34e5",
+      "bytes": 2038,
+      "kind": "exact_sha_github_ci",
+      "headSha": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39682043239",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39682043239/job/119506686830"
+        }
+      ],
+      "scope": "CI terminée sur le SHA publié DFD exact : pytest et compileall. Ne qualifie ni les changements documentaires ou sources ultérieurs, ni une exécution modèle/GPU."
+    },
+    "standalone_final_suite_dfd93d0_774520": {
+      "path": "work/live/final-suite-acceptance-dfd93d0-terminal-audit.json",
+      "sha256": "97ad3071b6fb951bcc2ec3c6cfa2bf71885634758e74123631b9c2e26f55fe1a",
+      "bytes": 69999,
+      "kind": "actual_standalone_distinct_final_suite_terminal_audit",
+      "ok": true,
+      "source_HEAD": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "job_id": "774520",
+      "session_id": "ac-final-suite-046627e288b64c9f93b4a122058b1753",
+      "terminal": {
+        "elapsed": "00:00:47",
+        "exit_code": "0:0",
+        "job_id": "774520",
+        "nodes": "romeo-a031",
+        "state": "COMPLETED",
+        "terminal": true
+      },
+      "authority_reference": {
+        "path": "results/final-suite-acceptance-20261021/final-suite-acceptance.json",
+        "sha256": "57bb724ccaa22b42988f834ba34a62a5fc38fa5312207240ea395581f58831c8"
+      },
+      "checks": {
+        "all_four_actual_sanitizers_on_two_final_cases": true,
+        "all_thirty_eight_native_metadata_sources_launches_guards_and_ownership": true,
+        "allocation_intent_session_hardware_and_plan_bound": true,
+        "authority_and_json_artifacts_unchanged_during_audit": true,
+        "authority_success_and_all_fourteen_declared_checks": true,
+        "candidate_artifacts_distinct_launches_same_source": true,
+        "embedded_baseline_source_and_artifact_recomputed": true,
+        "embedded_candidate_source_and_artifact_recomputed": true,
+        "exact_final_input_path_and_byte_metadata_shared_oracle_timing_sanitizers": true,
+        "exact_release_ci_and_unchanged_recorded_sources": true,
+        "expected_unique_native_request_counts": true,
+        "final_input_one_use_refused_without_new_request": true,
+        "functional_pass_does_not_claim_gain_certification": true,
+        "hardware_uuid_smi_and_toolchain_agree": true,
+        "independent_oracle_comparisons_complete_without_binary_re_read": true,
+        "one_contract_final_suite_bound_through_validation_confirmation": true,
+        "oracle_reports_bound_to_exact_native_requests_and_artifacts": true,
+        "owned_terminal_completed_zero": true,
+        "same_worker_monotonic_reservations_do_not_overlap": true,
+        "timing_only_fresh_final_96_128_with_exact_ABBA_pairs_and_eighty_raw_launches": true,
+        "two_independent_output_poisons_per_oracle_case_artifact": true,
+        "zero_model_consumption": true
+      },
+      "declared_helper_checks": {
+        "all_four_sanitizers_on_final_cases": true,
+        "alternating_AB_BA": true,
+        "confirmation_explicitly_final": true,
+        "distinct_artifacts": true,
+        "exact_fixed_pairs": true,
+        "exposed_holdout_not_reused": true,
+        "final_authorization_revoked": true,
+        "final_input_buffers_used": true,
+        "final_oracles_passed": true,
+        "finalization_completed": true,
+        "fresh_final_shapes_only": true,
+        "sanitizer_requests_use_exact_final_inputs": true,
+        "search_oracle_passed": true,
+        "two_disjoint_final_cases": true
+      },
+      "native_counts": {
+        "benchmark_requests": 16,
+        "final_case_ids": [
+          "final-96",
+          "final-128"
+        ],
+        "harness_requests": 30,
+        "paired_case_series": 8,
+        "raw_cuda_launches": 80,
+        "run_oracle_requests": 14,
+        "sanitizer_requests": 8,
+        "search_case_ids": [
+          "search-1",
+          "search-17",
+          "search-63"
+        ]
+      },
+      "hardware_identity": {
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "cuda_toolkit_version": 12060,
+        "driver_version": 13010,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+        "name": "NVIDIA GH200 120GB",
+        "nvrtc_version": "12.6",
+        "uuid": "3aae1b13973a4d47de28b1edd209dd85"
+      },
+      "contract_hash": "0b25f041013701fbcd0567f5bde7c3bf9c445eda9f83d5451852759b15e1c068",
+      "artifacts": {
+        "baseline": {
+          "artifact_hash": "a57f92480ff078e50a582464391fe4e228999eed40808d4f9259c28af149cf16",
+          "block": [
+            16,
+            16,
+            1
+          ],
+          "launch_rule": {
+            "block": [
+              16,
+              16,
+              1
+            ],
+            "elements_key": "n",
+            "grid": [
+              1,
+              1,
+              1
+            ],
+            "kind": "square_2d",
+            "shared_memory_bytes": 0,
+            "tile_x": null,
+            "tile_y": null,
+            "version": 1
+          },
+          "parameters": {},
+          "source_hash": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a"
+        },
+        "declared-final-suite-control": {
+          "artifact_hash": "2523d904fe80eaf6686abb069654d572cda02831d284bd06eb58464eda9530df",
+          "block": [
+            8,
+            8,
+            1
+          ],
+          "launch_rule": {
+            "block": [
+              8,
+              8,
+              1
+            ],
+            "elements_key": "n",
+            "grid": [
+              1,
+              1,
+              1
+            ],
+            "kind": "square_2d",
+            "shared_memory_bytes": 0,
+            "tile_x": null,
+            "tile_y": null,
+            "version": 1
+          },
+          "parameters": {},
+          "source_hash": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a"
+        }
+      },
+      "observed_confirmation": {
+        "confirmation_status": "not_improved",
+        "critical_cases_ok": false,
+        "finalization_status": "validated_gain_uncertified",
+        "interval": {
+          "bootstrap_samples": 2000,
+          "case_gains": {
+            "final-128": {
+              "gain": 1.0201090705232436,
+              "lower": 0.9769673630432975,
+              "upper": 1.0637422962120457
+            },
+            "final-96": {
+              "gain": 1.0424333521460873,
+              "lower": 0.8809849779639007,
+              "upper": 1.154559514308795
+            }
+          },
+          "confidence": 0.95,
+          "gain": 1.0312108018926947,
+          "lower": 0.9277357224997589,
+          "upper": 1.1082210018152074
+        }
+      },
+      "usage": {
+        "benchmark_requests": 16,
+        "cuda_event_kernel_seconds": 0.0007309439992532134,
+        "harness_requests": 30,
+        "native_cache_hits": 29,
+        "native_cache_misses": 1,
+        "native_compile_stage_wall_seconds": 0.042495422000000005,
+        "native_reservation_wall_seconds": 0.6729602366685867,
+        "sanitizer_requests": 8
+      },
+      "model_calls": 0,
+      "model_tokens": 0,
+      "included_in_section16_cohorts": false,
+      "scope": "Contrôle fonctionnel statique réellement exécuté au DFD : SEARCH n=1/17/63 puis oracles, chronométrages appariés et quatre sanitizers sur FINAL n=96/128 distincts. Deux artefacts distincts par lancement, même source naïve ; autorisation finale révoquée et réutilisation refusée. Gain non certifié, aucun candidat produit par modèle, aucune cohorte §16 supplémentaire.",
+      "limitations": [
+        "Bounded local JSON receipts only; no SSH, job/process action, model call, compilation, CUDA launch or additional validation",
+        "No source-file or numeric input/output binary body opened; embedded source hashes/artifact identities recomputed from plan/native JSON strings",
+        "Independent NumPy oracle success and sentinels/input-readonly checks authenticated via executed reports; numerical outputs not recomputed",
+        "Exact acquired request fingerprints compared across envelope/collected/result receipts; binary fingerprint inputs were not re-read",
+        "Release provenance/source hashes are recorded before/after and linked to exact-SHA archived CI; source files were not rehashed by this audit",
+        "Declared static functional regression control excluded from section16 quality cohorts; no optimizer gain certification",
+        "No protected-job inventory or continuous observation inferred; this audit did not contact or mutate any job"
+      ]
+    },
+    "catalog_integrity_dfd93d0": {
+      "path": "work/live/catalog-evidence-integrity-dfd93d0.json",
+      "sha256": "5d8226f59d3ce927fb746c0842e67f21b5d959299a8370e4af75db122c97832c",
+      "bytes": 809168,
+      "kind": "read_only_catalog_identity_and_link_integrity_audit",
+      "audited_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "audited_registry": {
+        "path": "docs/validation/requirement-evidence.json",
+        "sha256_at_commit": "3fa97187fa1c13f8df90604647e13ffdcf510d73d572dd23adcf816f929276ee",
+        "sha256_working_file": "3fa97187fa1c13f8df90604647e13ffdcf510d73d572dd23adcf816f929276ee",
+        "matches_published_bytes": true
+      },
+      "observed_counts": {
+        "source_status_counts": {
+          "matched_historical_git": 43,
+          "historical_bytes_not_recovered_in_git": 3,
+          "matched_published_current": 42
+        },
+        "source_definition_mismatches": 0,
+        "explicit_reference_status_counts": {
+          "hash_matches": 139,
+          "matched_historical_git": 5,
+          "historical_unpinned_observation_now_has_file": 1
+        },
+        "internal_evidence_links": 1622,
+        "internal_links_unresolved": 0,
+        "requirement_count": 78,
+        "evidence_count": 154,
+        "derived_spec_sections": 45,
+        "derived_acs": 20,
+        "derived_decisions": 10,
+        "expected_ids_missing": [],
+        "unexpected_ids": [],
+        "spec_sha256_matches": true,
+        "duplicate_json_keys": [],
+        "embedded_evaluation_ids_not_registry_links": 3,
+        "spec_identity_range_mismatches": [],
+        "historical_provenance_gaps": 1,
+        "current_source_hash_mismatches": 0,
+        "immutable_public_reference_hash_mismatches": 0,
+        "catalogue_entries_without_checked_primary_or_linked_reference": [],
+        "current_top_level_definitions_verified": 341,
+        "historical_top_level_definitions_verified": 174,
+        "permitted_text_source_map_status_counts": {
+          "matched_historical_git": 292,
+          "excluded_nonpublic_or_nontext_without_read": 9,
+          "hash_matches": 24
+        }
+      },
+      "historical_provenance_limits": [
+        {
+          "id": "HISTORICAL_DIRTY_BYTES_NOT_RECOVERED",
+          "severity": "provenance_limit",
+          "evidence_ids": [
+            "source:optimizer_agent/diagnostics.py",
+            "source:optimizer_agent/execution_backend.py",
+            "source:optimizer_agent/suite_orchestrator.py"
+          ],
+          "expected_hashes": {
+            "optimizer_agent/diagnostics.py": "31a74d9647956e01716000d9af9df8d53eb6e7945b26bbbad81bb2dc5ac24294",
+            "optimizer_agent/execution_backend.py": "a42245743a6fc2f5ed9af91ffc4dec7b7520e2a87bf50cf0420bd1e55c2ea651",
+            "optimizer_agent/suite_orchestrator.py": "9933250d0ff87356b7d1d3f0be9fbba0a722039f8464934cd4cdd6df42fe11bc"
+          },
+          "observed": "Initial audit recorded working bytes changed before its end; none of the available Git revisions or named public frozen source snapshots checked contains these three exact byte strings. This is not a mismatch against current DFD.",
+          "impact": "Those historical hashes/definition inventories cannot be independently reconstructed here. Current source_current and later test/ROMEO identities remain separate and valid within their own scope.",
+          "action_bound": "Retain original pins unchanged; explicitly mark them as historical dirty observations with bytes not recovered, or add an already-existing exact public source archive if located. Do not create a replacement with the current source.",
+          "affected_requirement_ids_using_historical_source": [
+            "SEC-1",
+            "SEC-2",
+            "SEC-3",
+            "SEC-3.1",
+            "SEC-4.3",
+            "SEC-5",
+            "SEC-5.1",
+            "SEC-5.2",
+            "SEC-5.3",
+            "SEC-5.4",
+            "SEC-6.1",
+            "SEC-9",
+            "SEC-9.1",
+            "SEC-9.2",
+            "SEC-10",
+            "SEC-10.1",
+            "SEC-10.2",
+            "SEC-11.3",
+            "SEC-13",
+            "SEC-14",
+            "SEC-15",
+            "SEC-16",
+            "SEC-17",
+            "SEC-18",
+            "SEC-19",
+            "AC-01",
+            "AC-02",
+            "AC-03",
+            "AC-04",
+            "AC-13",
+            "AC-14",
+            "AC-15",
+            "AC-18",
+            "AC-19",
+            "USER-LOCAL",
+            "USER-HPC",
+            "ARCH-01",
+            "RES-01",
+            "RES-02",
+            "PMPP-01",
+            "EXEC-01",
+            "QUALITY-01"
+          ],
+          "current_source_independent_evidence_present_for_each_affected_requirement": true
+        }
+      ],
+      "scope": "Audit en lecture seule du registre publié DFD (154 entrées,78 exigences), pas du présent registre enrichi :42 snapshots courants/341 définitions et1622 liens authentifiés ; limites des3 captures dirty initiales explicites. Un hash de fichier ne prouve pas une fonctionnalité, un snapshot source ne prouve pas un test, et un test ne prouve pas ROMEO."
+    },
+    "ac02_third_resumption_authority": {
+      "path": "results/research-refresh-ac02-resumed-3-20261021/research-refresh-acceptance.json",
+      "sha256": "c475c0023fe29e4d271dd1089a58b43fa822ccb1718dcc3ab9b6c04c6ad257b1",
+      "bytes": 25108,
+      "kind": "actual_documentary_research_refresh_acceptance",
+      "ok": true,
+      "status": "documentary_research_refresh_resumption_acceptance_passed",
+      "source_HEAD": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "proof_manifest": {
+        "path": "results/research-refresh-ac02-resumed-3-20261021/proof-sha256.json",
+        "sha256": "f86c3a1c79141e4b6ecea00af60c13289ce519bd2268e6de68645cd1d45ed44a",
+        "bytes": 28074
+      },
+      "checks": {
+        "new_family_real_applicable_dossier": true,
+        "compatible_adjustment_exact_dossier_reuse_without_research": true,
+        "compatible_adjustment_uses_previous_source_parent": true,
+        "compatible_proposal_changes_source_launch_or_parameters": true,
+        "uncovered_technique_blocked_before_candidate": true,
+        "diagnostic_contains_exact_blocked_technique": true,
+        "targeted_new_dossier_covers_technique": true,
+        "targeted_dossier_links_immutable_diagnostic": true,
+        "new_covered_proposal_admitted": true,
+        "only_three_admitted_generation_events": true,
+        "no_trial_integration_or_measurement": true,
+        "no_final_holdout_exposed": true,
+        "resume_original_prefix_unchanged": true,
+        "resume_no_old_model_call_repeated": true,
+        "resume_no_new_selection_or_diagnostic": true,
+        "resume_hardware_context_bound": true,
+        "resume_source_unchanged": true
+      },
+      "inherited_model_call_count": 11,
+      "new_model_call_count": 3,
+      "cumulative_model_call_count": 14,
+      "new_usage_delta": {
+        "model_tokens": 1600074.0,
+        "model_calls": 3.0
+      },
+      "ledger_usage_observed": {
+        "limits": {
+          "trials": 1
+        },
+        "spent": {
+          "model_calls": 14.0,
+          "model_tokens": 12210438.0
+        },
+        "reserved": {
+          "trials": 1.0
+        }
+      },
+      "new_gpu_requests": 0,
+      "new_gpu_requests_attempted": 0,
+      "scope": "Nouvelle autorité séparée des ancêtres incomplete : complément documentaire du tour 5 et proposition couverte admise par les gardes normales. Pas de compilation, validation numérique, sanitizer, profil ou mesure GPU ; hors cohortes §16."
+    },
+    "ac02_third_resumption_execution_audit": {
+      "path": "work/live/research-ac02-third-resumption-execution-audit.json",
+      "sha256": "8935f28e9e162c1779e89507b75064872108c53460a8e158cfe6741873987793",
+      "bytes": 61958,
+      "kind": "actual_documentary_research_refresh_admission_read_only_audit",
+      "ok": true,
+      "observed_at_utc": "2026-10-21T22:08:36.697055+00:00",
+      "source_HEAD": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "authority_reference": {
+        "path": "results/research-refresh-ac02-resumed-3-20261021/research-refresh-acceptance.json",
+        "sha256": "c475c0023fe29e4d271dd1089a58b43fa822ccb1718dcc3ab9b6c04c6ad257b1",
+        "bytes": 25108
+      },
+      "proof_manifest": {
+        "path": "results/research-refresh-ac02-resumed-3-20261021/proof-sha256.json",
+        "sha256": "f86c3a1c79141e4b6ecea00af60c13289ce519bd2268e6de68645cd1d45ed44a",
+        "bytes": 28074
+      },
+      "checks": {
+        "new_family_real_applicable_dossier": true,
+        "compatible_adjustment_exact_dossier_reuse_without_research": true,
+        "compatible_adjustment_uses_previous_source_parent": true,
+        "compatible_proposal_changes_source_launch_or_parameters": true,
+        "uncovered_technique_blocked_before_candidate": true,
+        "diagnostic_contains_exact_blocked_technique": true,
+        "targeted_new_dossier_covers_technique": true,
+        "targeted_dossier_links_immutable_diagnostic": true,
+        "new_covered_proposal_admitted": true,
+        "only_three_admitted_generation_events": true,
+        "no_trial_integration_or_measurement": true,
+        "no_final_holdout_exposed": true,
+        "resume_original_prefix_unchanged": true,
+        "resume_no_old_model_call_repeated": true,
+        "resume_no_new_selection_or_diagnostic": true,
+        "resume_hardware_context_bound": true,
+        "resume_source_unchanged": true
+      },
+      "new_calls": [
+        {
+          "call_id": "fbdf06ad32d64f61903e0157dcecbc84",
+          "purpose": "research",
+          "stage": "research_service",
+          "kernel_proposal": false,
+          "receipt": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/model/fbdf06ad32d64f61903e0157dcecbc84.json",
+            "sha256": "a5ef1ecd8a2b409081c7bb9875f7b9206a2becc4fa5b55e7ecb8c92f066e30d1",
+            "bytes": 73162
+          },
+          "requested_model": "gpt-6-luna",
+          "requested_reasoning_effort": "max",
+          "observed_provider_model_ids": [],
+          "identity_scope": "Recorded requested CLI configuration; lifecycle envelopes return no provider model identifier. No model-weight attestation.",
+          "raw_backend_elapsed_seconds": 334.422066500003,
+          "controller_elapsed_seconds": 334.42460025000037,
+          "usage": {
+            "input_tokens": 1422328,
+            "cached_input_tokens": 1243264,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 39595,
+            "reasoning_output_tokens": 36071,
+            "cost_usd": null
+          },
+          "returned_payload_sha256": "60b3d841c4954fbfb7a709fed2d3dc185abfc5e1a55d2e6844bd5b885538b9f6"
+        },
+        {
+          "call_id": "d3c0c222a69e4319a5c56c0dd3b579f7",
+          "purpose": "proposal",
+          "stage": "research_service",
+          "kernel_proposal": false,
+          "receipt": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/model/d3c0c222a69e4319a5c56c0dd3b579f7.json",
+            "sha256": "6c2a91f12e43bf3041df6ae285a33115b56c2c0d8670a088fbefe43e016306e2",
+            "bytes": 23772
+          },
+          "requested_model": "gpt-6-luna",
+          "requested_reasoning_effort": "max",
+          "observed_provider_model_ids": [],
+          "identity_scope": "Recorded requested CLI configuration; lifecycle envelopes return no provider model identifier. No model-weight attestation.",
+          "raw_backend_elapsed_seconds": 147.10070458397968,
+          "controller_elapsed_seconds": 147.1021184999845,
+          "usage": {
+            "input_tokens": 68372,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 18398,
+            "reasoning_output_tokens": 16006,
+            "cost_usd": null
+          },
+          "returned_payload_sha256": "e096acf9e5ebd8847a4b659ceb8e3fcfbda325c826503e17b817bbefbc7f5c06"
+        },
+        {
+          "call_id": "47b352bb1d3f4eeb89e072b9cd2cf6f1",
+          "purpose": "proposal",
+          "stage": "newly-covered-proposal",
+          "kernel_proposal": true,
+          "receipt": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/model/47b352bb1d3f4eeb89e072b9cd2cf6f1.json",
+            "sha256": "ab337c03d11734133ab5931ad3685c92aec4fd6e6e4aca74db7b063a932e2042",
+            "bytes": 12673
+          },
+          "requested_model": "gpt-6-luna",
+          "requested_reasoning_effort": "max",
+          "observed_provider_model_ids": [],
+          "identity_scope": "Recorded requested CLI configuration; lifecycle envelopes return no provider model identifier. No model-weight attestation.",
+          "raw_backend_elapsed_seconds": 49.831734250008594,
+          "controller_elapsed_seconds": 49.83265791699523,
+          "usage": {
+            "input_tokens": 45047,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 6334,
+            "reasoning_output_tokens": 4976,
+            "cost_usd": null
+          },
+          "returned_payload_sha256": "8782b1bf215d993dab47b86d8707db249b93abddd757b9a434e6f3171566659c"
+        }
+      ],
+      "usage_new_calls_only": {
+        "input_tokens": 1535747,
+        "cached_input_tokens": 1243264,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 64327,
+        "reasoning_output_tokens": 57053,
+        "uncached_input_tokens": 292483,
+        "model_tokens_input_plus_output": 1600074,
+        "cost_usd": null
+      },
+      "research_context_phases": [
+        {
+          "phase": "search",
+          "intent": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/research/c48634cada5f48a3aa4d4fa334169ac4-search-context-intent.json",
+            "sha256": "8093e1f0fc59361d1d5e7c3a7956c23b82f9f8b7500afb4c16c62a493f17e48f",
+            "bytes": 41927
+          },
+          "result": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/research/c48634cada5f48a3aa4d4fa334169ac4-search-context-result.json",
+            "sha256": "7f800602bffe5e960c29073b3e7793a0600e260bb4cf7b83dfa0357281785a85",
+            "bytes": 801
+          },
+          "call_id": "fbdf06ad32d64f61903e0157dcecbc84",
+          "prompt_sha256": "eaed9f3216074095aef3873c9fe4a8e69c547947d398a242816dba03019d8ec1",
+          "serialized_context_sha256": "43dc4cbd1e0c8e8f0a42fc496824c6ceb44a73b917070a4995a9d1ea5367287d",
+          "public_context_sha256": "8f75de20d482a0dbe86e0bdf12b2e662017220051437f06924671d63360bfb0d",
+          "public_context_complete": false,
+          "component_context_sha256": {
+            "diagnostic": "5dde278d352bc6e21c1f25b2fde0767aacdc6760cf744249ce0aaebd7cacf632",
+            "hardware_evidence_context": "3fd4cac501acbc28bfcc91c57ff8f3a2407b8f0b07612cb5b35ad85cb17f6202",
+            "runtime_evidence_context": "95faad1d91b0dec7339ab75942884915f9cb90b95cf649a708ff70226359e0fc"
+          },
+          "checks": {
+            "public_context_hash": true,
+            "component_hashes": true,
+            "actual_hardware_annex": true,
+            "actual_runtime_annex": true,
+            "actual_compact_diagnostic": true,
+            "exact_requested_technique": true,
+            "result_links_intent_hash": true,
+            "call_id": true,
+            "returned_payload_hash": true,
+            "invocation_links_prompt_hash": true
+          },
+          "scope": "Exact prompt fingerprint only; full prompt bytes are not archived. An incomplete public projection cannot reconstruct the actual context."
+        },
+        {
+          "phase": "synthesis",
+          "intent": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/research/c48634cada5f48a3aa4d4fa334169ac4-synthesis-context-intent.json",
+            "sha256": "b9f08808350e6480e6986e6f75ec5a213a04e1d9b334b6613bcdc734729060ef",
+            "bytes": 43945
+          },
+          "result": {
+            "path": "results/research-refresh-ac02-resumed-3-20261021/campaign/research/c48634cada5f48a3aa4d4fa334169ac4-synthesis-context-result.json",
+            "sha256": "cb43d2225a87667efa5d6a9ebb869c2801c7613beaf343a2f92ff4bc5824f62e",
+            "bytes": 807
+          },
+          "call_id": "d3c0c222a69e4319a5c56c0dd3b579f7",
+          "prompt_sha256": "c8266df42d45a3a6fab436d219a1503c78f46b5b93b665a4cbc9fd548eb0bac4",
+          "serialized_context_sha256": "b32255c01df0dfabdf08b79e0cb5c53321b20805876e1b43b7a5885a3b8a95d5",
+          "public_context_sha256": "cf4d235b5b818f2d5a34651f648a2b384684363f501d442b0cd26affca2d1171",
+          "public_context_complete": false,
+          "component_context_sha256": {
+            "diagnostic": "5dde278d352bc6e21c1f25b2fde0767aacdc6760cf744249ce0aaebd7cacf632",
+            "hardware_evidence_context": "3fd4cac501acbc28bfcc91c57ff8f3a2407b8f0b07612cb5b35ad85cb17f6202",
+            "runtime_evidence_context": "95faad1d91b0dec7339ab75942884915f9cb90b95cf649a708ff70226359e0fc"
+          },
+          "checks": {
+            "public_context_hash": true,
+            "component_hashes": true,
+            "actual_hardware_annex": true,
+            "actual_runtime_annex": true,
+            "actual_compact_diagnostic": true,
+            "exact_requested_technique": true,
+            "result_links_intent_hash": true,
+            "call_id": true,
+            "returned_payload_hash": true,
+            "invocation_links_prompt_hash": true
+          },
+          "scope": "Exact prompt fingerprint only; full prompt bytes are not archived. An incomplete public projection cannot reconstruct the actual context."
+        }
+      ],
+      "observed_web_search_calls": 4,
+      "observed_web_query_count": 12,
+      "sources_actually_supplied_count": 11,
+      "source_receipt_versions": [
+        2
+      ],
+      "dossier": {
+        "research_id": "c48634cada5f48a3aa4d4fa334169ac4",
+        "contract_hash": "620c34261a1044301e6092584df3bebf766ba2babfd8a20add1b35ec1830d085",
+        "strategy_family": "tiling",
+        "environment_fingerprint": "3e78b2fc962bb791b20bbe5df4b7f9b9ba4af10dc7118a939eca8f77cbfe16cc",
+        "diagnostic_ids": [
+          "diag-e7fd9db88d79c01602fdb853b69bd5f107d027bdc5c2c2d58867c13c5b8535e5"
+        ],
+        "call_ids": [
+          "fbdf06ad32d64f61903e0157dcecbc84",
+          "d3c0c222a69e4319a5c56c0dd3b579f7"
+        ],
+        "actual_research_ready_guard": true,
+        "covered_techniques": [
+          "register_blocking",
+          "Optional register reuse across adjacent outputs",
+          "One-dimensional shared-memory input tiling with a two-element stencil halo",
+          "Zero-filled out-of-range input values and tail handling",
+          "Block synchronization before consuming the shared tile"
+        ],
+        "applicability_checks": [
+          {
+            "condition": "The standalone kernel can use the supplied single-kernel ABI and the exact A, B, and C buffers, with C fully overwritten.",
+            "evidence": "The workload contract specifies the signature, exact-sized contiguous float32 buffers, one launch, read-only A and B, and output-only C.",
+            "satisfied": true
+          },
+          {
+            "condition": "Input and output alias behavior is defined for shared input staging and output writes.",
+            "evidence": "The contract states that A, B, and C are distinct, disjoint device allocations.",
+            "satisfied": true
+          },
+          {
+            "condition": "Block-local shared memory and block-wide synchronization provide the required shared-write visibility before tile reads.",
+            "evidence": "CUDA 12.6 shared-memory documentation describes `__shared__` scratch storage; its synchronization passage states that `__syncthreads()` waits for all block threads and makes prior shared-memory accesses visible. Sources: source-b177b2349ce70a2d-e5438e13-p446fe2eb0eba and source-b177b2349ce70a2d-b452a341-p04d2e26d7e42.",
+            "satisfied": true
+          },
+          {
+            "condition": "The selected 64-thread launch and 264-byte shared tile fit the observed allocation's ordinary device limits.",
+            "evidence": "The supplied historical runtime context records a 1024-thread block limit, 49,152 bytes of shared memory per block, and a maximum x-grid dimension of 2,147,483,647. For positive int32 n, ceil(n/64) fits that grid limit; 264 bytes fits the shared-memory limit.",
+            "satisfied": true
+          },
+          {
+            "condition": "The adaptation needs only ordinary CUDA kernel features available in the declared target environment.",
+            "evidence": "The contract identifies GH200, sm_90, CUDA Toolkit/NVRTC 12.6. The runtime annex records ordinary runtime initialization and completed NVRTC baseline compilations on the same GPU UUID. These observations establish baseline environment availability only; they do not certify a future candidate.",
+            "satisfied": true
+          }
+        ],
+        "missing_evidence": [],
+        "pmpp_topics": [
+          "coalescing",
+          "tiling",
+          "register_reuse",
+          "occupancy",
+          "divergence",
+          "synchronization",
+          "stencil",
+          "convolution"
+        ],
+        "PMPP_scope": "Original installed guidance and project-authored cards actually supplied; no fullbook consultation claimed.",
+        "profile_scope": "No candidate profile/counters/latency supplied; stated unavailable and futuremeasurement requirements retained.",
+        "hypothesis_fact_code_expected_effect_separated": true
+      },
+      "new_proposal": {
+        "candidate_id": "a9a525131cf2552bb5d07c02",
+        "call_id": "47b352bb1d3f4eeb89e072b9cd2cf6f1",
+        "parent_id": "baseline",
+        "source_parent_id": "7b233befbd74e093a4b46915",
+        "contract_hash": "620c34261a1044301e6092584df3bebf766ba2babfd8a20add1b35ec1830d085",
+        "family": "tiling",
+        "techniques": [
+          "register_blocking",
+          "Optional register reuse across adjacent outputs",
+          "One-dimensional shared-memory input tiling with a two-element stencil halo",
+          "Zero-filled out-of-range input values and tail handling",
+          "Block synchronization before consuming the shared tile"
+        ],
+        "references": [
+          "pmpp-installed",
+          "source-c4ac6e309137863f-p28f414bacde4",
+          "source-8be5b7397513d692-p3f88f7c159cb",
+          "source-b177b2349ce70a2d-e5438e13-p446fe2eb0eba",
+          "source-b177b2349ce70a2d-b452a341-p04d2e26d7e42",
+          "source-b177b2349ce70a2d-de0a05b3-pb32888eb1aa7"
+        ],
+        "launch_rule": {
+          "kind": "elementwise",
+          "block": [
+            64,
+            1,
+            1
+          ],
+          "grid": [
+            1,
+            1,
+            1
+          ],
+          "elements_key": "n",
+          "shared_memory_bytes": 520,
+          "version": 1,
+          "tile_x": 128,
+          "tile_y": 1
+        },
+        "source_sha256": "52d2f1850d105e16fb5656914ea3e103af2ca50503f5eaef65b624200d586166",
+        "prompt_sha256": "196fb556a6a01dcc817d7a5ba4a08de304575d50e99d58fc4c107ee1bad4dda4",
+        "original_unmodified_generator_prompt_sha256": "8f2dd550b4f1c60725833d2c2838b73cdd02f91ea977420844acf275d13002f0",
+        "explicit_documentary_control_in_prompt": true,
+        "full_outgoing_prompt_archived": true,
+        "actual_proposal_and_dossier_guards_passed": true,
+        "checks": {
+          "research_dossier_exact": true,
+          "immutable_diagnostic_exact": true,
+          "hardware_annex_exact": true,
+          "runtime_annex_exact": true,
+          "tree_parent": true,
+          "source_parent": true,
+          "source_file": true,
+          "actual_call": true,
+          "requested_technique_covered": true,
+          "references_retrieved": true
+        },
+        "measurement_performed": false
+      },
+      "event_chain": {
+        "previous_prefix_events": 22,
+        "exact_prefix_preserved": true,
+        "new_suffix": [
+          {
+            "event_id": 23,
+            "kind": "model",
+            "identities": {
+              "call_id": "fbdf06ad32d64f61903e0157dcecbc84"
+            }
+          },
+          {
+            "event_id": 24,
+            "kind": "model",
+            "identities": {
+              "call_id": "d3c0c222a69e4319a5c56c0dd3b579f7"
+            }
+          },
+          {
+            "event_id": 25,
+            "kind": "research",
+            "identities": {
+              "trial_id": "01M5FXH3YARXYZN21SNQ8M8AJ9",
+              "diagnostic_id": "diag-e7fd9db88d79c01602fdb853b69bd5f107d027bdc5c2c2d58867c13c5b8535e5",
+              "research_id": "c48634cada5f48a3aa4d4fa334169ac4",
+              "targeted_refresh": true
+            }
+          },
+          {
+            "event_id": 26,
+            "kind": "model",
+            "identities": {
+              "call_id": "47b352bb1d3f4eeb89e072b9cd2cf6f1"
+            }
+          },
+          {
+            "event_id": 27,
+            "kind": "generation",
+            "identities": {
+              "trial_id": "01M5FXH3YARXYZN21SNQ8M8AJ9",
+              "candidate_id": "a9a525131cf2552bb5d07c02"
+            }
+          }
+        ],
+        "new_selection_or_diagnostic_or_integration": false
+      },
+      "inherited_prefix": {
+        "completed_model_calls": 11,
+        "new_completed_calls": 3,
+        "new_ids_disjoint": true,
+        "old_authority": {
+          "path": "results/research-refresh-ac02-resumed-2-20261021/research-refresh-acceptance.json",
+          "sha256": "4ecf9ffda13f1bfa3136a0411b6465886cfceef528f6e9b1664a52426b73151d",
+          "bytes": 21797
+        },
+        "old_authority_stays_incomplete": true,
+        "old_dossier728_accepted_but_exact_technique_uncovered": true,
+        "old_authorities_not_requalified": true,
+        "source_and_bootstrap_unchanged_reported_by_controller": true,
+        "scope": "Publicprefix/callidentity and authoritycopies checked without openingSQL/RNG/privateinputs; fullopaqueSQL checks belong to controller receipt."
+      },
+      "limitations": [
+        {
+          "id": "FULL_RESEARCH_PROMPTS_NOT_ARCHIVED",
+          "detail": "Both research contexts have public_context_complete=False. Exact fullprompt fingerprints and context/result links are checked; the fullprompt or omitted context cannot be reconstructed from the publicprojection. Relevant diagnostic/hardware/runtime components are complete and matchtheir recordedcomponenthashes."
+        },
+        {
+          "id": "VERSION_API_FETCH_REJECTED",
+          "detail": "cuDriverGetVersion APIpage had no resolvable exactfragment and was excluded bythecontroller. Its searchreason/open event doesnotestablish it was suppliedtosynthesis; preservedfetchfailure isnot silentlyupgraded."
+        },
+        {
+          "id": "PROVIDER_MODEL_ID_UNREPORTED",
+          "detail": "All three CLIreceipts requestgpt-6-luna withmaxeffort; lifecycleevents omitmodelID. These are configurationclaims,not independentweightsidentification."
+        },
+        {
+          "id": "FREE_TEXT_DIAGNOSTIC_TYPO",
+          "detail": "The first hypothesis documented_fact has a one-character-truncateddiagnosticID in prose. Structureddiagnostic_ids,immutablepromptcomponents,eventchainandnewproposalcontextallmatchthefullID. No proofbytesmodified.",
+          "expected": "diag-e7fd9db88d79c01602fdb853b69bd5f107d027bdc5c2c2d58867c13c5b8535e5",
+          "observed": "diag-e7fd9db88d79c01602fdb853b69bd5f107d027bdc5c2c2d58867c13c5b8535e"
+        },
+        {
+          "id": "NO_NEW_GPU_ACCEPTANCE",
+          "detail": "Documentaryrunner recordszeroGPUrequests/attempts. Newproposalcompilation,correctness,sanitizers,latencyandusefulgainremainunmeasured."
+        }
+      ],
+      "scope": "Exécution locale documentaire réelle sur le code DFD après CI exacte : 11 appels hérités préservés puis 3 nouveaux, 1 600 074 tokens observés, coût USD inconnu et zéro requête GPU. Diagnostic, matériel et contexte runtime transmis sont liés par SHA. Les projections publiques recherche/synthèse sont incomplètes et leurs prompts complets non archivés. L’admission ne qualifie pas le kernel."
+    },
+    "study_v2_twenty_completed_generations_55_drain": {
+      "path": "work/live/section16-twenty-generations-55da43e.json",
+      "sha256": "09f1ced6125489667f20201037977d48505420d3130fccf6b34b71f4a8063636",
+      "bytes": 100418,
+      "kind": "actual_twenty_generation_receipt_inventory",
+      "observed_at_utc": "2026-10-21T22:08:48.027678+00:00",
+      "completed_generation_receipts": 20,
+      "planned_generations": 144,
+      "common_final_groups_acquired": 1,
+      "planned_common_finals": 18,
+      "targeted_completions": [
+        {
+          "task_id": "quality-20261021-v2.convolution.2718.no_autotuning",
+          "mode": "no_autotuning",
+          "job_id": "774441",
+          "session_id": "suite-gen-647d3d4c0e008f5ef432ab0762c37b91",
+          "terminal": {
+            "elapsed": "00:50:36",
+            "exit_code": "0:0",
+            "job_id": "774441",
+            "nodes": "romeo-a031",
+            "state": "COMPLETED",
+            "terminal": true
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_autotuning/result.json",
+            "sha256": "7a6bc5a6bdc2e5dde4c7bb17b26869ba7fc20ce40e397190a8f830e7a6791afc"
+          },
+          "generation_manifest": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_autotuning/generation/manifest.json",
+            "sha256": "a7c8e7beb9dcff47d59374854b1479a6e00ed7bceb655b1856e8a70001f9bceb"
+          },
+          "candidate_id": "baseline",
+          "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+          "source_sha256": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+          "generation_status": {
+            "execution_complete": true,
+            "generation_complete": true,
+            "generation_stage_status": "generation_complete",
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "common_final": {
+            "ok": false,
+            "status": "deferred_common_final_evaluation"
+          },
+          "cancelled_trials": [],
+          "generation_scores_excluded_from_suite_final": true,
+          "costs_observed": {
+            "actual_slurm_elapsed": "00:50:36",
+            "campaign_usage_ledger": {
+              "configurations": 3.0,
+              "gpu_seconds": 3020.2395192094555,
+              "model_calls": 9.0,
+              "model_tokens": 9920358.0,
+              "trials": 3.0
+            },
+            "cuda_event_kernel_seconds": 0.09508323213388212,
+            "generation_elapsed_seconds": 3021.268644094467,
+            "native_compile_stage_wall_seconds": 0.360729165,
+            "native_reservation_wall_seconds_from_receipts": 13.10157067538239,
+            "pending_usage": {},
+            "recorded_queue_and_worker_start_wall_seconds": 21291.50458431244,
+            "scope": "Tokens, campaign wall ledger, native reservation wall, CUDA event time and Slurm elapsed are distinct; recorded queue field includes interruption/idle history, not independently measured queue wait",
+            "total_task_wall_seconds_including_history": 24322.154556274414
+          }
+        },
+        {
+          "task_id": "quality-20261021-v2.convolution.2718.no_research",
+          "mode": "no_research",
+          "job_id": "774442",
+          "session_id": "suite-gen-2ee4d67e753622444e1dd9c0db614e98",
+          "terminal": {
+            "elapsed": "00:30:12",
+            "exit_code": "0:0",
+            "job_id": "774442",
+            "nodes": "romeo-a031",
+            "state": "COMPLETED",
+            "terminal": true
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_research/result.json",
+            "sha256": "fad9b73dd17e5f6f74a6f6fbb62bd146397e581eb34a7e213213c5749582ce2c"
+          },
+          "generation_manifest": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_research/generation/manifest.json",
+            "sha256": "5236c845fc73f8509986d7f148f65fb7cb8481a50cedd83912d389fef37d4f28"
+          },
+          "candidate_id": "baseline",
+          "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+          "source_sha256": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+          "generation_status": {
+            "execution_complete": true,
+            "generation_complete": true,
+            "generation_stage_status": "generation_complete",
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "common_final": {
+            "ok": false,
+            "status": "deferred_common_final_evaluation"
+          },
+          "cancelled_trials": [],
+          "generation_scores_excluded_from_suite_final": true,
+          "costs_observed": {
+            "actual_slurm_elapsed": "00:30:12",
+            "campaign_usage_ledger": {
+              "compilations": 8.0,
+              "configurations": 3.0,
+              "gpu_seconds": 1796.5323100002715,
+              "local_configurations": 8.0,
+              "model_calls": 3.0,
+              "model_tokens": 182517.0,
+              "trials": 3.0
+            },
+            "cuda_event_kernel_seconds": 0.13582303968723863,
+            "generation_elapsed_seconds": 1797.5933961868286,
+            "native_compile_stage_wall_seconds": 0.581119652,
+            "native_reservation_wall_seconds_from_receipts": 18.55619600834325,
+            "pending_usage": {},
+            "recorded_queue_and_worker_start_wall_seconds": 20984.966974020004,
+            "scope": "Tokens, campaign wall ledger, native reservation wall, CUDA event time and Slurm elapsed are distinct; recorded queue field includes interruption/idle history, not independently measured queue wait",
+            "total_task_wall_seconds_including_history": 22792.260505199432
+          }
+        },
+        {
+          "task_id": "quality-20261021-v2.convolution.2718.no_pmpp",
+          "mode": "no_pmpp",
+          "job_id": "774443",
+          "session_id": "suite-gen-2a9f055b94c18dca69aba6d836e7f6a7",
+          "terminal": {
+            "elapsed": "00:48:05",
+            "exit_code": "0:0",
+            "job_id": "774443",
+            "nodes": "romeo-a031",
+            "state": "COMPLETED",
+            "terminal": true
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_pmpp/result.json",
+            "sha256": "6c61dbee4f4f1c610540334c3b45294760a8b01b087d7397981628535db66136"
+          },
+          "generation_manifest": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.no_pmpp/generation/manifest.json",
+            "sha256": "1bedd51f99e29863e962c296d6784bc08c178bbb871e84dc5a916c83b3ea16cc"
+          },
+          "candidate_id": "baseline",
+          "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+          "source_sha256": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+          "generation_status": {
+            "execution_complete": true,
+            "generation_complete": true,
+            "generation_stage_status": "generation_complete",
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "common_final": {
+            "ok": false,
+            "status": "deferred_common_final_evaluation"
+          },
+          "cancelled_trials": [],
+          "generation_scores_excluded_from_suite_final": true,
+          "costs_observed": {
+            "actual_slurm_elapsed": "00:48:05",
+            "campaign_usage_ledger": {
+              "configurations": 3.0,
+              "gpu_seconds": 2870.173895829852,
+              "model_calls": 9.0,
+              "model_tokens": 11724520.0,
+              "trials": 3.0
+            },
+            "cuda_event_kernel_seconds": 0.09891615983238444,
+            "generation_elapsed_seconds": 2871.177118062973,
+            "native_compile_stage_wall_seconds": 0.359262165,
+            "native_reservation_wall_seconds_from_receipts": 12.928407507250085,
+            "pending_usage": {},
+            "recorded_queue_and_worker_start_wall_seconds": 21290.977603197098,
+            "scope": "Tokens, campaign wall ledger, native reservation wall, CUDA event time and Slurm elapsed are distinct; recorded queue field includes interruption/idle history, not independently measured queue wait",
+            "total_task_wall_seconds_including_history": 24171.8183221817
+          }
+        },
+        {
+          "task_id": "quality-20261021-v2.convolution.2718.pmpp_permanent_only",
+          "mode": "pmpp_permanent_only",
+          "job_id": "774461",
+          "session_id": "suite-gen-c3e877a597260404d0cf7e4928fa8b80",
+          "terminal": {
+            "elapsed": "00:45:08",
+            "exit_code": "0:0",
+            "job_id": "774461",
+            "nodes": "romeo-a031",
+            "state": "COMPLETED",
+            "terminal": true
+          },
+          "result": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.pmpp_permanent_only/result.json",
+            "sha256": "fd5a933e889f963096b758a8a4bf432a0372255c2b187bfc6b948844557ac9f5"
+          },
+          "generation_manifest": {
+            "encoding": "raw_file_bytes",
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.2718.pmpp_permanent_only/generation/manifest.json",
+            "sha256": "fb7e011e6638df46273a3615d19c56be969db0d8e0b586097ac380bb36201714"
+          },
+          "candidate_id": "baseline",
+          "artifact_hash": "c9e4ceed088de55e7b8d2c9cf050f1de8e4efc31d214eccb232d090e944f92ec",
+          "source_sha256": "a62354f1b1ea7fb02a10135f9a734335b3e07ca5952a05619bc92343436cbfd7",
+          "generation_status": {
+            "execution_complete": true,
+            "generation_complete": true,
+            "generation_stage_status": "generation_complete",
+            "method_status": "completed",
+            "status": "generation_complete",
+            "termination_reason": "trial_budget",
+            "trials_done": 3
+          },
+          "common_final": {
+            "ok": false,
+            "status": "deferred_common_final_evaluation"
+          },
+          "cancelled_trials": [
+            {
+              "created_at": 1792620219.169174,
+              "event_id": 37,
+              "kind": "trial_cancelled",
+              "reason": "Proposal must use the exact selected parent or explicitly supplied repair source",
+              "trial_id": "01M5G761ZKVWHR2TA2G29MY5HG"
+            }
+          ],
+          "generation_scores_excluded_from_suite_final": true,
+          "costs_observed": {
+            "actual_slurm_elapsed": "00:45:08",
+            "campaign_usage_ledger": {
+              "configurations": 2.0,
+              "gpu_seconds": 2698.183098748297,
+              "model_calls": 9.0,
+              "model_tokens": 11722609.0,
+              "trials": 3.0
+            },
+            "cuda_event_kernel_seconds": 0.06072739218035713,
+            "generation_elapsed_seconds": 2698.933820962906,
+            "native_compile_stage_wall_seconds": 0.209033965,
+            "native_reservation_wall_seconds_from_receipts": 8.343793866690248,
+            "pending_usage": {},
+            "recorded_queue_and_worker_start_wall_seconds": 22030.44261097908,
+            "scope": "Tokens, campaign wall ledger, native reservation wall, CUDA event time and Slurm elapsed are distinct; recorded queue field includes interruption/idle history, not independently measured queue wait",
+            "total_task_wall_seconds_including_history": 24738.624701976776
+          }
+        }
+      ],
+      "limitations": [
+        "Twenty completed generation receipts plus one completed common final group are observed; planned study is incomplete.",
+        "All four targeted methods retain the exact naive convolution baseline artifact; no optimizer speedup or additional final qualification is claimed.",
+        "Permanent-only third trial was cancelled by exact-parent proposal guard before performance observation; three closed trials are not three measured configurations.",
+        "Terminal accounting comes from preserved controller results; no fresh Slurm query was made.",
+        "Source attestation concerns observed on-disk files and clean Git identity before dispatch, not loaded bytecode or model weights.",
+        "Source55 runtime-annex hook and real research are observed, but exact outgoing context bytes were not archived.",
+        "No live queue state, cancellation history beyond cached terminal accounting, or lock release is independently inferred."
+      ],
+      "scope": "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Les trois essais fermés en permanent_only ne sont pas trois configurations mesurées : deux mesurées, une annulée par la garde du parent. Aucun état futur de la file déduit."
+    },
+    "local_report_per_case_v2_dfd93d0": {
+      "path": "work/live/report-per-case-v2-dfd93d0-local.json",
+      "sha256": "f0f170cad538cf83f88c29f251d1af8a580876c82383f262dc467cff710eb47c",
+      "bytes": 893,
+      "kind": "focused_local_report_regressions",
+      "base_head": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "tests_passed": 206,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "junit": {
+        "path": "work/live/report-per-case-v2-dfd93d0-local-tests.xml",
+        "sha256": "e7953e2f4e05ae18d6b5d9016d70510493a79e9595c19c7cec2b47f526524907"
+      },
+      "source_files": {
+        "scripts/report_study_fr.py": "2078201b249ea707afbad9300d92c68d8b8aa2ca884d43936b90c6809865c5c1",
+        "tests/test_study_report.py": "f4a8fa9f636278b2ec5222d19329fd7780b69942961113423a0acb86f58644ae"
+      },
+      "scope": "206 tests du seul module de rapport après garde des ratios inconnus et présentation par cas avec source et qualification visibles. Identités capturées après test ; ce reçu remplace le précurseur à 204 tests comme preuve du delta final, sans revendiquer une nouvelle suite complète ou CI exacte. Aucun modèle/GPU."
+    },
+    "local_observed_metrics_fix_dfd93d0": {
+      "path": "work/live/observed-metrics-fix-acceptance.json",
+      "sha256": "db11ba03f54bf105449a8082fb19589ac516e6704211c422bd25c0ad4dec46bd",
+      "bytes": 4328,
+      "kind": "focused_local_observed_metrics_regressions",
+      "source": {
+        "encoding": "raw_file_bytes",
+        "path": "optimizer_agent/suite_orchestrator.py",
+        "sha256": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6"
+      },
+      "tests_source": {
+        "encoding": "raw_file_bytes",
+        "path": "tests/test_observed_metrics.py",
+        "sha256": "98088dbe1060df33872c491a8d4ca14a4728e18fb3dc2928177da6428c97b050"
+      },
+      "tests_passed": 63,
+      "junit": {
+        "encoding": "raw_file_bytes",
+        "path": "work/live/observed-metrics-tests.xml",
+        "sha256": "c072d1a2d57c01e6a23897618aed08254869c8f407dfa913003bc6a03522c6e1"
+      },
+      "errors": 0,
+      "failures": 0,
+      "scope": "63 tests CPU ciblés, dont quatre nouvelles régressions sur les métriques connues, absentes ou nulles. La liste utilise les valeurs finales du mapping et les noms time_to_first_useful_gain_seconds / research_model_wall_seconds. Aucun autre calcul, coût ou classement modifié ; aucune exécution modèle/GPU ni nouvelle suite complète ou CI."
+    },
+    "historical_observed_metrics_view_dfd93d0": {
+      "path": "work/live/observed-metrics-historical-derived-dfd93d0.json",
+      "sha256": "daac4e85fb5f438f0e9ce9ddbff2b4053e35afe9c54810d979c300454cee8fe4",
+      "bytes": 2577,
+      "kind": "additive_historical_observed_metrics_presentation_audit",
+      "historical_result": {
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.3141.full/result.json",
+        "raw_sha256_after": "ecd2a31626e48fa269a8f3c62b05867637d5c5d9372019129dd272347187ddde",
+        "raw_sha256_before": "ecd2a31626e48fa269a8f3c62b05867637d5c5d9372019129dd272347187ddde",
+        "unchanged": true
+      },
+      "source": {
+        "encoding": "raw_file_bytes",
+        "path": "optimizer_agent/suite_orchestrator.py",
+        "sha256": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6"
+      },
+      "historical_metrics": {
+        "research_model_wall_seconds": 301.5568711250089,
+        "time_to_first_useful_gain_seconds": 869.6877868175507
+      },
+      "current_derived_metrics": {
+        "research_model_wall_seconds": 301.5568711250089,
+        "time_to_first_useful_gain_seconds": 869.6877868175507
+      },
+      "exact_value_equality": {
+        "research_model_wall_seconds": true,
+        "time_to_first_useful_gain_seconds": true
+      },
+      "old_unknown_metrics": [
+        "time_to_first_useful_gain_seconds",
+        "research_seconds"
+      ],
+      "new_unknown_metrics": [],
+      "metadata_read_scope": {
+        "database_rng_sealed_or_binary_input_reads": 0,
+        "enforced_explicit_json_jsonl_path_whitelist": true,
+        "file_categories_read": {
+          "clock.json": 1,
+          "events.json": 1,
+          "request_receipts": 414,
+          "trial_metadata": 4
+        },
+        "unique_files_read": 420,
+        "whitelisted_files": 420
+      },
+      "scope": "Annotation additive exécutée hors ligne sur 420 métadonnées publiques autorisées. Les deux valeurs historiques restent exactement 869.6877868175507 s et 301.5568711250089 s ; l’ancienne liste erronée est conservée, la liste dérivée pour ces deux valeurs est vide. L’ancien résultat reste hash-identique ; aucune nouvelle mesure, modification de classement ou attestation rétrospective d’exécution."
+    },
+    "ac03_negative_historical_readiness_dfd93d0": {
+      "path": "work/live/ac03-validation-readiness-dfd93d0.json",
+      "sha256": "116183b2e8810a786d2a4c25768e32e1c89de08130409a253dc368af110b3c9d",
+      "bytes": 34019,
+      "kind": "late_read_only_audit_of_historical_negative_research",
+      "observed_at_utc": "2026-10-21T22:20:30.813702+00:00",
+      "current_guard_replay_revision": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+      "historical_negative_example": {
+        "source_controller": "b9bda60145ebf438fecd2837bdc2b1b00474674c",
+        "run_id": "quality-20261021-v2.convolution.1729.full",
+        "historical_job_id": "771747",
+        "research_id": "a53a382b8715438a84b77a7d987492c2",
+        "contract_hash": "109ebe050e37931083709e92a09d65913e929b68ea942cbb1baa1e339908cea6",
+        "strategy_family": "coalescing",
+        "environment_fingerprint": "f0a9d5474e1a1d944e5c66e3ea0378916319acef266f0c2c940c87253ef9943b",
+        "model_calls": [
+          {
+            "call_id": "6c5aa7a3a2b7467095dfb583f72a678a",
+            "purpose": "research",
+            "requested_model": "gpt-6-luna",
+            "requested_reasoning_effort": "max",
+            "receipt": {
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/model/6c5aa7a3a2b7467095dfb583f72a678a.json",
+              "sha256": "7195d0a7b267cd44ba320bcb45c0efaf211b26a3bb05b68324d15875cc1b472a",
+              "bytes": 94514
+            },
+            "status": "completed"
+          },
+          {
+            "call_id": "c083a82e3d724209956f15ad53999c58",
+            "purpose": "proposal",
+            "requested_model": "gpt-6-luna",
+            "requested_reasoning_effort": "max",
+            "receipt": {
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/model/c083a82e3d724209956f15ad53999c58.json",
+              "sha256": "c67f1c614e2467721b4e6ca192fbcebe5689f169c127621cbab435c0d4065fe0",
+              "bytes": 21181
+            },
+            "status": "completed"
+          },
+          {
+            "call_id": "018ba9738ede47e6b4fd5add1b4bd187",
+            "purpose": "proposal",
+            "requested_model": "gpt-6-luna",
+            "requested_reasoning_effort": "max",
+            "receipt": {
+              "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/model/018ba9738ede47e6b4fd5add1b4bd187.json",
+              "sha256": "47fc86377cfb77525142f6c9e052d5a1227b0c494a6c8430539a0fb8ed0461b3",
+              "bytes": 11961
+            },
+            "status": "completed"
+          }
+        ],
+        "observed_search_calls": 4,
+        "observed_query_count": 13,
+        "reference_kernels": [],
+        "negative_search": [
+          "No actually supplied source passage contains a directly reusable three-tap convolution kernel with the required standalone ABI, exact buffers, and tail behavior.",
+          "The full CUB BlockReduce file is a reduction reference, not a stencil kernel. The selected CUB BlockLoad passages are partial utility contexts, not a complete standalone kernel.",
+          "The full CuTe SGEMM source and truncated CUTLASS implicit-GEMM excerpts do not provide a directly applicable one-dimensional convolution implementation."
+        ],
+        "missing_evidence": [],
+        "following_proposal_call_id": "018ba9738ede47e6b4fd5add1b4bd187",
+        "candidate_id": "05ca724431b5f01042c0930c",
+        "search_measurement_evaluation_id": "5b26d2c44365449dba62cee988fc3e90",
+        "search_measurement_ok": true,
+        "search_measurement_status": "measured",
+        "read_only_current_DFD_dossier_and_proposal_guards_passed": true,
+        "evidence": {
+          "dossier": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/research/a53a382b8715438a84b77a7d987492c2.json",
+            "sha256": "75f68415628ed57dac38836f1126ac5aca012cad6d76e3b63cf686f34412c863",
+            "bytes": 52901
+          },
+          "trial_dossier": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FSAYXZSBRGTRVD3V3DPH2V/dossier.json",
+            "sha256": "75f68415628ed57dac38836f1126ac5aca012cad6d76e3b63cf686f34412c863",
+            "bytes": 52901
+          },
+          "proposal": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FSAYXZSBRGTRVD3V3DPH2V/proposal-0-1.json",
+            "sha256": "735439b46360c78c13cf6bb283305d04a9dcb954b798445d81d1b97ca03cdab8",
+            "bytes": 5492
+          },
+          "trial_result": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FSAYXZSBRGTRVD3V3DPH2V/result.json",
+            "sha256": "e5b2382dde99bd3ccf0ae21e2376fffa4124ab36e702d42a731dfa9e96a7c6f3",
+            "bytes": 3592919
+          },
+          "measurement": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/generation/trials/01M5FSAYXZSBRGTRVD3V3DPH2V/evaluation-05ca724431b5f01042c0930c.json",
+            "sha256": "7806530df0fe77d8040adebfc41abbe32ade1e36d2db2924ad20e2392bcd7997",
+            "bytes": 548820
+          },
+          "completed_generation": {
+            "path": "results/quality-study-v2/campaigns/quality-20261021-v2.convolution.1729.full/result.json",
+            "sha256": "d2ad390d9cf88d4891abb335189190da417ce498075e3cc07e1eb54fc4e0f9c5",
+            "bytes": 7354
+          },
+          "prior_scoped_diagnostic_audit": {
+            "path": "work/live/research-convolution-diagnostic-b9bda60.json",
+            "sha256": "37ea5f4779535722dd2e946cea140c0ad42a355ae6a66967f988d7b6338d49ba",
+            "bytes": 159716
+          }
+        }
+      },
+      "real_external_web_outage_authenticated": false,
+      "scope": "Audit tardif d’une preuve historique au code b9bda60 : dossier a53a382… avec reference_kernels vide, recherche négative documentée et hypothèse originale, trois appels CLI réels puis proposition 018ba9… et mesure SEARCH 5b26…. Gardes actuelles rejouées en lecture seule sur les preuves existantes. Aucun nouveau modèle/GPU ni nouvelle attestation de transport des anciens prompts. Panne web externe réelle non prouvée ; branche de panne acquise seulement dans les contrôles techniques simulés."
     }
   },
   "requirements": {
@@ -8551,7 +10118,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -8560,9 +10128,10 @@
         "applicable": true,
         "evidence": [
           "diagnostic_loop",
-          "frozen_gemm"
+          "frozen_gemm",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
         "Étude §16 complète non acquise ; les chaînes modèle avec passages v2 sont acquises uniquement dans les scopes et versions cités, sans supériorité globale."
@@ -8608,7 +10177,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -8710,7 +10280,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -8722,12 +10293,15 @@
           "rpc_transport",
           "true_original_first_generation_773802",
           "study_v2_eleven_completed_generations",
-          "common_final_convolution_1729_freeze"
+          "common_final_convolution_1729_freeze",
+          "section16_protocol_review_55",
+          "common_final_convolution_1729_terminal",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Première génération du véritable original773802 acquise ;11générations terminées au total. Finale commune convolution1729 active774017, comparaison finale encore non acquise."
+        "Véritable original 773802 et première finale commune convolution 1729 (774017) acquis dans leurs scopes. Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale sur 18, sans gain certifié. Autres comparaisons à terminer."
       ]
     },
     "SEC-3": {
@@ -8807,7 +10381,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -8818,12 +10393,15 @@
           "diagnostic_loop",
           "autotuning",
           "true_original_first_generation_773802",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "section16_protocol_review_55",
+          "common_final_convolution_1729_terminal",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Onze générations terminées dans deux familles ; workflow complet, reprise intégrale et18finales communes non acquis."
+        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Workflow sur six familles et reprise intégrale non qualifiés ; contrôle autonome 774520 hors cohortes."
       ]
     },
     "SEC-3.1": {
@@ -8897,7 +10475,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -8909,12 +10488,15 @@
           "gemm_agent_final",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "section16_protocol_review_55",
+          "common_final_convolution_1729_terminal",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Onze générations terminées dans deux familles ; boucle ciblée réelle acquise dans les campagnes citées. Six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
       ]
     },
     "SEC-3.2": {
@@ -8985,7 +10567,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9045,7 +10628,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9103,7 +10687,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9161,7 +10746,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9240,7 +10826,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9251,12 +10838,14 @@
           "final_isolation",
           "frozen_gemm",
           "native_read_isolation_cpu",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "standalone_final_suite_dfd93d0_774520",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Deux générations native v2 terminées (convolution1729, GEMM3141), read_isolation_required=true et préflightok dans leurs reçus ; aucune qualification finale commune v2 déduite."
+        "Jeux SEARCH et FINAL distincts exécutés dans le contrôle autonome DFD 774520 ; finale commune convolution 1729 acquise pour ses artefacts exacts. Six familles et autres groupes finaux du §16 restent à qualifier."
       ]
     },
     "SEC-5": {
@@ -9301,7 +10890,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9316,11 +10906,21 @@
           "diagnostic_loop_v2",
           "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
+        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit."
       },
       "remaining": [
-        "Chaînes ciblées diagnostic → recherche v2 → proposition → mesure SEARCH acquises en production convolution 1729 au b9bda60. Scénario AC-02 complet (nouvelle famille, ajustement, retour technique) et finales communes §16 non acquis ; helper 773095 séparé toujours échoué."
-      ]
+        "AC-02 est acquis dans le périmètre documentaire du contrôle DFD : famille, ajustement réutilisé, refus, diagnostic, complément réel et proposition couverte admise. Le nouveau candidat reste non testé sur GPU ; l’étude §16 et le contrôle historique 773095 restent incomplets."
+      ],
+      "documentary_executed": {
+        "ok": true,
+        "status": "verified_documentary_only",
+        "applicable": true,
+        "evidence": [
+          "ac02_third_resumption_authority",
+          "ac02_third_resumption_execution_audit"
+        ],
+        "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
+      }
     },
     "SEC-5.1": {
       "id": "SEC-5.1",
@@ -9364,7 +10964,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9439,7 +11040,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9455,11 +11057,21 @@
           "diagnostic_loop_v2",
           "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
+        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit."
       },
       "remaining": [
-        "Portée acquise : trois chaînes de production convolution 1729 au b9bda60. Aucun achèvement §16 ni scénario AC-02 complet déduit. Le helper 773095 séparé reste incomplet après math.h, sans relance. Les octets du stdin modèle ne sont pas archivés séparément ; manifestes et code de construction du prompt sont liés explicitement."
-      ]
+        "Boucles de production b9bda60 et contrôle documentaire DFD acquis dans leurs scopes. Le nouveau candidat AC-02 n’est ni compilé ni mesuré. Les empreintes et composants publics recherche/synthèse sont liés, mais leurs projections restent incomplètes et leurs prompts complets ne sont pas archivés. Le helper 773095 conserve son échec math.h."
+      ],
+      "documentary_executed": {
+        "ok": true,
+        "status": "verified_documentary_only",
+        "applicable": true,
+        "evidence": [
+          "ac02_third_resumption_authority",
+          "ac02_third_resumption_execution_audit"
+        ],
+        "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
+      }
     },
     "SEC-5.3": {
       "id": "SEC-5.3",
@@ -9508,7 +11120,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9523,11 +11136,21 @@
           "diagnostic_loop_v2",
           "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
+        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit."
       },
       "remaining": [
-        "Ancienne séquence documentaire9454 terminée incomplete après refus acquis et refresh bloqué ; nouvelle reprise isolée sans autorité finale. Réutilisation/technique non couverte complète encore non acquise."
-      ]
+        "Dossier complémentaire c48634… applicable au DFD : 11 sources v2 réellement fournies et nouvelle proposition couverte admise. Contextes publics incomplets et identifiant fournisseur absent ; une page API sans localisateur est refusée et exclue. Aucune validation GPU du nouveau candidat ni requalification des anciens dossiers."
+      ],
+      "documentary_executed": {
+        "ok": true,
+        "status": "verified_documentary_only",
+        "applicable": true,
+        "evidence": [
+          "ac02_third_resumption_authority",
+          "ac02_third_resumption_execution_audit"
+        ],
+        "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
+      }
     },
     "SEC-5.4": {
       "id": "SEC-5.4",
@@ -9571,7 +11194,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9582,9 +11206,10 @@
           "diagnostic_loop",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "ac03_negative_historical_readiness_dfd93d0"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Audit tardif : la branche négative historique a53a382… au source b9bda60 a fourni une hypothèse originale et une proposition ensuite mesurée. Les anciennes lectures et prompts ne reçoivent aucune attestation plus forte ; panne web réelle non prouvée."
       },
       "remaining": [
         "Générations des modes full,pmpp_permanent_only etno_pmpp terminées surconvolution1729 ; comparaisons finales etautres cohortes encore non acquises. Aucun livre intégral prétendu."
@@ -9630,7 +11255,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9702,7 +11328,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9768,7 +11395,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9846,7 +11474,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9925,7 +11554,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -9984,7 +11614,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10042,7 +11673,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10052,9 +11684,10 @@
         "evidence": [
           "gpu_safety_context",
           "final_isolation",
-          "frozen_gemm"
+          "frozen_gemm",
+          "standalone_final_suite_dfd93d0_774520"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16."
       },
       "remaining": [],
       "limitations": [
@@ -10101,7 +11734,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10110,9 +11744,10 @@
         "applicable": true,
         "evidence": [
           "frozen_gemm",
-          "rpc_transport"
+          "rpc_transport",
+          "standalone_final_suite_dfd93d0_774520"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16."
       },
       "remaining": [],
       "limitations": [
@@ -10169,7 +11804,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10231,7 +11867,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10243,12 +11880,13 @@
           "gemm_structured_final",
           "frozen_gemm",
           "final_isolation",
-          "common_final_convolution_1729_freeze"
+          "common_final_convolution_1729_freeze",
+          "standalone_final_suite_dfd93d0_774520"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16."
       },
       "remaining": [
-        "Finale commune convolution1729 active774017, gel naïf+8méthodes authentifié ; aucune nouvelle mesure ou qualification finale acquise. Les statuts historiques restent attachés aux artefacts cités."
+        "Finale commune convolution 1729 (774017) acquise pour ses neuf artefacts, sans gain certifié. Le contrôle fonctionnel autonome DFD 774520 valide oracles, mesures et sanitizers sur FINAL 96/128 distincts ; gain non certifié, sans nouvelle cohorte §16. Autres finales et qualifications à acquérir."
       ]
     },
     "SEC-8": {
@@ -10291,7 +11929,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10359,7 +11998,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10420,7 +12060,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10482,7 +12123,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10539,7 +12181,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10620,7 +12263,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10714,7 +12358,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10807,7 +12452,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10884,7 +12530,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -10953,7 +12600,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11025,7 +12673,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11105,7 +12754,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11161,7 +12811,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11259,7 +12910,10 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0",
+          "local_report_per_case_v2_dfd93d0",
+          "local_observed_metrics_fix_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11276,6 +12930,9 @@
       },
       "remaining": [
         "Bundle/rapport finaux §16 non acquis; exports incomplets explicitement non certifiés."
+      ],
+      "offline_presentation_evidence": [
+        "historical_observed_metrics_view_dfd93d0"
       ]
     },
     "SEC-14": {
@@ -11381,7 +13038,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11487,7 +13145,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11570,7 +13229,10 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0",
+          "local_report_per_case_v2_dfd93d0",
+          "local_observed_metrics_fix_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11591,12 +13253,16 @@
           "common_final_convolution_1729_freeze",
           "common_final_convolution_1729_terminal",
           "study_v2_fifteen_completed_generations_55_dispatch",
-          "section16_protocol_review_55"
+          "section16_protocol_review_55",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Actualisation datée:15générations/1finalecommune authentifiées dans le reçu55;gaincertifiéabsent;aucune extrapolation aux autrescohortes. Le reçu indépendant section16_protocol_review_55 authentifie ensuite une16e génération native convolution2718, job774444, sans finalecommune supplémentaire."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
+        "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Permanent_only : deux configurations mesurées et un essai annulé avant mesure par la garde du parent exact."
+      ],
+      "offline_presentation_evidence": [
+        "historical_observed_metrics_view_dfd93d0"
       ]
     },
     "SEC-17": {
@@ -11659,7 +13325,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11733,7 +13400,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11799,7 +13467,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11858,7 +13527,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11928,7 +13598,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -11941,12 +13612,22 @@
           "study_v2_greedy_parent_first_proposal",
           "ac02_second_resumption_incomplete"
         ],
-        "scope": "Séquence initiale7CLI +2reprise bloqués +2nouveauxCLI recherche/synthèse. Nouveau dossier accepté et diagnostic lié, mais techniqueexacte register_blocking noncouverte. Refusjustifié avantnouvelleproposition,0GPU;pasAC02complet."
+        "scope": "Les anciens contrôles GPU et SEARCH cités ne constituent pas à eux seuls la séquence AC-02. La reprise DFD avec 14 appels CLI est acquise séparément comme exécution documentaire réelle, sans requête GPU ; elle ne transforme pas les autorités historiques à 7, 9 ou 11 appels incomplete en succès."
       },
       "remaining": [
-        "Conserver11appels et dossieraccepté;complémentciblé réellementétayé avec identifiantstechniques exacts,puispropositionnouvellementcouverte. Aucun ancien dossier relabelé ou gardecontournée."
+        "Séquence documentaire acquise dans la nouvelle autorité DFD à 14 appels CLI ; nouvelle proposition non compilée et non mesurée, aucune qualification numérique ou performance déduite. Les contextes publics recherche/synthèse sont incomplets, les prompts complets non archivés et les poids du modèle non attestés. Les autorités historiques à 7, 9 et 11 appels restent incomplete."
       ],
-      "expected_result": "Recherche effective pour la famille, réutilisation autorisée pour l’ajustement ; proposition non couverte bloquée et renvoyée à la recherche."
+      "expected_result": "Recherche effective pour la famille, réutilisation autorisée pour l’ajustement ; proposition non couverte bloquée et renvoyée à la recherche.",
+      "documentary_executed": {
+        "ok": true,
+        "status": "verified_documentary_only",
+        "applicable": true,
+        "evidence": [
+          "ac02_third_resumption_authority",
+          "ac02_third_resumption_execution_audit"
+        ],
+        "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
+      }
     },
     "AC-03": {
       "id": "AC-03",
@@ -11990,18 +13671,21 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
         "ok": false,
-        "status": "pending",
+        "status": "partial",
         "applicable": true,
-        "evidence": [],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "evidence": [
+          "ac03_negative_historical_readiness_dfd93d0"
+        ],
+        "scope": "Branche négative historique réellement suivie d’une proposition et d’une mesure SEARCH au source b9bda60 ; audit tardif et gardes DFD rejouées en lecture seule. Cette preuve n’est ni un nouveau run DFD ni une panne web externe réelle. Les contrôles de panne restent simulés."
       },
       "remaining": [
-        "Panneweb et constat négatif complet réels à distinguer; aucun faux succès de recherche."
+        "Recherche négative historique documentée et proposition originale mesurée acquises dans le scope cité. Une panne web externe réelle ou une autorité isolée de contrôle de panne reste non acquise ; ne pas confondre une précondition documentaire manquante, une panne de transport CLI et une recherche négative."
       ],
       "expected_result": "Panne et recherche négative distinguées ; aucun faux succès, aucune citation inventée."
     },
@@ -12047,7 +13731,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12105,7 +13790,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12164,7 +13850,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12231,7 +13918,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12287,7 +13975,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12346,7 +14035,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12404,7 +14094,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12473,7 +14164,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12531,7 +14223,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12594,7 +14287,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12657,7 +14351,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12718,7 +14413,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12788,7 +14484,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12858,7 +14555,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -12954,7 +14652,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13034,7 +14733,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13043,12 +14743,13 @@
         "applicable": true,
         "evidence": [
           "final_isolation",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "standalone_final_suite_dfd93d0_774520"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Complément DFD 774520 : contrôle autonome statique sur SEARCH 1/17/63 puis FINAL 96/128 ; chronométrages et sanitizers réellement sur FINAL. Confirmation not_improved / validated_gain_uncertified, zéro modèle, hors cohortes §16."
       },
       "remaining": [
-        "Formes admissibles/échecfinal historique sans générateur acquis. Deux générations native v2 avec préflight de barrière requis ont terminé ; finale commune774017 encore active, aucun nouveau scénario d’échec final acquis."
+        "Formes admissibles et échec final historiques sans générateur conservés. Le contrôle autonome DFD 774520 confirme les formes FINAL 96/128 par la règle figée sans modèle, puis refuse leur réutilisation et révoque l’autorisation. Ce contrôle positif n’est ni un nouvel échec numérique final ni une cohorte §16."
       ],
       "expected_result": "Lancement calculé par la règle figée sans rappel du modèle ; échec explicite, sans boucle de génération alimentée secrètement par le jeu final."
     },
@@ -13108,7 +14809,10 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0",
+          "local_report_per_case_v2_dfd93d0",
+          "local_observed_metrics_fix_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13197,7 +14901,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13260,7 +14965,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13270,12 +14976,15 @@
         "evidence": [
           "rpc_transport",
           "gpu_safety_context",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "section16_protocol_review_55",
+          "common_final_convolution_1729_terminal",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Onze générations terminées après des pannesSSH/DNS historiques ; finale commune774017 active avecidentité locale vérifiée. La reprise intégrale144/18 et la disponibilité réseau présente ne se déduisent pas de ces reçus."
+        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18, après des pannes SSH/DNS historiques. Contrôle autonome 774520 terminé. La reprise intégrale et la disponibilité réseau présente ne se déduisent pas de ces reçus."
       ]
     },
     "USER-PROFILE": {
@@ -13317,7 +15026,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13392,7 +15102,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13404,12 +15115,15 @@
           "gemm_agent_final",
           "study_v2_full_first_proposal",
           "study_v2_greedy_parent_first_proposal",
-          "study_v2_eleven_completed_generations"
+          "study_v2_eleven_completed_generations",
+          "section16_protocol_review_55",
+          "common_final_convolution_1729_terminal",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "Onze générations terminées dans deux familles ; boucle ciblée réelle acquise dans les campagnes citées. Six familles et reprise intégrale non qualifiées."
+        "Au constat du 21 octobre à 22:08:48 UTC : 20 générations sur 144 et une finale commune sur 18. Boucle ciblée réelle acquise dans les campagnes citées ; six familles et reprise intégrale non qualifiées."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -13453,7 +15167,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13515,7 +15230,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13586,7 +15302,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13602,12 +15319,22 @@
           "diagnostic_loop_v2",
           "convolution_targeted_diagnostic_b9bda60"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. 773095 au 06bd4be : diagnostic réel → recherche ciblée → dossier v2 vérifié → proposition stricte acceptée, puis compilation math.h échouée ; aucune mesure ni intégration du quatrième candidat. Ce contrôle reste incomplet et exclu des cohortes §16. Boucle §5.2 acquise dans les campagnes convolution 1729 full, greedy_parent et no_autotuning au b9bda60 : diagnostic immuable → web ciblé → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH indépendante. Aucune finale commune ni séquence AC-02 complète déduite ; le helper 773095 reste incomplet."
+        "scope": "Trois chaînes de production convolution 1729 au code b9bda60 ont acquis diagnostic immuable → recherche web ciblée → dossier v2 vérifié → proposition stricte → validation et mesure SEARCH. Le contrôle documentaire DFD acquiert séparément la séquence AC-02 avec 14 appels CLI et zéro requête GPU ; son nouveau candidat n’est ni compilé ni mesuré. Le helper historique 773095 conserve son échec de compilation math.h, sans mesure du quatrième candidat. Aucune qualification générale ou achèvement du §16 n’est déduit."
       },
       "remaining": [
-        "Séquence documentaireinitiale7CLI puis reprise2CLI restent incomplete,0GPU nouveau. Refus couvert par les gardes conservé. Annexe puremétadonnées authentifiée;nouvelle reprise avec ce contexte et proposition couverte encore non acquise."
+        "Reprise documentaire DFD : diagnostic immuable → web ciblé → dossier couvrant register_blocking → proposition stricte admise, avec 14 appels CLI cumulés et zéro requête GPU. Les autorités historiques à 7, 9 et 11 appels restent incomplete ; le nouveau candidat n’est ni compilé, ni validé numériquement, ni mesuré."
       ],
-      "derived_from": "SEC-5.2"
+      "derived_from": "SEC-5.2",
+      "documentary_executed": {
+        "ok": true,
+        "status": "verified_documentary_only",
+        "applicable": true,
+        "evidence": [
+          "ac02_third_resumption_authority",
+          "ac02_third_resumption_execution_audit"
+        ],
+        "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
+      }
     },
     "PMPP-01": {
       "id": "PMPP-01",
@@ -13651,7 +15378,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13711,7 +15439,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13770,7 +15499,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13780,12 +15510,13 @@
         "evidence": [
           "autotuning",
           "contracts_cache_reconstruction",
-          "tuning_constraints_773755"
+          "tuning_constraints_773755",
+          "model_autotuning_real_773803_773804"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. 773755 au ef057b3 acquiert le contrôle statique DSL/source_macro : domaine TILE8/12/16, configuration12 matériellement valide mais filtrée sans requête CUDA, variantes8/16 validées puis mesurées avec couplage macro/block/tile/grid exact, gagnant16 remesuré avec un nouvel identifiant. Les 14 checks sont vrais et le job termine COMPLETED0:0. Aucune génération modèle ni qualification des cohortes §16."
+        "scope": "Contrôle statique DSL/source_macro 773755 au source ef057b3 : domaine TILE={8,12,16}, contraintes appliquées avant requête et gagnant remesuré. Les jobs 773803/773804 ajoutent une stratégie et un autotuning réels proposés par modèle dans deux ablations : trois configurations chacune, oracle et mesure GPU, puis gagnant remesuré et un seul tell. Ces ablations terminent not_improved ; elles ne qualifient ni le mode full multiconfiguration, ni une stratégie générale, ni un gain global."
       },
       "remaining": [
-        "Mécanisme DSL/source_macro acquis sur contrôle statique 773755 ; cette preuve sans modèle ne qualifie pas la stratégie proposée par un LLM. Aucun plafond global réintroduit."
+        "Mécanisme statique et chaîne modèle réelle acquis dans les contrôles et ablations cités. Le mode full multiconfiguration et une supériorité générale de la stratégie ne sont pas qualifiés. Aucun plafond global réintroduit."
       ],
       "derived_from": "SEC-8"
     },
@@ -13838,7 +15569,8 @@
         "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13909,7 +15641,8 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -13990,7 +15723,10 @@
         },
         "current_release_evidence": [
           "local_protocol_runtime_release",
-          "local_research_cache_final_suite_release"
+          "local_research_cache_final_suite_release",
+          "ci_dfd93d0",
+          "local_report_per_case_v2_dfd93d0",
+          "local_observed_metrics_fix_dfd93d0"
         ]
       },
       "romeo_executed": {
@@ -14011,14 +15747,18 @@
           "common_final_convolution_1729_freeze",
           "common_final_convolution_1729_terminal",
           "study_v2_fifteen_completed_generations_55_dispatch",
-          "section16_protocol_review_55"
+          "section16_protocol_review_55",
+          "study_v2_twenty_completed_generations_55_drain"
         ],
-        "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite. First actual pinned-original generation 773802 completed with successful owned terminal; final shared quality comparison remains pending. Actualisation documentaire :11générations fermées dans les reçus cités, sans finale commune ni qualification globale ; variantesPMPP/native réelles distinguées du gain final. Actualisation datée:15générations/1finalecommune authentifiées dans le reçu55;gaincertifiéabsent;aucune extrapolation aux autrescohortes. Le reçu indépendant section16_protocol_review_55 authentifie ensuite une16e génération native convolution2718, job774444, sans finalecommune supplémentaire."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer."
       },
       "remaining": [
-        "16/144 générations terminées et1/18 finale commune acquise à cette observation. Convolution1729:aucun gain certifié;6 alias historiques ne fournissent pas de contrastes mesurés distincts. Quatre nouvelles générations55da43e actives surlong48h/4UUIDdistincts;un incidentdeprotocolehérité est conservé. Achever autrescohortes/ablations,dispersion,exports,reconstructions."
+        "Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Permanent_only : deux configurations mesurées et un essai annulé avant mesure par la garde du parent exact."
       ],
-      "derived_from": "SEC-16"
+      "derived_from": "SEC-16",
+      "offline_presentation_evidence": [
+        "historical_observed_metrics_view_dfd93d0"
+      ]
     }
   },
   "coverage": {
@@ -14231,6 +15971,47 @@
       "observed_at_utc": "2026-10-21T21:50:29.831158+00:00",
       "kind": "coherent_complete_local_suite_1440_plus_13",
       "scope": "187trackedfilesunchanged,firstfailedXMLpreserved,onlytwoauditdocumentsupdatedaftertesting;newpublicationCI/ROMEOchecksnotinferred."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:06:38.277890+00:00",
+      "kind": "published_dfd_ci_standalone_final_and_catalog_integrity",
+      "evidence": [
+        "ci_dfd93d0",
+        "local_research_cache_final_suite_release",
+        "standalone_final_suite_dfd93d0_774520",
+        "catalog_integrity_dfd93d0"
+      ],
+      "scope": "Lecture des reçus existants seulement. Contrôle 774520 réel mais gain non certifié et hors §16. Les trois pins dirty initiaux restent inchangés et non récupérés. La reprise documentaire AC-02 et les cohortes conservent leurs autorités propres ; le renderer est actualisé séparément après son gel."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:11:54.716293+00:00",
+      "kind": "documentary_ac02_round5_admitted_and_twenty_generations_observed",
+      "evidence": [
+        "ac02_third_resumption_authority",
+        "ac02_third_resumption_execution_audit",
+        "study_v2_twenty_completed_generations_55_drain"
+      ],
+      "scope": "Intégration de reçus réels gelés en lecture seule. DFD : 14 appels CLI, 1 600 074 nouveaux tokens et zéro requête GPU acquièrent le scénario documentaire seulement. Au constat daté : 20 générations sur 144 et une finale sur 18, aucun état futur déduit. Anciennes autorités et pins inchangés."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:12:46.726866+00:00",
+      "kind": "post_dfd_per_case_report_final_delta",
+      "evidence": [
+        "source_current:scripts/report_study_fr.py",
+        "local_report_per_case_v2_dfd93d0"
+      ],
+      "scope": "Après revue du delta, source 2078201b et tests f4a8fa9f : 206 tests ciblés. Snapshot DFD fc996 préservé ; aucun modèle/GPU, nouvelle suite complète ou CI du prochain SHA inférés."
+    },
+    {
+      "observed_at_utc": "2026-10-21T22:23:22.807677+00:00",
+      "kind": "observed_metrics_classification_and_late_historical_negative_audit",
+      "evidence": [
+        "source_current:optimizer_agent/suite_orchestrator.py",
+        "local_observed_metrics_fix_dfd93d0",
+        "historical_observed_metrics_view_dfd93d0",
+        "ac03_negative_historical_readiness_dfd93d0"
+      ],
+      "scope": "Après revue, orchestrateur b00d927 et 63 tests ciblés. Ancien résultat et snapshot DFD conservés ; seule la liste dérivée des métriques inconnues est corrigée. Audit tardif AC-03 négatif historique ajouté, sans nouvelle panne externe, exécution modèle/GPU ou requalification des anciens prompts."
     }
   ]
 }

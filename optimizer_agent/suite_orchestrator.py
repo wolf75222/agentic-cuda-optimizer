@@ -461,7 +461,6 @@ def observed_metrics(directory, result):
         requests.append(read_json(path))
     reports = [row.get("report", {}) for row in requests]
     known_validity = [row for row in evaluated.values() if type(row["valid"]) is bool]
-    usage = result.get("usage", {})
     events_path = directory / "generation/events.json"
     events = read_json(events_path) if events_path.exists() else []
     research_events = [row for row in events if "research" in str(row.get("kind", row.get("event", "")))]
@@ -475,7 +474,7 @@ def observed_metrics(directory, result):
     native_audit_path = directory / "generation/evidence/requests.jsonl"
     native_audit = [json.loads(line) for line in native_audit_path.read_text().splitlines() if line.strip()] if native_audit_path.exists() else []
     first_provisional = next((row["timestamp"] for row in native_audit if row.get("operation") == "benchmark" and row.get("ok") is True), None)
-    return {"candidate_configurations_with_recorded_validity": len(known_validity),
+    metrics = {"candidate_configurations_with_recorded_validity": len(known_validity),
         "correct_candidates": sum(row["valid"] for row in known_validity),
         "correct_candidate_fraction": (sum(row["valid"] for row in known_validity)/len(known_validity)) if known_validity else None,
         "trial_results": trials, "candidate_validation_results": list(evaluated.values()),
@@ -501,8 +500,11 @@ def observed_metrics(directory, result):
         "cuda_event_seconds_to_first_useful_gain": sum(sum(row.get("report", {}).get("latency_samples_ms", []))/1000 for row in requests if first and row.get("ended_at_unix", float("inf")) <= first) if first else None,
         "time_to_final_generation_seconds": result.get("elapsed_seconds"),
         "first_useful_gain_status": "observed" if first is not None else "no_promoted_gain" if events_path.exists() else "not_recorded_by_method",
-        "unknown_metrics": [name for name in ("time_to_first_useful_gain_seconds", "research_seconds") if result.get(name, usage.get(name)) is None],
         "gpu_seconds_ledger_scope": "Trial elapsed ledger includes model/research/SSH and can span interruption downtime; actual allocated GPU time requires distinct Slurm accounting receipts"}
+    metrics["unknown_metrics"] = [name for name in (
+        "time_to_first_useful_gain_seconds", "research_model_wall_seconds")
+        if metrics[name] is None]
+    return metrics
 
 
 class RecordingRunner:
