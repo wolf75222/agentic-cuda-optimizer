@@ -321,3 +321,73 @@ def test_original_transport_retry_count_survives_resume_without_reissuing_exhaus
     assert backend.calls == 3
     assert resumed.usage()["model_calls"] == 3
     assert not resumed.usage()["usage_complete"]
+
+
+def test_independent_first_gain_observer_preserves_original_choices_and_messages(tmp_path,pinned):
+    config = CampaignConfig(run_id="original-observer",workload="scan",search_sizes=(8,),final_sizes=(8,),
+        max_trials=3,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
+    backend = OriginalResponses((1,17,63,8),"scan",repair=True)
+    runner = CPUHarness(tmp_path/"runner")
+    result = module.run_upstream_campaign(config,runner,tmp_path/"original",model_backend=backend,
+        source_snapshot=pinned,observe_first_gain=True)
+    assert result["status"] == "generated", result
+    assert result["original_summary"]["best_iteration"] == 2
+    assert result["metrics"]["first_useful_gain_status"] == "observed"
+    assert result["metrics"]["model_tokens_to_first_useful_gain"] == 500
+    assert result["usage"]["model_tokens"] == 625
+    state = json.loads((tmp_path/"original/gain-observer/summary.json").read_text())
+    assert len(state["observations"]) == 1  # Invalid proposal is never observed.
+    receipt = next(iter(state["observations"].values()))
+    assert receipt["decision"] == "promoted" and receipt["observer_gpu_requests"] > 0
+    assert receipt["confirmation"]["interval"]["lower"] == 2
+    assert result["usage"]["combined_method_and_observer_gpu_wall_seconds"] > result["usage"]["original_harness_elapsed_seconds"]
+    assert any(run_id.startswith("observer-") for run_id,_ in runner.calls)
+    assert all("original-observer-2" not in prompt and "observer_only" not in prompt
+               and "paired confirmation" not in prompt for prompt in backend.prompts)
+    count = len(runner.calls)
+    assert module.run_upstream_campaign(config,runner,tmp_path/"original",resume=True,
+        model_backend=backend,source_snapshot=pinned,observe_first_gain=True) == result
+    assert len(runner.calls) == count
+    with pytest.raises(ValueError,match="observation policy"):
+        module.run_upstream_campaign(config,runner,tmp_path/"original",resume=True,
+            model_backend=backend,source_snapshot=pinned,observe_first_gain=False)
+
+
+def test_original_resume_observes_completed_checkpoint_before_next_model_action(tmp_path,pinned,monkeypatch):
+    from optimizer_agent.gain_observer import GainObserver
+    config = CampaignConfig(run_id="original-observer-resume",workload="scan",search_sizes=(8,),final_sizes=(8,),
+        max_trials=3,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
+    backend = OriginalResponses((1,17,63,8),"scan",repair=True)
+    runner = CPUHarness(tmp_path/"runner")
+    observe = GainObserver.observe
+    def crash_before_intent(*args,**kwargs):
+        raise KeyboardInterrupt("controller stopped after completed original checkpoint")
+    monkeypatch.setattr(GainObserver,"observe",crash_before_intent)
+    with pytest.raises(KeyboardInterrupt):
+        module.run_upstream_campaign(config,runner,tmp_path/"original",model_backend=backend,
+            source_snapshot=pinned,observe_first_gain=True)
+    assert len(backend.prompts) == 4
+    monkeypatch.setattr(GainObserver,"observe",observe)
+    result = module.run_upstream_campaign(config,runner,tmp_path/"original",resume=True,model_backend=backend,
+        source_snapshot=pinned,observe_first_gain=True)
+    assert result["status"] == "generated" and result["metrics"]["first_useful_gain_status"] == "observed"
+    assert result["metrics"]["model_tokens_to_first_useful_gain"] == 500
+    assert result["usage"]["model_tokens"] == 625
+
+
+def test_original_observer_infrastructure_failure_stops_graph_and_export_gpu_validation(tmp_path,pinned,monkeypatch):
+    config = CampaignConfig(run_id="original-observer-incident",workload="scan",search_sizes=(8,),final_sizes=(8,),
+        max_trials=3,benchmark_series=1,confirmation_batches=2,launches_per_series=2,warmup=0,profile=False)
+    backend = OriginalResponses((1,17,63,8),"scan",repair=True)
+    runner = CPUHarness(tmp_path/"runner")
+    calls_at_failure = []
+    def failure(*args,**kwargs):
+        calls_at_failure.append(len(runner.calls))
+        return {"ok":False,"status":"infrastructure_failure","context_reusable":False}
+    monkeypatch.setattr(module.common_evaluation.Evaluator,"confirm",failure)
+    result = module.run_upstream_campaign(config,runner,tmp_path/"original",model_backend=backend,
+        source_snapshot=pinned,observe_first_gain=True)
+    assert result["status"] == "generation_failed" and result["candidate"]
+    assert result["search_validation"]["status"] == "infrastructure_failure"
+    assert result["metrics"]["first_useful_gain_status"] == "unknown_incident"
+    assert len(backend.prompts) == 4 and len(runner.calls) == calls_at_failure[-1]

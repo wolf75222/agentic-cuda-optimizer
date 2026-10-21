@@ -26,6 +26,8 @@ sys.path.insert(0, str(REPO))
 
 from optimizer_agent.campaign_config import CampaignConfig
 from optimizer_agent.codex_backend import default_codex_executable
+from optimizer_agent.native_read_isolation import (NativeReadIsolationError, SCOPE,
+    permission_arguments, probe_read_isolation)
 from optimizer_agent.vanilla_gpu_service import OPERATIONS, baseline_source, workload_description
 
 MODEL = "gpt-6-luna"
@@ -82,16 +84,17 @@ def file_hash(path):
     return digest.hexdigest()
 
 
-def build_command(executable, workspace, protected):
+def build_command(executable, workspace, protected, *, sensitive_root):
+    overrides = permission_arguments(sensitive_root, workspace, protected/"output-schema.json")
     return [str(executable),"-a","never","exec","--ignore-user-config",
-        "--ephemeral","--json","--skip-git-repo-check","--sandbox","workspace-write",
+        "--ephemeral","--json","--skip-git-repo-check", *overrides,
         "-C",str(workspace),"-m",MODEL,"-c",f'model_reasoning_effort="{EFFORT}"',
-        "-c","project_doc_max_bytes=0","-c","sandbox_workspace_write.network_access=true",
+        "-c","project_doc_max_bytes=0",
         "-c","features.shell_tool=true","--output-schema",str(protected/"output-schema.json"),
         "--output-last-message",str(protected/"last-message.json"),"-"]
 
 
-def plan(config, output, session_id, executable):
+def plan(config, output, session_id, executable, *, sensitive_root=None):
     if config.workload not in OPERATIONS:
         raise ValueError("Unsupported literal vanilla workload")
     root = Path(output).resolve()
@@ -99,7 +102,10 @@ def plan(config, output, session_id, executable):
         "model":MODEL,"reasoning_effort":EFFORT,"worker_session":session_id,
         "workload":config.workload,
         "workspace":str(root/"workspace"),"protected_evidence":str(root/"evidence"),
-        "command":build_command(executable,root/"workspace",root/"evidence"),
+        "command":(build_command(executable,root/"workspace",root/"evidence",sensitive_root=sensitive_root)
+                   if sensitive_root is not None else None),
+        "sensitive_root":str(Path(sensitive_root).resolve()) if sensitive_root is not None else None,
+        "read_isolation_required":True,"read_isolation_scope":SCOPE,
         "global_resource_caps":None,"certification_status":"not_evaluated_on_independent_final_data"}
 
 
@@ -199,11 +205,17 @@ def normalized_candidate(payload, protected, operation="matmul"):
 
 
 def run_vanilla(config, output, session_id, executable, *, service_factory=None,
-                popen_factory=subprocess.Popen, version_runner=subprocess.run):
-    description = plan(config,output,session_id,executable)
+                popen_factory=subprocess.Popen, version_runner=subprocess.run, sensitive_root=None,
+                isolation_probe=probe_read_isolation):
+    description = plan(config,output,session_id,executable,sensitive_root=sensitive_root)
     workspace,protected = Path(description["workspace"]),Path(description["protected_evidence"])
     if workspace.exists() or protected.exists():
         raise ValueError("Use a new output directory for each native Codex session")
+    # This is deliberately before service construction/start and before any
+    # model process. Suite callers additionally probe before borrowed-worker start.
+    isolation = isolation_probe(sensitive_root,codex_executable=executable)
+    if not isolation.get("ok") or isolation.get("sensitive_root") != description["sensitive_root"]:
+        raise NativeReadIsolationError("Native isolation preflight did not qualify the explicit sensitive_root")
     workspace.mkdir(parents=True)
     protected.mkdir(parents=True)
     (workspace/"baseline.cu").write_text(baseline_source(config, REPO))
@@ -213,12 +225,13 @@ def run_vanilla(config, output, session_id, executable, *, service_factory=None,
     version = version_runner([str(executable),"--version"],capture_output=True,text=True,check=True,timeout=10)
     execution_sources = [Path(__file__),REPO/"scripts/vanilla_gpu_tool.py"]
     execution_sources += [REPO/"optimizer_agent"/name for name in
-        ("vanilla_gpu_service.py","evaluation.py","benchmark_workloads.py","execution_backend.py",
+        ("native_read_isolation.py","vanilla_gpu_service.py","workload_semantics.py","evaluation.py","benchmark_workloads.py","execution_backend.py",
          "remote_worker.py","gpu_scheduler.py","compile_cache.py","codex_backend.py")]
     execution_sources += sorted((REPO/"cuda_test_harness").glob("*.h"))
     execution_sources += sorted((REPO/"cuda_test_harness").glob("*.cpp"))
     receipt = {**description,"mode":"run","status":"starting","command":description["command"],
         "codex_version":version.stdout.strip(),"started_at":time.time(),"usage_events":[],
+        "read_isolation":isolation,
         "usage":{"input_tokens":0,"cached_input_tokens":0,"output_tokens":0},
         "actual_models":[],"thread_ids":[],"cost_usd":None,
         "code_hashes":{str(path.relative_to(REPO)):file_hash(path) for path in execution_sources if path.is_file()},
@@ -281,6 +294,8 @@ def run_vanilla(config, output, session_id, executable, *, service_factory=None,
         if not receipt["usage_events"]:
             raise RuntimeError("Native Codex omitted completed-turn usage evidence")
         response_path = protected/"last-message.json"
+        if response_path.is_symlink() or (response_path.is_file() and response_path.stat().st_nlink != 1):
+            raise NativeReadIsolationError("Native structured output must be a fresh regular file without aliases")
         response = response_path.read_text() if response_path.is_file() else last_message
         if not response:
             raise RuntimeError("Native Codex omitted its final structured source")
@@ -315,14 +330,15 @@ def main(argv=None):
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--worker-session",default=None)
     parser.add_argument("--codex",default=default_codex_executable())
+    parser.add_argument("--sensitive-root",type=Path,help="Explicit study/results root denied to native model tools")
     parser.add_argument("--run",action="store_true",help="Explicitly start one owned GPU service and one native Codex session")
     args = parser.parse_args(argv)
     config = CampaignConfig.load(args.config)
     session_id = args.worker_session or (config.run_id[:64]+".native-vanilla-"+uuid.uuid4().hex[:8])
     if not args.run:
-        print(json.dumps(plan(config,args.output,session_id,args.codex),indent=2))
+        print(json.dumps(plan(config,args.output,session_id,args.codex,sensitive_root=args.sensitive_root),indent=2))
         return 0
-    result = run_vanilla(config,args.output,session_id,args.codex)
+    result = run_vanilla(config,args.output,session_id,args.codex,sensitive_root=args.sensitive_root)
     print(json.dumps({"status":result["status"],"receipt":str(args.output.resolve()/"evidence/receipt.json"),
         "usage":result["usage"],"candidate":result.get("candidate")},indent=2))
     return 0 if result["status"] == "completed" else 1

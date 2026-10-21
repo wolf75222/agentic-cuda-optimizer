@@ -3,9 +3,9 @@ from optimizer_agent.campaign_config import CampaignConfig
 from optimizer_agent.quality_suite import MODES, plan_suite, summarize_suite
 
 
-def test_default_108_true_upstream_native_and_isolated_ablations():
+def test_default_126_true_upstream_native_and_isolated_ablations():
     plan = plan_suite(CampaignConfig(run_id="q"))
-    assert len(plan["entries"]) == 108
+    assert len(plan["entries"]) == 126
     modes = {e["mode"]: e["config"] for e in plan["entries"] if e["workload"] == "matmul" and e["seed"] == 1729}
     assert set(modes) == set(MODES)
     assert modes["full"]["experimental_mode"] is None
@@ -14,10 +14,18 @@ def test_default_108_true_upstream_native_and_isolated_ablations():
     assert modes["no_autotuning"]["research_required"]
     assert not modes["no_research"]["research_required"] and modes["no_research"]["autotuning_enabled"]
     assert modes["no_pmpp"]["research_required"] and modes["no_pmpp"]["autotuning_enabled"]
+    assert modes["pmpp_permanent_only"]["experimental_mode"] == "ablation_pmpp_permanent_only"
+    assert modes["pmpp_permanent_only"]["research_required"] and modes["pmpp_permanent_only"]["web_search_required"]
     assert all(e["config"]["search_sizes"] == e["config"]["final_sizes"] for e in plan["entries"])
     assert all(set(e["config"]["required_sanitizers"]) == {"memcheck","racecheck","initcheck","synccheck"} for e in plan["entries"])
     assert plan["global_resource_caps"] is None
-    assert len(plan_suite(CampaignConfig(), include_greedy=True)["entries"]) == 126
+    expanded = plan_suite(CampaignConfig(), include_greedy=True)
+    assert len(expanded["entries"]) == 144 and len(expanded["modes"]) == 8
+    assert len({entry["group_id"] for entry in expanded["entries"]}) == 18
+    assert plan["ablation_contrasts"]["targeted_pmpp_consultation"]["reference"] == "pmpp_permanent_only"
+    assert plan["ablation_contrasts"]["permanent_pmpp_guidance"]["reference"] == "no_pmpp"
+    with pytest.raises(ValueError, match="retains mandatory"):
+        CampaignConfig(experimental_mode="ablation_pmpp_permanent_only", research_required=False)
 
 
 def test_long_ids_unique_and_invalid_seed_replication_rejected():

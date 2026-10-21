@@ -221,12 +221,19 @@ class SlurmBackend:
         self.hardware: dict = {}
         self.transport_capabilities: tuple[str, ...] = ()
         self._ready = False
+        self.historical_only = False
 
     def _json(self, name: str, *, optional: bool = False):
         payload = self.transport.read(f"{self.remote_dir}/{name}", optional=optional)
         return None if payload is None else json.loads(payload)
 
+    def _require_execution_access(self):
+        if self.historical_only:
+            raise BackendError("Historical read-only attachment cannot execute GPU work or stage sources; "
+                               "use a new backend with the original snapshot or a new worker session")
+
     def stage(self):
+        self._require_execution_access()
         # Ship the immutable evaluator only. Candidate sources/inputs arrive as
         # independent requests. Never upload credentials, .git or the local venv.
         files = sorted((self.repo_dir / "cuda_test_harness").rglob("*"))
@@ -279,6 +286,9 @@ class SlurmBackend:
         ``allow_terminal`` is for collecting historical status/artifacts only;
         it never makes an ended worker ready for new GPU work.
         """
+        if allow_terminal:
+            return self.attach_existing()["job_id"]
+        self._require_execution_access()
         self.stage()
         process = self.transport.run([
             self.config.python, f"{self.remote_dir}/optimizer_agent/remote_worker.py",
@@ -294,9 +304,69 @@ class SlurmBackend:
         (self.results_dir / "slurm-session.json").write_text(json.dumps(
             {"session_id": self.session_id, "job_id": self.job_id, "remote_dir": self.remote_dir,
              "config": asdict(self.config)}, indent=2))
-        if not allow_terminal:
-            self.require_live_worker()
+        self.require_live_worker()
         return self.job_id
+
+    @staticmethod
+    def _owned_job_id(record: dict, label: str) -> str:
+        value = record.get("job_id")
+        if isinstance(value, bool) or not isinstance(value, (str, int)):
+            raise BackendError(f"Invalid {label} ownership receipt: scheduler job ID must be a positive integer")
+        job_id = str(value)
+        if not re.fullmatch(r"[1-9][0-9]*", job_id):
+            raise BackendError(f"Invalid {label} ownership receipt: scheduler job ID must be a positive integer")
+        return job_id
+
+    def attach_existing(self) -> dict:
+        """Authenticate an existing allocation without staging or submitting.
+
+        The remote receipt is mandatory; a local receipt is optional because the
+        controller may have lost the submission acknowledgement. When present,
+        both receipts must agree. Controller source changes do not affect this
+        read-only operation. Subsequent GPU requests remain prohibited.
+        """
+        self.historical_only = True
+        self._ready = False
+        self.transport_capabilities = ()
+        previous_job_id, self.job_id = self.job_id, None
+        try:
+            remote = self._json("job_id.json", optional=True)
+        except (ValueError, TypeError, OSError) as error:
+            raise BackendError("Invalid remote job ownership receipt") from error
+        if not isinstance(remote, dict):
+            raise BackendError("Cannot attach historical worker: remote job ownership receipt is missing or ambiguous")
+        if remote.get("uncertain") or "job_ids" in remote:
+            raise BackendError("Cannot attach historical worker: remote job ownership receipt is ambiguous")
+        job_id = self._owned_job_id(remote, "remote")
+        if remote.get("session_id") != self.session_id:
+            raise BackendError("Remote job ownership receipt session mismatch")
+        # Older worker receipts identify the directory by their read location.
+        # If a directory/name is recorded explicitly, it must also match.
+        if any(remote[key] != self.remote_dir for key in ("remote_dir", "directory") if key in remote):
+            raise BackendError("Remote job ownership receipt directory mismatch")
+        if "job_name" in remote and remote["job_name"] != "aco-" + self.session_id:
+            raise BackendError("Remote job ownership receipt job name mismatch")
+        local_path = self.results_dir / "slurm-session.json"
+        if local_path.exists():
+            try:
+                local = json.loads(local_path.read_bytes())
+            except (ValueError, TypeError, OSError) as error:
+                raise BackendError("Invalid local job ownership receipt") from error
+            if not isinstance(local, dict):
+                raise BackendError("Invalid local job ownership receipt")
+            local_job_id = self._owned_job_id(local, "local")
+            if (local_job_id != job_id or local.get("session_id") != self.session_id
+                    or local.get("remote_dir") != self.remote_dir):
+                raise BackendError("Local and remote job ownership receipts mismatch")
+        if previous_job_id is not None and previous_job_id != job_id:
+            raise BackendError("Attached and remote job ownership receipts mismatch")
+        self.job_id = job_id
+        receipt = self.status()
+        return {**receipt, "job_id": job_id, "terminal": slurm_state(receipt) in TERMINAL_STATES}
+
+    def attach_readonly(self) -> dict:
+        """Alias for :meth:`attach_existing`, preserving its read-only guards."""
+        return self.attach_existing()
 
     def status(self) -> dict:
         if self.job_id is None:
@@ -317,6 +387,7 @@ class SlurmBackend:
                  "elapsed": row[3], "nodes": row[4]} if row else {"state": "ACCOUNTING_PENDING"})
 
     def require_live_worker(self, receipt: dict | None = None) -> dict:
+        self._require_execution_access()
         if self.job_id is None:
             raise BackendError("No Slurm job is attached to this worker session")
         receipt = self.status() if receipt is None else receipt
@@ -334,6 +405,7 @@ class SlurmBackend:
         return receipt
 
     def wait_until_ready(self) -> dict:
+        self._require_execution_access()
         deadline = time.monotonic() + self.config.startup_timeout
         while time.monotonic() < deadline:
             receipt = self.require_live_worker()
@@ -359,6 +431,7 @@ class SlurmBackend:
         raise BackendError("Timed out waiting for Slurm worker; allocation remains tracked for resume/cancel")
 
     def runner(self) -> "RemoteHarnessRunner":
+        self._require_execution_access()
         if not self._ready:
             self.wait_until_ready()
         return RemoteHarnessRunner(self)
@@ -370,6 +443,14 @@ class SlurmBackend:
         record = self._json("job_id.json")
         if str(record["job_id"]) != self.job_id or record["session_id"] != self.session_id:
             raise BackendError("Refusing cancellation: job ownership receipt mismatch")
+        state = slurm_state(self.status())
+        if state in TERMINAL_STATES:
+            self._ready = False
+            return
+        if cancel and self.historical_only:
+            raise BackendError("Historical attachment forbids cancellation; only explicit graceful close is allowed")
+        if self.historical_only and state != "RUNNING":
+            raise BackendError("Historical graceful close requires a currently RUNNING owned worker")
         if cancel:
             self.transport.run(["scancel", self.job_id])
         else:
@@ -416,6 +497,7 @@ class RemoteHarnessRunner:
         return self.hardware["device_properties"]
 
     def _request(self, operation: str, request: dict, files: dict[str, bytes], identity: str) -> dict:
+        self.backend._require_execution_access()
         identity = safe_id(identity)
         remote = f"{self.backend.remote_dir}/requests/{identity}"
         fingerprint = hashlib.sha256((operation + "\0" + json.dumps(request, sort_keys=True)).encode())
@@ -475,6 +557,7 @@ class RemoteHarnessRunner:
         return result
 
     def _exchange_request(self, envelope: dict, files: dict[str, bytes]) -> dict:
+        self.backend._require_execution_access()
         started = time.monotonic()
         identity = envelope["identity"]
         manifest = {name: {"sha256": hashlib.sha256(content).hexdigest(), "size": len(content)}

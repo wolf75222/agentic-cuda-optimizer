@@ -201,9 +201,11 @@ def test_explicit_recovery_requires_recorded_incident_and_terminal_owned_job(tmp
     assert suite.journal.seed(task["id"]) == seed and suite.journal.tasks("final")[0]["attempt"] == 0
 
 
-def test_group_seals_all_candidates_then_validates_everything_before_timing(tmp_path,monkeypatch):
+@pytest.mark.parametrize("pmpp_contrast", [False, True])
+def test_group_seals_all_candidates_then_validates_everything_before_timing(tmp_path,monkeypatch,pmpp_contrast):
     import optimizer_agent.campaign as campaign
     order = []
+    expected_qualifications = 5 if pmpp_contrast else 3
     class Runner:
         def get_device_properties(self,device):
             return {"uuid":"GPU-fixed","architecture":"sm_90"}
@@ -219,21 +221,31 @@ def test_group_seals_all_candidates_then_validates_everything_before_timing(tmp_
             order.append("qualify:"+candidate.candidate_id)
             return {"ok":True}
         def benchmark(self,candidate):
-            assert len([row for row in order if row.startswith("qualify")]) == 3
+            assert len([row for row in order if row.startswith("qualify")]) == expected_qualifications
             order.append("measure:baseline")
             return {"ok":True,"status":"measured","cases":{}}
         def confirm(self,candidate,baseline):
             order.append("measure:"+candidate.candidate_id)
-            assert len([row for row in order if row.startswith("qualify")]) == 3
-            return {"ok":True,"status":"not_improved","interval":{"gain":.8,"lower":.7,"upper":.9}}
+            assert len([row for row in order if row.startswith("qualify")]) == expected_qualifications
+            return {"ok":True,"status":"not_improved","candidate_id":candidate.candidate_id,
+                    "incumbent_id":baseline.candidate_id,"interval":{"gain":.8,"lower":.7,"upper":.9}}
     monkeypatch.setattr(campaign,"Evaluator",Evaluator)
     plan = small_plan()
+    if pmpp_contrast:
+        expanded = plan_suite(CampaignConfig(run_id="unit", search_sizes=(64,), profile=False), seeds=(1,2))
+        plan["entries"] += [entry for entry in expanded["entries"] if entry["workload"] == "matmul" and
+                            entry["seed"] == 1 and entry["mode"] in ("pmpp_permanent_only", "no_pmpp")]
     generations = {e["config"]["run_id"]:{"candidate":frozen(tmp_path/"generation"/e["mode"],e["mode"])} for e in plan["entries"]}
     seed=123456
     proof=evaluate_group(plan["entries"],generations,Runner(),tmp_path/"final",seed,hashlib.sha256(str(seed).encode()).hexdigest())
     assert proof["all_modes_available"] and proof["generation_scores_used"] is False
     assert all(r["status"] == "validated_gain_uncertified" for r in proof["candidates"].values())
     assert len(proof["input_hashes"]) == 8
+    if pmpp_contrast:
+        assert "full_vs_pmpp_permanent_only" in proof["method_comparisons"]
+        contrast = proof["method_comparisons"]["pmpp_permanent_only_vs_no_pmpp"]
+        assert contrast["candidate_id"] == "pmpp_permanent_only"
+        assert contrast["incumbent_id"] == "no_pmpp"
 
 
 def test_requirement_report_never_promotes_plans_or_source_paths_to_test_proof(tmp_path):

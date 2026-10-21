@@ -28,12 +28,12 @@ tools and the owned ROMEO compilation/benchmark service:
 # Plan only; no model call or Slurm job.
 .venv/bin/python scripts/run_codex_vanilla.py --config configs/gemm-comparison.json --output results/codex-native-demo
 # Run one Luna Max prompt with its tools; no LangGraph search policy.
-.venv/bin/python scripts/run_codex_vanilla.py --config configs/gemm-comparison.json --output results/codex-native-demo --run
+.venv/bin/python scripts/run_codex_vanilla.py --config configs/gemm-comparison.json --output results/codex-native-demo --sensitive-root results --run
 ```
 
 This baseline retains existing execution policies and uses a writable isolated
 workspace. The parent service owns the oracle, workload and GPU evidence outside
-that workspace. There is no global token, tool-count or turn-time ceiling. Its
+that workspace. For actual execution, `--sensitive-root` must name an ancestor of the fresh workspace containing all protected study data. A native Codex permissions profile denies tool reads of that tree, permits the child workspace and the output schema, and disables inherited project instructions. A CPU preflight checks parent/traversal/symlink/hardlink denial and the real HTTP client before GPU submission and model launch. Unsupported CLI/platform configurations fail explicitly. The CLI transport remains trusted for its schema, output and authentication. There is no global token, tool-count or turn-time ceiling. Its
 frozen kernel still requires independent final evaluation. The campaign `compare`
 command is a distinct structured single-prompt baseline with shell tools
 disabled; the two protocols are identified separately in the results.
@@ -85,15 +85,15 @@ If an unfinished campaign's worker has stopped, `resume --config FILE --worker-s
 The multi-campaign protocol and isolated ablations are explicit commands:
 
 ```sh
-# Writes 126 generation entries plus 18 common final groups; submits zero jobs.
-.venv/bin/python scripts/run_quality_suite.py plan --config configs/quality-romeo.json --directory results/quality-study --include-greedy
+# Writes 144 generation entries plus 18 common final groups; submits zero jobs.
+.venv/bin/python scripts/run_quality_suite.py plan --config configs/quality-romeo-v2.json --directory results/quality-study-v2 --include-greedy
 # Explicitly executes the planned studies (substantial GPU/model use).
-.venv/bin/python scripts/run_quality_suite.py run --directory results/quality-study --concurrency 2
-.venv/bin/python scripts/run_quality_suite.py status --directory results/quality-study
-.venv/bin/python scripts/run_quality_suite.py report --directory results/quality-study
+.venv/bin/python scripts/run_quality_suite.py run --directory results/quality-study-v2 --concurrency 4
+.venv/bin/python scripts/run_quality_suite.py status --directory results/quality-study-v2
+.venv/bin/python scripts/run_quality_suite.py report --directory results/quality-study-v2
 ```
 
-The plan repeats three seeds over six families and the improved agent, actual pinned upstream agent, native one-prompt Codex, and no-tuning/no-research/no-PMPP modes. `--include-greedy` adds the isolated parent-selection ablation, giving 126 generations; without it, there are 108. Every group freezes all methods before fresh data, four sanitizers and paired comparisons on one new GPU. The greedy mode is distinct from executing the authenticated original LangGraph. Missing, failed and regressing campaigns retain their denominator. See [the complete protocol and recovery commands](docs/quality_suite.fr.md) and [original-agent adaptations](docs/upstream_original.md).
+The plan repeats three seeds over six families and the improved agent, actual pinned upstream agent, native one-prompt Codex, and no-tuning/no-research/no-PMPP/permanent-PMPP-only modes. `--include-greedy` adds the isolated parent-selection ablation, giving 144 generations; without it, there are 126. Every group freezes all methods before fresh data, four sanitizers and paired comparisons on one new GPU. The greedy mode is distinct from executing the authenticated original LangGraph. Missing, failed and regressing campaigns retain their denominator. See [the complete protocol and recovery commands](docs/quality_suite.fr.md) and [original-agent adaptations](docs/upstream_original.md).
 
 ## Architecture and evaluation
 
@@ -140,3 +140,7 @@ the archive manifest hashes the actual exported bytes. Downloaded reference bodi
 stay in the local cache; their URLs, locators and hashes remain in the dossiers.
 
 The [specification](docs/spec.md) is preserved as requirements. [Acceptance coverage](docs/ACCEPTANCE.md) distinguishes implementation, simulated tests, GPU evidence and remaining qualification. [Validation results](docs/VALIDATION.md) records actual executions. Local tests are distinct from GitHub CI; one GPU pilot does not replace the multi-campaign six-family ablation study in specification section16.
+
+Portable exports and reconstruction are documented in [portable_exports.md](docs/portable_exports.md). Declarative tuning restrictions are described in [tuning_constraints.fr.md](docs/tuning_constraints.fr.md). The section16 first-gain observer is separate from method selection and model feedback; see [gain_observer.fr.md](docs/gain_observer.fr.md).
+
+The French requirement-by-requirement audit distinguishes implementation, local tests, ROMEO execution and outstanding work: [SPEC_AUDIT.fr.md](docs/SPEC_AUDIT.fr.md). Observed receipts, including regressions and failed attempts, are indexed in [evidence-index.json](docs/validation/evidence-index.json).

@@ -32,45 +32,18 @@ from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
 from execution_backend import BackendError, SlurmBackend, SlurmConfig
 SEARCH_SIZES = (128, 256, 512)
 VALIDATION_SIZES = (1, 17, 63) + SEARCH_SIZES
-MEMORY_POLICY = {
-    "allocations": "A, B and C are distinct, disjoint device allocations; no aliasing",
-    "inputs": "A and B are read-only and checked bitwise after each launch",
-    "input_domain": "Dense finite float32 values in [-1,1]; no NaN/Inf, sparsity or sentinel-input assumptions",
-    "output": "C is output-only, poisoned before every launch; fully overwrite it without reading prior C",
-    "storage": "Contiguous exact-sized float32 buffers; no padding, halo or auxiliary allocation",
-    "sizes": "A/B/C each n*n elements",
-    "shape_scalar": "n is positive signed int32 with physically admissible allocations; handle non-divisible tails and use sufficiently wide address arithmetic",
-    "arithmetic": "Full float32 arithmetic; ordinary float32 FMA is allowed; double, TF32, half and bfloat16 arithmetic are excluded",
-    "launches": "Independent invocations; no persistent data, prior-output accumulation or cross-launch synchronization",
-}
+try:
+    from .workload_semantics import MEMORY_POLICY, operation_spec
+except ImportError:
+    from workload_semantics import MEMORY_POLICY, operation_spec
 
 
 def workload_description(operation):
-    """Closed operation semantics shared by the tool contract and one prompt."""
-    descriptions = {
-        "matmul": ("GEMM", "A/B/C each n*n elements, contiguous row-major n by n",
-            "c[row*n+col] = sum(k=0..n-1, a[row*n+k]*b[k*n+col])"),
-        "reduction": ("sum reduction", "A/B each n elements; C exactly one element; B is unused",
-            "c[0] = sum(i=0..n-1, a[i])"),
-        "scan": ("inclusive prefix sum", "A/B/C each n elements; B is unused",
-            "c[i] = sum(j=0..i, a[j]) for 0 <= i < n (inclusive scan)"),
-        "stencil": ("three-point stencil", "A/B/C each n elements; B is unused",
-            "c[i] = a[i-1] + a[i] + a[i+1], treating a[j]=0 for j<0 or j>=n"),
-        "convolution": ("three-tap convolution", "A and C each n elements; B exactly 3 elements",
-            "c[i] = a[i-1]*b[0] + a[i]*b[1] + a[i+1]*b[2], treating a[j]=0 outside [0,n); coefficients are not reversed"),
-        "normalization": ("RMS normalization", "A/B/C each n elements; B is unused",
-            "c[i] = a[i] / sqrt((sum(j=0..n-1, a[j]*a[j]))/n + 1e-5); this is RMS normalization, not mean subtraction"),
-    }
-    if operation not in descriptions:
-        raise ValueError(f"Unknown workload {operation!r}; choose {OPERATIONS}")
-    title, sizes, mathematics = descriptions[operation]
-    policy = {**MEMORY_POLICY, "sizes": sizes}
+    """Closed semantics also supplied to normal research and generation."""
+    description = operation_spec(operation)
     launch = (LaunchRule(kind="square_2d", block=(16, 16, 1)) if operation == "matmul"
               else LaunchRule(kind="elementwise", block=(128, 1, 1)))
-    return {"operation": operation, "title": title,
-            "signature": f'extern "C" __global__ void {operation}(const float* a, const float* b, float* c, int n)',
-            "mathematics": mathematics, "memory_policy": policy,
-            "baseline_launch_rule": asdict(launch), "numerical_tolerance": {"atol": 2e-4, "rtol": 2e-4}}
+    return {**description, "baseline_launch_rule": asdict(launch)}
 
 
 def baseline_source(config, repo_dir=REPO):
@@ -96,7 +69,8 @@ def device_identity(properties):
 
 class VanillaGPUService:
     def __init__(self, config: CampaignConfig, protected_dir, child_workspace, session_id,
-                 repo_dir=REPO, *, runner=None):
+                 repo_dir=REPO, *, runner=None, observe_first_gain=False,
+                 observer_started_at_unix=None, observer_usage_provider=None):
         self.repo_dir = Path(repo_dir).resolve()
         self.protected_dir = Path(protected_dir).resolve()
         self.child_workspace = Path(child_workspace).resolve()
@@ -125,6 +99,25 @@ class VanillaGPUService:
         self._lock = threading.Lock()
         self._closed = False
         self._terminal = None
+        self._observe_first_gain = observe_first_gain
+        self._observer_started = time.time() if observer_started_at_unix is None else observer_started_at_unix
+        self._observer_usage_provider = observer_usage_provider
+        self.gain_observer = None
+        self._observer_failure = None
+        self._method_usage = {"method_gpu_evaluation_wall_seconds":0.0,"method_gpu_evaluation_calls":0}
+
+    def _observer_usage(self):
+        # The native CLI reports aggregate model usage after its complete turn.
+        # During GPU callbacks those token/call counts are unknown.
+        usage = {"model_tokens":None,"input_tokens":None,"output_tokens":None,"model_calls":None,
+                 **self._method_usage}
+        if self._observer_usage_provider is not None:
+            usage.update(self._observer_usage_provider())
+        return usage
+
+    def observer_metrics(self):
+        """Parent-only metrics, never part of a model-facing tool response."""
+        return self.gain_observer.snapshot()["metrics"] if self.gain_observer else {}
 
     def _setup_evaluator(self, runner):
         suite = WorkloadSuite(self.config.workload, self.protected_dir / "search-data", self.config)
@@ -154,11 +147,24 @@ class VanillaGPUService:
             {"short": cases[:2], "search": cases,
              "performance": [case for case in cases if case.metadata["n"] in self.search_sizes]})
         baseline = suite.baseline(self.repo_dir / self.config.baseline_source)
-        measurement = evaluator.benchmark(baseline)  # Fresh actual GPU evidence.
+        started = time.monotonic()
+        try:
+            measurement = evaluator.benchmark(baseline)  # Fresh actual GPU evidence.
+        finally:
+            self._method_usage["method_gpu_evaluation_wall_seconds"] += time.monotonic()-started
+            self._method_usage["method_gpu_evaluation_calls"] += 1
         write_json(self.protected_dir / "baseline.json", measurement)
         if measurement.get("ok") is not True:
             raise BackendError("The fixed naive baseline did not validate and benchmark successfully")
         self.evaluator, self.baseline = evaluator, measurement
+        if self._observe_first_gain:
+            try:
+                from .gain_observer import GainObserver
+            except ImportError:
+                from gain_observer import GainObserver
+            self.gain_observer = GainObserver(evaluator,baseline,self.protected_dir/"gain-observer",
+                method="native_codex",campaign_started_at_unix=self._observer_started,
+                usage_provider=self._observer_usage)
         write_json(self.protected_dir / "contract.json", {
             "contract": asdict(contract), "contract_hash": evaluator.contract_hash,
             "search_sizes": list(self.search_sizes), "validation_sizes": list(self.validation_sizes)})
@@ -347,9 +353,16 @@ class VanillaGPUService:
                           "memory_policy": self.description["memory_policy"]}
                 response = {"ok": True, "operation": operation, "request_id": request_id, **result}
             elif operation in {"validate", "benchmark"}:
+                if self._observer_failure:
+                    raise RuntimeError("GPU activity stopped after independent observer infrastructure incident")
                 candidate = self._candidate(request)
-                result = (self.evaluator.validate(candidate, "search") if operation == "validate"
-                          else self.evaluator.benchmark(candidate))
+                started = time.monotonic()
+                try:
+                    result = (self.evaluator.validate(candidate, "search") if operation == "validate"
+                              else self.evaluator.benchmark(candidate))
+                finally:
+                    self._method_usage["method_gpu_evaluation_wall_seconds"] += time.monotonic()-started
+                    self._method_usage["method_gpu_evaluation_calls"] += 1
                 response = {"ok": result.get("ok") is True, "operation": operation,
                             "request_id": request_id, "candidate_id": candidate.candidate_id,
                             "artifact_hash": candidate.artifact_hash, "source_sha256": candidate._source_hash,
@@ -358,6 +371,16 @@ class VanillaGPUService:
             else:
                 raise ValueError("Only properties, validate and benchmark are available")
             write_json(directory / "response.json", response)
+            if operation == "benchmark" and response["ok"] and self.gain_observer:
+                # Keep the genuine method measurement even if this independent
+                # callback fails. Its decision is never included in the reply.
+                try:
+                    self.gain_observer.observe(candidate,evidence_id=result.get("evaluation_id",request_id))
+                except BaseException as error:
+                    self._observer_failure = str(error)
+                    write_json(self.protected_dir/"observer-unavailable.json",{
+                        "error":str(error),"request_id":request_id,"gpu_activity_stopped":True})
+                    raise
             self._audit({"request_id": request_id, "operation": operation, "authenticated": True,
                          "status": "complete", "ok": response["ok"],
                          "artifact_hash": response.get("artifact_hash"),
@@ -389,6 +412,8 @@ class VanillaGPUService:
                 receipt = {"job_id": self.backend.job_id, "terminal": False, "cleanup_error": str(error)}
         self.protected_dir.mkdir(parents=True, exist_ok=True)
         write_json(self.protected_dir / "worker-terminal.json", receipt)
+        if self.gain_observer:
+            self.observer_metrics()
         self._terminal = receipt
         return receipt
 

@@ -201,12 +201,13 @@ def _script(name):
     return module
 
 
-def generation_adapter(entry, runner, directory, session, *, resume=False):
+def generation_adapter(entry, runner, directory, session, *, resume=False, sensitive_root=None):
     config = config_from_dict(entry["config"])
     mode = entry["mode"]
     if mode == "true_upstream":
         from .upstream_original import run_upstream_campaign
-        result = run_upstream_campaign(config, runner, directory, resume=resume, finalize=False)
+        result = run_upstream_campaign(config, runner, directory, resume=resume, finalize=False,
+                                       observe_first_gain=True)
     elif mode == "native_codex_vanilla":
         from .codex_backend import default_codex_executable
         from .vanilla_gpu_service import VanillaGPUService
@@ -216,12 +217,32 @@ def generation_adapter(entry, runner, directory, session, *, resume=False):
             if result.get("status") != "completed":
                 raise RuntimeError("Native one-prompt attempt is incomplete; preserve it rather than issue a duplicate prompt")
             result["candidate"] = read_json(Path(directory) / "evidence/candidate.json")
+            observer_path = Path(directory) / "observer-metrics.json"
+            if observer_path.exists():
+                result["metrics"] = {**result.get("metrics", {}), **read_json(observer_path)}
+            elif (Path(directory) / "evidence/gain-observer").is_dir():
+                from .gain_observer import read_observer_metrics
+                metrics = read_observer_metrics(Path(directory) / "evidence/gain-observer")
+                write_json(observer_path, metrics)
+                result["metrics"] = {**result.get("metrics", {}), **metrics}
         else:
             if Path(directory).exists() and any(Path(directory).iterdir()):
                 raise RuntimeError("Native attempt has partial artifacts; an uncertain prompt is never automatically repeated")
+            if sensitive_root is None:
+                raise ValueError("A fresh native generator requires an explicit protected study root")
+            services = []
+            observer_started = time.time()
+            def service_factory(config, protected, workspace, session_id, repo_dir):
+                service = VanillaGPUService(config, protected, workspace, session_id, repo_dir=repo_dir,
+                    runner=runner, observe_first_gain=True, observer_started_at_unix=observer_started)
+                services.append(service)
+                return service
             result = _script("run_codex_vanilla").run_vanilla(config, directory, session, default_codex_executable(),
-                service_factory=lambda config, protected, workspace, session_id, repo_dir:
-                    VanillaGPUService(config, protected, workspace, session_id, repo_dir=repo_dir, runner=runner))
+                service_factory=service_factory, sensitive_root=Path(sensitive_root))
+            if services:
+                metrics = services[-1].observer_metrics()
+                write_json(Path(directory) / "observer-metrics.json", metrics)
+                result["metrics"] = {**result.get("metrics", {}), **metrics}
     else:
         from .campaign import run_on_runner
         result = run_on_runner(config, runner, Path(directory), resume=resume, generation_only=True)
@@ -372,6 +393,8 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         "seed": seed, "seed_commitment": commitment, "input_hashes": inputs,
         "scope": "Exclusive shared GPU; CUDA Event kernel time; input reset per launch; no transfer/compile timings in ranking",
         "generation_closed": True, "outcome_dependent_retries": False}
+    from .workload_semantics import operation_spec
+    metadata["operation_semantics"] = operation_spec(config.workload)
     write_json(directory / "holdout-reveal.json", metadata)
     contract = WorkloadContract(config.run_id, 1, config.workload, suite.signature,
         "Independent NumPy float64 CPU oracle with float32 outputs; fixed domain with fresh sealed data",
@@ -437,6 +460,10 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         if all(mode in candidates and qualifications[mode].get("ok") is True for mode in ("full", other)):
             proof["method_comparisons"]["full_vs_" + other] = evaluator.confirm(candidates["full"], candidates[other])
             write_json(directory / "group-result.pending.json", proof)
+    if all(mode in candidates and qualifications[mode].get("ok") is True for mode in ("pmpp_permanent_only", "no_pmpp")):
+        proof["method_comparisons"]["pmpp_permanent_only_vs_no_pmpp"] = evaluator.confirm(
+            candidates["pmpp_permanent_only"], candidates["no_pmpp"])
+        write_json(directory / "group-result.pending.json", proof)
     proof["all_modes_available"] = all(e["mode"] in candidates for e in entries)
     proof["evaluation_finished"] = True
     return proof
@@ -464,6 +491,10 @@ class SuiteOrchestrator:
         root = self.directory / ("campaigns" if task["kind"] == "generation" else "final-groups") / task["id"]
         return root if task.get("attempt", 0) == 0 else root / "attempts" / ("%03d" % task["attempt"])
 
+    def _require_active_study(self):
+        if (self.directory / "superseded-by.json").exists():
+            raise ValueError("This study is superseded; retain its receipts and use the replacement study directory")
+
     def _task(self, task):
         # Spawned workers can outlive a killed controller. Their own lock
         # prevents a resumed controller from dispatching the same generation
@@ -486,7 +517,7 @@ class SuiteOrchestrator:
         config = config_from_dict(entry["config"])
         directory = self._directory(task)
         result_path = directory / "result.json"
-        backend, result, terminal = None, None, None
+        backend, result, terminal, attached_status = None, None, None, None
         started = task["started"] or time.time()
         ready_at = None
         self.journal.update(task["id"], state="running", started=started)
@@ -506,15 +537,44 @@ class SuiteOrchestrator:
                     return
             if kind == "final" and result is None and (directory / "holdout-reveal.json").exists():
                 raise RuntimeError("Final inputs were already revealed before interruption; no outcome-dependent final repeat is permitted")
+            native_completed = directory / "generation/evidence/receipt.json"
+            if (result is None and kind == "generation" and entry["mode"] == "native_codex_vanilla"
+                    and self.generate is generation_adapter and native_completed.exists()
+                    and read_json(native_completed).get("status") == "completed"):
+                # The CLI can finish before the outer controller commits its
+                # task result. Recover those frozen files without a new prompt
+                # or any GPU access, even if its old worker has since ended.
+                result = self.generate(entry, None, directory / "generation", task["session"],
+                                       resume=True, sensitive_root=self.directory.parent)
+                result["metrics"] = {**observed_metrics(directory, result), **result.get("metrics", {})}
+                result.update(session_id=task["session"], job_id=task["job_id"], task_evidence_path=str(directory))
+                write_json(result_path, result)
+            if (result is None and kind == "generation" and entry["mode"] == "native_codex_vanilla"
+                    and self.generate is generation_adapter):
+                from .codex_backend import default_codex_executable
+                from .native_read_isolation import probe_read_isolation
+                preflight = probe_read_isolation(self.directory.parent, codex_executable=default_codex_executable())
+                write_json(directory / "native-read-isolation-preflight.json", preflight)
+                if preflight.get("ok") is not True:
+                    raise ValueError("Native generator read-isolation preflight did not pass")
             backend = self._backend(task, config, directory)
-            backend.start(allow_terminal=result is not None)
+            if result is not None:
+                attached_status = backend.attach_existing()
+                if task["job_id"] is not None and str(task["job_id"]) != str(backend.job_id):
+                    backend.job_id = None
+                    raise ValueError("Historical worker differs from the journal's owned job")
+            else:
+                backend.start()
             self.journal.update(task["id"], job_id=str(backend.job_id))
             if result is None:
                 backend.wait_until_ready()
                 ready_at = time.time()
                 recording = RecordingRunner(backend.runner(), directory / "request-receipts")
                 if kind == "generation":
-                    result = self.generate(task["payload"], recording, directory / "generation", task["session"], resume=task["state"] == "running")
+                    kwargs = {"resume": task["state"] == "running"}
+                    if self.generate is generation_adapter:
+                        kwargs["sensitive_root"] = self.directory.parent
+                    result = self.generate(task["payload"], recording, directory / "generation", task["session"], **kwargs)
                 else:
                     generations = {r["id"]: r["result"] or {} for r in self.journal.tasks("generation")}
                     result = self.qualify(task["payload"], generations, recording, directory,
@@ -522,7 +582,9 @@ class SuiteOrchestrator:
                 result["metrics"] = {**observed_metrics(directory, result), **result.get("metrics", {})}
                 result.update(session_id=task["session"], job_id=str(backend.job_id), task_evidence_path=str(directory))
                 write_json(result_path, result)
-            backend.close()
+            result.update(session_id=task["session"], job_id=str(backend.job_id), task_evidence_path=str(directory))
+            if not attached_status or attached_status.get("terminal") is not True:
+                backend.close()
             terminal = backend.wait_until_finished(timeout=60)
             result["worker_terminal"] = terminal
             result["task_started_at_unix"] = started
@@ -542,11 +604,13 @@ class SuiteOrchestrator:
                                 result=result, finished=time.time())
         except Exception as error:
             failure = {"status": "failed", "error": str(error), "traceback": traceback.format_exc(),
-                "session_id": task["session"], "job_id": str(getattr(backend, "job_id", "")) or None,
+                "session_id": task["session"],
+                "job_id": str(backend.job_id) if backend is not None and backend.job_id is not None else None,
                 "execution_complete": False, "partial_result": result, "infrastructure_category": infrastructure_category(error)}
             if backend is not None and getattr(backend, "job_id", None):
                 try:
-                    backend.close()
+                    if not attached_status or attached_status.get("terminal") is not True:
+                        backend.close()
                     failure["worker_terminal"] = backend.wait_until_finished(timeout=60)
                 except Exception as close_error:
                     failure["cleanup_error"] = str(close_error)
@@ -560,6 +624,7 @@ class SuiteOrchestrator:
         decisions in an infrastructure-interrupted group are retained, including
         losses; the new group is an explicitly separate measurement context.
         """
+        self._require_active_study()
         if not reason or len(reason.strip()) < 20:
             raise ValueError("Describe the concrete infrastructure incident in at least twenty characters")
         with self.journal.controller():
@@ -648,6 +713,7 @@ class SuiteOrchestrator:
                 "summary": summary, "concurrency": self.concurrency, "global_resource_caps": None}
 
     def run(self):
+        self._require_active_study()
         with self.journal.controller():
             # Reuse only authenticated complete receipts. A changed source or
             # failed terminal state cannot be hidden by a cached journal flag.

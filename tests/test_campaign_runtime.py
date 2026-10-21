@@ -150,10 +150,10 @@ def test_runtime_changed_gpu_rejects_resume(runtime_setup):
         campaign.CampaignRuntime(config,RunnerFixture("different-device"),runtime.directory,model_backend=model)
 
 
-def archive_candidate(runtime,state,candidate_id="fast",source=None):
+def archive_candidate(runtime,state,candidate_id="fast",source=None,parameters=None):
     path = runtime.directory/(candidate_id+".cu")
     path.write_text(source or runtime.baseline.source.read_text())
-    candidate = campaign.Candidate(candidate_id,path,runtime.config.workload,runtime.baseline.launch_rule)
+    candidate = campaign.Candidate(candidate_id,path,runtime.config.workload,runtime.baseline.launch_rule,parameters or {})
     tree_parent_id = runtime.trial(state)["parent"]["candidate_id"]
     runtime.store.archive_candidate(runtime.config.run_id,runtime.candidate_state(candidate,
         tree_parent_id=tree_parent_id,source_parent_id=tree_parent_id,trial_id=state["trial_id"]))
@@ -184,7 +184,8 @@ def test_confirmation_and_promotion_replay_reuses_durable_evidence(runtime_setup
     assert len(restored.policy.snapshot()["tree"].tree) == 2
 
 
-def test_runtime_tuner_uses_exact_variant_and_fresh_reward_measurement(runtime_setup):
+@pytest.mark.parametrize("constraint,winning_tile", [([],32), ([{"op":"le","parameters":["TILE"],"values":[16]}],16)])
+def test_runtime_tuner_uses_exact_variant_and_fresh_reward_measurement(runtime_setup,constraint,winning_tile):
     runtime,_,_,_ = runtime_setup
     state = selected(runtime)
     source = "#ifndef TILE\n#define TILE 16\n#endif\n"+runtime.baseline.source.read_text()
@@ -192,16 +193,57 @@ def test_runtime_tuner_uses_exact_variant_and_fresh_reward_measurement(runtime_s
     state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1)
     proposal = {"source":source,"kernel":runtime.config.workload,"launch_rule":asdict(candidate.launch_rule),
                 "parameter_space":[{"name":"TILE","values":[16,32]}],
-                "parameter_bindings":[{"parameter":"TILE","target":"source_macro"}]}
+                "parameter_bindings":[{"parameter":"TILE","target":"source_macro"}],"constraints":constraint}
     campaign.write_json(runtime.trial_dir(state)/"proposal-0-1.json",proposal)
     outcome = runtime.evaluate(state)
     assert outcome["valid"] and outcome["candidate_id"] != "fast"
     winner = runtime.candidate(outcome["candidate_id"])
-    assert winner.parameters == {"TILE":32}
-    assert "#define TILE 32" in winner.source.read_text()
+    assert winner.parameters == {"TILE":winning_tile}
+    assert f"#define TILE {winning_tile}" in winner.source.read_text()
     assert runtime.evaluator.benchmarks.count(winner.candidate_id) == 2
     stored = runtime.store.get_candidate_source(winner.candidate_id,runtime.config.run_id)
     assert stored["tree_parent_id"] == "baseline" and stored["source_parent_id"] == "fast"
+    tuning = campaign.read_json(runtime.trial_dir(state)/"autotuning.json")
+    assert tuning["constraints"] == constraint
+    if constraint:
+        rejected = next(row for row in tuning["configurations"] if row["parameters"]["TILE"] == 32)
+        assert rejected["status"] == "filtered"
+        assert rejected["candidate_id"] not in runtime.evaluator.validations
+        assert rejected["candidate_id"] not in runtime.evaluator.benchmarks
+
+
+@pytest.mark.parametrize("autotuning", [True, False])
+def test_runtime_unknown_constraint_reference_rejected_before_candidate_gpu_evaluation(runtime_setup,autotuning):
+    runtime,config,runner,model = runtime_setup
+    if not autotuning:
+        runtime = campaign.CampaignRuntime(replace(config,autotuning_enabled=False),runner,
+            runtime.directory.parent/"no-autotuning",model_backend=model)
+    state = selected(runtime)
+    candidate = archive_candidate(runtime,state)
+    state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1)
+    campaign.write_json(runtime.trial_dir(state)/"proposal-0-1.json",{
+        "parameter_space":[],"constraints":[{"op":"le","parameters":["unknown"],"values":[16]}]})
+    before = list(runtime.evaluator.benchmarks)
+    result = runtime.evaluate(state)
+    assert result["valid"] is False and "unknown parameter" in result["error"]
+    assert runtime.evaluator.benchmarks == before and not runtime.evaluator.validations
+    assert campaign.read_json(runtime.trial_dir(state)/"constraints.json")["status"] == "rejected"
+
+
+def test_runtime_no_autotuning_still_applies_constraints_to_concrete_parameters(runtime_setup):
+    original,config,runner,model = runtime_setup
+    runtime = campaign.CampaignRuntime(replace(config,autotuning_enabled=False),runner,
+        original.directory.parent/"fixed-configuration",model_backend=model)
+    state = selected(runtime)
+    candidate = archive_candidate(runtime,state,parameters={"TILE":32})
+    state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1)
+    campaign.write_json(runtime.trial_dir(state)/"proposal-0-1.json",{
+        "parameter_space":[{"name":"TILE","values":[16,32]}],
+        "constraints":[{"op":"le","parameters":["TILE"],"values":[16]}]})
+    before = list(runtime.evaluator.benchmarks)
+    outcome = runtime.evaluate(state)
+    assert not outcome["valid"] and "violates declared tuning constraints" in outcome["error"]
+    assert runtime.evaluator.benchmarks == before and not runtime.evaluator.validations
 
 
 def test_same_tuned_executable_in_distinct_trials_preserves_both_lineages(runtime_setup):

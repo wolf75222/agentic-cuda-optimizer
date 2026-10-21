@@ -12,7 +12,7 @@ def requirement_registry(spec=None):
             {"id": "USER-PROFILE", "title": "Profilage hybride et séparation des matériels"}]
     for line in text.splitlines():
         match = re.match(r"^#{2,3} (\d+(?:\.\d+)?)\.?\s+(.+)", line)
-        if match and 2 <= int(match[1].split(".")[0]) <= 16:
+        if match and 1 <= int(match[1].split(".")[0]) <= 19:
             rows.append({"id": "SEC-" + match[1], "title": match[2]})
         match = re.match(r"^\| (AC-\d+) \| (.+?) \|", line)
         if match:

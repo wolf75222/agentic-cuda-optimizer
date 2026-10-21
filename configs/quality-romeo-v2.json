@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "run_id": "quality-20261021-v2",
+  "backend": "romeo",
+  "execution_config": "configs/romeo.json",
+  "workload": "matmul",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "max",
+  "max_trials": 3,
+  "max_repairs_per_trial": 2,
+  "max_configurations_per_trial": 4,
+  "model_timeout_seconds": 600,
+  "actions": ["tiling", "coalescing", "work_per_thread"],
+  "search_sizes": [64, 128, 256, 512],
+  "final_sizes": [64, 128, 256, 512],
+  "benchmark_series": 7,
+  "confirmation_batches": 20,
+  "launches_per_series": 20,
+  "required_sanitizers": ["memcheck", "racecheck", "initcheck", "synccheck"]
+}

@@ -1,5 +1,5 @@
 """Real diagnostic/research/generator services with explicit transport/CUDA mocks."""
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import hashlib
 import json
 from pathlib import Path
@@ -11,6 +11,7 @@ from optimizer_agent import campaign
 from optimizer_agent.codex_backend import CodexResult
 from optimizer_agent.diagnostics import build_diagnostic, diagnostic_digest, verify_diagnostic
 from optimizer_agent.research_service import diagnostic_research_context, ResearchBlocked
+from optimizer_agent.pmpp_guidance import PMPP_GUIDANCE
 from tests.test_campaign_runtime import runtime_setup, selected, archive_candidate
 from tests.test_codex_research import proposal_payload
 
@@ -63,8 +64,14 @@ def test_diagnostic_identity_and_unavailable_profile_never_invent_measurements(t
         verify_diagnostic(diagnostic, tmp_path, contract_hash="different", environment_fingerprint="gpu")
 
 
-def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runtime_setup):
-    runtime, config, _, _ = runtime_setup
+@pytest.mark.parametrize("mode", [None, "ablation_pmpp_permanent_only", "ablation_no_pmpp"])
+def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runtime_setup, mode, monkeypatch):
+    runtime, config, runner, model = runtime_setup
+    if mode:
+        config = replace(config, experimental_mode=mode)
+        runtime = campaign.CampaignRuntime(config, runner, runtime.directory.parent/mode, model_backend=model)
+        monkeypatch.setattr("optimizer_agent.research_service.consult_pmpp",
+                            lambda _: pytest.fail("Isolated PMPP ablation must not consult topic cards"))
     first = selected(runtime)
     candidate = archive_candidate(runtime, first)
     first.update(candidate_id=candidate.candidate_id, valid=True)
@@ -83,6 +90,7 @@ def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runt
         hardware_transfer_note="Local counters are not target measurements"))
     diagnostic_update = runtime.diagnose(first)
     diagnostic = runtime.diagnostic_context(diagnostic_update, runtime.trial(first))
+    assert (diagnostic["pmpp_guidance"] == PMPP_GUIDANCE) == (mode != "ablation_no_pmpp")
     assert diagnostic["triggers"] == ["unexplained_result"]
     assert any(reference["identity"] == measurement["evaluation_id"] for reference in diagnostic["evidence_references"])
     assert runtime.diagnose(first) == diagnostic_update  # Replay does not profile or change identity.
@@ -108,7 +116,8 @@ def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runt
                 payload = dict(covered_techniques=["shared_tiling"],reference_kernels=code,
                     launch_requirements=["guard tails and synchronize"],dependencies=[],
                     applicability_checks=[dict(condition="fixture ABI",evidence="mock contract and sources",satisfied=True)],
-                    incompatible_conditions=[],missing_evidence=[],pmpp_topics=["tiling"],
+                    incompatible_conditions=[],missing_evidence=[],pmpp_topics=(
+                        [] if schema["properties"]["pmpp_topics"].get("maxItems") == 0 else ["tiling"]),
                     hypotheses=[dict(documented_fact="mock documentary barrier semantics",
                         observed_code_property="mock shared tile",expected_effect_to_measure="explain paired-not-improved",
                         source_ids=sources)],expected_effects=["measure latency"],validation_metrics=["paired target timing"],
@@ -124,17 +133,25 @@ def test_measured_diagnostic_drives_real_targeted_service_and_next_proposal(runt
     transport = Transport()
     runtime.backend.backend = transport
     runtime.research_service.fetcher = lambda url, timeout, limit: (
-        (b"// mock source\n"+b"__global__ void mock() {}\n"*8) if "raw.githubusercontent.com" in url else
+        (b"// mock source\nstruct BlockReduce {};\n__global__ void gemm_device() {}\n"+b"__global__ void mock() {}\n"*8) if "raw.githubusercontent.com" in url else
         b'<section id="shared-memory"><p>mock shared memory documentation</p></section><section id="synchronization-functions"><p>mock __syncthreads semantics</p></section>', url)
     update = runtime.research(second)
     assert update["research_ready"], update
     second.update(update)
     dossier = campaign.ResearchDossier.from_dict(campaign.read_json(runtime.trial_dir(second)/"dossier.json"))
     assert dossier.diagnostic_ids == [diagnostic["diagnostic_id"]]
+    assert dossier.experimental_mode == mode
+    if mode == "ablation_pmpp_permanent_only":
+        assert dossier.pmpp_topics == []
+        assert "pmpp" not in {source.kind for source in dossier.sources}
+        assert "pmpp_permanent" in {source.kind for source in dossier.sources}
     generated = runtime.generate(second)
     assert generated["candidate_id"] and generated["error"] is None
     assert len(transport.calls) == 3  # Search, actual-source synthesis, then proposal.
     assert "Local counters are not target measurements" in transport.calls[-1][0]
+    assert (PMPP_GUIDANCE in transport.calls[-1][0]) == (mode != "ablation_no_pmpp")
+    if mode:
+        assert mode in transport.calls[-1][0]
     assert len(runtime.policy.snapshot()["tree"].tree) == frozen_tree_size
     assert runtime.store.incumbent(config.run_id)["candidate_id"] is None
 

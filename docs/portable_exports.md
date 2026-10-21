@@ -63,4 +63,3 @@ and never approve research_ready. Kernel reconstruction needs no external corpus
 Kernel source,
 baseline source, real input bytes, raw measurements, configuration, contracts,
 environment and provenance evidence remain included.
-

@@ -1,0 +1,419 @@
+#!/usr/bin/env python3
+"""Render a French, evidence-scoped HTML report and standalone scientific plot."""
+import argparse
+import hashlib
+from html import escape
+import json
+import math
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO))
+
+LABELS = {"full": "Optimiseur amélioré", "true_upstream": "Agent original 1e9464d",
+          "native_codex_vanilla": "Codex vanilla Luna Max", "greedy_parent": "Parent glouton",
+          "no_autotuning": "Sans autotuning", "no_research": "Sans recherche",
+          "no_pmpp": "Sans PMPP", "pmpp_permanent_only": "Guide PMPP permanent seul"}
+FAMILIES = {"reduction": "Réduction", "scan": "Scan inclusif", "stencil": "Stencil",
+            "convolution": "Convolution", "matmul": "GEMM", "normalization": "Normalisation RMS"}
+FROZEN_ROLES = {"baseline": "Kernel naïf", "agent": "Agent amélioré, kernel brut",
+                "single_prompt": "Proposition structurée sans outils", "native_codex": "Codex CLI vanilla natif"}
+FROZEN_PAIRS = {"agent_vs_baseline": ("agent", "baseline"),
+                "single_prompt_vs_baseline": ("single_prompt", "baseline"),
+                "native_codex_vs_baseline": ("native_codex", "baseline"),
+                "agent_vs_native_codex": ("agent", "native_codex")}
+FROZEN_RECEIPT = "results/gemm-frozen-final-20261021/comparison.json"
+PROOF_PATHS = (
+    ("Autotuning réel", "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json"),
+    ("Précision, cache et reconstruction", "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json"),
+    ("Diagnostic et nouvelle recherche", "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json"),
+    ("Comparaison GEMM figée, quatre artefacts bruts", FROZEN_RECEIPT),
+    ("Transport GPU RPC réel", "results/gpu-rpc-acceptance/20261021-current/allocation-receipt.json"),
+    ("Isolation profil/benchmark et contrôle final négatif", "results/gpu-final-isolation-acceptance/20261021-current/allocation-receipt.json"),
+    ("Reprise après arrêt brutal", "results/process-recovery-acceptance-20261021-release/process-recovery-acceptance.json"),
+    ("Codex vanilla natif", "results/native-vanilla-20261021/evidence/receipt.json"))
+
+
+def load(path, default=None):
+    return json.loads(Path(path).read_text()) if Path(path).is_file() else default
+
+
+def fmt(value, digits=3):
+    return f"{value:.{digits}g}" if isinstance(value, (int, float)) and math.isfinite(value) else "inconnu"
+
+
+def table(headers, rows):
+    return "<div class='scroll'><table><thead><tr>" + "".join("<th>" + escape(str(h)) + "</th>" for h in headers) + "</tr></thead><tbody>" + "".join(
+        "<tr>" + "".join("<td>" + escape(str(x)) + "</td>" for x in row) + "</tr>" for row in rows) + "</tbody></table></div>"
+
+
+def audit_table(path):
+    lines = Path(path).read_text().splitlines()
+    rows = [[cell.strip() for cell in line.strip().strip("|").split("|")]
+            for line in lines if line.startswith("|")]
+    return table(rows[0], rows[2:]) if rows else ""
+
+
+def checkout_source_identity(repo):
+    """Capture all Git-visible source changes; ignored generated outputs stay out."""
+    repo = Path(repo).resolve()
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo, text=True).strip()
+    fields = subprocess.check_output(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"], cwd=repo).decode("utf-8", errors="surrogateescape").split("\0")
+    entries, index = [], 0
+    while index < len(fields):
+        record = fields[index]
+        index += 1
+        if not record:
+            continue
+        entry = {"status": record[:2], "path": record[3:]}
+        if "R" in entry["status"] or "C" in entry["status"]:
+            entry["original_path"] = fields[index]
+            index += 1
+        entries.append(entry)
+    return {"checkout": str(repo), "head": head, "branch": branch, "dirty": bool(entries),
+            "dirty_entries": entries,
+            "tracked_changes": [entry for entry in entries if entry["status"] != "??"],
+            "untracked_files": [entry["path"] for entry in entries if entry["status"] == "??"],
+            "scope": "All Git tracked changes and nonignored untracked files; Git-ignored generated outputs excluded"}
+
+
+def ci_qualifies_checkout(ci, source):
+    return bool(source.get("head") and not source["dirty"] and ci.get("headSha") == source["head"] and
+                ci.get("conclusion") == "success" and ci.get("status") == "completed")
+
+
+def control_receipts(repo):
+    receipts = []
+    for name, relative in PROOF_PATHS:
+        path = Path(repo) / relative
+        value = load(path, {})
+        terminal = value.get("terminal") or value.get("worker_terminal") or {}
+        provenance = value.get("source_provenance", {})
+        receipts.append({"label": name, "path": relative,
+            "receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+            "status": value.get("status", "reçu disponible" if value else "en attente"),
+            "ok": value.get("ok"), "job_id": terminal.get("job_id", value.get("job_id")),
+            "terminal": terminal, "source_head": provenance.get("HEAD", value.get("source_HEAD")),
+            "source_dirty_state": provenance.get("dirty_state"), "execution_source_sha256": provenance.get("sources", value.get("execution_source_sha256", {})),
+            "sources_unchanged": value.get("sources_unchanged"), "scope": value.get("scope", value.get("evidence_kind"))})
+    return receipts
+
+
+def project_consumption(results):
+    """Deduplicate completed-call receipts; failed unreported usage stays unknown."""
+    calls = {}
+    def remember(identity, value):
+        if identity in calls and calls[identity].get("usage") != value.get("usage"):
+            raise ValueError("Conflicting observed usage for the same model call: "+identity)
+        calls[identity] = value
+    for path in Path(results).rglob("model/*.json"):
+        value = load(path, {})
+        identity = value.get("call_id", path.stem)
+        if not re.fullmatch(r"[0-9a-f]{32}", str(identity)) or "usage" not in value:
+            continue
+        remember("structured:"+str(identity), value)
+    for path in Path(results).rglob("evidence/receipt.json"):
+        value = load(path, {})
+        if not value.get("thread_ids") or not value.get("model_started"):
+            continue
+        identity = ",".join(value["thread_ids"])
+        remember("native:"+identity, value)
+    totals = {key: 0 for key in ("input_tokens", "cached_input_tokens", "output_tokens")}
+    unknown = 0
+    for value in calls.values():
+        usage = value.get("usage", {})
+        known = (all(key in usage for key in ("input_tokens", "output_tokens")) and
+                 (value.get("status") == "completed" or any(usage.get(k, 0) for k in ("input_tokens", "output_tokens"))))
+        if not known:
+            unknown += 1
+        for key in totals:
+            totals[key] += usage.get(key, 0) or 0
+    totals.update(cli_call_receipts=len(calls), unreported_call_usage=unknown,
+                  model_tokens=totals["input_tokens"]+totals["output_tokens"], cost_usd=None,
+                  scope="All retained project model-call receipts, including failures and diagnostic/earlier pilots; deduplicated by call/thread ID",
+                  cached_tokens_included_in_input=True, reasoning_tokens_included_in_output=True)
+    return totals
+
+
+def frozen_pilot_summary(path):
+    """Keep this four-source pilot outside every section-16 cohort/selection."""
+    path = Path(path)
+    receipt = load(path, {})
+    result = {"scope": {"kind": "independent_frozen_gemm_pilot", "operations": ["matmul"],
+              "included_in_section16_cohorts": False, "artifact_selection": "raw_frozen_sources",
+              "retained_best_substitution": False, "original_upstream_present": False,
+              "artifact_roles": list(FROZEN_ROLES), "inference_scope": "These four fixed artifacts and these final cases only"},
+              "source_receipt": str(path), "source_receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+              "receipt_verified": False, "status": receipt.get("status", "receipt_missing"),
+              "terminal": receipt.get("terminal", {}), "job_id": receipt.get("job_id"),
+              "contract_hash": receipt.get("contract_hash"), "hardware_identity": receipt.get("hardware_identity", {}),
+              "shapes": receipt.get("shapes", []), "protocol": receipt.get("protocol", {}),
+              "generation_boundary": receipt.get("generation_boundary"),
+              "model_calls_during_final": receipt.get("model_calls"), "sources": [], "comparisons": {}, "validation_errors": []}
+    errors = result["validation_errors"]
+    if not receipt:
+        errors.append("Reçu du pilote absent")
+        return result
+    if receipt.get("kind") != "independent_frozen_kernel_comparison" or receipt.get("ok") is not True:
+        errors.append("Reçu de comparaison figée non achevé ou invalide")
+    terminal = result["terminal"]
+    if terminal.get("state") != "COMPLETED" or terminal.get("exit_code") != "0:0" or terminal.get("job_id") != result["job_id"]:
+        errors.append("Terminal Slurm réussi non confirmé pour ce job")
+    candidates = receipt.get("candidates", {})
+    if set(candidates) != set(FROZEN_ROLES):
+        errors.append("Les quatre rôles figés attendus ne correspondent pas au reçu")
+    for role, candidate in candidates.items():
+        if role not in FROZEN_ROLES:
+            continue
+        if (not candidate.get("source") or hashlib.sha256(candidate["source"].encode()).hexdigest() != candidate.get("source_hash")
+                or not candidate.get("artifact_hash")):
+            errors.append("Source figée non authentifiée : " + role)
+        complete = receipt.get("validations", {}).get(role, {}).get("complete", {})
+        sanitized = receipt.get("sanitizer_qualification", {}).get(role, {})
+        if complete.get("ok") is not True or sanitized.get("ok") is not True:
+            errors.append("Validation complète ou sanitizers non qualifiés : " + role)
+        result["sources"].append({"role": role, "label": FROZEN_ROLES[role], "candidate_id": candidate.get("candidate_id"),
+            "source_hash": candidate.get("source_hash"), "artifact_hash": candidate.get("artifact_hash"),
+            "generation_kind": candidate.get("provenance", {}).get("kind"),
+            "correctness_ok": complete.get("ok"), "sanitizers_ok": sanitized.get("ok")})
+    if candidates.get("native_codex", {}).get("provenance", {}).get("kind") != "native_codex_one_prompt":
+        errors.append("Le rôle vanilla natif ne prouve pas un véritable appel Codex CLI")
+    if candidates.get("single_prompt", {}).get("provenance", {}).get("kind") != "generation_only_structured_single_prompt":
+        errors.append("La proposition structurée sans outils est mal identifiée")
+    for name, (role, reference) in FROZEN_PAIRS.items():
+        pair = receipt.get("paired_comparisons", {}).get(name, {})
+        interval = pair.get("interval", {})
+        values = [interval.get(key) for key in ("gain", "lower", "upper")]
+        valid_interval = all(type(value) in (float, int) and math.isfinite(value) and value > 0 for value in values)
+        if not valid_interval or not values[1] <= values[0] <= values[2]:
+            errors.append("Intervalle apparié manquant ou invalide : " + name)
+        candidate, incumbent = candidates.get(role, {}), candidates.get(reference, {})
+        if (pair.get("ok") is not True or pair.get("candidate_role") != role or pair.get("reference_role") != reference
+                or pair.get("artifact_hash") != candidate.get("artifact_hash")
+                or pair.get("incumbent_artifact_hash") != incumbent.get("artifact_hash")
+                or pair.get("contract_hash") != result["contract_hash"]):
+            errors.append("Identité candidate/référence/contrat différente : " + name)
+        if any(pair.get("environment", {}).get(key) != value for key, value in result["hardware_identity"].items()):
+            errors.append("Environnement différent du GPU final commun : " + name)
+        result["comparisons"][name] = {key: pair.get(key) for key in (
+            "evaluation_id", "status", "candidate_role", "reference_role", "gain_direction", "critical_cases_ok")}
+        result["comparisons"][name]["interval"] = interval
+    result["receipt_verified"] = not errors
+    return result
+
+
+def plot_frozen_pilot(pilot, output):
+    if not pilot["receipt_verified"]:
+        return None
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, axes = plt.subplots(1, 2, figsize=(12.8, 5.3), constrained_layout=True,
+                             gridspec_kw={"width_ratios": [1.35, 1]})
+    ax, direct_ax = axes
+    colors = {"agent": "#b04c42", "single_prompt": "#586f7c", "native_codex": "#167c80"}
+    ax.scatter(1, 0, marker="D", color="#71828d", s=35)
+    ax.annotate("1 : référence", (1, 0), xytext=(8, 8), textcoords="offset points", fontsize=9)
+    for y, role in enumerate(("agent", "single_prompt", "native_codex"), 1):
+        interval = pilot["comparisons"][role + "_vs_baseline"]["interval"]
+        gain, low, high = (interval[key] for key in ("gain", "lower", "upper"))
+        ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color=colors[role], capsize=4)
+        ax.annotate(f"{gain:.3f} [{low:.3f} ; {high:.3f}]", (gain, y), xytext=(0, 12),
+                    textcoords="offset points", fontsize=9, ha="center")
+    ax.set_yticks(range(4), list(FROZEN_ROLES.values()))
+    ax.invert_yaxis()
+    ax.set_ylim(3.6, -.65)
+    ax.set_xlim(.67, 1.24)
+    ax.set_xlabel("Latence naïve / latence du kernel figé")
+    ax.set_title("Quatre artefacts bruts\nGains géométriques, IC appariés à 95 %")
+    direct = pilot["comparisons"]["agent_vs_native_codex"]["interval"]
+    intervals = [("Ensemble des cas", direct)] + [("n = " + case.removeprefix("final-"), interval)
+                  for case, interval in direct.get("case_gains", {}).items()]
+    for y, (_, interval) in enumerate(intervals):
+        gain, low, high = (interval[key] for key in ("gain", "lower", "upper"))
+        direct_ax.errorbar(gain, y, xerr=[[gain-low], [high-gain]], fmt="o", color="#6c62a5", capsize=4)
+        direct_ax.annotate(f"{gain:.3f}", (gain, y), xytext=(0, 10), textcoords="offset points", ha="center", fontsize=9)
+    direct_ax.set_yticks(range(len(intervals)), [name for name, _ in intervals])
+    direct_ax.invert_yaxis()
+    direct_ax.set_ylim(len(intervals)-.4, -.65)
+    direct_ax.set_xlim(.59, 1.06)
+    direct_ax.set_xlabel("Latence CLI natif / latence agent brut")
+    direct_ax.set_title("Comparaison directe appariée\nUn ratio < 1 favorise le CLI natif")
+    for axis in axes:
+        axis.axvline(1, color="#71828d", linestyle="--", linewidth=1)
+        axis.grid(axis="x", alpha=.15)
+    fig.suptitle("Pilote GEMM indépendant — ROMEO GH200 — n = " + ", ".join(map(str, pilot["shapes"])))
+    target = output / "pilote-gemm-fige-romeo.png"
+    fig.savefig(target, dpi=180)
+    plt.close(fig)
+    return target
+
+
+def frozen_pilot_panel(pilot, figure):
+    heading = "<h2>Pilote GEMM indépendant : quatre kernels figés</h2>"
+    if not pilot["receipt_verified"]:
+        return heading + "<p>Comparaison figée non qualifiée : " + escape(" ; ".join(pilot["validation_errors"])) + ".</p>"
+    rows = []
+    for role in ("agent", "single_prompt", "native_codex"):
+        pair = pilot["comparisons"][role + "_vs_baseline"]
+        interval = pair["interval"]
+        rows.append([FROZEN_ROLES[role], fmt(interval["gain"], 6),
+                     "[" + fmt(interval["lower"], 6) + " ; " + fmt(interval["upper"], 6) + "]", pair["status"]])
+    direct = pilot["comparisons"]["agent_vs_native_codex"]["interval"]
+    return (heading + "<p>Ce pilote compare le naïf, le kernel brut de l’agent amélioré, une proposition structurée sans outils et le véritable Codex CLI vanilla natif. "
+            "Il ne contient aucun agent original upstream et n’entre pas dans les cohortes de l’étude §16. Les kernels bruts sont conservés, sans substitution par le meilleur parent retenu.</p>"
+            + (f"<img src='{escape(figure.name)}' alt='Pilote GEMM : quatre artefacts bruts et comparaison directe agent contre Codex CLI natif'>" if figure else "")
+            + table(["Artefact face au naïf", "Gain", "IC95% apparié", "Statut du reçu"], rows)
+            + f"<p>Le gain géométrique de l’agent brut face au naïf vaut {fmt(pilot['comparisons']['agent_vs_baseline']['interval']['gain'], 6)} : la régression reste visible. "
+            + f"Le ratio direct CLI natif/agent brut vaut {fmt(direct['gain'], 6)} [{fmt(direct['lower'], 6)} ; {fmt(direct['upper'], 6)}] ; un ratio inférieur à1 favorise le CLI natif. "
+            + "Ce ratio provient de ses propres paires AB/BA et n’est pas déduit des deux gains agrégés.</p>"
+            + f"<p>Sources figées avant révélation des nouvelles tailles {escape(', '.join(map(str, pilot['shapes'])))} ; quatre validations complètes et quatre qualifications aux sanitizers. "
+            + f"Mesures neuves sur une allocation GH200 commune, job <code>{escape(str(pilot['job_id']))}</code>, terminal COMPLETED 0:0. "
+            + "Les anciennes séries ne sont pas regroupées. Ce résultat porte sur ces artefacts et ces cas, sans conclusion de supériorité universelle.</p>")
+
+
+def plot(summary, output):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    methods = ("full", "true_upstream", "native_codex_vanilla")
+    colors = ("#167c80", "#be743a", "#6c62a5")
+    rows = summary["rows"]
+    if not any(row.get("gain") for row in rows):
+        return None
+    fig, axes = plt.subplots(2, 3, figsize=(13, 7), constrained_layout=True)
+    for ax, (operation, title) in zip(axes.flat, FAMILIES.items()):
+        for x, (mode, color) in enumerate(zip(methods, colors)):
+            selected = [row for row in rows if row["workload"] == operation and row["mode"] == mode and row.get("gain")]
+            for index, row in enumerate(selected):
+                offset = (index-(len(selected)-1)/2)*.10
+                y = row["gain"]
+                ax.scatter(x+offset, y, color=color, s=40, zorder=3)
+                if row.get("lower") and row.get("upper"):
+                    ax.vlines(x+offset, row["lower"], row["upper"], color=color, alpha=.65)
+        ax.axhline(1, color="#71828d", linestyle="--", linewidth=1)
+        ax.set_xticks(range(3), ("Amélioré", "Original", "Vanilla"))
+        ax.set_title(title)
+        ax.set_ylabel("Latence naïve / latence retenue")
+        ax.grid(axis="y", alpha=.15)
+    fig.suptitle("ROMEO : résultats finaux par campagne, intervalles appariés à 95 %")
+    target = output / "comparaison-methodes-romeo.png"
+    fig.savefig(target, dpi=180)
+    plt.close(fig)
+    return target
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--study", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--ci", type=Path)
+    parser.add_argument("--requirements", type=Path)
+    parser.add_argument("--audit", type=Path, default=REPO / "docs/SPEC_AUDIT.fr.md")
+    parser.add_argument("--frozen-comparison", type=Path, default=REPO / FROZEN_RECEIPT)
+    args = parser.parse_args()
+    from optimizer_agent.suite_orchestrator import SuiteOrchestrator
+    from optimizer_agent.suite_report import write_report
+    plan = load(args.study / "plan.json")
+    planned_generations = len(plan["entries"])
+    planned_groups = len({entry["group_id"] for entry in plan["entries"]})
+    status = SuiteOrchestrator(plan, args.study).status()  # No job or model action.
+    evidence = load(args.requirements, {}) if args.requirements else {}
+    report = write_report(args.study, status, evidence=evidence)
+    report["project_observed_consumption"] = project_consumption(REPO / "results")
+    summary = report["summary"]
+    output = args.output.resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    figure = plot(summary, output)
+    pilot = frozen_pilot_summary(args.frozen_comparison)
+    report["independent_frozen_gemm_pilot"] = pilot
+    pilot_figure = plot_frozen_pilot(pilot, output)
+    ci = load(args.ci, {}) if args.ci else {}
+    source = checkout_source_identity(REPO)
+    head = source["head"]
+    ci_ok = ci_qualifies_checkout(ci, source)
+    report["source_checkout"] = source
+    report["ci_evidence"] = {"receipt": ci, "exact_checkout_qualified": ci_ok,
+                             "policy": "Successful completed CI on HEAD qualifies only a clean source checkout"}
+    aggregate_rows = [[LABELS.get(mode, mode), value["planned"], value["final_measured"], value["qualified"],
+                       value["regressions"], value["unmeasured_or_failed"], fmt(value["geometric_mean_all_measured_gain"]),
+                       fmt(value["gain_stddev_between_campaigns"])] for mode, value in summary["aggregates"].items()]
+    results = [[FAMILIES.get(row["workload"], row["workload"]), row["seed"], LABELS.get(row["mode"], row["mode"]),
+                row["status"], fmt(row["gain"]), "["+fmt(row["lower"])+", "+fmt(row["upper"])+"]",
+                fmt(row["model_tokens"], 9), fmt(row.get("model_calls")), fmt(row.get("wall_seconds")),
+                row.get("artifact_hash") or "absent"] for row in summary["rows"]]
+    report["control_receipts"] = control_receipts(REPO)
+    receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
+                 value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
+                 value["source_head"] or "non enregistré", value["path"]] for value in report["control_receipts"]]
+    links = " · ".join(f"<a href='{escape(p.name)}'>{escape(p.name)}</a>" for p in sorted(output.glob("*.zip")))
+    ci_html = (f"<a href='{escape(ci.get('url',''))}'>CI du SHA publié</a> : " + ("réussie sur les sources propres de ce SHA" if ci_ok else "ne qualifie pas ce checkout source"))
+    consumed = report["project_observed_consumption"]
+    consumption_html = table(["Périmètre", "Reçus appelsCLI", "Entrée observée", "Dont cache", "Sortie observée", "Appels à usage inconnu"],
+        [["Tout le projet retenu, pilotes et diagnostics inclus", consumed["cli_call_receipts"], consumed["input_tokens"],
+          consumed["cached_input_tokens"], consumed["output_tokens"], consumed["unreported_call_usage"]]])
+    chart_html = f"<img src='{figure.name}' alt='Trois méthodes comparées par famille et graine avec intervalles appariés'>" if figure else "<p>Aucun gain final commun mesuré à cette date.</p>"
+    html = f"""<!doctype html><html lang='fr'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Comparaison vérifiée des agents CUDA sur ROMEO</title><style>
+body{{font:15px/1.6 system-ui,sans-serif;color:#173542;max-width:1280px;margin:40px auto;padding:0 24px}}
+h1{{font-size:30px}}h2{{margin-top:36px}}a{{color:#136b80}}table{{border-collapse:collapse;width:100%;font-size:12px}}
+td,th{{padding:9px;border-bottom:1px solid #d6e2e5;text-align:left;vertical-align:top}}th{{background:#eef4f5}}
+.scroll{{overflow:auto}}.status{{padding:18px;background:#eef4f5;border-left:5px solid #167c80}}img{{max-width:100%}}
+code{{overflow-wrap:anywhere}}details{{margin-top:20px}}summary{{cursor:pointer;font-weight:600}}
+</style><h1>Comparaison vérifiée des agents CUDA sur ROMEO</h1>
+<p class='status'>Campagnes et évaluations communes terminées : <strong>{'oui' if summary['complete'] else 'non'}</strong>.
+Tous les artefacts finaux qualifiés : <strong>{'oui' if summary['scientific_qualified'] else 'non'}</strong>.
+Les échecs, pertes et résultats encore inconnus restent visibles.</p>
+<p><a href='https://github.com/wolf75222/agentic-cuda-optimizer'>Fork publié</a> · source du rapport : <code>{head}</code> · {ci_html}.</p>
+<p>Checkout source : <strong>{'modifié' if source['dirty'] else 'propre'}</strong> ; {len(source['tracked_changes'])} chemins suivis modifiés et {len(source['untracked_files'])} fichiers non suivis non ignorés. Les chemins exacts sont enregistrés dans le JSON du rapport.</p>
+<p>Agent local Codex, modèle demandé <code>gpt-6-luna</code>, effort <code>max</code> ; orchestration LangGraph et recherche TreeQuest.
+L'inférence utilise le service OpenAI authentifié. Aucun plafond global de tokens, coût, appels ou durée cumulée n'est imposé.
+Les limites techniques et les durées obligatoires de Slurm restent enregistrées.</p>
+{frozen_pilot_panel(pilot, pilot_figure)}
+<h2>Étude §16 : trois méthodes, un évaluateur final</h2>
+<p>L'optimiseur amélioré, le véritable agent original au commit <code>1e9464d</code> et Codex vanilla natif sont des méthodes distinctes.
+Le vanilla reçoit un seul prompt et dispose de ses outils de compilation et benchmark. Le parent glouton constitue une ablation supplémentaire.
+Le protocole déclaré couvre {len(plan['workloads'])} opérations, {len(plan['seeds'])} graines et {len(plan['modes'])} modes : {planned_generations} générations et {planned_groups} groupes finaux. Chaque groupe fige toutes les sources avant de créer de nouvelles données sur le domaine de tailles déclaré.</p>
+<p>Les contrastes PMPP prévus séparent la consultation ciblée (méthode complète face au guide permanent seul) et le guide permanent (guide seul face au mode sans PMPP).</p>
+<p>Chaque groupe compare ses artefacts sur un même GPU réservé, avec oracle CPU indépendant, toutes les sorties, quatre sanitizers,
+puis confirmations AB/BA et bootstrap des séries. Les chronométrages d'allocations différentes ne sont jamais regroupés.
+Les mesures locales ne remplacent aucune performance ROMEO. Les points et intervalles ci-dessous montrent les campagnes individuelles ; un gain supérieur à1 favorise le candidat face au naïf.</p>
+{chart_html}{table(['Méthode','Prévus','Mesurés','Qualifiés','Régressions','Absents/échecs','Gain géométrique mesuré','Dispersion entre campagnes'], aggregate_rows)}
+<p>Les agrégats incluent les retours au noyau naïf et les régressions mesurées. Les absences ne reçoivent aucun gain inventé.
+Cette étude sur des domaines déclarés à un seul kernel ne promet pas de gain universel ni de supériorité sur cuBLAS.</p>
+<h2>Consommation, régressions et provenance</h2>
+{consumption_html}
+<p>Les tokens comptent les entrées et sorties observées, y compris les tokens d'entrée servis du cache lorsqu'ils sont inclus par le fournisseur.
+Les traces conservent séparément les tokens mis en cache. Aucun coût en dollars n'est déduit sans reçu de facturation.
+Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les outils ; les CUDA Events ne mesurent que le kernel.
+Les coûts absents sont inconnus. Le rapport JSON contient les compteurs de compilation, cache, recherche, configurations et premier gain utile lorsque la méthode les observe.</p>
+<details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{table(['Famille','Graine','Méthode','Statut final','Gain','IC95%','Tokens','AppelsCLI','Durée génération(s)','Artefact'], results)}</details>
+<h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu'], receipts)}
+<p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.
+Ces indisponibilités restent des diagnostics explicites ; aucun compteur n'est inventé et aucun temps instrumenté ne participe au classement.
+Les scénarios destructifs antérieurs ont vérifié la mise en quarantaine et le remplacement du worker. Les reprises de processus rejouent des preuves CUDA archivées sans produire de nouvelle mesure GPU.</p>
+<p>Les essais historiques interrompus, notamment le job770184 terminé par TIMEOUT, sont conservés. Ses deux finales individuelles ne constituent pas une comparaison directe complète.
+Sa proposition structurée sans outils est identifiée séparément du véritable Codex vanilla natif.</p>
+<h2>Exigences : implémenté, testé localement, exécuté sur ROMEO, restant</h2>
+<p>Cette confrontation couvre la spécification intégralement relue. Chaque affirmation est limitée à son périmètre ; la présence d'un fichier ou d'un test ne prouve pas un fonctionnement de bout en bout.</p>
+{audit_table(args.audit)}
+<h2>Reproduction et artefacts</h2><p>{links or 'Archive portable en attente de préparation.'}</p>
+<p><a href='rapport-donnees.json'>Résultats structurés et consommation observée</a>. Les archives contiennent sources figées, configurations,
+entrées relatives et empreintes, contrats, environnements, journaux, sauvegardes SQLite cohérentes et provenance du dépôt original.
+Les références documentaires conservent URL, version, section et empreinte ; leurs corps externes ne sont pas redistribués.</p>
+<p>Commandes et configuration : <code>README.md</code>, <code>docs/quality_suite.fr.md</code> et <code>docs/upstream_original.md</code> dans les sources exportées.
+La reconstruction vérifie les hashes avant toute compilation. Les preuves locales, la CI du SHA publié et les qualifications ROMEO restent trois validations distinctes.</p></html>"""
+    (output / "rapport-validation.html").write_text(html)
+    (output / "rapport-donnees.json").write_text(json.dumps(report, indent=2, allow_nan=False))
+    paths = [output / "rapport-validation.html", output / "rapport-donnees.json"] + ([figure] if figure else []) + ([pilot_figure] if pilot_figure else [])
+    (output / "RAPPORT-SHA256SUMS.txt").write_text("".join(hashlib.sha256(p.read_bytes()).hexdigest()+"  "+p.name+"\n" for p in paths))
+    print(json.dumps({"report": str(output / "rapport-validation.html"), "complete": summary["complete"],
+                      "ci_exact_sha": ci_ok, "source_head": head, "source_dirty": source["dirty"]}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

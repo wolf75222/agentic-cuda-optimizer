@@ -1,0 +1,878 @@
+{
+  "schema_version": 1,
+  "spec_sha256": "cc031ea26282fba6f1fa59fcc4629feebd69c05180df5f6bb8cd0e84d608e8fd",
+  "policy": "Index of observed receipts; no new certification. Complete raw data remain in the evidence archives. A source commit and executed code hashes are separate identities.",
+  "receipts": {
+    "frozen_gemm": {
+      "path": "results/gemm-frozen-final-20261021/comparison.json",
+      "sha256": "47f2294905d7f6f3c8bb75e7be98db61c908c136b3656c47487cd610fde073ca",
+      "bytes": 3362465,
+      "ok": true,
+      "status": "frozen_comparison_complete",
+      "terminal": {
+        "job_id": "770762",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:17:39",
+        "nodes": "romeo-a043",
+        "terminal": true
+      },
+      "job_id": "770762",
+      "hardware_identity": {
+        "name": "NVIDIA GH200 120GB",
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "uuid": "099dda56d7aff60ec285aa2dc7ddfcfe",
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+      },
+      "measurement_usage": {
+        "harness_requests": 224,
+        "benchmark_requests": 168,
+        "native_reservation_wall_seconds": 4.503536753356457,
+        "cuda_event_kernel_seconds": 0.025009600008372216,
+        "native_compile_stage_wall_seconds": 0.637907477,
+        "native_cache_hits": 220,
+        "native_cache_misses": 4
+      },
+      "sanitizer_usage": {
+        "tool_calls": 48,
+        "native_reservation_wall_seconds": 22.15927963424474,
+        "instrumented_times_excluded_from_comparisons": true
+      },
+      "comparisons": {
+        "agent_vs_baseline": {
+          "evaluation_id": "7de1622b5e50491a8fefd624a2ba4689",
+          "artifact_hash": "f99c6ba7f3a3f366edae8aaca17c4cdb7997d14116b4c372e1a2c417694ad397",
+          "status": "not_improved",
+          "interval": {
+            "gain": 0.8307313219924599,
+            "lower": 0.823755523650804,
+            "upper": 0.83557938692503,
+            "confidence": 0.95,
+            "bootstrap_samples": 2000,
+            "seed": 0,
+            "case_gains": {
+              "final-122": {
+                "gain": 0.7605109068230802,
+                "lower": 0.7492055101320331,
+                "upper": 0.7724824975017253
+              },
+              "final-169": {
+                "gain": 0.7221872904446498,
+                "lower": 0.7144933553374246,
+                "upper": 0.7256340425924401
+              },
+              "final-316": {
+                "gain": 1.0438220539204515,
+                "lower": 1.0315733546828345,
+                "upper": 1.0546308585014272
+              }
+            }
+          },
+          "critical_cases_ok": true,
+          "gain_direction": "baseline latency / agent latency; >1 favors agent",
+          "interpretation": "Fixed fresh paired comparison; decision does not modify any previous campaign incumbent"
+        },
+        "single_prompt_vs_baseline": {
+          "evaluation_id": "50864e6c64b44d42bbde02097bc954d2",
+          "artifact_hash": "588842d7bd6c96340259ec7e3a1ed4163f96fd06d680883f7c2ac22aac497f5a",
+          "status": "inconclusive",
+          "interval": {
+            "gain": 1.0003195815463921,
+            "lower": 0.9882945195479007,
+            "upper": 1.0197784049108545,
+            "confidence": 0.95,
+            "bootstrap_samples": 2000,
+            "seed": 0,
+            "case_gains": {
+              "final-122": {
+                "gain": 0.8782771513126699,
+                "lower": 0.8710280343327281,
+                "upper": 0.9270633256140218
+              },
+              "final-169": {
+                "gain": 0.8555694488199348,
+                "lower": 0.8296019894104193,
+                "upper": 0.8632478752539297
+              },
+              "final-316": {
+                "gain": 1.3320773943168849,
+                "lower": 1.3238907891968528,
+                "upper": 1.3503624532011758
+              }
+            }
+          },
+          "critical_cases_ok": true,
+          "gain_direction": "baseline latency / single_prompt latency; >1 favors single_prompt",
+          "interpretation": "Fixed fresh paired comparison; decision does not modify any previous campaign incumbent"
+        },
+        "native_codex_vs_baseline": {
+          "evaluation_id": "89bddbf0216340628e43421a49ef36a4",
+          "artifact_hash": "4c12a3216027cb3c44b95446ca4574e53feb61836d6a30bf4cf6317aad7ba099",
+          "status": "promoted",
+          "interval": {
+            "gain": 1.1201905818225948,
+            "lower": 1.1019394079195148,
+            "upper": 1.14276361308342,
+            "confidence": 0.95,
+            "bootstrap_samples": 2000,
+            "seed": 0,
+            "case_gains": {
+              "final-122": {
+                "gain": 1.0713746384318918,
+                "lower": 1.0304740425970362,
+                "upper": 1.1145305724255699
+              },
+              "final-169": {
+                "gain": 1.136348861453501,
+                "lower": 1.1005840171718262,
+                "upper": 1.15306456230295
+              },
+              "final-316": {
+                "gain": 1.15457648520829,
+                "lower": 1.1359379799667355,
+                "upper": 1.18411174360601
+              }
+            }
+          },
+          "critical_cases_ok": true,
+          "gain_direction": "baseline latency / native_codex latency; >1 favors native_codex",
+          "interpretation": "Fixed fresh paired comparison; decision does not modify any previous campaign incumbent"
+        },
+        "agent_vs_native_codex": {
+          "evaluation_id": "83a84d90b7404078b4fe8678575c6762",
+          "artifact_hash": "f99c6ba7f3a3f366edae8aaca17c4cdb7997d14116b4c372e1a2c417694ad397",
+          "status": "not_improved",
+          "interval": {
+            "gain": 0.7429837037642778,
+            "lower": 0.7340174888509906,
+            "upper": 0.7517301845102552,
+            "confidence": 0.95,
+            "bootstrap_samples": 2000,
+            "seed": 0,
+            "case_gains": {
+              "final-122": {
+                "gain": 0.6982922141856079,
+                "lower": 0.6808566885607965,
+                "upper": 0.7188940184511344
+              },
+              "final-169": {
+                "gain": 0.6507360834977283,
+                "lower": 0.6411392366474252,
+                "upper": 0.6684199061628213
+              },
+              "final-316": {
+                "gain": 0.9026009283546328,
+                "lower": 0.8915872834607474,
+                "upper": 0.922482715503864
+              }
+            }
+          },
+          "critical_cases_ok": false,
+          "gain_direction": "native_codex latency / agent latency; >1 favors agent",
+          "interpretation": "Fixed fresh paired comparison; decision does not modify any previous campaign incumbent"
+        }
+      },
+      "scope": "Raw frozen generated kernels, not retained-best replacement; no original-upstream kernel; excluded from section16 cohorts"
+    },
+    "diagnostic_loop": {
+      "path": "results/diagnostic-loop-20261021/diagnostic-loop-acceptance.json",
+      "sha256": "7bbe27e150d3f3292bc986ac235be705f4088ad1f60706eb20dc9c7c5f70d571",
+      "bytes": 677002,
+      "ok": true,
+      "status": "diagnostic_loop_acceptance_passed",
+      "checks": {
+        "three_independent_actual_control_evaluations": true,
+        "controls_valid_and_not_promoted": true,
+        "stagnation_links_actual_measurements": true,
+        "actual_targeted_new_dossier": true,
+        "diagnostic_dossier_proposal_chain": true,
+        "guarded_proposal_actually_validated_and_measured": true,
+        "three_controls_integrated_once": true,
+        "fourth_trial_integrated_once": true,
+        "no_final_holdout_exposed": true
+      },
+      "terminal": {
+        "job_id": "770679",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:25:05",
+        "nodes": "romeo-a051",
+        "terminal": true
+      },
+      "job_id": "770679",
+      "observed_usage": {
+        "limits": {
+          "trials": 4
+        },
+        "spent": {
+          "gpu_seconds": 1496.2290450508299,
+          "trials": 4.0,
+          "configurations": 4.0,
+          "model_calls": 5.0,
+          "model_tokens": 3549462.0
+        },
+        "reserved": {}
+      }
+    },
+    "autotuning": {
+      "path": "results/gpu-autotuning-acceptance/20261021-current/autotuning-acceptance.json",
+      "sha256": "38dd03c2a58ca0fe476bf5ccf80cd7852af882d38f9074d34706d8fee8e2f071",
+      "bytes": 853947,
+      "ok": true,
+      "status": "autotuning_acceptance_passed",
+      "checks": {
+        "all_three_launch_bindings_evaluated": true,
+        "every_configuration_validated_before_measurement": true,
+        "source_unchanged_across_launch_configurations": true,
+        "distinct_launches_recorded": true,
+        "fresh_winner_measurement": true,
+        "no_model_invocations": true
+      },
+      "terminal": {
+        "job_id": "770615",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:06:45",
+        "nodes": "romeo-a046",
+        "terminal": true
+      },
+      "job_id": "770615",
+      "hardware_identity": {
+        "name": "NVIDIA GH200 120GB",
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "uuid": "bd261d1d3a6a684806a8dcdf1ce48498",
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+      },
+      "usage": {
+        "harness_requests": 109,
+        "benchmark_requests": 45,
+        "native_reservation_wall_seconds": 2.636741314083338,
+        "cuda_event_kernel_seconds": 0.0046395519920624795,
+        "native_compile_stage_wall_seconds": 0.165104432,
+        "native_cache_hits": 105,
+        "native_cache_misses": 4
+      }
+    },
+    "contracts_cache_reconstruction": {
+      "path": "results/gpu-contract-acceptance/20261021-current/acceptance-summary.json",
+      "sha256": "5541ccaab222a13c3d9a5f6b55c059700017351b684fb557e8592249d9638ff7",
+      "bytes": 4148,
+      "ok": true,
+      "checks": {
+        "valid_control_measured": true,
+        "AC09_double_rejected_before_harness": true,
+        "AC09_tf32_rejected_before_harness": true,
+        "AC09_half_rejected_before_harness": true,
+        "AC13_native_toolchain_tag_mismatch_recompiled": true,
+        "AC13_dependency_content_manifest_invalidated": true,
+        "AC13_toolchain_manifest_invalidated": true,
+        "unstaged_dependencies_fail_closed": true,
+        "AC20_exact_bundle_reconstructed_and_executed": true,
+        "AC12_valid_measured_invalid_hardware_filtered": true
+      },
+      "terminal": {
+        "job_id": "770710",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:02:43",
+        "nodes": "romeo-a043",
+        "terminal": true
+      },
+      "job_id": "770710",
+      "hardware_identity": {
+        "name": "NVIDIA GH200 120GB",
+        "architecture": "sm_90",
+        "compute_capability": {
+          "major": 9,
+          "minor": 0
+        },
+        "uuid": "099dda56d7aff60ec285aa2dc7ddfcfe",
+        "driver_version": 13010,
+        "nvrtc_version": "12.6",
+        "cuda_toolkit_version": 12060,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+      }
+    },
+    "process_recovery": {
+      "path": "results/process-recovery-acceptance-20261021-release/process-recovery-acceptance.json",
+      "sha256": "7d59e2f85f526cf5a8e9142aee0470edc2025d979244d3f50638ee307cd486ec",
+      "bytes": 2884,
+      "ok": true
+    },
+    "rpc_transport": {
+      "path": "results/gpu-rpc-acceptance/20261021-current/allocation-receipt.json",
+      "sha256": "06456a6a1cd0f8b1917b171769aa6f16108b656e821e95206b20fc5f8882f1c5",
+      "bytes": 174496,
+      "ok": true,
+      "job_id": "770863",
+      "source_provenance": {
+        "HEAD": "6292b7d88467ebd528c816d5bdb9daf1760d3b86",
+        "dirty_state": [],
+        "sources": {
+          "optimizer_agent/execution_backend.py": "00bad0e09a6a83587fa0c380a0a44d577b4a0133c72193c847723639df427b06",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/campaign.py": "8505f0a0679679a1791cbf37234648157cb9f110342e4a140d35f1da37f0b68a",
+          "optimizer_agent/campaign_config.py": "59d4ebfba26021b0ebf3fa3497a4d734ea09be8c30c600399c92072d77bd3ff1",
+          "optimizer_agent/benchmark_workloads.py": "c4c6f463b59bdb33e5ced265100e6034469b96d525fc7965fdadf8a09266c058",
+          "optimizer_agent/compile_cache.py": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+          "optimizer_agent/use_harness.py": "4ebb54759d6407d196dc1782dbeadcf22776e403cd49f419870020bdd685ba53",
+          "scripts/gpu_rpc_acceptance.py": "d35b8a78cb43bc56f29c010cd66f4dad3fc2a4cae00f8384e1df4f9eff63ee8a",
+          "scripts/gpu_contract_acceptance.py": "c57bc44bcb61400f7b2a754b8e12db4e8995d58829cf3185b36b5a2492a64424",
+          "scripts/acceptance_intent.py": "f9f5717b2b3bbd0271b07d1e7e8cab0895e967f45cd7dee1d302ce59d516fc06",
+          "examples/naive_matmul.cu": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a",
+          "cuda_test_harness/CMakeLists.txt": "7084efe9715111e444e0013ed01a730d5c96226248718df3f7ec9ffedbe4a31b",
+          "cuda_test_harness/kernel_request.h": "3a1e0e979342060ed8a161d1c01a92736ceec9721a18de270be31d21a1d8daf3",
+          "cuda_test_harness/run_record.h": "5704ae984391bf1f7478492ffc3fe9df28cfa0e44744c9a82611793a984f10b5",
+          "cuda_test_harness/harness.cpp": "365ce5fbf3b2043d197ea810c482d852bd831440e480cc42c45b4956d8ba2698",
+          "cuda_test_harness/cuda_common.h": "3c02bb1374c9e099cb5afefc7c32e4fdf6b795f2d34779a4736c6f71fab90df1",
+          "cuda_test_harness/device_info.h": "1de76d66830425762bbd0c2674fabcc1ad240ac202b8c62d83b8b9c354610291",
+          "cuda_test_harness/third_party/nlohmann/json.hpp": "410977f78a1f79feb79edf7ac78c7e29163ce51809b39b5450eb3f77127ca63b",
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750"
+        }
+      },
+      "transport_summary": {
+        "ok": true,
+        "job_id": "770863",
+        "terminal": {
+          "job_id": "770863",
+          "state": "COMPLETED",
+          "exit_code": "0:0",
+          "elapsed": "00:00:39",
+          "nodes": "romeo-a041",
+          "terminal": true
+        },
+        "checks": {
+          "fixed_order_preserved": true,
+          "native_execution_order_preserved": true,
+          "all_cpu_oracles_and_guards_passed": true,
+          "same_hardware_toolchain": true,
+          "request_and_raw_counts_unchanged": true,
+          "fast_path_used_one_rpc_per_request": true,
+          "fast_rpc_count_matches_actual_ssh_processes": true,
+          "cached_blobs_avoided_repeated_transfers": true
+        },
+        "hardware_identity": {
+          "name": "NVIDIA GH200 120GB",
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "uuid": "ec947ba13e159860163d330d6c66d1b4",
+          "driver_version": 13010,
+          "nvrtc_version": "12.6",
+          "cuda_toolkit_version": 12060,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+        },
+        "model_calls": 0,
+        "source_HEAD": "6292b7d88467ebd528c816d5bdb9daf1760d3b86",
+        "sources_unchanged": true,
+        "snapshot_dirty_after": [],
+        "modes": {
+          "legacy": {
+            "requests": 8,
+            "benchmark_requests": 4,
+            "raw_timings": 8,
+            "median_controller_wall_seconds": 3.143350770493271,
+            "total_controller_wall_seconds": 25.32363054092275,
+            "native_reservation_seconds": 0.08492979872971773,
+            "native_compile_seconds": 0.000723441,
+            "blob_upload_bytes": 0,
+            "ssh_processes": [
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9,
+              9
+            ],
+            "ssh_roundtrips": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "cuda_events_kernel_seconds": 5.360000068321824e-05,
+            "native_cache_hits": 8,
+            "transport_receipts": [
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.129068374983035
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.207350291981129
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.2059546670061536
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.1362115840020124
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.334489458007738
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.104197833017679
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.052892082981998
+              },
+              {
+                "mode": "legacy",
+                "reason": "explicit_legacy",
+                "controller_wall_seconds": 3.080627041985281
+              }
+            ]
+          },
+          "exchange": {
+            "requests": 8,
+            "benchmark_requests": 4,
+            "raw_timings": 8,
+            "median_controller_wall_seconds": 0.5372325835051015,
+            "total_controller_wall_seconds": 4.382100417977199,
+            "native_reservation_seconds": 0.08640090003609657,
+            "native_compile_seconds": 0.000672593,
+            "blob_upload_bytes": 31752,
+            "ssh_processes": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "ssh_roundtrips": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "cuda_events_kernel_seconds": 5.219199974089861e-05,
+            "native_cache_hits": 8,
+            "transport_receipts": [
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.5192547090118751
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.5394496250082739
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 2,
+                "blob_upload_bytes": 31752,
+                "blob_cache_hits": 1,
+                "controller_wall_seconds": 0.5075364999938756
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.5055200419737957
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.524256874981802
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.5296673749980982
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.6250829999917187
+              },
+              {
+                "mode": "exchange_v1",
+                "ssh_roundtrips": 1,
+                "blob_uploads": 0,
+                "blob_upload_bytes": 0,
+                "blob_cache_hits": 3,
+                "controller_wall_seconds": 0.550505291990703
+              }
+            ]
+          }
+        },
+        "protected_jobs": {
+          "770862": {
+            "before": {
+              "JobId": "770862",
+              "JobName": "aco-final-isolation-3282a11debde48d89cd176504c4dcbfd",
+              "UserId": "rmdraux(100267)",
+              "StartTime": "2026-10-21T16:09:25",
+              "NodeList": "romeo-a041",
+              "Restarts": "0",
+              "JobState": "RUNNING"
+            },
+            "after": {
+              "JobId": "770862",
+              "JobName": "aco-final-isolation-3282a11debde48d89cd176504c4dcbfd",
+              "UserId": "rmdraux(100267)",
+              "StartTime": "2026-10-21T16:09:25",
+              "NodeList": "romeo-a041",
+              "Restarts": "0",
+              "JobState": "COMPLETED"
+            },
+            "identity_unchanged": true,
+            "accounting": "770862|aco-final-isolation-3282a11debde48d89cd176504c4dcbfd|COMPLETED|0:0|00:00:21|romeo-a041|2026-10-21T16:09:25|2026-10-21T16:09:46\n770862.batch|batch|COMPLETED|0:0|00:00:21|romeo-a041|2026-10-21T16:09:25|2026-10-21T16:09:46\n770862.extern|extern|COMPLETED|0:0|00:00:21|romeo-a041|2026-10-21T16:09:25|2026-10-21T16:09:46"
+          }
+        },
+        "proof_hashes": {
+          "allocation-receipt.json": "06456a6a1cd0f8b1917b171769aa6f16108b656e821e95206b20fc5f8882f1c5",
+          "allocation-intent.json": "a525c4fb6bc9f2b040a8b17215c3e31c0904ccc35e7bbe4042b67bdcd3574201",
+          "protocol.json": "eb51c567d955af9f6cc26db12f4fd714caa57db81e6935a9e110dcab0fd5aa3f",
+          "preflight-source.json": "b4721021cc393ccf28f3dded0146703ee8240961a7041404a3bbd92873c3fd52",
+          "protected-jobs-before.json": "bf26c0386d2ff169462f3ee021529da9a6f1f38faedc08cf68e7b9234f6caa65",
+          "protected-jobs-after.json": "440782ffdcc563fff408d8f561df7d4afe9be6d009b03dcf4345157f49de63d3"
+        },
+        "execution_source_sha256": {
+          "optimizer_agent/execution_backend.py": "00bad0e09a6a83587fa0c380a0a44d577b4a0133c72193c847723639df427b06",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/campaign.py": "8505f0a0679679a1791cbf37234648157cb9f110342e4a140d35f1da37f0b68a",
+          "optimizer_agent/campaign_config.py": "59d4ebfba26021b0ebf3fa3497a4d734ea09be8c30c600399c92072d77bd3ff1",
+          "optimizer_agent/benchmark_workloads.py": "c4c6f463b59bdb33e5ced265100e6034469b96d525fc7965fdadf8a09266c058",
+          "optimizer_agent/compile_cache.py": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+          "optimizer_agent/use_harness.py": "4ebb54759d6407d196dc1782dbeadcf22776e403cd49f419870020bdd685ba53",
+          "scripts/gpu_rpc_acceptance.py": "d35b8a78cb43bc56f29c010cd66f4dad3fc2a4cae00f8384e1df4f9eff63ee8a",
+          "scripts/gpu_contract_acceptance.py": "c57bc44bcb61400f7b2a754b8e12db4e8995d58829cf3185b36b5a2492a64424",
+          "scripts/acceptance_intent.py": "f9f5717b2b3bbd0271b07d1e7e8cab0895e967f45cd7dee1d302ce59d516fc06",
+          "examples/naive_matmul.cu": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a",
+          "cuda_test_harness/CMakeLists.txt": "7084efe9715111e444e0013ed01a730d5c96226248718df3f7ec9ffedbe4a31b",
+          "cuda_test_harness/kernel_request.h": "3a1e0e979342060ed8a161d1c01a92736ceec9721a18de270be31d21a1d8daf3",
+          "cuda_test_harness/run_record.h": "5704ae984391bf1f7478492ffc3fe9df28cfa0e44744c9a82611793a984f10b5",
+          "cuda_test_harness/harness.cpp": "365ce5fbf3b2043d197ea810c482d852bd831440e480cc42c45b4956d8ba2698",
+          "cuda_test_harness/cuda_common.h": "3c02bb1374c9e099cb5afefc7c32e4fdf6b795f2d34779a4736c6f71fab90df1",
+          "cuda_test_harness/device_info.h": "1de76d66830425762bbd0c2674fabcc1ad240ac202b8c62d83b8b9c354610291",
+          "cuda_test_harness/third_party/nlohmann/json.hpp": "410977f78a1f79feb79edf7ac78c7e29163ce51809b39b5450eb3f77127ca63b",
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750"
+        },
+        "all_sources_match_source_HEAD": true,
+        "prewarm": {
+          "compile_cache_hit": false,
+          "compile_ms": 37.576682,
+          "reservation_wall_seconds": 0.6127991443499923,
+          "transport_receipt": {
+            "mode": "exchange_v1",
+            "ssh_roundtrips": 1,
+            "blob_uploads": 3,
+            "blob_upload_bytes": 2839,
+            "blob_cache_hits": 0,
+            "controller_wall_seconds": 1.2444872080232017
+          }
+        }
+      }
+    },
+    "final_isolation": {
+      "path": "results/gpu-final-isolation-acceptance/20261021-current/allocation-receipt.json",
+      "sha256": "831afbe556adce37e6037cc9231a6525e80fd46a16ef6bee16ccf488ed128001",
+      "bytes": 108130,
+      "ok": true,
+      "job_id": "770862",
+      "worker_terminal": {
+        "job_id": "770862",
+        "state": "COMPLETED",
+        "exit_code": "0:0",
+        "elapsed": "00:00:21",
+        "nodes": "romeo-a041",
+        "terminal": true
+      },
+      "sources_unchanged": true,
+      "usage": {
+        "harness_requests": 14,
+        "benchmark_requests": 1,
+        "native_reservation_wall_seconds": 0.7984125921502709,
+        "cuda_event_kernel_seconds": 4.1727999690920115e-05,
+        "native_compile_stage_wall_seconds": 0.074349691,
+        "native_cache_hits": 12,
+        "native_cache_misses": 2,
+        "profile_native_reservation_wall_seconds": 1.791182555258274
+      },
+      "source_provenance": {
+        "HEAD": "6292b7d88467ebd528c816d5bdb9daf1760d3b86",
+        "dirty_state": [],
+        "sources": {
+          "scripts/gpu_final_isolation_acceptance.py": "0529d70a364622b8abb76a8ba05b2a1ee01ee93cae567194556d809b1959217a",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/benchmark_workloads.py": "c4c6f463b59bdb33e5ced265100e6034469b96d525fc7965fdadf8a09266c058",
+          "optimizer_agent/campaign.py": "8505f0a0679679a1791cbf37234648157cb9f110342e4a140d35f1da37f0b68a",
+          "optimizer_agent/campaign_config.py": "59d4ebfba26021b0ebf3fa3497a4d734ea09be8c30c600399c92072d77bd3ff1",
+          "optimizer_agent/execution_backend.py": "00bad0e09a6a83587fa0c380a0a44d577b4a0133c72193c847723639df427b06",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "optimizer_agent/use_harness.py": "4ebb54759d6407d196dc1782dbeadcf22776e403cd49f419870020bdd685ba53",
+          "scripts/gpu_autotuning_acceptance.py": "4b163e5226bbfdf68ac6f7d8085b0fa94bb6b1be9c64d36feceedf6c9bfc2e0b",
+          "examples/naive_matmul.cu": "c5270000584434d9e9b0863501f0e1a4271ed20e663a9b2c10fd427b60ba0a7a",
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750",
+          "cuda_test_harness/CMakeLists.txt": "7084efe9715111e444e0013ed01a730d5c96226248718df3f7ec9ffedbe4a31b",
+          "cuda_test_harness/kernel_request.h": "3a1e0e979342060ed8a161d1c01a92736ceec9721a18de270be31d21a1d8daf3",
+          "cuda_test_harness/run_record.h": "5704ae984391bf1f7478492ffc3fe9df28cfa0e44744c9a82611793a984f10b5",
+          "cuda_test_harness/harness.cpp": "365ce5fbf3b2043d197ea810c482d852bd831440e480cc42c45b4956d8ba2698",
+          "cuda_test_harness/cuda_common.h": "3c02bb1374c9e099cb5afefc7c32e4fdf6b795f2d34779a4736c6f71fab90df1",
+          "cuda_test_harness/device_info.h": "1de76d66830425762bbd0c2674fabcc1ad240ac202b8c62d83b8b9c354610291",
+          "cuda_test_harness/third_party/nlohmann/json.hpp": "410977f78a1f79feb79edf7ac78c7e29163ce51809b39b5450eb3f77127ca63b"
+        }
+      },
+      "ac14_checks": {
+        "client_request_intervals_overlap": true,
+        "server_intervals_present": true,
+        "same_monotonic_worker": true,
+        "server_execution_serialized": true,
+        "same_worker_and_gpu_uuid": true,
+        "benchmark_oracle_and_environment": true,
+        "benchmark_readonly_and_output_guards": true,
+        "benchmark_raw_count": true,
+        "profile_success_or_explicit_counter_denial": true
+      },
+      "ac19_status": "final_validation_failed",
+      "final_benchmark_requests": 0,
+      "generator_calls": 0,
+      "race_detected": true,
+      "profile_counter_permission_denied": true
+    },
+    "reconstructed_native_finalist": {
+      "path": "results/gpu-reconstructed-acceptance/20261021-current/acceptance-summary.json",
+      "sha256": "83ff0e36b012f0362a053a7a07a9b317a51e26411aa21b0f8644ce61cd5a9cb3",
+      "observed_summary": {
+        "ok": true,
+        "source_HEAD": "412d857391cd1627392f9695614a6369e781400f",
+        "source_files_all_match_HEAD": true,
+        "source_files": 52,
+        "snapshot_dirty_after": [],
+        "job_id": "771414",
+        "session_id": "reconstructed-native-87082e02faec409c80a0104c601a34e4",
+        "terminal": {
+          "job_id": "771414",
+          "state": "COMPLETED",
+          "exit_code": "0:0",
+          "elapsed": "00:00:11",
+          "nodes": "romeo-a041",
+          "terminal": true
+        },
+        "evidence_kind": "romeo_execution",
+        "model_calls": 0,
+        "harness_requests": 1,
+        "benchmark_requests": 0,
+        "new_scores_created": false,
+        "checks": {
+          "independent_cpu_oracle": true,
+          "native_success": true,
+          "actual_gpu_identity": true,
+          "read_only_inputs": true,
+          "missing_output_sentinels": true,
+          "source_launch_options_inputs_unchanged": true,
+          "exact_source_and_compiler_options_executed": true,
+          "one_run_without_timing": true,
+          "clean_worker": true,
+          "owned_slurm_job": true
+        },
+        "artifact_hash": "4c12a3216027cb3c44b95446ca4574e53feb61836d6a30bf4cf6317aad7ba099",
+        "source_sha256": "4ec06a50cda5380ff70d38062cfbb1fd6fec27ad39bd9cba1aedceb0f7602b03",
+        "bundle_sha256": "b33b7f63fc5964afb54ad3b071532497b5e88f7c9854bf450b960dd3e69d1a35",
+        "request_index": 3,
+        "mode": "run",
+        "n": 316,
+        "launch": {
+          "grid": [
+            16,
+            16,
+            1
+          ],
+          "block": [
+            16,
+            16,
+            1
+          ],
+          "shared_memory_bytes": 0
+        },
+        "compiler_options": [],
+        "sentinel_byte": 127,
+        "input_sha256": [
+          "4ae7ccacee846f6d35aca4e92e8bda2826b5f28cb203ac6544d177a0f9642f7b",
+          "f3006d960402be35664f1001a7ca5e42d201268573ebd7aa07673f1c1771ae99"
+        ],
+        "actual_environment": {
+          "name": "NVIDIA GH200 120GB",
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "uuid": "ec947ba13e159860163d330d6c66d1b4",
+          "driver_version": 13010,
+          "nvrtc_version": "12.6",
+          "cuda_toolkit_version": 12060,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+        },
+        "original_environment": {
+          "name": "NVIDIA GH200 120GB",
+          "architecture": "sm_90",
+          "compute_capability": {
+            "major": 9,
+            "minor": 0
+          },
+          "uuid": "099dda56d7aff60ec285aa2dc7ddfcfe",
+          "driver_version": 13010,
+          "nvrtc_version": "12.6",
+          "cuda_toolkit_version": 12060,
+          "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab"
+        },
+        "original_contract_hash": "631ee9bd9a7714fd7e0ccad537ea91b1655f6cb5b7e23ffd7a53e6fc8a0676b8",
+        "original_comparison_sha256": "47f2294905d7f6f3c8bb75e7be98db61c908c136b3656c47487cd610fde073ca",
+        "original_files_unchanged": true,
+        "original_file_count": 3516,
+        "max_absolute_error": 1.71661376953125e-05,
+        "raw_cuda_timings": [],
+        "compile_stage_ms": 202.67357,
+        "native_reservation_seconds": 0.9132253862917423,
+        "transport_receipt": {
+          "mode": "exchange_v1",
+          "ssh_roundtrips": 1,
+          "blob_uploads": 3,
+          "blob_upload_bytes": 804843,
+          "blob_cache_hits": 0,
+          "controller_wall_seconds": 1.7809004579903558
+        },
+        "portable_module_sha256": "64fb31af1627f83b4d3d5c6d46c81ea473141a5a561a0944706b2b6424cc4a21",
+        "source_sha256_map": {
+          "configs/romeo.json": "57f5b5c845af7424a8da33962d00c917c6d44902bff181857d87c54e8e1e6750",
+          "cuda_test_harness/CMakeLists.txt": "7084efe9715111e444e0013ed01a730d5c96226248718df3f7ec9ffedbe4a31b",
+          "cuda_test_harness/cuda_common.h": "3c02bb1374c9e099cb5afefc7c32e4fdf6b795f2d34779a4736c6f71fab90df1",
+          "cuda_test_harness/device_info.h": "1de76d66830425762bbd0c2674fabcc1ad240ac202b8c62d83b8b9c354610291",
+          "cuda_test_harness/harness.cpp": "365ce5fbf3b2043d197ea810c482d852bd831440e480cc42c45b4956d8ba2698",
+          "cuda_test_harness/kernel_request.h": "3a1e0e979342060ed8a161d1c01a92736ceec9721a18de270be31d21a1d8daf3",
+          "cuda_test_harness/run_record.h": "5704ae984391bf1f7478492ffc3fe9df28cfa0e44744c9a82611793a984f10b5",
+          "cuda_test_harness/third_party/nlohmann/json.hpp": "410977f78a1f79feb79edf7ac78c7e29163ce51809b39b5450eb3f77127ca63b",
+          "optimizer_agent/__init__.py": "35316b475621b7c1c5abe272cc4df87c033f88f11fb41e6207eb58f16c62d583",
+          "optimizer_agent/agent_tools.py": "7201d611f03cdd1bfa9c14ed8dfdabe5ca69f916b81d04ece56de7d62a9b3a4b",
+          "optimizer_agent/agent_workload.py": "1adf0f60fe75003927adfe2746bb201281a583226c04a68eaa01f4297179928e",
+          "optimizer_agent/autotuning.py": "14fe7412c867a6006c0bcd1f1d465f47b303b2bc54f314bbee1e5a6076c65d02",
+          "optimizer_agent/benchmark_workloads.py": "c4c6f463b59bdb33e5ced265100e6034469b96d525fc7965fdadf8a09266c058",
+          "optimizer_agent/campaign.py": "8505f0a0679679a1791cbf37234648157cb9f110342e4a140d35f1da37f0b68a",
+          "optimizer_agent/campaign_config.py": "59d4ebfba26021b0ebf3fa3497a4d734ea09be8c30c600399c92072d77bd3ff1",
+          "optimizer_agent/campaign_workflow.py": "f5ba1f85df4d83ec7d456a5966750b3d85bb226f0e73b67c18128cc850a40d4f",
+          "optimizer_agent/codex_backend.py": "4d5fbdac1d14b04d60aab751e55111792dc68d098c5595d5351880b29f15afcc",
+          "optimizer_agent/compile_cache.py": "61a6dd7ba02f9550163f498c5287b43bf75f527b3c79b7a4b01f5829a1898d4e",
+          "optimizer_agent/diagnostics.py": "6a97fc5d23893cde1d862a7366fb596af99dea8cb47825a0c477ffd0648e53a7",
+          "optimizer_agent/evaluation.py": "f922ba882735c912890d0f8db71cea001e37a09f70c8376404020b5a7de2b838",
+          "optimizer_agent/execution_backend.py": "00bad0e09a6a83587fa0c380a0a44d577b4a0133c72193c847723639df427b06",
+          "optimizer_agent/experiment_store.py": "177402db9445b433db0298ddea636896ad50423298bab9b8843f2b3586787d42",
+          "optimizer_agent/frozen_launch.py": "8498e6e1367cda0bfabe83354bef00c273b048dbb68686cef648fa6795e49718",
+          "optimizer_agent/gpu_scheduler.py": "f0310189486b17621ace46ec27a0f2071acd5e1a42e7e4974b823ef7f6f8ef45",
+          "optimizer_agent/greedy_search_policy.py": "8dd5802d328126a6b61c73a0a37ea7a487619992b44c0c64c90dd358e1c35508",
+          "optimizer_agent/hybrid_profiler.py": "edaf5eb6da85dc4fe7cb0499e8141ded227f9cf678d72007edbefb32a2dcf5b7",
+          "optimizer_agent/input_generation.py": "76da4fdf6bdbc88d2ac8fa9d36a29fb7fd03f94db5ce8ef568484c186a647a21",
+          "optimizer_agent/kernel_proposal.py": "51e8b6d79f2edf7cfe31f38edfeee321d5b882d4fa1bc1f0161a553394393a86",
+          "optimizer_agent/nodes.py": "67b1961ddac782d31a7ff54ac5ebe834070693dadec3f1456001c3c311b4f16b",
+          "optimizer_agent/nsight_profiler.py": "e7fa268d0f22b019664238e0636e18081911ad238214c9efb76dc1e88f8fef95",
+          "optimizer_agent/nvidia_research.py": "e53505f31737c3e9ff25d19691ae36e25f047ace8c5f654c3568c16bf9fcab7d",
+          "optimizer_agent/openai_test.py": "65658f0e0305da01a9a1a4f467c5607fb858f61fe00443bf6c30aebc70dcba92",
+          "optimizer_agent/optimization_history.py": "cc06e6ca23dc66fbdc45a9755de649a6e951f2fa37564e1a3b36faa11796b1a4",
+          "optimizer_agent/optimizer_agent.py": "23909e6c8c7bc8d3f60a6946bb92cf7f9551502b5451e192bdea241e3023e1bd",
+          "optimizer_agent/optimizer_config.py": "b6d9d8421d8971f723e5629964ff3e3884e7531d03b5a7e4f675adf1d57374fc",
+          "optimizer_agent/plot_history.py": "6c9014478745e4d8b7e8900d2bea389caa2043efbee448a95039d61bfcfe3bf8",
+          "optimizer_agent/pmpp_guidance.py": "f640ffb9d3002e66d93add246ca6ef99f0619ccdad82ccefeff544fac3765147",
+          "optimizer_agent/portable_export.py": "64fb31af1627f83b4d3d5c6d46c81ea473141a5a561a0944706b2b6424cc4a21",
+          "optimizer_agent/quality_suite.py": "18be72b9ec01071deff8437b3f1a2ec50089fc55cd6df14f5c08e2ed947ab797",
+          "optimizer_agent/remote_worker.py": "125760216f0ecb553e0544513a7d1971302c9f049a24f8cf5ea06080d341c767",
+          "optimizer_agent/research_service.py": "548d53e4702ff4714b21980f23786cf06f18711a35c481469ecc8dd6d868d4d3",
+          "optimizer_agent/search_policy.py": "6212c2743e020007f775ae98d83dcf6e16148b35905df994ede5bb66d3ba2fae",
+          "optimizer_agent/state.py": "654d3e81139fe98105a3db86b4cff7ce639b35696aab92b8b2670f7ac6a6dac8",
+          "optimizer_agent/suite_orchestrator.py": "5f4ee885f1b2915f189ad81e9dc37529c58edb81228d5671b866a72fb793470d",
+          "optimizer_agent/suite_report.py": "045758e8cebcf0186ec01c27429946425a994f86266789ede00e28e906115cec",
+          "optimizer_agent/treequest_eligibility.py": "ffed452e4e5f9e0556bab743ad3c1931f76ee3031f508fd4e58a79ad54cd7db4",
+          "optimizer_agent/upstream_original.py": "fd974e92b2e247a6ca99a879b5fd14f11779a9e497783aae0199fbe2d80d013c",
+          "optimizer_agent/use_harness.py": "4ebb54759d6407d196dc1782dbeadcf22776e403cd49f419870020bdd685ba53",
+          "optimizer_agent/vanilla_gpu_service.py": "4eb95db74c64284e0ff2d3ec3c055b49bcc799c9b32981a9037c7372af87df64",
+          "optimizer_agent/workflow.py": "58ab7b94360112ad329d50432c4d131e965d37cf6c0a2e1f491ff63ea78d0ced",
+          "scripts/acceptance_intent.py": "f9f5717b2b3bbd0271b07d1e7e8cab0895e967f45cd7dee1d302ce59d516fc06",
+          "scripts/gpu_reconstructed_acceptance.py": "7c0b313c8f361c3ad6a7b3059f5e90af415d828dc97c2d19d4f7e4c36c0ec741"
+        },
+        "scope": "One relocated archived execution with independent numerical verification; original qualification and comparison scores are not inherited or updated",
+        "protected_inventory_before": {
+          "time_utc": "2026-10-21T14:38:20.231650+00:00",
+          "jobs": []
+        },
+        "protected_inventory_after": {
+          "time_utc": "2026-10-21T14:39:54.115396+00:00",
+          "jobs": [],
+          "owned_accounting": "771414|aco-reconstructed-native-87082e02faec409c80a0104c601a34e4|COMPLETED|0:0|00:00:11|romeo-a041|2026-10-21T16:38:40|2026-10-21T16:38:51\n771414.batch|batch|COMPLETED|0:0|00:00:11|romeo-a041|2026-10-21T16:38:40|2026-10-21T16:38:51\n771414.extern|extern|COMPLETED|0:0|00:00:11|romeo-a041|2026-10-21T16:38:40|2026-10-21T16:38:51"
+        },
+        "proof_sha256": {
+          "allocation-receipt.json": "ebdc4c23c283273b85fe0909b72158e83820845d42ef34ef58e0e1dab4c6d31c",
+          "allocation-intent.json": "1f4184caee5602f9f6f2a5cfd65a70fa4ced24310b8836695800d9a6d6d6ac7f",
+          "preflight-source.json": "8a98756934bd8127d5e829e8e0d8adcef96de9608ff3b5068e65579f429453bc",
+          "plan.json": "5cb09f421981cee13e25f6f6b1981cc276ddc10631f59ccd54c8dfb13375b715",
+          "origin-before.json": "2b529c797fb4788d215fd8237e874b809a1c77f61a4c3de564d1d259739fc5b0",
+          "origin-after.json": "94a9766162a746fce51dd2d10de38d43fb17a34d12c2e584426909eeedc848fb",
+          "protected-jobs-before.json": "db3737cd3cdcead352d80e0e5515f8b6d2893411b0f4d0995c28f0c0f5fcce99",
+          "protected-jobs-after.json": "b57eb8c2fdc97d32d006276b1a30489bef825dd7c3c902fa7edd20510524505b"
+        }
+      },
+      "scope": "One correctness-only execution of an authenticated reconstructed actual native finalist; no new benchmark, gain or model call"
+    }
+  }
+}

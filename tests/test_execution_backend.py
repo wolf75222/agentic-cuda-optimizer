@@ -319,6 +319,9 @@ def test_start_recovered_terminal_job_requires_new_session_but_allows_history(tm
     class Transport:
         def run(self, command, **kwargs):
             return subprocess.CompletedProcess(command, 0, b'{"ok":true,"job_id":"123"}', b"")
+        def read(self, path, optional=False):
+            assert path.endswith("/job_id.json")
+            return b'{"job_id":"123","session_id":"old"}'
     backend = SlurmBackend(SlurmConfig(), tmp_path, tmp_path / "out", "old", transport=Transport())
     monkeypatch.setattr(backend, "stage", lambda: None)
     monkeypatch.setattr(backend, "status", lambda: {"state": "COMPLETED"})

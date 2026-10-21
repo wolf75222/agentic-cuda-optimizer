@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sqlite3
 import subprocess
+import sys
 import zipfile
 
 import pytest
@@ -192,7 +193,7 @@ def test_sqlite_backup_contains_committed_wal_but_excludes_uncommitted_transacti
 
 def test_cli_help_requires_no_model_or_gpu():
     repo = Path(__file__).resolve().parents[1]
-    result = subprocess.run([str(repo/".venv/bin/python"),str(repo/"scripts/export_study.py"),"--help"],cwd=repo,capture_output=True,text=True)
+    result = subprocess.run([sys.executable,str(repo/"scripts/export_study.py"),"--help"],cwd=repo,capture_output=True,text=True)
     assert result.returncode == 0 and "reconstruct" in result.stdout
 
 
@@ -259,7 +260,7 @@ def test_fresh_cli_exports_and_reconstructs_without_pytest_path_setup(study,tmp_
     from optimizer_agent.portable_export import REPO
     root,candidate,db = study
     script = REPO/"scripts/export_study.py"
-    command = [str(REPO/".venv/bin/python"),str(script)]
+    command = [sys.executable,str(script)]
     export = subprocess.run(command+["export","--study",str(root),"--output",str(tmp_path/"cli-export")],
         cwd=tmp_path,capture_output=True,text=True)
     assert export.returncode == 0,export.stderr
@@ -315,7 +316,3 @@ def test_v2_reference_text_is_omitted_but_exact_receipts_and_rehydration_metadat
     reconstruction = json.loads((tmp_path/"restored/reconstruction.json").read_text())
     assert reconstruction["generation_resume"]["guard_ready"] is False
     assert reconstruction["generation_resume"]["rehydration_required"] is True
-
-
-
-

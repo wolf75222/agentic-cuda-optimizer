@@ -34,8 +34,10 @@ from .greedy_search_policy import GreedySearchPolicy
 from .treequest_eligibility import NoEligibleActions
 from .research_service import ResearchService, ResearchConfig, ResearchDossier, ResearchBlocked
 from .autotuning import Autotuner
+from .tuning_constraints import compile_constraints, ConstraintSpecificationError
 from .pmpp_guidance import PMPP_GUIDANCE
 from .diagnostics import build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary
+from .workload_semantics import operation_spec
 from benchmark_workloads import WorkloadSuite
 from evaluation import Candidate, Evaluator, LaunchRule, WorkloadContract
 from execution_backend import SlurmBackend, SlurmConfig
@@ -118,19 +120,8 @@ class CampaignRuntime:
             raise ValueError("GPU/toolchain changed; scores cannot be merged at resume")
         write_json(env_path, self.environment)
         self.suite = WorkloadSuite(config.workload, self.directory / "evaluator_data", config)
-        self.memory_policy = {
-            "allocations": "A, B and C are distinct, disjoint device allocations; no aliasing",
-            "inputs": "A and B are read-only and checked bitwise after each launch",
-            "input_domain": "Dense finite float32 values in [-1,1]; no NaN/Inf, sparsity or sentinel-input assumptions",
-            "output": "C is output-only, poisoned before every launch; fully overwrite it without reading prior C",
-            "storage": "Contiguous exact-sized float32 buffers; no padding, halo or auxiliary allocation",
-            "sizes": "A/B/C each n*n elements" if config.workload == "matmul" else
-                     "A n, B 3, C n elements" if config.workload == "convolution" else
-                     "A/B n, C 1 element" if config.workload == "reduction" else "A/B/C each n elements",
-            "shape_scalar": "n is positive signed int32 with physically admissible allocations; handle non-divisible tails and use sufficiently wide address arithmetic",
-            "arithmetic": "Full float32 arithmetic; ordinary float32 FMA is allowed; double, TF32, half and bfloat16 arithmetic are excluded",
-            "launches": "Independent invocations; no persistent data, prior-output accumulation or cross-launch synchronization",
-        }
+        semantics = operation_spec(config.workload)
+        self.memory_policy = semantics["memory_policy"]
         self.baseline = self.suite.baseline(REPO / config.baseline_source)
         cases = self.suite.cases()
         perf = [c for c in cases if c.metadata["n"] in config.search_sizes]
@@ -143,6 +134,7 @@ class CampaignRuntime:
             max_critical_regression=config.max_critical_regression,
             required_sanitizers=config.required_sanitizers,
             metadata_json=json.dumps({"operation": config.workload, "precision": "float32",
+                "mathematics": semantics["mathematics"], "layout": semantics["layout"],
                 "timed_scope": "single CUDA kernel, CUDA Events, transfers/compilation excluded",
                 "cache_regime": "warm, inputs reset before every launch",
                 "memory_policy": self.memory_policy,
@@ -187,13 +179,14 @@ class CampaignRuntime:
         self.research_service = ResearchService(self.backend, self.directory / "research", ResearchConfig(
             required=config.research_required, web_required=config.web_search_required,
             experimental=config.experimental_mode is not None,
-            include_pmpp=config.experimental_mode != "ablation_no_pmpp"))
+            include_pmpp=config.experimental_mode != "ablation_no_pmpp",
+            pmpp_permanent_only=config.experimental_mode == "ablation_pmpp_permanent_only"))
         local_harness = Path(config.local_profile_harness).expanduser().resolve() if config.local_profile_harness else executable
         local_runner = runner if config.backend == "local" else (HarnessRuner(local_harness, self.directory / "local-profiles") if local_harness.is_file() else None)
         self.profiler = HybridProfiler(remote_runner=runner if config.backend == "romeo" else None,
                                        local_runner=local_runner,
                                        max_profiles=None, max_seconds=None)
-        self.workload_description = {"contract_hash": self.contract_hash, "operation": config.workload,
+        self.workload_description = {**semantics, "contract_hash": self.contract_hash, "operation": config.workload,
             "signature": self.suite.signature, "precision": "float32 input/output, full float32 arithmetic",
             "layout": "row-major contiguous matrices a[n,n], b[n,n], c[n,n], c[row*n+col]=sum_k a[row*n+k]*b[k*n+col]" if config.workload == "matmul" else "contiguous one-dimensional arrays",
             "memory_policy": self.memory_policy,
@@ -368,7 +361,7 @@ class CampaignRuntime:
                         contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash,
                         source_parent=source_parent,
                         include_pmpp=self.config.experimental_mode != "ablation_no_pmpp",
-                        experimental_mode="ablation_no_pmpp" if self.config.experimental_mode == "ablation_no_pmpp" else None,
+                        experimental_mode=self.config.experimental_mode if self.config.experimental_mode in ("ablation_no_pmpp", "ablation_pmpp_permanent_only") else None,
                         evidence=evidence, workload=self.workload_description)
                     data = asdict(proposal)
                 write_json(path, data)
@@ -378,7 +371,7 @@ class CampaignRuntime:
             if self.config.experimental_mode != "vanilla":
                 Proposal.from_dict(data, parent_id=trial["parent"]["candidate_id"], source_parent_id=source_parent["candidate_id"],
                                    contract_hash=self.contract_hash, family=trial["action"],
-                                   experimental_mode=self.config.experimental_mode if self.config.experimental_mode in ("ablation_no_research", "ablation_no_pmpp") else None)
+                                   experimental_mode=self.config.experimental_mode if self.config.experimental_mode in ("ablation_no_research", "ablation_no_pmpp", "ablation_pmpp_permanent_only") else None)
             if dossier:
                 dossier.validate_proposal(data)
             if data["kernel"] != self.config.workload:
@@ -419,6 +412,13 @@ class CampaignRuntime:
                 proposal_paths = sorted(self.trial_dir(state).glob(f'proposal-{state["repair"]}-*.json'))
                 proposal = read_json(proposal_paths[-1])
                 space = {p["name"]: p["values"] for p in proposal.get("parameter_space", [])}
+                constraints = proposal.get("constraints", [])
+                restrictions = compile_constraints(constraints, space.keys())
+                constraint_receipt = {"status": "compiled", "parameter_names": list(space),
+                                      "constraints": [restriction.to_dict() for restriction in restrictions]}
+                write_json(self.trial_dir(state) / "constraints.json", constraint_receipt)
+                self.store.event(self.config.run_id, "tuning_constraints", {"trial_id": state["trial_id"],
+                    "candidate_id": candidate.candidate_id, **constraint_receipt})
                 if self.config.autotuning_enabled and space and self.config.experimental_mode != "vanilla":
                     tuner = Autotuner(self.evaluator, self.store, self.config.run_id)
                     materialize = tuner.materialize
@@ -434,10 +434,11 @@ class CampaignRuntime:
 
                     tuner.materialize = archive_variant
                     tuned = tuner.search(proposal, space, {"configurations": self.config.max_configurations_per_trial,
-                        "compilations": self.config.max_configurations_per_trial}, hardware_limits=self.properties)
+                        "compilations": self.config.max_configurations_per_trial}, restrictions=restrictions, hardware_limits=self.properties)
                     write_json(self.trial_dir(state) / "autotuning.json", {"configurations": [asdict(x) for x in tuned.configurations],
                         "termination_reason": tuned.termination_reason,
-                        "winner": tuned.best_candidate.candidate_id if tuned.best_candidate else None})
+                        "winner": tuned.best_candidate.candidate_id if tuned.best_candidate else None,
+                        "constraints": constraint_receipt["constraints"]})
                     if tuned.best_candidate is not None:
                         candidate, measurement = tuned.best_candidate, tuned.remeasurement
                     else:
@@ -450,7 +451,15 @@ class CampaignRuntime:
                         measurement = {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": status,
                                        "error": "No valid tuning configuration", "local_statuses": sorted(str(x) for x in statuses)}
                 else:
+                    if not all(restriction(candidate.parameters) for restriction in restrictions):
+                        raise ConstraintSpecificationError("Concrete candidate violates declared tuning constraints")
                     measurement = self.evaluator.benchmark(candidate)
+            except ConstraintSpecificationError as error:
+                write_json(self.trial_dir(state) / "constraints.json", {"status": "rejected", "error": str(error),
+                    "constraints": proposal.get("constraints", [])})
+                self.store.event(self.config.run_id, "tuning_constraints_rejected", {"trial_id": state["trial_id"],
+                    "candidate_id": candidate.candidate_id, "constraints": proposal.get("constraints", []), "error": str(error)})
+                measurement = {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": "contract_violation", "error": str(error)}
             except Exception as error:
                 measurement = {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": "infrastructure_failure", "error": str(error)}
             measurement["attempt_id"] = attempt_id

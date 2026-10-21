@@ -30,7 +30,10 @@ def test_compatibility_cli_dispatches_real_method_adapters(tmp_path, monkeypatch
     result = campaign.main([command, "--config", str(path), "--include-greedy", "--concurrency", "3"])
     assert result == (1 if starts else 0)
     plan = calls[0][1]
-    assert len(plan["entries"]) == 126
+    assert len(plan["entries"]) == 144
+    assert {entry["mode"] for entry in plan["entries"]} == {
+        "full", "true_upstream", "native_codex_vanilla", "greedy_parent",
+        "no_autotuning", "no_research", "no_pmpp", "pmpp_permanent_only"}
     assert {"true_upstream", "native_codex_vanilla", "greedy_parent"} <= set(plan["modes"])
     assert calls[0][2] == 3
     assert calls[-1][0] == ("run" if starts else "status")

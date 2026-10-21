@@ -254,3 +254,49 @@ def test_borrowed_worker_is_never_submitted_or_stopped(tmp_path, monkeypatch):
         assert value.metadata["validation_sizes"] == [1, 17, 63, 64, 128]
     assert value.close() == {"job_id": "caller-owned-job", "ownership": "borrowed", "terminal": False,
                              "state": "BORROWED_WORKER_PRESERVED", "service_closed": True}
+
+
+def test_native_gain_observer_is_private_fresh_once_and_keeps_midturn_tokens_unknown(tmp_path):
+    runner = SimulatedRunner(tmp_path/"runner")
+    config = module.CampaignConfig(run_id="native-observer",workload="scan",search_sizes=(8,),
+        benchmark_series=1,launches_per_series=2,confirmation_batches=2,warmup=0)
+    with module.VanillaGPUService(config,tmp_path/"proof",tmp_path/"child","native-observer",
+            runner=runner,observe_first_gain=True,observer_started_at_unix=time.time()-5) as value:
+        (value.child_workspace/"kernel.cu").write_text(module.baseline_source(config))
+        (value.child_workspace/"launch.json").write_text(json.dumps(value.description["baseline_launch_rule"]))
+        first = http(value,"benchmark",{"source":"kernel.cu","launch":"launch.json"})
+        assert first["ok"] and "first_useful_gain" not in json.dumps(first)
+        state = value.gain_observer.snapshot()
+        receipt = next(iter(state["observations"].values()))
+        assert receipt["decision"] == "not_improved"
+        requests = state["metrics"]["observer_gpu_requests"]
+        assert requests > 0
+        second = http(value,"benchmark",{"source":"kernel.cu","launch":"launch.json"})
+        assert second["result"]["evaluation_id"] != first["result"]["evaluation_id"]
+        metrics = value.observer_metrics()
+        assert metrics["observer_gpu_requests"] == requests
+        assert metrics["method_consumption"]["method_gpu_evaluation_calls"] == 3
+        assert metrics["method_consumption"]["model_tokens"] is None
+        assert metrics["combined_method_and_observer_gpu_wall_seconds"] > metrics["observer_wall_seconds"]
+        assert "first_useful_gain" not in json.dumps(http(value,"properties"))
+
+
+def test_observer_infrastructure_incident_preserves_measurement_then_stops_native_gpu(tmp_path,monkeypatch):
+    runner = SimulatedRunner(tmp_path/"runner")
+    config = module.CampaignConfig(run_id="native-observer-stop",workload="scan",search_sizes=(8,),
+        benchmark_series=1,launches_per_series=2,confirmation_batches=2,warmup=0)
+    with module.VanillaGPUService(config,tmp_path/"proof",tmp_path/"child","observer-stop",
+            runner=runner,observe_first_gain=True) as value:
+        (value.child_workspace/"kernel.cu").write_text(module.baseline_source(config))
+        (value.child_workspace/"launch.json").write_text(json.dumps(value.description["baseline_launch_rule"]))
+        def failure(*args,**kwargs):
+            return {"ok":False,"status":"infrastructure_failure","quarantined":True}
+        monkeypatch.setattr(value.gain_observer.evaluator,"confirm",failure)
+        with pytest.raises(RuntimeError,match="infrastructure"):
+            value.dispatch("benchmark",{"source":"kernel.cu","launch":"launch.json"},request_id="incident")
+        assert json.loads((value.protected_dir/"requests/incident/response.json").read_text())["ok"]
+        before = len(runner.calls)
+        with pytest.raises(RuntimeError,match="stopped"):
+            value.dispatch("validate",{"source":"kernel.cu","launch":"launch.json"})
+        assert len(runner.calls) == before
+        assert value.observer_metrics()["first_useful_gain_status"] == "unknown_incident"

@@ -72,7 +72,10 @@ def fake_execution(tmp_path,*,events=None,returncode=0):
     def version(argv,**kwargs):
         versions.append((argv,kwargs))
         return SimpleNamespace(stdout="codex-cli fixture-version\n")
-    options = dict(service_factory=Service,popen_factory=popen,version_runner=version)
+    def isolation(root, *, codex_executable):
+        return {"ok":True,"sensitive_root":str(Path(root).resolve()),"scope":"CPU fixture; no native isolation claim"}
+    options = dict(service_factory=Service,popen_factory=popen,version_runner=version,
+                   sensitive_root=tmp_path,isolation_probe=isolation)
     return process,calls,versions,options
 
 
@@ -113,11 +116,17 @@ def test_shell_enabled_one_prompt_workspace_scope_and_real_usage_receipts(tmp_pa
     assert argv[argv.index("-m")+1] == "gpt-6-luna"
     assert 'model_reasoning_effort="max"' in argv
     assert "features.shell_tool=true" in argv
-    assert "sandbox_workspace_write.network_access=true" in argv
+    assert "permissions.study_native_tools.network.enabled=true" in argv
+    assert not any("sandbox_workspace_write" in argument for argument in argv)
+    assert 'default_permissions="study_native_tools"' in argv
+    filesystem = next(argument for argument in argv if argument.startswith("permissions.study_native_tools.filesystem="))
+    assert json.dumps(str(tmp_path))+'="deny"' in filesystem
+    assert json.dumps(str(root/"workspace"))+'="write"' in filesystem
     assert "project_doc_max_bytes=0" in argv
     assert "--ignore-user-config" in argv and "--ignore-rules" not in argv
     assert "--ephemeral" in argv and "--json" in argv
-    assert argv[argv.index("--sandbox")+1] == "workspace-write"
+    assert "--sandbox" not in argv
+    assert argv[argv.index("--output-last-message")+1] == str(root/"evidence/last-message.json")
     assert "--add-dir" not in argv and "--dangerously-bypass-approvals-and-sandbox" not in argv
     assert "timeout" not in kwargs
     assert kwargs["cwd"] == root/"workspace"

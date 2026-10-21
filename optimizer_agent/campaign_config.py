@@ -46,10 +46,12 @@ class CampaignConfig:
             raise ValueError("run_id must be a safe, stable identifier")
         if self.backend not in ("romeo", "local"):
             raise ValueError("backend must be romeo or local")
-        if self.experimental_mode not in (None, "vanilla", "ablation_no_research", "ablation_no_tree", "ablation_no_pmpp", "test"):
+        if self.experimental_mode not in (None, "vanilla", "ablation_no_research", "ablation_no_tree", "ablation_no_pmpp", "ablation_pmpp_permanent_only", "test"):
             raise ValueError("Unknown experimental mode")
         if self.experimental_mode is None and not (self.research_required and self.web_search_required):
             raise ValueError("Normal campaigns require code, documentation, web search and PMPP")
+        if self.experimental_mode == "ablation_pmpp_permanent_only" and not (self.research_required and self.web_search_required):
+            raise ValueError("PMPP permanent-only ablation retains mandatory code/documentation/live research")
         if not self.actions or len(set(self.actions)) != len(self.actions):
             raise ValueError("actions must be nonempty and unique")
         if self.reasoning_effort not in ("low", "medium", "high", "xhigh", "max"):

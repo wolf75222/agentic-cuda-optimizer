@@ -11,7 +11,7 @@ import statistics
 from .campaign_config import CampaignConfig
 
 WORKLOADS = ("reduction", "scan", "stencil", "convolution", "matmul", "normalization")
-MODES = ("full", "true_upstream", "native_codex_vanilla", "no_autotuning", "no_research", "no_pmpp")
+MODES = ("full", "true_upstream", "native_codex_vanilla", "no_autotuning", "no_research", "pmpp_permanent_only", "no_pmpp")
 OPTIONAL_MODES = ("greedy_parent",)
 TOOLS = ("memcheck", "racecheck", "initcheck", "synccheck")
 
@@ -44,6 +44,8 @@ def plan_suite(base: CampaignConfig, seeds=(1729, 2718, 3141), *, include_greedy
                     updates.update(experimental_mode="ablation_no_research", research_required=False, web_search_required=False)
                 elif mode == "no_pmpp":
                     updates["experimental_mode"] = "ablation_no_pmpp"
+                elif mode == "pmpp_permanent_only":
+                    updates["experimental_mode"] = "ablation_pmpp_permanent_only"
                 elif mode in ("true_upstream", "native_codex_vanilla"):
                     updates.update(experimental_mode="test", research_required=False, web_search_required=False)
                 config = replace(base, **updates)
@@ -56,11 +58,17 @@ def plan_suite(base: CampaignConfig, seeds=(1729, 2718, 3141), *, include_greedy
                 "generation": "Same fixed iteration/repair controls where applicable; observed costs are not equalized",
                 "domain": "Fixed admissible shapes; fresh sealed final inputs on those same shapes (spec4.3)",
                 "final": "All generators frozen before one new exclusive GPU group; independent CPU oracle, all four sanitizers, fixed AB/BA paired bootstrap",
-                "direct_pairs": "Full against original, native vanilla and each isolated ablation; fixed before generation",
+                "direct_pairs": "Full against original, native vanilla and each isolated ablation; permanent-only against no-PMPP; fixed before generation",
                 "aggregation": "Baseline-normalized final gains; no pooling of raw timings from different leases",
                 "unknowns": "Failures and missing evidence retain their denominator; no synthetic measured gains"},
+            "ablation_contrasts": {
+                "targeted_pmpp_consultation": {"candidate": "full", "reference": "pmpp_permanent_only",
+                                               "comparison_key": "full_vs_pmpp_permanent_only"},
+                "permanent_pmpp_guidance": {"candidate": "pmpp_permanent_only", "reference": "no_pmpp",
+                                            "comparison_key": "pmpp_permanent_only_vs_no_pmpp"}},
             "method_scope": {"true_upstream": "Pinned original LangGraph optimizer with transport/model bridges only",
                 "native_codex_vanilla": "One ordinary tools-enabled Codex prompt; no custom LangGraph optimizer",
+                "pmpp_permanent_only": "Original permanent guide in diagnostics/generation; no targeted cards, book, companion or external PMPP sources",
                 "greedy_parent": "Optional isolated parent-selection ablation; never an upstream substitute"}}
 
 

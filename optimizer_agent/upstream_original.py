@@ -290,7 +290,7 @@ def _candidate_receipt(candidate):
 
 
 def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,model_backend=None,
-                          source_snapshot=None,nvidia_research=False):
+                          source_snapshot=None,nvidia_research=False,observe_first_gain=False):
     """Run real original generation on a borrowed ready worker; no submission.
 
     Final certification is intentionally deferred to the common post-generation
@@ -310,6 +310,13 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             raise ValueError("Original campaign already exists; use resume")
         saved = json.loads(manifest_path.read_text())
     config_data = config.to_dict()
+    observation_path = directory/"observation-policy.json"
+    observation_policy = {"observe_first_gain":bool(observe_first_gain),"feedback_to_method":False}
+    if observation_path.exists() and json.loads(observation_path.read_text()) != observation_policy:
+        raise ValueError("Original observation policy changed at resume")
+    if manifest_path.exists() and not observation_path.exists() and observe_first_gain:
+        raise ValueError("Cannot retrospectively enable a first-gain observer on completed generation")
+    write_json(observation_path,observation_policy)
     config_path = directory/"config.json"
     if config_path.exists() and json.loads(config_path.read_text()) != json.loads(json.dumps(config_data)):
         raise ValueError("Original campaign configuration changed at resume")
@@ -322,6 +329,9 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
         if candidate and hashlib.sha256(Path(candidate["source_path"]).read_bytes()).hexdigest() != candidate["source_hash"]:
             raise ValueError("Frozen original source changed after generation")
         return saved
+    if observe_first_gain:
+        from .gain_observer import assert_observer_available
+        assert_observer_available(directory/"gain-observer")
     properties = runner.get_device_properties(0)
     device_keys = ("name","architecture","uuid","gpu_uuid","compute_capability","driver_version","nvrtc_version","harness_build_id")
     environment = {key:properties[key] for key in device_keys if key in properties}
@@ -339,9 +349,22 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
         launches_per_series=config.launches_per_series,warmup=config.warmup,
         confidence=config.confidence_level,min_relative_gain=config.min_relative_gain,
         max_critical_regression=config.max_critical_regression,
+        required_sanitizers=config.required_sanitizers,
         metadata_json=json.dumps({"precision":"float32","environment":environment,"domain":"fixed supplied shapes"},sort_keys=True))
     evaluator = common_evaluation.Evaluator(runner,contract,suite.oracle,{"short":cases[:2],"search":cases,"performance":performance})
-    baseline_check = evaluator.validate(baseline,"search")
+    validation_cost_path = directory/"independent-validation-costs.json"
+    validation_costs = json.loads(validation_cost_path.read_text()) if validation_cost_path.exists() else []
+    def measured_validation(candidate,label):
+        row = {"label":label,"started_at_unix":time.time(),"status":"pending"}
+        validation_costs.append(row)
+        write_json(validation_cost_path,validation_costs)
+        clock = time.monotonic()
+        try:
+            return evaluator.validate(candidate,"search")
+        finally:
+            row.update(status="completed",wall_seconds=time.monotonic()-clock)
+            write_json(validation_cost_path,validation_costs)
+    baseline_check = measured_validation(baseline,"supplied-baseline-admission")
     write_json(directory/"baseline-independent-validation.json",baseline_check)
     if not baseline_check.get("ok"):
         raise RuntimeError("Original supplied reference failed the independent oracle")
@@ -349,6 +372,16 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
         timeout_seconds=config.model_timeout_seconds,trace_dir=directory/"model"))
     transport = OriginalCodexTransport(backend,config.max_repairs_per_trial,directory/"model-transport")
     harness = OriginalHarnessTransport(runner,directory,cases,suite,evaluator)
+    observer = None
+    observer_failed = False
+    if observe_first_gain:
+        from .gain_observer import GainObserver
+        observer = GainObserver(evaluator,baseline,directory/"gain-observer",method="true_upstream_original",
+            campaign_started_at_unix=started,usage_provider=lambda:{**transport.usage(),
+                "method_gpu_evaluation_wall_seconds":sum(call["elapsed_seconds"] for call in harness.calls)
+                    +sum(row["wall_seconds"] for row in validation_costs)
+                    if all("wall_seconds" in row for row in validation_costs) else None,
+                "method_harness_calls":len(harness.calls)})
     from .vanilla_gpu_service import workload_description
     description = workload_description(config.workload)
     with original_modules(snapshot,directory) as original,SqliteSaver.from_conn_string(str(directory/"original-langgraph.sqlite")) as saver:
@@ -382,12 +415,37 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             iteration=0,validation_ok=False,reference_results=[],reference_attempt=None,messages=[],optimization_history=[],
             best_attempt=None,proposal_retries=0,model_calls=0,error=None,profiling_unavailable=None,stop_reason=None)
         state = checkpoint.values or initial
+        def observe_attempt(current_state):
+            if not observer or not current_state["optimization_history"]:
+                return
+            attempt = current_state["optimization_history"][-1]
+            if attempt.iteration <= 0 or original.nodes.geometric_mean_time(attempt) is None:
+                return
+            observed_source = directory/"observer-candidates"/(str(attempt.iteration)+".cu")
+            observed_source.parent.mkdir(exist_ok=True)
+            if observed_source.exists() and observed_source.read_text() != attempt.kernel_source:
+                raise ValueError("Original observer source changed")
+            observed_source.write_text(attempt.kernel_source)
+            launches = {str(cases[case.case_index].metadata["n"]):{
+                "grid":list(case.request.grid),"block":list(case.request.block),
+                "shared_memory_bytes":case.request.shared_memory_bytes} for case in attempt.case_runs}
+            observed_candidate = common_evaluation.Candidate("original-observer-"+str(attempt.iteration),
+                observed_source,config.workload,FrozenShapeLaunchRule(launches),{})
+            # No observer output is ever inserted into original state/messages,
+            # history, or its selected incumbent. A checkpoint can precede this
+            # callback, so examine it on resume before advancing the graph.
+            observer.observe(observed_candidate,evidence_id="original-attempt-"+str(attempt.iteration))
         try:
+            observe_attempt(state)
             if not checkpoint.values or checkpoint.next:
                 for state in graph.stream(initial,graph_config,stream_mode="values"):
                     write_json(directory/"generation-progress.json",{"iteration":state["iteration"],"model_calls":state["model_calls"],
                         "attempt_count":len(state["optimization_history"]),"error":state["error"]})
+                    observe_attempt(state)
         except Exception as error:
+            if observer:
+                from .gain_observer import ObserverInfrastructureError
+                observer_failed = isinstance(error,ObserverInfrastructureError)
             state = dict(state,error=f"{type(error).__name__}: {error}")
             (directory/"error.log").write_text(traceback.format_exc())
             state.update(original.nodes.finalize_result(state))
@@ -405,7 +463,9 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             frozen["provenance"] = {"method":"true_upstream_original","upstream":identity,"selected_iteration":best.iteration,
                 "selected_origin":"supplied_initial" if best.iteration == 0 else "original_generated_proposal",
                 "requested_model":"gpt-6-luna","reasoning_effort":"max","launch_domain":"fixed supplied shapes; no extrapolation"}
-            validation = evaluator.validate(candidate,"search")
+            validation = ({"ok":False,"status":"infrastructure_failure",
+                "error":"Observer infrastructure incident stopped GPU activity; frozen source retained"}
+                if observer_failed else measured_validation(candidate,"selected-export-validation"))
             write_json(directory/"frozen-search-validation.json",validation)
             write_json(directory/"candidate.json",frozen)
         summary = json.loads((directory/"summary.json").read_text()) if (directory/"summary.json").exists() else {}
@@ -429,6 +489,11 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
             "first_useful_gain_status":"not_recorded_by_method",
             "unknown_metrics":["time_to_first_useful_gain_seconds","model_tokens_to_first_useful_gain"],
             "first_useful_gain_note":"Original raw-geomean selection has no common paired promotion receipt; not inferred from means"}
+        observer_metrics = observer.snapshot()["metrics"] if observer else None
+        if observer_metrics:
+            metrics.update(observer_metrics)
+            metrics["first_useful_gain_note"] = "Independent observer only; original model/control flow receives no result; elapsed includes observation overhead"
+            metrics["unknown_metrics"] = [name for name in metrics["unknown_metrics"] if metrics.get(name) is None]
         manifest = {"run_id":config.run_id,"method":"true_upstream_original","generation_complete":True,
             "status":"generated" if frozen is not None and validation.get("ok") else "generation_failed",
             "certification_status":"not_yet_independently_finalized","candidate":frozen,
@@ -438,14 +503,19 @@ def run_upstream_campaign(config,runner,directory,*,resume=False,finalize=False,
                 "max_model_calls_per_proposal":8*(original_config.max_retries+1)},
             "model":"gpt-6-luna","reasoning_effort":"max","usage":{
                 **transport.usage(),"local_configurations":len(generated),"original_harness_calls":len(harness.calls),
-                "original_harness_elapsed_seconds":sum(call["elapsed_seconds"] for call in harness.calls)},"environment":environment,
+                "original_harness_elapsed_seconds":sum(call["elapsed_seconds"] for call in harness.calls),
+                "gain_observer_wall_seconds":observer_metrics["observer_wall_seconds"] if observer_metrics else None,
+                "combined_method_and_observer_gpu_wall_seconds":observer_metrics["combined_method_and_observer_gpu_wall_seconds"] if observer_metrics else None},"environment":environment,
             "elapsed_seconds":time.time()-started,"metrics":metrics,"termination_reason":summary.get("termination",state.get("error")),
             "original_summary":summary,"search_validation":validation,"global_resource_caps":None,
+            "gain_observer":{"enabled":bool(observer),"receipt":"gain-observer/summary.json" if observer else None,
+                "feedback_to_method":False,"includes_observer_overhead":bool(observer)},
             "adapter_source_hashes":{name:hashlib.sha256((REPO/"optimizer_agent"/name).read_bytes()).hexdigest()
-                for name in ("upstream_original.py","frozen_launch.py","codex_backend.py")},
+                for name in ("upstream_original.py","frozen_launch.py","codex_backend.py","gain_observer.py")},
             "adapter_changes":["local Codex structured chat/tool transport","ROMEO legacy request transport",
                 "provider reasoning effort vocabulary extended to max; other original config checks retained",
                 "independent supplied reference/oracle admission","durable checkpointer attached at compile",
-                "exact shape-table export; final qualification deferred"]}
+                "exact shape-table export; final qualification deferred",
+                "optional independent gain observer outside original state/messages/selection"]}
         write_json(manifest_path,manifest)
         return manifest

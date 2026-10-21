@@ -17,6 +17,8 @@ from optimizer_agent.research_service import (
     NeedsResearch, ResearchBlocked, ResearchConfig, ResearchDossier,
     ResearchService, SourceRecord, observed_web_queries, observed_search_call_count, cuda_documentation_requests,
     SEARCH_SCHEMA, synthesis_schema, normalize_research_references,
+    _passage, render_passages, store_hashed_json,
+    reject_external_pmpp_actions,
 )
 
 
@@ -30,10 +32,28 @@ def proposal_payload():
                     elements_key="n", shared_memory_bytes=0, version=1, tile_x=16, tile_y=16),
                 parameters=[dict(name="tile", value=16)], expected_measurement="Lower target latency",
                 parameter_space=[], parameter_bindings=[],
+                constraints=[],
                 verification_criteria=["Independent oracle and held-out tails pass"])
 
 
 class BackendTests(unittest.TestCase):
+    def test_optional_constraints_validate_names_and_preserve_legacy_empty_default(self):
+        self.assertNotIn("default", PROPOSAL_SCHEMA["properties"]["constraints"])
+        self.assertIn("constraints", PROPOSAL_SCHEMA["required"])
+        legacy = proposal_payload()
+        legacy.pop("constraints")
+        self.assertEqual(Proposal.from_payload(legacy, parent_id="parent", contract_hash="hash", family="tiling").constraints, [])
+        payload = proposal_payload()
+        payload["constraints"] = [dict(op="bounds", parameters=["tile"], values=[8,32])]
+        with self.assertRaisesRegex(ValueError, "unknown parameter"):
+            Proposal.from_payload(payload, parent_id="parent", contract_hash="hash", family="tiling")
+        payload["parameter_space"] = [dict(name="tile", values=[16,32])]
+        payload["parameter_bindings"] = [dict(parameter="tile", target="tile_x")]
+        proposal = Proposal.from_payload(payload, parent_id="parent", contract_hash="hash", family="tiling")
+        self.assertEqual(proposal.constraints, payload["constraints"])
+        replay = Proposal.from_dict(asdict(proposal), parent_id="parent", contract_hash="hash", family="tiling")
+        self.assertEqual(replay.constraints, proposal.constraints)
+
     def test_structured_transport_model_usage_and_no_shell(self):
         events = [{"type": "item.completed", "item": {"type": "agent_message", "text": '{"ok":true}'}},
                   {"type": "turn.completed", "usage": {"input_tokens": 12, "output_tokens": 5}}]
@@ -190,13 +210,24 @@ class ResearchTests(unittest.TestCase):
             sources.append(SourceRecord(source_id, kind, "https://docs.nvidia.com/test", repository,
                 f"sha256:{digest}", "file", "symbol", "full file", "independent read", "original", digest,
                 str(path), "2026-10-21T00:00:00Z", len(body)))
-        return ResearchDossier("research", "hash", "tiling", "gpu-fingerprint", ["real search query"],
+            sources[-1].passages = [_passage(Path(directory), body.decode(), role="full_file", start=1, end=1)]
+            sources[-1].read_receipt_version = 2
+        dossier = ResearchDossier("research", "hash", "tiling", "gpu-fingerprint", ["real search query"],
             "retrieved", "2026-10-21T00:00:00Z", sources, ["code"], ["16x16 block"], [],
             [dict(condition="same ABI", evidence="contract signature matched source launcher", satisfied=True)],
             ["multi-launch CUB host APIs cannot replace a single kernel"], [], ["tiling"],
             [dict(documented_fact="block barriers synchronize a block", observed_code_property="tiles reused",
                   expected_effect_to_measure="fewer input reads", source_ids=["code", "cuda"])],
             ["lower target latency"], ["fresh paired target timings"], ["shared_tiling"])
+        events = [{"type": "item.completed", "item": {"id": "search", "type": "web_search",
+                   "action": {"type": "search", "queries": ["real search query"]}}}]
+        from optimizer_agent.codex_backend import observed_web_activity
+        dossier.receipt_version = 2
+        dossier.observed_web = observed_web_activity(events)
+        dossier.web_events_path, dossier.web_events_sha256 = store_hashed_json(Path(directory), "web.json", events)
+        dossier.supplied_content_path, dossier.supplied_content_sha256 = store_hashed_json(Path(directory), "supplied.json",
+            [{"source": asdict(source), "read_text": render_passages(source.passages)} for source in sources])
+        return dossier
 
     def test_read_receipts_environment_and_new_technique(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -257,14 +288,15 @@ class ResearchTests(unittest.TestCase):
             with self.assertRaisesRegex(ResearchBlocked, "unsatisfied"):
                 replay.research_ready("hash", "tiling", "gpu-fingerprint")
 
-    def test_actual_saved_luna_dossier_all_guards(self):
+    def test_actual_saved_luna_dossier_is_readable_but_requires_passage_refresh(self):
         path = Path(__file__).resolve().parent.parent / "results/gemm-comparison-20261021/agent/research/e2c1998322464ea88717a70a5545176a.json"
         if not path.is_file():
             self.skipTest("Real campaign receipt is local integration evidence, not a checked-in fixture")
         dossier = ResearchDossier.from_dict(json.loads(path.read_text()))
         self.assertEqual(dossier.reference_kernels, ["source-8be5b7397513d692"])
         self.assertEqual(len(dossier.reference_context), 8)
-        self.assertTrue(dossier.research_ready(dossier.workload_hash, dossier.strategy_family, dossier.environment_fingerprint))
+        with self.assertRaisesRegex(ResearchBlocked, "Legacy dossier"):
+            dossier.research_ready(dossier.workload_hash, dossier.strategy_family, dossier.environment_fingerprint)
 
     def test_boolean_or_search_snippet_cannot_satisfy_guard(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -291,6 +323,8 @@ class ResearchTests(unittest.TestCase):
             dossier.sources = [source for source in dossier.sources if source.kind != "pmpp"]
             dossier.pmpp_topics = []
             dossier.experimental_mode = "ablation_no_pmpp"
+            dossier.supplied_content_path, dossier.supplied_content_sha256 = store_hashed_json(Path(directory), "supplied-no-pmpp.json",
+                [{"source": asdict(source), "read_text": render_passages(source.passages)} for source in dossier.sources])
             self.assertTrue(dossier.research_ready("hash", "tiling", "gpu-fingerprint"))
             backend = Backend()
             generator = CandidateGenerator(backend)
@@ -324,8 +358,9 @@ class ResearchTests(unittest.TestCase):
             def generate_json(self, prompt, schema, **kwargs):
                 self.prompts.append(prompt)
                 if len(self.prompts) == 1:
-                    return CodexResult({"sources": [], "rejected_examples": []}, {"input_tokens": 10},
-                        [{"type": "item.completed", "item": {"type": "web_search", "query": "CUTLASS CCCL tiling"}}],
+                    return CodexResult({"sources": [], "rejected_examples": [], "queries": ["declared but not observed"]}, {"input_tokens": 10},
+                        [{"type": "item.completed", "item": {"id": "search", "type": "web_search",
+                          "action": {"type": "search", "queries": ["CUTLASS CCCL tiling"]}}}],
                         "gpt-6-luna", "max", 1, "search-call")
                 contents = json.loads(prompt.split("Actually read source content:\n")[1])
                 references = [entry["source"]["source_id"] for entry in contents if entry["source"]["kind"] == "code"]
@@ -341,7 +376,7 @@ class ResearchTests(unittest.TestCase):
                 return CodexResult(payload, {"input_tokens": 20}, [], "gpt-6-luna", "max", 1, "synthesis-call")
         def fetcher(url, timeout, limit):
             if "raw.githubusercontent.com" in url:
-                return ("// read complete source\n" + "__global__ void kernel() {}\n" * 10).encode(), url
+                return ("// read complete source\nstruct BlockReduce {};\n__global__ void gemm_device() {}\n" + "__global__ void kernel() {}\n" * 10).encode(), url
             return b"<html><p>Official NVIDIA synchronization documentation</p></html>", url
         with tempfile.TemporaryDirectory() as directory:
             backend = Backend()
@@ -350,6 +385,9 @@ class ResearchTests(unittest.TestCase):
                 {"environment_fingerprint": "gpu"})
             self.assertTrue(dossier.research_ready("hash", "tiling", "gpu"))
             self.assertEqual(dossier.usage["input_tokens"], 30)
+            self.assertEqual(dossier.declared_queries, ["declared but not observed"])
+            self.assertEqual(dossier.queries, ["CUTLASS CCCL tiling"])
+            self.assertEqual(dossier.observed_web["search_calls"], 1)
             self.assertIn("__global__ void kernel", backend.prompts[1])
             self.assertIn("Official NVIDIA synchronization", backend.prompts[1])
             self.assertIn("applicability_checks must EXCLUSIVELY list prerequisites", backend.prompts[1])
@@ -366,6 +404,35 @@ class ResearchTests(unittest.TestCase):
             self.assertNotIn("pmpp", {source.kind for source in ablation.sources})
             self.assertNotIn(PMPP_GUIDANCE, ablation_backend.prompts[1])
             self.assertTrue(ablation.research_ready("hash", "tiling", "gpu"))
+            class PermanentBackend(Backend):
+                def generate_json(self, *args, **kwargs):
+                    result = super().generate_json(*args, **kwargs)
+                    if len(self.prompts) == 1:
+                        result.payload["sources"] = [dict(kind=kind, repository="", file="", symbol="",
+                            url="https://shop.elsevier.com/books/book-companion/9780323912310",
+                            section_or_locator="full source", reason="excluded") for kind in ("pmpp", "cuda_documentation")]
+                    return result
+            permanent_backend = PermanentBackend()
+            permanent_backend.prompts = []
+            with patch("optimizer_agent.research_service.consult_pmpp", side_effect=AssertionError("targeted cards excluded")) as consult:
+                permanent = ResearchService(permanent_backend, Path(directory)/"permanent", fetcher=fetcher,
+                    config=ResearchConfig(experimental=True, pmpp_permanent_only=True)).prepare(
+                        {"contract_hash":"hash"}, {}, {"strategy_family":"tiling"}, {"environment_fingerprint":"gpu"})
+                consult.assert_not_called()
+            self.assertEqual(permanent.experimental_mode, "ablation_pmpp_permanent_only")
+            self.assertEqual(permanent.pmpp_topics, [])
+            self.assertNotIn("pmpp", {source.kind for source in permanent.sources})
+            guide = next(source for source in permanent.sources if source.kind == "pmpp_permanent")
+            self.assertEqual(Path(guide.cache_path).read_text(), PMPP_GUIDANCE)
+            self.assertIn("unchanged original permanent guide", permanent_backend.prompts[1])
+            self.assertTrue(permanent.research_ready("hash", "tiling", "gpu"))
+            altered = ResearchDossier.from_dict(permanent.to_dict())
+            altered.pmpp_topics = ["tiling"]
+            with self.assertRaisesRegex(ResearchBlocked, "excluded targeted"):
+                altered.research_ready("hash", "tiling", "gpu")
+            altered.pmpp_topics, altered.experimental_mode = [], None
+            with self.assertRaisesRegex(ResearchBlocked, "explicit experimental marker"):
+                altered.research_ready("hash", "tiling", "gpu")
             class ManySourcesBackend(Backend):
                 def generate_json(self, *args, **kwargs):
                     result = super().generate_json(*args, **kwargs)
@@ -428,12 +495,14 @@ class ResearchTests(unittest.TestCase):
             self.assertIn("__syncthreads", sync_text)
             self.assertEqual(shared.content_sha256, sync.content_sha256)
             self.assertNotEqual(shared.source_id, sync.source_id)
-            missing = dict(requests[0], url=requests[0]["url"].replace("#shared-memory", "#missing"))
+            missing = dict(requests[0], url=requests[0]["url"].replace("#shared-memory", "#missing"),
+                           section_or_locator="#missing")
             with self.assertRaisesRegex(ValueError, "section #missing was not found"):
                 service._open_source(missing)
 
     def test_real_query_receipts_and_explicit_experimental_mode(self):
-        events = [{"type": "item.completed", "item": {"type": "web_search", "query": "NVIDIA CUTLASS tiling"}}]
+        events = [{"type": "item.completed", "item": {"id": "search", "type": "web_search",
+                  "action": {"type": "search", "queries": ["NVIDIA CUTLASS tiling"]}}}]
         self.assertEqual(observed_web_queries(events), ["NVIDIA CUTLASS tiling"])
         with self.assertRaises(ValueError):
             ResearchConfig(required=False)
@@ -478,6 +547,18 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(len(card["content_sha256"]), 64)
         with self.assertRaises(ValueError):
             consult_pmpp(["invented-book-page"])
+
+    def test_permanent_only_requires_explicit_marker_and_rejects_external_consultation(self):
+        with self.assertRaisesRegex(ValueError, "explicit experimental"):
+            ResearchConfig(pmpp_permanent_only=True)
+        with self.assertRaisesRegex(ValueError, "permanent guide"):
+            ResearchConfig(experimental=True, pmpp_permanent_only=True, include_pmpp=False)
+        for action in [dict(type="search", queries=["PMPP tiling chapter"]),
+                       dict(type="open_page", url="https://shop.elsevier.com/books/book-companion/9780323912310")]:
+            with self.assertRaises(ResearchBlocked):
+                reject_external_pmpp_actions([dict(type="item.completed", item=dict(id="actual", type="web_search", action=action))])
+        reject_external_pmpp_actions([dict(type="item.completed",item=dict(id="actual",type="web_search",
+            action=dict(type="search",queries=["NVIDIA CCCL shared memory implementation"])))])
 
 
 if __name__ == "__main__":
