@@ -97,6 +97,13 @@ class CampaignRuntime:
         self.config, self.runner, self.directory = config, runner, Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
         self.generation_only = bool(generation_only)
+        self.rehost_marker = self.directory / "unscored-rehost.json"
+        self.rehost_context = read_json(self.rehost_marker) if self.rehost_marker.exists() else None
+        if self.rehost_marker.exists() and (not isinstance(self.rehost_context,dict)
+                or self.rehost_context.get("phase") != "committed"
+                or self.rehost_context.get("old_proof",{}).get("run_id") != config.run_id
+                or not self.generation_only):
+            raise ValueError("Only a committed unscored generation transfer can start a fresh context")
         mode_path = self.directory / "execution-mode.json"
         execution_mode = {"generation_only": self.generation_only}
         if mode_path.exists() and read_json(mode_path) != execution_mode:
@@ -168,10 +175,11 @@ class CampaignRuntime:
             self.baseline_latencies, actions=list(config.actions), contract_fingerprint=self.contract_hash,
             environment_fingerprint=self.environment_hash,
             budget_limits={"trials": config.max_trials},
-            seed=config.seed)
+            seed=config.seed, **({"rehost_marker": self.rehost_marker} if self.rehost_context else {}))
         baseline_cost = self.baseline_measurement.get("resource_wall_seconds", 0)
-        self.store.reserve(config.run_id, "baseline-bootstrap", {"gpu_seconds": baseline_cost})
-        self.store.reconcile(config.run_id, "baseline-bootstrap", {"gpu_seconds": baseline_cost})
+        baseline_reservation = self.rehost_context["baseline_reservation_id"] if self.rehost_context else "baseline-bootstrap"
+        self.store.reserve(config.run_id, baseline_reservation, {"gpu_seconds": baseline_cost})
+        self.store.reconcile(config.run_id, baseline_reservation, {"gpu_seconds": baseline_cost})
         bundled = Path("/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex")
         codex_executable = os.environ.get("CODEX_CLI_PATH") or (str(bundled) if bundled.is_file() else "codex")
         self.raw_backend = model_backend or CodexBackend(CodexConfig(executable=codex_executable,
@@ -237,10 +245,24 @@ class CampaignRuntime:
             path = self.trial_dir(state) / f'evaluation-{state["candidate_id"]}.json'
             if path.exists():
                 receipt = read_json(path)
+                receipt = self._historical_error_context(receipt)
                 evidence["previous_evaluation"] = evaluation_summary(receipt)
                 evidence["previous_evaluation_reference"] = evidence_reference(path, self.directory,
                     kind="evaluation", identity=receipt.get("evaluation_id"))
         return evidence
+
+    def _historical_error_context(self, receipt):
+        if receipt.get("contract_hash") and receipt["contract_hash"] != self.contract_hash:
+            if (not getattr(self,"rehost_context",None) or receipt.get("status") != "compilation_error"
+                    or receipt["contract_hash"] != self.rehost_context["old_proof"]["identity"]["contract"]
+                    or receipt.get("candidate_id") != self.rehost_context["old_proof"]["checkpoint"]["state"]["candidate_id"]):
+                raise ValueError("A measurement from another contract cannot guide this performance context")
+            return {**receipt,"historical_context":{
+                "scope":"Compilation failure on the previous allocation; no current performance observation",
+                "previous_contract_hash":receipt["contract_hash"],
+                "previous_environment_fingerprint":self.rehost_context["old_proof"]["identity"]["environment"],
+                "context_id":self.rehost_context["context_id"],"ranking_eligible":False}}
+        return receipt
 
     def initialize(self, state):
         self.store.event(self.config.run_id, "checkpoint", {"phase": "initialize", "resume": bool(state.get("initialized"))})
@@ -599,6 +621,8 @@ class CampaignRuntime:
                     references.append(evidence_reference(trace, self.directory,
                         kind="blocked_proposal_model_receipt", identity=calls[-1].call_id))
         measurement = receipt(directory / f'evaluation-{state.get("candidate_id")}.json', "evaluation", "evaluation_id")
+        if measurement is not None:
+            measurement = self._historical_error_context(measurement)
         confirmation = receipt(directory / "confirmation.json", "confirmation", "evaluation_id")
         profile = receipt(directory / "profile.json", "profile")
         history = []

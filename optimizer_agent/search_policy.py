@@ -83,7 +83,7 @@ class SearchPolicy:
                  baseline_latencies: dict, weights=None, actions=None,
                  contract_fingerprint="", environment_fingerprint="",
                  budget_limits=None, finalization_reserve=None, seed=0,
-                 max_batch_size=8, action_families=None):
+                 max_batch_size=8, action_families=None, rehost_marker=None):
         verify_treequest_pin()
         self.store, self.run_id = store, run_id
         self.baseline_latencies = dict(baseline_latencies)
@@ -105,6 +105,11 @@ class SearchPolicy:
             "treequest_revision":TREEQUEST_REVISION,
             "eligibility_extension":ELIGIBILITY_EXTENSION_VERSION,
         }
+        if rehost_marker is not None:
+            if finalization_reserve:
+                raise ValueError("An unscored context transfer cannot change finalization reservations")
+            from .unscored_rehost import verified_rehost_identity
+            verified_rehost_identity(store,run_id,rehost_marker,self.identity,budget_limits)
         store.initialize_campaign(run_id,self.identity,budget_limits,finalization_reserve)
         store.archive_candidate(run_id,baseline_state)
         with store.transaction() as db:

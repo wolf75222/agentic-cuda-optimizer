@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T16:32:46.216194+00:00",
+  "generated_at_utc": "2026-10-21T17:14:41.635514+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -153,7 +153,9 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 59
+    "evidence_entries": 61,
+    "latest_local_junit_entries": 897,
+    "latest_local_testcase_nodes": 892
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -4315,6 +4317,20 @@
       "tests_passed": 785,
       "subtests_passed": 5,
       "scope": "Source hashes in receipt; CPU recovery/diagnostics/reconnect regression suite only. No new ROMEO qualification."
+    },
+    "local_unscored_release": {
+      "path": "docs/validation/unscored-local-tests.json",
+      "sha256": "045764cdeeeb209a888b84803f9f5023322fd84000b67f5c69236737df6876de",
+      "kind": "local_cpu_test_release",
+      "git_base": "06bd4be0ab2e725deb52f38412d6f42c123d51e6",
+      "dirty_checkout": true,
+      "source_manifest_sha256": "19554b3de0bfa030654e34b641c8a42bf9d3b53073100efa62ba49a72195b7c5",
+      "source_files_count": 140,
+      "tests_passed": 892,
+      "subtests_passed": 5,
+      "junit_reported_results": 897,
+      "junit_sha256": "501cdfc86587137ba0d2dd6fca6823893d2a3d48f6d35946714a015da9d295de",
+      "scope": "Hashes exacts des sources/tests du checkout modifié au06bd4be;régressionsCPU unscored rehost et consommation observée. Pas de nouvelle preuveROMEO ni CI des changements dirty."
     }
   },
   "requirements": {
@@ -4631,7 +4647,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_campaign_workflow": 5,
@@ -4644,7 +4661,18 @@
           "test_greedy_search_policy": 12,
           "test_process_recovery_acceptance": 1
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -4691,7 +4719,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_campaign_workflow": 5,
@@ -4705,7 +4734,18 @@
           "test_gpu_final_isolation_acceptance": 12,
           "test_compare_frozen_kernels": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -5375,7 +5415,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -5387,7 +5428,18 @@
           "test_gpu_final_isolation_acceptance": 12,
           "test_compare_frozen_kernels": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -5430,7 +5482,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -5442,7 +5495,18 @@
           "test_gpu_autotuning_acceptance": 2,
           "test_gpu_contract_acceptance": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": true,
@@ -6063,7 +6127,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -6080,7 +6145,18 @@
           "test_diagnostic_loop_acceptance": 4,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": true,
@@ -6192,7 +6268,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -6200,7 +6277,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -6240,7 +6328,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -6248,7 +6337,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -6287,7 +6387,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -6295,7 +6396,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -6338,7 +6450,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_campaign_runtime": 18,
@@ -6350,7 +6463,18 @@
           "test_worker_reservations": 2,
           "test_backend_readonly": 49
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -6443,7 +6567,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -6459,7 +6584,18 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -6679,7 +6815,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -6692,7 +6829,18 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -7668,7 +7816,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -7676,7 +7825,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -7717,7 +7877,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -7725,7 +7886,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -7773,7 +7945,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_campaign_runtime": 18,
@@ -7789,7 +7962,18 @@
           "test_worker_reservations": 2,
           "test_backend_readonly": 49
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -7893,7 +8077,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -7901,7 +8086,18 @@
           "test_gpu_reconstructed_acceptance": 14,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": true,
@@ -8538,7 +8734,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -8546,7 +8743,18 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -8590,7 +8798,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_unscored_release"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -8603,7 +8812,18 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs."
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "additional_test_modules_by_evidence": {
+          "local_unscored_release": {
+            "test_unscored_rehost": 41,
+            "test_campaign_rehost_context": 10,
+            "test_diagnostic_evaluation_receipts": 14,
+            "test_study_report": 30,
+            "test_search_state": 19,
+            "test_suite_resume_boundaries": 9,
+            "test_process_recovery_acceptance": 1
+          }
+        }
       },
       "romeo_executed": {
         "ok": false,
@@ -8719,6 +8939,10 @@
       ],
       "romeo_reexecution": false,
       "ci_new_sha": "pending publication"
+    },
+    {
+      "at": "2026-10-21T17:14:41.635514+00:00",
+      "action": "Added existing892tests+5subtests JUnit and post-run dirty source manifest;no tests rerun and no new ROMEO claims."
     }
   ]
 }

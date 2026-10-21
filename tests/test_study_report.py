@@ -9,6 +9,7 @@ import pytest
 from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
     frozen_pilot_panel, plot_frozen_pilot, FROZEN_ROLES, FROZEN_PAIRS)
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
+from scripts.report_study_fr import gpu_lease_consumption
 
 
 def save(path, value):
@@ -42,6 +43,147 @@ def test_same_call_with_conflicting_usage_cannot_silently_change_totals(tmp_path
     save(tmp_path/"two/model"/("a"*32+".json"), {"status":"completed","usage":{"input_tokens":200,"output_tokens":20}})
     with pytest.raises(ValueError, match="Conflicting observed usage"):
         project_consumption(tmp_path)
+
+
+def test_failed_timeout_and_unreported_structured_receipts_remain_visible(tmp_path):
+    for char, status, extra in [("a", "failed", {}), ("b", "timeout", {"usage": None}),
+                                ("c", "failed", {"usage": {"input_tokens": 0, "output_tokens": 0}})]:
+        receipt = {"call_id": char*32, "status": status, "error": "CLI failed before usage", **extra}
+        save(tmp_path/"original/model"/(char*32+".json"), receipt)
+        save(tmp_path/"rehost/archive/model"/(char*32+".json"), receipt)
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == value["unreported_call_usage"] == 3
+    assert value["calls_without_any_reported_usage"] == 3
+    assert value["model_tokens"] == 0 and value["observed_lower_bounds"]
+    assert value["cost_usd"] is None
+    for call in value["call_provenance"]:
+        assert len(call["receipts"]) == 2 and call["usage_reporting"] == "unreported"
+        assert all(row["has_error"] and row["sha256"] for row in call["receipts"])
+
+
+def native_before_thread():
+    return {"model_started": True, "worker_session": "actual-native-session", "child_pid": 123,
+            "started_at": 1234.5, "thread_ids": [], "status": "failed", "returncode": 1,
+            "usage_events": [], "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0}}
+
+
+def test_native_started_before_first_thread_is_unknown_and_deduplicated_by_invocation(tmp_path):
+    receipt = native_before_thread()
+    for name in ["original", "copied-rehost"]:
+        save(tmp_path/name/"evidence/receipt.json", receipt)
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == value["unreported_call_usage"] == 1
+    assert value["call_provenance"][0]["kind"] == "native"
+    assert value["call_provenance"][0]["identity_bases"] == ["session_pid_started_at"]
+    assert value["call_provenance"][0]["observed_usage"] == {}
+    assert value["cost_usd"] is None
+
+
+def test_native_later_thread_snapshot_links_the_initial_invocation_and_copies(tmp_path):
+    initial = native_before_thread()
+    final = dict(initial, status="completed", thread_ids=["provider-thread"], returncode=0,
+                 usage={"input_tokens": 100, "cached_input_tokens": 80, "output_tokens": 20},
+                 usage_events=[{"usage": {"input_tokens": 100, "output_tokens": 20}}])
+    save(tmp_path/"before/evidence/receipt.json", initial)
+    save(tmp_path/"completed/evidence/receipt.json", final)
+    save(tmp_path/"archive/evidence/receipt.json", final)
+    value = project_consumption(tmp_path)
+    assert value["cli_call_receipts"] == 1 and value["unreported_call_usage"] == 0
+    assert value["model_tokens"] == 120 and value["cached_input_tokens"] == 80
+    assert len(value["call_provenance"][0]["receipts"]) == 3
+
+
+def test_distinct_native_invocations_without_threads_are_not_merged(tmp_path):
+    first = native_before_thread()
+    save(tmp_path/"one/evidence/receipt.json", first)
+    save(tmp_path/"two/evidence/receipt.json", dict(first, child_pid=456, started_at=1235.5))
+    assert project_consumption(tmp_path)["unreported_call_usage"] == 2
+
+
+def test_requested_native_thread_identity_and_unidentifiable_receipt_fail_closed(tmp_path):
+    receipt = {"model_started": True, "requested_thread_id": "reserved-thread", "status": "failed"}
+    save(tmp_path/"one/evidence/receipt.json", receipt)
+    save(tmp_path/"copy/evidence/receipt.json", receipt)
+    assert project_consumption(tmp_path)["unreported_call_usage"] == 1
+    save(tmp_path/"unknown/evidence/receipt.json", {"model_started": True, "status": "failed"})
+    with pytest.raises(ValueError, match="without thread or session/pid/start"):
+        project_consumption(tmp_path)
+
+
+def test_complementary_cached_usage_and_partial_failure_are_not_zero_invoices(tmp_path):
+    receipt = {"call_id": "a"*32, "status": "completed", "usage": {"input_tokens": 100, "output_tokens": 20}}
+    save(tmp_path/"one/model"/("a"*32+".json"), receipt)
+    save(tmp_path/"copy/model"/("a"*32+".json"), dict(receipt, usage={**receipt["usage"], "cached_input_tokens": 80}))
+    save(tmp_path/"failed/model"/("b"*32+".json"), {"status": "timeout", "usage": {
+        "input_tokens": 200, "cached_input_tokens": 160, "output_tokens": 40, "reasoning_output_tokens": 30}})
+    value = project_consumption(tmp_path)
+    assert value["model_tokens"] == 360 and value["cached_input_tokens"] == 240
+    assert value["cli_call_receipts"] == 2 and value["unreported_call_usage"] == 1
+    assert value["partly_reported_call_usage"] == 1 and value["calls_without_any_reported_usage"] == 0
+
+
+@pytest.mark.parametrize("usage", [{"input_tokens": 100, "cached_input_tokens": 101, "output_tokens": 20},
+                                   {"input_tokens": 100, "output_tokens": 20, "reasoning_output_tokens": 21},
+                                   {"input_tokens": -1, "output_tokens": 20}])
+def test_impossible_usage_cannot_be_reported_as_a_lower_bound(tmp_path, usage):
+    save(tmp_path/"one/model"/("a"*32+".json"), {"status": "completed", "usage": usage})
+    with pytest.raises(ValueError, match="token"):
+        project_consumption(tmp_path)
+
+
+def lease(directory, job="123", elapsed="00:00:39", state="COMPLETED", gres="gpu:h100:1"):
+    save(directory/"slurm-session.json", {"job_id": job, "session_id": "owned-"+job,
+        "config": {"host": "romeo", "account": "project", "gres": gres}})
+    if elapsed is not None:
+        save(directory/"slurm-diagnostics/accounting.json", {"job_id": job, "state": state, "elapsed": elapsed})
+
+
+@pytest.mark.parametrize("elapsed,seconds", [("00:00:39", 39), ("49:02:03", 176523),
+                                             ("2-03:04:05", 183845), ("03:04", 184)])
+def test_gpu_leases_use_recorded_slurm_elapsed_formats(tmp_path, elapsed, seconds):
+    lease(tmp_path/"worker", elapsed=elapsed)
+    value = project_consumption(tmp_path)
+    assert value["observed_terminal_allocated_gpu_seconds"] == seconds
+    assert value["observed_terminal_job_count"] == 1
+    assert value["nonterminal_or_unreported_jobIDs"] == []
+
+
+def test_failed_timeout_leases_and_rehost_copies_retain_cost_once(tmp_path):
+    lease(tmp_path/"one/worker", "1", "00:00:05", "FAILED")
+    lease(tmp_path/"archive/worker", "1", "00:00:05", "FAILED")
+    lease(tmp_path/"two/worker", "2", "00:00:07", "TIMEOUT")
+    lease(tmp_path/"three/worker", "3", "1-00:00:00", "COMPLETED")
+    lease(tmp_path/"equivalent-copy/worker", "3", "24:00:00", "COMPLETED")
+    value = gpu_lease_consumption(tmp_path)
+    assert value["observed_terminal_allocated_gpu_seconds"] == 86412
+    assert value["observed_terminal_job_count"] == 3
+    assert len(next(row for row in value["gpu_lease_provenance"] if row["job_id"] == "1")["provenance"]) == 4
+
+
+def test_active_unparsed_or_unverified_leases_remain_unknown_not_zero(tmp_path):
+    lease(tmp_path/"active/worker", "1", elapsed=None)
+    lease(tmp_path/"unparsed/worker", "2", elapsed="unknown")
+    lease(tmp_path/"multi-gpu/worker", "3", gres="gpu:h100:2")
+    save(tmp_path/"orphan/worker/slurm-diagnostics/accounting.json", {"job_id": "4", "state": "COMPLETED", "elapsed": "00:00:39"})
+    value = gpu_lease_consumption(tmp_path)
+    assert value["observed_terminal_job_count"] == 0
+    assert value["nonterminal_or_unreported_jobIDs"] == ["1", "2", "3", "4"]
+    assert value["unpaired_gpu_lease_receipts"]
+
+
+@pytest.mark.parametrize("change", ["job_id", "duration", "session"])
+def test_inconsistent_slurm_receipts_cannot_falsify_allocation_cost(tmp_path, change):
+    lease(tmp_path/"one/worker")
+    if change == "job_id":
+        save(tmp_path/"one/worker/slurm-diagnostics/accounting.json", {"job_id": "other", "state": "COMPLETED", "elapsed": "00:00:39"})
+    elif change == "duration":
+        lease(tmp_path/"copy/worker", elapsed="00:01:00")
+    else:
+        lease(tmp_path/"copy/worker")
+        save(tmp_path/"copy/worker/slurm-session.json", {"job_id": "123", "session_id": "different-owner",
+             "config": {"host": "romeo", "account": "project", "gres": "gpu:h100:1"}})
+    with pytest.raises(ValueError, match="Slurm"):
+        gpu_lease_consumption(tmp_path)
 
 
 def frozen_receipt():
@@ -159,3 +301,19 @@ def test_new_gpu_receipts_keep_executed_source_head_and_hashes_separate_from_rep
         assert row["execution_source_sha256"] == {"worker.py":"frozen-source-sha"}
         assert row["terminal"]["state"] == "COMPLETED"
         assert row["receipt_sha256"] and row["sources_unchanged"]
+
+
+def test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope(tmp_path):
+    save(tmp_path/"results/gpu-reconstructed-acceptance/20261021-current/acceptance-summary.json", {
+        "ok": True, "job_id": "771414", "source_HEAD": "412d857",
+        "source_sha256_map": {"portable_export.py": "executed-source-hash"}, "snapshot_dirty_after": [],
+        "terminal": {"job_id": "771414", "state": "COMPLETED", "exit_code": "0:0"},
+        "scope": "One reconstructed correctness-only run;zero benchmark or model calls"})
+    rows = control_receipts(tmp_path)
+    actual = next(row for row in rows if row["job_id"] == "771414")
+    assert actual["available"] and actual["source_head"] == "412d857"
+    assert actual["execution_source_sha256"] == {"portable_export.py": "executed-source-hash"}
+    pending = next(row for row in rows if row["label"] == "Diagnostic ciblé avec lecteur v2")
+    assert not pending["available"] and pending["ok"] is None
+    assert pending["path"] is pending["receipt_sha256"] is pending["job_id"] is None
+    assert "en attente" in pending["status"]

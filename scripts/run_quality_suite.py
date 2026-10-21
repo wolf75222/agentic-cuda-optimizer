@@ -15,7 +15,7 @@ from optimizer_agent.suite_report import write_report
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation"))
+    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation", "recover-unscored", "resume-unscored-preparation"))
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--config", type=Path)
     parser.add_argument("--seeds", type=int, nargs="+", default=(1729, 2718, 3141))
@@ -51,6 +51,14 @@ def main(argv=None):
         if not args.task:
             parser.error("resume-bootstrap-preparation requires --task")
         recovery = orchestrator.resume_bootstrap_preparation(args.task)
+    elif args.command == "recover-unscored":
+        if not args.task or not args.reason:
+            parser.error("recover-unscored requires --task and --reason")
+        recovery = orchestrator.recover_unscored(args.task,args.reason)
+    elif args.command == "resume-unscored-preparation":
+        if not args.task:
+            parser.error("resume-unscored-preparation requires --task")
+        recovery = orchestrator.resume_unscored_preparation(args.task)
     status = orchestrator.run() if args.command == "run" else orchestrator.status()
     evidence = read_json(args.requirement_evidence) if args.requirement_evidence else None
     write_report(directory, status, evidence=evidence)

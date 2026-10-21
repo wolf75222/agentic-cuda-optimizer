@@ -439,7 +439,7 @@ def observed_metrics(directory, result):
         "time_to_final_generation_seconds": result.get("elapsed_seconds"),
         "first_useful_gain_status": "observed" if first is not None else "no_promoted_gain" if events_path.exists() else "not_recorded_by_method",
         "unknown_metrics": [name for name in ("time_to_first_useful_gain_seconds", "research_seconds") if result.get(name, usage.get(name)) is None],
-        "gpu_seconds_ledger_scope": "Reserved trial wall time includes model/research/SSH; distinct from CUDA Event active kernel time"}
+        "gpu_seconds_ledger_scope": "Trial elapsed ledger includes model/research/SSH and can span interruption downtime; actual allocated GPU time requires distinct Slurm accounting receipts"}
 
 
 class RecordingRunner:
@@ -602,6 +602,11 @@ class SuiteOrchestrator:
             except BlockingIOError:
                 return
             try:
+                rehost_intent = self.directory / "unscored-rehost-intents" / (task["id"]+".json")
+                if rehost_intent.exists():
+                    intent = read_json(rehost_intent)
+                    if intent.get("phase") == "prepared" and task["session"] in {intent.get("previous_session"),intent.get("new_session")}:
+                        return
                 preparation_dirs = [self._directory(task)]
                 if task.get("attempt",0):
                     preparation_dirs.append(self._directory({**task,"attempt":task["attempt"]-1}))
@@ -692,7 +697,7 @@ class SuiteOrchestrator:
                                                        directory / "bootstrap-replay-audit",
                                                        defer_request_files=entry["mode"] == "native_codex_vanilla")
                 if kind == "generation":
-                    kwargs = {"resume": task["state"] == "running"}
+                    kwargs = {"resume": task["state"] == "running" or bool(entry.get("source_recovery"))}
                     if self.generate is generation_adapter:
                         kwargs["sensitive_root"] = self.directory.parent
                     result = self.generate(task["payload"], recording, directory / "generation", task["session"], **kwargs)
@@ -758,6 +763,14 @@ class SuiteOrchestrator:
     def resume_bootstrap_preparation(self, task_id):
         from .bootstrap_recovery import resume_preparation
         return resume_preparation(self, task_id)
+
+    def recover_unscored(self, task_id, reason):
+        from .unscored_rehost import prepare_unscored_rehost
+        return prepare_unscored_rehost(self,task_id,reason)
+
+    def resume_unscored_preparation(self, task_id):
+        from .unscored_rehost import resume_unscored_preparation
+        return resume_unscored_preparation(self,task_id)
 
     def recover_final(self, task_id, reason):
         """Explicit new independent attempt after a proven infrastructure loss.

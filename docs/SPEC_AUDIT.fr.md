@@ -10,12 +10,7 @@ Le JUnit existant `work/live/policy-tests-release.xml` déclare **590 entrées d
 
 Les preuves prioritaires manquantes restent :
 
-Les correctifs postérieurs à cet audit passent **785 tests locaux et 5 sous-tests**
-(zéro échec). Le reçu [recovery-local-tests.json](validation/recovery-local-tests.json)
-enregistre le JUnit et les empreintes des sources exécutées. Ils corrigent le
-format des validations, le contexte parent trop volumineux et la reprise SSH
-avant modèle, avec réconciliation des préparations interrompues. Leur reprise
-effective sur ROMEO et la CI du nouveau SHA restent à acquérir séparément.
+La nouvelle suite locale passe **892 tests et 5 sous-tests**, sans échec, erreur ni skip. Le JUnit déclare 897 résultats en 42.731 s ; la sortie pytest rapportée par le parent indique 43.21 s et 13 avertissements amont. Le reçu [unscored-local-tests.json](validation/unscored-local-tests.json) identifie le HEAD `06bd4be0ab2e725deb52f38412d6f42c123d51e6`, le checkout modifié et les SHA-256 de ses 140 fichiers sources, tests, fixtures et configurations concernés. Les empreintes ont été capturées après le test ; le JUnit ne les embarque pas. Cette preuve précise la reprise sans nouvelle récompense et les bornes de consommation observées, avec déduplication des appels et leases Slurm. Le reçu antérieur [recovery-local-tests.json](validation/recovery-local-tests.json),785 tests +5 sous-tests, est conservé. **Aucune nouvelle exécution ROMEO ni CI des changements non commités n’est déduite de ces tests.**
 
 - **§5.2, lecteur v2** : la chaîne réelle de démarrage est désormais acquise au 45407a2 pour GEMM 3141 full et greedy : Luna → dossier v2 applicable → proposition → validation/mesure → promotion sur cas de recherche. Les passages et références ont été revérifiés avec les gardes du code figé. Les dossiers ont diagnostic_ids=[] : cela ne prouve pas un nouveau passage diagnostic → recherche en v2. Les tours 2/3 sont bloqués par une entrée CLI dépassant sa limite technique, sans plafond de ressources. La boucle diagnostic 770679 reste acquise au 76da, avec certaines lectures historiques partielles.
 - **§16, étude v2** : 144 générations prévues (6 familles × 3 graines × 8 modes), puis18 finales communes. Après les erreursSSH/DNS initiales, les jobs 772656/772658 ont terminé leur génération GEMM 3141, sans finale commune. Le véritable original et le native v2 ne sont toujours pas qualifiés par une comparaison finale commune.
@@ -59,7 +54,7 @@ effective sur ROMEO et la CI du nouveau SHA restent à acquérir séparément.
 | §10.1 | Identités et objets | acquis* | acquis* | acquis* | Intermédiaires, observation arbre et certification restent distincts. |
 | §10.2 | Interfaces applicatives à développer | acquis* | acquis* | partiel | Interfaces et première chaîne modèle v2 réelle acquises; réutilisation/retourtechnique complète et correction de taille du contexte restent à exercer. |
 | §11 | Persistance, reprise et budgets | acquis* | acquis* | partiel | Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures. |
-| §11.1 | État durable | acquis* | acquis* | partiel | Crash/replay local réel de preuveCUDA archivée; pas de nouvelle exécutionROMEO. |
+| §11.1 | État durable | acquis* | acquis* | partiel | Crash/replay local réel de preuveCUDA archivée; pas de nouvelle exécution ROMEO. |
 | §11.2 | Idempotence | acquis* | acquis* | partiel | Reprise complète144 générations/18 groupes non acquise; preuves locales ne sont pas nouveau GPU. |
 | §11.3 | Budgets | acquis* | acquis* | partiel | Budgets globaux explicitement remplacés par compteurs; délais techniques et duréeSlurm restent. |
 | §12 | Configuration proposée | acquis* | acquis* | acquis* | YAML proposé adapté à override humain sans plafonds globaux. |

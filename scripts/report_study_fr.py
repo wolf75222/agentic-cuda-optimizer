@@ -33,6 +33,7 @@ PROOF_PATHS = (
     ("Comparaison GEMM figée, quatre artefacts bruts", FROZEN_RECEIPT),
     ("Transport GPU RPC réel", "results/gpu-rpc-acceptance/20261021-current/allocation-receipt.json"),
     ("Isolation profil/benchmark et contrôle final négatif", "results/gpu-final-isolation-acceptance/20261021-current/allocation-receipt.json"),
+    ("Finaliste natif reconstruit et revalidé", "results/gpu-reconstructed-acceptance/20261021-current/acceptance-summary.json"),
     ("Reprise après arrêt brutal", "results/process-recovery-acceptance-20261021-release/process-recovery-acceptance.json"),
     ("Codex vanilla natif", "results/native-vanilla-20261021/evidence/receipt.json"))
 
@@ -98,44 +99,197 @@ def control_receipts(repo):
             "status": value.get("status", "reçu disponible" if value else "en attente"),
             "ok": value.get("ok"), "job_id": terminal.get("job_id", value.get("job_id")),
             "terminal": terminal, "source_head": provenance.get("HEAD", value.get("source_HEAD")),
-            "source_dirty_state": provenance.get("dirty_state"), "execution_source_sha256": provenance.get("sources", value.get("execution_source_sha256", {})),
-            "sources_unchanged": value.get("sources_unchanged"), "scope": value.get("scope", value.get("evidence_kind"))})
+            "source_dirty_state": provenance.get("dirty_state", value.get("snapshot_dirty_after")),
+            "execution_source_sha256": provenance.get("sources", value.get("execution_source_sha256", value.get("source_sha256_map", {}))),
+            "sources_unchanged": value.get("sources_unchanged"), "available": path.is_file(),
+            "scope": value.get("scope", value.get("evidence_kind"))})
+    receipts.append({"label": "Diagnostic ciblé avec lecteur v2", "path": None,
+        "receipt_sha256": None, "status": "en attente — aucun reçu acquis", "ok": None,
+        "job_id": None, "terminal": {}, "source_head": None, "source_dirty_state": None,
+        "execution_source_sha256": {}, "sources_unchanged": None, "available": False,
+        "scope": "Les dossiers de démarrage v2 ne prouvent pas une nouvelle boucle diagnostic→recherche v2; le reçu historique reste distinct."})
     return receipts
 
 
+def _receipt_snapshot(path):
+    body = Path(path).read_bytes()
+    return json.loads(body), {"path": str(path), "sha256": hashlib.sha256(body).hexdigest()}
+
+
+def _reported_tokens(value, kind):
+    usage = value.get("usage") or {}
+    if not isinstance(usage, dict):
+        raise ValueError("Malformed model usage receipt")
+    tokens = {key: usage[key] for key in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
+              if usage.get(key) is not None}
+    for key, amount in tokens.items():
+        if type(amount) is not int or amount < 0:
+            raise ValueError("Invalid observed token count: " + key)
+    for subset, total in (("cached_input_tokens", "input_tokens"), ("reasoning_output_tokens", "output_tokens")):
+        if subset in tokens and total in tokens and tokens[subset] > tokens[total]:
+            raise ValueError("Observed token subset exceeds its total: " + subset)
+    # The native driver initializes zero counters before its first provider
+    # event. Those counters are not a provider report of zero billed tokens.
+    if not any(tokens.values()) and (value.get("status") != "completed" or
+            (kind == "native" and not value.get("usage_events"))):
+        tokens = {}
+    complete = value.get("status") == "completed" and all(k in tokens for k in ("input_tokens", "output_tokens"))
+    return tokens, complete
+
+
+def _elapsed_seconds(value):
+    """Parse recorded sacct Elapsed, never controller/ledger wall estimates."""
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"(?:(\d+)-)?(\d+):(\d{2})(?::(\d{2}))?", value)
+    if not match:
+        return None
+    days, first, second, third = match.groups()
+    if days is not None and third is None:
+        return None
+    if third is None:  # MM:SS
+        return int(first)*60 + int(second) if int(second) < 60 else None
+    hours, minutes, seconds = int(first), int(second), int(third)
+    if minutes >= 60 or seconds >= 60 or (days is not None and hours >= 24):
+        return None
+    return int(days or 0)*86400 + hours*3600 + minutes*60 + seconds
+
+
+def gpu_lease_consumption(results):
+    """Read authenticated local session/accounting pairs; never contact Slurm."""
+    jobs, orphans = {}, []
+    terminal_states = {"COMPLETED", "FAILED", "TIMEOUT", "CANCELLED", "OUT_OF_MEMORY", "NODE_FAIL",
+                       "PREEMPTED", "BOOT_FAIL", "DEADLINE", "REVOKED", "SPECIAL_EXIT"}
+    for path in sorted(Path(results).rglob("slurm-session.json")):
+        session, origin = _receipt_snapshot(path)
+        job = str(session.get("job_id") or "")
+        if not re.fullmatch(r"\d+", job):
+            orphans.append({**origin, "reason": "session has no valid job_id"})
+            continue
+        config = session.get("config") or {}
+        session_id, gres = session.get("session_id"), config.get("gres")
+        valid = isinstance(session_id, str) and bool(session_id) and bool(re.fullmatch(r"gpu(?::[A-Za-z0-9_-]+)?:1", str(gres)))
+        identity = (session_id, gres, config.get("host"), config.get("account"))
+        row = jobs.setdefault(job, {"job_id": job, "identity": identity, "provenance": [], "terminal": None,
+                                    "unknown_reasons": [], "one_gpu_session_verified": valid})
+        if row["identity"] != identity:
+            raise ValueError("Conflicting Slurm session identity for job " + job)
+        row["provenance"].append(origin)
+        if not valid:
+            row["unknown_reasons"].append("session_id or single-GPU gres not verified")
+        accounting = path.parent/"slurm-diagnostics/accounting.json"
+        if not accounting.is_file():
+            row["unknown_reasons"].append("terminal accounting unavailable")
+            continue
+        receipt, source = _receipt_snapshot(accounting)
+        row["provenance"].append(source)
+        if str(receipt.get("job_id")) != job:
+            raise ValueError("Slurm accounting/session job_id mismatch for " + job)
+        state = str(receipt.get("state", "")).split(" ")[0].rstrip("+")
+        seconds = _elapsed_seconds(receipt.get("elapsed"))
+        if state not in terminal_states or seconds is None or not valid:
+            row["unknown_reasons"].append("nonterminal state, unparsed elapsed or unverified GPU count")
+            continue
+        observation = {"state": state, "elapsed": receipt["elapsed"], "allocated_gpu_seconds": seconds}
+        if row["terminal"] is not None and any(row["terminal"][key] != observation[key]
+                for key in ("state", "allocated_gpu_seconds")):
+            raise ValueError("Conflicting terminal Slurm accounting for job " + job)
+        row["terminal"] = observation
+    for path in sorted(Path(results).rglob("slurm-diagnostics/accounting.json")):
+        if not (path.parent.parent/"slurm-session.json").is_file():
+            value, origin = _receipt_snapshot(path)
+            orphans.append({**origin, "job_id": value.get("job_id"), "reason": "no sibling session authenticating this allocation"})
+    known = [row for row in jobs.values() if row["terminal"] is not None]
+    return {"observed_terminal_allocated_gpu_seconds": sum(row["terminal"]["allocated_gpu_seconds"] for row in known),
+        "observed_terminal_job_count": len(known),
+        "nonterminal_or_unreported_jobIDs": sorted({job for job, row in jobs.items() if row["terminal"] is None} |
+            {str(row["job_id"]) for row in orphans if re.fullmatch(r"\d+", str(row.get("job_id", "")))}),
+        "gpu_lease_provenance": [{key: value for key, value in row.items() if key != "identity"} for row in jobs.values()],
+        "unpaired_gpu_lease_receipts": orphans,
+        "gpu_lease_scope": "Observed lower bound from unique terminal Slurm jobs with matching session and one-GPU gres. Includes model/research/idle during the allocation; excludes queue time. Active/missing/unparsed leases remain unknown. Ledger GPU estimates are not used as allocated wall time."}
+
+
 def project_consumption(results):
-    """Deduplicate completed-call receipts; failed unreported usage stays unknown."""
-    calls = {}
-    def remember(identity, value):
-        if identity in calls and calls[identity].get("usage") != value.get("usage"):
-            raise ValueError("Conflicting observed usage for the same model call: "+identity)
-        calls[identity] = value
-    for path in Path(results).rglob("model/*.json"):
-        value = load(path, {})
-        identity = value.get("call_id", path.stem)
-        if not re.fullmatch(r"[0-9a-f]{32}", str(identity)) or "usage" not in value:
+    """Known totals are lower bounds; missing provider usage is never a zero bill."""
+    snapshots, aliases, parents = [], {}, []
+    def find(index):
+        while parents[index] != index:
+            parents[index] = parents[parents[index]]
+            index = parents[index]
+        return index
+    def remember(kind, value, origin, keys, basis):
+        index = len(snapshots)
+        parents.append(index)
+        snapshots.append({"kind": kind, "value": value, "origin": origin, "aliases": keys, "identity_basis": basis})
+        for key in keys:
+            if key in aliases:
+                parents[find(index)] = find(aliases[key])
+            aliases[key] = index
+    for path in sorted(Path(results).rglob("model/*.json")):
+        value, origin = _receipt_snapshot(path)
+        identity = value.get("call_id") or path.stem
+        if not re.fullmatch(r"[0-9a-f]{32}", str(identity)):
+            if re.fullmatch(r"[0-9a-f]{32}", path.stem):
+                raise ValueError("Invalid structured model call identity: "+str(path))
             continue
-        remember("structured:"+str(identity), value)
-    for path in Path(results).rglob("evidence/receipt.json"):
-        value = load(path, {})
-        if not value.get("thread_ids") or not value.get("model_started"):
+        remember("structured", value, origin, ["structured:"+identity], "call_id")
+    for path in sorted(Path(results).rglob("evidence/receipt.json")):
+        value, origin = _receipt_snapshot(path)
+        if not value.get("model_started"):
             continue
-        identity = ",".join(value["thread_ids"])
-        remember("native:"+identity, value)
+        keys, basis = [], []
+        for key in ("requested_thread_id",):
+            if value.get(key):
+                keys.append("native-thread:"+str(value[key])); basis.append(key)
+        threads = value.get("thread_ids") or []
+        if not isinstance(threads, list) or any(not isinstance(thread, str) or not thread for thread in threads):
+            raise ValueError("Malformed native thread identities: "+str(path))
+        for thread in sorted(set(threads)):
+            keys.append("native-thread:"+str(thread)); basis.append("observed_thread_id")
+        session = value.get("worker_session", value.get("session_id"))
+        if isinstance(session, str) and session and type(value.get("child_pid")) is int and value["child_pid"] > 0 and value.get("started_at") is not None:
+            keys.append("native-invocation:"+json.dumps([session, value["child_pid"], value["started_at"]], separators=(",", ":")))
+            basis.append("session_pid_started_at")
+        if not keys:
+            raise ValueError("Cannot deduplicate model-started native receipt without thread or session/pid/start identity: "+str(path))
+        remember("native", value, origin, keys, ",".join(sorted(set(basis))))
+    groups = {}
+    for index, snapshot in enumerate(snapshots):
+        groups.setdefault(find(index), []).append(snapshot)
     totals = {key: 0 for key in ("input_tokens", "cached_input_tokens", "output_tokens")}
-    unknown = 0
-    for value in calls.values():
-        usage = value.get("usage", {})
-        known = (all(key in usage for key in ("input_tokens", "output_tokens")) and
-                 (value.get("status") == "completed" or any(usage.get(k, 0) for k in ("input_tokens", "output_tokens"))))
-        if not known:
-            unknown += 1
+    provenance = []
+    for group in groups.values():
+        merged, complete, all_aliases = {}, False, sorted({key for item in group for key in item["aliases"]})
+        identity = all_aliases[0]
+        for item in group:
+            tokens, done = _reported_tokens(item["value"], item["kind"])
+            for key, amount in tokens.items():
+                if key in merged and merged[key] != amount:
+                    raise ValueError("Conflicting observed usage for the same model call: "+identity)
+                merged[key] = amount
+            complete |= done
+        # Validate subsets again after merging complementary receipt fields.
+        for subset, total in (("cached_input_tokens", "input_tokens"), ("reasoning_output_tokens", "output_tokens")):
+            if subset in merged and total in merged and merged[subset] > merged[total]:
+                raise ValueError("Observed token subset exceeds its total: "+identity)
         for key in totals:
-            totals[key] += usage.get(key, 0) or 0
-    totals.update(cli_call_receipts=len(calls), unreported_call_usage=unknown,
-                  model_tokens=totals["input_tokens"]+totals["output_tokens"], cost_usd=None,
-                  scope="All retained project model-call receipts, including failures and diagnostic/earlier pilots; deduplicated by call/thread ID",
-                  cached_tokens_included_in_input=True, reasoning_tokens_included_in_output=True)
+            totals[key] += merged.get(key, 0)
+        origins = [{**item["origin"], "status": item["value"].get("status"),
+                    "returncode": item["value"].get("returncode"),
+                    "has_error": bool(item["value"].get("error") or item["value"].get("stderr"))} for item in group]
+        provenance.append({"identity": identity, "aliases": all_aliases, "kind": group[0]["kind"],
+            "identity_bases": sorted({item["identity_basis"] for item in group}), "receipts": origins,
+            "usage_reporting": "complete" if complete else "partial" if merged else "unreported",
+            "observed_usage": merged, "missing_usage_fields": [key for key in totals if key not in merged]})
+    totals.update(cli_call_receipts=len(groups), unreported_call_usage=sum(row["usage_reporting"] != "complete" for row in provenance),
+        calls_without_any_reported_usage=sum(row["usage_reporting"] == "unreported" for row in provenance),
+        partly_reported_call_usage=sum(row["usage_reporting"] == "partial" for row in provenance),
+        calls_without_reported_cached_usage=sum("cached_input_tokens" in row["missing_usage_fields"] for row in provenance),
+        call_provenance=provenance, model_tokens=totals["input_tokens"]+totals["output_tokens"], cost_usd=None,
+        observed_lower_bounds=True,
+        scope="All retained CLI-call receipts including failures, pilots, diagnostics and copied archives; deduplicated by structured call ID or linked native invocation/thread identities. Missing/partial usage remains unknown, not a zero invoice.",
+        cached_tokens_included_in_input=True, reasoning_tokens_included_in_output=True)
+    totals.update(gpu_lease_consumption(results))
     return totals
 
 
@@ -349,13 +503,20 @@ def main():
     report["control_receipts"] = control_receipts(REPO)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
-                 value["source_head"] or "non enregistré", value["path"]] for value in report["control_receipts"]]
+                 value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis"] for value in report["control_receipts"]]
     links = " · ".join(f"<a href='{escape(p.name)}'>{escape(p.name)}</a>" for p in sorted(output.glob("*.zip")))
     ci_html = (f"<a href='{escape(ci.get('url',''))}'>CI du SHA publié</a> : " + ("réussie sur les sources propres de ce SHA" if ci_ok else "ne qualifie pas ce checkout source"))
     consumed = report["project_observed_consumption"]
     consumption_html = table(["Périmètre", "Reçus appelsCLI", "Entrée observée", "Dont cache", "Sortie observée", "Appels à usage inconnu"],
         [["Tout le projet retenu, pilotes et diagnostics inclus", consumed["cli_call_receipts"], consumed["input_tokens"],
           consumed["cached_input_tokens"], consumed["output_tokens"], consumed["unreported_call_usage"]]])
+    consumption_html += table(["Périmètre GPU", "Secondes GPU allouées observées", "Jobs terminaux authentifiés", "Jobs sans durée terminale connue"],
+        [["Borne inférieure des leases Slurm à un GPU, sans temps de queue", consumed["observed_terminal_allocated_gpu_seconds"],
+          consumed["observed_terminal_job_count"], ", ".join(consumed["nonterminal_or_unreported_jobIDs"]) or "aucun parmi les reçus retenus"]])
+    consumption_html += ("<p>Les totaux sont des bornes inférieures observées : un appel sans usage déclaré reste inconnu, sans facture nulle inventée. "
+        "Les secondes allouées proviennent des durées terminales Slurm archivées et incluent recherche, modèle et attente pendant la réservation. "
+        "Les compteurs GPU du ledger peuvent inclure une interruption entre sélection et résultat après rehost ; ils ne représentent pas ces leases Slurm réelles. "
+        "Les coûts en dollars restent inconnus.</p>")
     chart_html = f"<img src='{figure.name}' alt='Trois méthodes comparées par famille et graine avec intervalles appariés'>" if figure else "<p>Aucun gain final commun mesuré à cette date.</p>"
     html = f"""<!doctype html><html lang='fr'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>Comparaison vérifiée des agents CUDA sur ROMEO</title><style>

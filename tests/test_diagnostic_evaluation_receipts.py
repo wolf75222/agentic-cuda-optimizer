@@ -105,6 +105,11 @@ def test_diagnostic_keeps_real_failure_and_profile_as_distinct_observations():
 def test_repair_generation_evidence_consumes_real_receipt_without_model_or_gpu(runtime_setup):
     runtime, _, _, model = runtime_setup
     receipt = recorded("validation-compilation-error.json")
+    # This historical GPU fixture has another contract than the CPU runtime.
+    # Make that provenance explicit rather than relabeling its observed error.
+    runtime.rehost_context = {"context_id":"cpu-test-historical-error",
+        "old_proof":{"identity":{"contract":receipt["contract_hash"],"environment":"historical-gpu"},
+                     "checkpoint":{"state":{"candidate_id":receipt["candidate_id"]}}}}
     state = {**selected(runtime), "candidate_id": receipt["candidate_id"], "repair": 1,
              "error": "compilation_error"}
     path = runtime.trial_dir(state) / f'evaluation-{state["candidate_id"]}.json'
@@ -113,6 +118,7 @@ def test_repair_generation_evidence_consumes_real_receipt_without_model_or_gpu(r
     evidence = runtime.generation_evidence(state)
     assert evidence["previous_error"] == "compilation_error"
     assert evidence["previous_evaluation"]["status"] == "compilation_error"
+    assert evidence["previous_evaluation"]["historical_context"]["ranking_eligible"] is False
     assert 'cannot open source file "math.h"' in evidence["previous_evaluation"]["cases"][0]["report"]["compiler_log"]
     reference = evidence["previous_evaluation_reference"]
     assert reference["path"] == str(path.relative_to(runtime.directory))

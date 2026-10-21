@@ -140,7 +140,7 @@ def evaluation_summary(value: dict | None) -> dict | None:
         "evaluation_id", "attempt_id", "candidate_id", "artifact_hash", "contract_hash",
         "ok", "status", "error", "interval", "critical_cases_ok", "incumbent_id",
         "incumbent_version", "kernel_resources", "diagnostics", "suite", "protocol",
-        "environment", "violations", "source_guard_scope", "resource_wall_seconds") if key in value}
+        "environment", "violations", "source_guard_scope", "resource_wall_seconds", "historical_context") if key in value}
     cases = value.get("cases", {})
     if isinstance(cases, dict):
         summary["cases"] = {case_id: _case_summary(case) for case_id, case in cases.items()}

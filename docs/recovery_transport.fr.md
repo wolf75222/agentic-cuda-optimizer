@@ -79,6 +79,41 @@ GPU ou modèle :
 La propriété distante et l'intégrité des fichiers sont recontrôlées. La même
 session préparée est conservée ; la tentative n'est pas incrémentée deux fois.
 
+## Réparation interrompue avant la première récompense
+
+`recover-unscored` couvre un cas plus restreint : le défaut de diagnostic sur
+une validation `cases` en liste a interrompu une réparation, alors que son job
+est terminé. Il exige une racine TreeQuest neutre, un seul essai en attente,
+aucune évaluation/récompense/promotion intégrée et tous les appels modèle déjà
+achevés et réconciliés. Une campagne ayant appris un score ne peut pas passer
+par ce transfert.
+
+```bash
+.venv/bin/python scripts/run_quality_suite.py recover-unscored \
+  --directory results/quality-study-v2 \
+  --task quality-20261021-v2.matmul.3141.no_autotuning \
+  --reason "Diagnostic cases-list corrigé ; réparation interrompue avant tout score"
+```
+
+La copie conserve tous les espaces de checkpoint LangGraph, le BLOB TreeQuest,
+son RNG, les candidats et les reçus modèle. L'original reste intact. Le nouveau
+worker mesure sa propre baseline ; seul ce nouveau contexte de performance est
+lié à la copie encore sans score. L'ancienne baseline reste archivée et son
+coût est conservé avec une clé distincte. Une nouvelle recherche web et un
+nouveau dossier applicable sont obligatoires : l'ancien dossier n'est pas
+requalifié par simple changement d'identifiant. L'erreur de compilation est
+transmise avec son contrat et son environnement historiques, hors classement.
+
+Une préparation interrompue se réconcilie avec
+`resume-unscored-preparation --directory ... --task ...`. Les copies partielles
+sont conservées ; cette commande ne soumet ni job ni prompt et ne crée pas une
+deuxième session. Le dispatch reste bloqué tant que l'intention est `prepared`.
+
+Le temps écoulé d'un essai peut traverser une interruption sans allocation. Il
+ne constitue donc pas une mesure de réservation GPU. Le bilan distingue les
+durées Slurm effectivement observées, le temps des requêtes natives et les
+durées CUDA Events.
+
 ## Portée des preuves
 
 L'incident du 21 octobre a révélé une perte de lien Wi-Fi et la suppression de
