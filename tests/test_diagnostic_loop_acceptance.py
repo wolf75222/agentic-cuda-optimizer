@@ -17,8 +17,8 @@ def test_prepare_is_service_free_keeps_configured_partition_and_excludes_quality
     monkeypatch.setattr(acceptance,"CampaignRuntime",forbidden)
     config,slurm,plan = acceptance.prepare(tmp_path,"diagnostic-plan",acceptance.REPO/"configs/romeo.json")
     configured = acceptance.SlurmConfig.load(acceptance.REPO/"configs/romeo.json")
-    assert slurm.partition == configured.partition == "long"
-    assert slurm.walltime == configured.walltime == "48:00:00"
+    assert slurm.partition == configured.partition == "short"
+    assert slurm.walltime == configured.walltime == "02:00:00"
     assert config.model == "gpt-6-luna" and config.reasoning_effort == "max"
     assert config.max_trials == 4 and config.actions == ("tiling",)
     assert plan["global_resource_caps"] is None and plan["holdout_exposure"] is False
@@ -27,7 +27,7 @@ def test_prepare_is_service_free_keeps_configured_partition_and_excludes_quality
 
 def test_prepare_preserves_long_partition_walltime_without_an_extra_helper_ceiling(tmp_path):
     config = asdict(acceptance.SlurmConfig.load(acceptance.REPO/"configs/romeo.json"))
-    config["walltime"] = "72:00:00"
+    config.update(partition="long", walltime="72:00:00")
     path = tmp_path/"long.json"
     path.write_text(json.dumps(config))
     _,slurm,plan = acceptance.prepare(tmp_path/"plan","long-lease",path)
