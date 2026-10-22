@@ -150,7 +150,25 @@ def study_aggregate_table(summary):
     return table(["Méthode", "Prévus", "Méthodes réussies", "Méthodes échouées",
                   "Statuts méthode inconnus", "Ratios disponibles (mesures/identités)", "Artefacts qualifiés (mesures/identités)",
                   "Régressions : ratios ponctuels < 1", "Absents/échecs sans mesure", "Ratio géométrique (mesures/identités)",
-                  "Dispersion entre campagnes"], rows)
+                  "Écart-type descriptif toutes familles"], rows)
+
+
+def workload_dispersion_table(summary):
+    rows = []
+    for mode, aggregate in summary.get("aggregates", {}).items():
+        for workload, value in _mapping(aggregate.get("per_workload")).items():
+            seeds = value.get("seeds") if isinstance(value.get("seeds"), list) else []
+            observations = "; ".join(str(item.get("seed")) + ": " + fmt(item.get("gain")) +
+                " (" + str(item.get("status", "inconnu")) + ")" for item in seeds if isinstance(item, dict))
+            rows.append([LABELS.get(mode, mode), FAMILIES.get(workload, workload), value.get("planned", "inconnu"),
+                value.get("measured", "inconnu"), value.get("unmeasured_or_failed", "inconnu"),
+                fmt(value.get("geometric_mean_gain")), fmt(value.get("gain_stddev_between_independent_seeds")),
+                observations or "non enregistrées"])
+    return ("<h3>Dispersion par famille entre graines indépendantes</h3><p>Les valeurs sont celles des agrégats enregistrés, "
+            "séparées par famille et méthode, sans regrouper des opérations différentes. Moins de deux ratios disponibles "
+            "ne permettent pas un écart-type entre graines ; une absence reste inconnue. Les ratios peuvent inclure des identités déterministes.</p>" +
+            table(["Méthode", "Famille", "Prévus", "Ratios disponibles", "Absents/échecs sans ratio", "Ratio géométrique",
+                   "Écart-type entre graines", "Graines : ratio et statut"], rows))
 
 
 def study_campaign_table(summary):
@@ -508,6 +526,7 @@ def campaign_metric_views(summary):
             "independent_final_gain": {"status": row.get("status"),
                 "seconds": row.get("time_to_independently_confirmed_final_gain_seconds"),
                 "scope": "Délai depuis le début de la tâche de génération jusqu’au gain FINAL indépendamment confirmé, attente et interruptions comprises ; pas la seule durée de mesure finale."},
+            "final_closure": row.get("final_closure"),
             "recorded_quality": [{"key": key, "label": label, "value": metrics.get(key), "unit": unit}
                                  for key, label, unit in quality],
             "validation_evidence_basis": metrics.get("validation_evidence_basis"),
@@ -523,7 +542,7 @@ def campaign_metrics_panel(views):
                 "unknown_incident": "inconnu après incident", "unknown_identity_context": "contexte d’identité inconnu"}
     def number(value):
         return fmt(value, 9) if isinstance(value, (int, float)) and not isinstance(value, bool) else "inconnu"
-    blocks = []
+    blocks, shared_groups = [], {}
     for view in views:
         search, final = view["first_useful_search_gain"], view["independent_final_gain"]
         status = search["status"]
@@ -532,6 +551,42 @@ def campaign_metrics_panel(views):
         milestones = table(["Jalon", "Statut enregistré", "Délai (s)", "Tokens bruts au jalon", "Compteur méthode au jalon"], [
             ["Premier gain utile SEARCH", label, number(search["seconds"]), number(search["model_tokens"]), number(search["model_calls"])],
             ["Gain FINAL indépendant", final["status"] or "inconnu", number(final["seconds"]), "non enregistrés", "non enregistrées"]])
+        closure = _mapping(view.get("final_closure"))
+        closed = closure.get("status") == "closed"
+        closure_usage = _mapping(closure.get("reported_generation_usage")) if closed else {}
+        closure_table = table(["Clôture de l’évaluation FINAL", "Valeur", "Périmètre"], [
+            ["Statut / résultat", ("close / " + str(closure.get("outcome", "inconnu"))) if closed else "inconnu / non enregistré",
+             "Clôture distincte du gain, de la qualification numérique et de la fin du worker."],
+            ["Délai depuis le début de génération (s)", number(closure.get("seconds_since_generation_task_start") if closed else None),
+             "Comprend attente et interruptions avant cette clôture ; aucun ancien timestamp n’est reconstruit."],
+            ["Durée du groupe FINAL (s)", number(closure.get("final_group_wall_seconds") if closed else None),
+             "Durée du groupe partagé, répétée comme contexte ; ne pas additionner les campagnes."],
+            ["Tokens génération enregistrés à la clôture", number(closure_usage.get("model_tokens")),
+             "Snapshot brut du ledger de génération, potentiellement incomplet ; pas les tokens consommés pendant FINAL."],
+            ["Compteur méthode génération à la clôture", number(closure_usage.get("model_calls")),
+             "Compteur brut achevé, distinct des identités CLI observées."],
+            ["Tokens / appels modèles pendant FINAL", number(closure.get("final_model_tokens") if closed else None) + " / " + number(closure.get("final_model_calls") if closed else None),
+             "Aucune valeur supposée nulle, aucune interpolation depuis les totaux."],
+            ["Coût facturé USD", number(closure.get("cost_usd") if closed else None), "Inconnu en l’absence de reçu de facturation."]])
+        candidate_cost = _mapping(closure.get("candidate_request_cost")) if closed else {}
+        request_rows = [[label, number(candidate_cost.get(key)), unit] for key, label, unit in (
+            ("observed_rpc_calls", "RPC observés du candidat", "nombre"),
+            ("unique_request_ids", "Identifiants de requêtes uniques du candidat", "nombre"),
+            ("rpc_wall_seconds", "Durées RPC cumulées du candidat", "s"),
+            ("reported_native_reservation_seconds", "Durées natives rapportées : sous-total connu", "s"),
+            ("reported_compile_seconds", "Compilation rapportée : sous-total connu", "s"))]
+        request_rows += [[label, len(candidate_cost[key]) if isinstance(candidate_cost.get(key), list) else "inconnu", "nombre"]
+                        for key, label in (("native_duration_missing_request_ids", "IDs avec durée native manquante"),
+                                           ("native_duration_conflict_request_ids", "IDs avec durée native contradictoire"))]
+        request_cost_table = table(["Requêtes FINAL propres au candidat", "Valeur", "Unité"], request_rows)
+        evidence = _mapping(closure.get("cost_evidence"))
+        if closed and closure.get("group_id") is not None and evidence.get("sha256"):
+            key = (str(closure["group_id"]), str(evidence["sha256"]))
+            shared_cost = _mapping(closure.get("shared_group_request_cost"))
+            if key in shared_groups and shared_groups[key] != shared_cost:
+                shared_groups[key] = {}  # Contradictory copies do not select a preferred cost.
+            else:
+                shared_groups.setdefault(key, shared_cost)
         costs = table(["Coût enregistré", "Valeur", "Unité", "Périmètre"],
             [[cost["label"], number(cost["value"]), cost["unit"], cost["scope"]] for cost in view["recorded_costs"]])
         quality = table(["Validité / configurations enregistrées", "Valeur", "Unité"],
@@ -548,19 +603,33 @@ def campaign_metrics_panel(views):
         blocks.append("<details><summary>" + escape(name) + "</summary><p>Campagne : <code>" +
             escape(str(view["run_id"] or "non enregistré")) + "</code>.</p>" + milestones +
             "<p>SEARCH : " + escape(scope or "périmètre détaillé non enregistré") + "</p><p>FINAL : " + escape(final["scope"]) +
-            "</p>" + quality + "<p>Fondement de validation enregistré : " +
+            "</p>" + closure_table + request_cost_table +
+            "<p>Reçus de coût FINAL : " + escape(str(evidence) if evidence else "non enregistrés") +
+            ". Temps RPC = transport et attente compris ; durées natives = sous-totaux rapportés dédupliqués par identifiant de requête, "
+            "jamais une durée Slurm. Valeurs natives manquantes ou contradictoires restent inconnues. "
+            "La confirmation propre au candidat comprend les deux côtés de sa comparaison au naïf. "
+            "Les autres coûts partagés du naïf et des comparaisons directes sont présentés séparément, sans répartition.</p>" + quality + "<p>Fondement de validation enregistré : " +
             escape(str(basis) if basis is not None else "non enregistré") +
             ". Ces validités SEARCH ne qualifient pas automatiquement le dernier artefact exporté ni FINAL. "
             "La fraction et ses compteurs sont repris tels quels, sans recalcul ni dénominateur supposé. Les compteurs d’observations de configurations et de validations indépendantes dépendent de l’instrumentation de la méthode : un zéro ne signifie pas zéro candidat évalué. Les validités et leurs preuves restent distinctes.</p>" + costs +
             "<p>Usage complet indiqué au dernier callback méthode de l’observateur : " + completeness +
             " ; ce callback peut précéder la fin de génération.</p><p>Liste historique <code>unknown_metrics</code> inchangée : " + escape(unknown) +
             ".</p>" + ("<p>Annotation de vue seulement : " + escape(annotations) + "</p>" if annotations else "") + "</details>")
+    shared_rows = [[group_id, fingerprint, *[number(cost.get(key)) for key in (
+        "observed_rpc_calls", "unique_request_ids", "rpc_wall_seconds", "reported_native_reservation_seconds", "reported_compile_seconds")],
+        *[len(cost[key]) if isinstance(cost.get(key), list) else "inconnu" for key in (
+            "native_duration_missing_request_ids", "native_duration_conflict_request_ids")]]
+        for (group_id, fingerprint), cost in shared_groups.items()]
+    shared_panel = ("<h3>Coûts FINAL partagés, une fois par groupe et reçu</h3><p>Qualification/mesure du naïf et comparaisons directes "
+        "restent partagées. Ces valeurs ne sont ni réparties entre méthodes ni ajoutées à leurs sous-totaux propres.</p>" +
+        table(["Groupe", "SHA du reçu", "RPC observés", "IDs uniques", "Durées RPC (s)", "Durées natives connues (s)", "Compilation connue (s)",
+               "IDs durée manquante", "IDs durée contradictoire"], shared_rows)) if shared_rows else ""
     return ("<h3>Jalons et coûts enregistrés par campagne</h3><p>Les valeurs viennent des métriques déjà enregistrées et fusionnées par méthode. "
             "Le premier gain utile SEARCH reste distinct de la certification FINAL ; une première mesure valide ne suffit pas à le démontrer. "
             "L’observation inline peut augmenter le délai du premier gain. Les tokens et appels à ce jalon restent inconnus s’ils ne sont pas enregistrés, "
             "sans interpolation depuis les totaux. Ces coûts ne constituent pas une comparaison à budget égal. "
             "Les tokens enregistrés peuvent être des sous-totaux incomplets lorsqu’un appel échoué n’a pas retourné d’usage. "
-            "Aucun coût absent ne devient zéro ; aucun coût facturé en USD n’est déduit.</p>" + "".join(blocks))
+            "Aucun coût absent ne devient zéro ; aucun coût facturé en USD n’est déduit.</p>" + "".join(blocks) + shared_panel)
 
 
 def case_comparison_table(summary, direct_views):
@@ -1855,7 +1924,7 @@ Le protocole déclaré couvre {len(plan['workloads'])} opérations, {len(plan['s
 puis confirmations AB/BA et bootstrap des séries. Les chronométrages d'allocations différentes ne sont jamais regroupés.
 Les mesures locales ne remplacent aucune performance ROMEO. Les points et intervalles ci-dessous montrent les campagnes individuelles ; un gain supérieur à1 favorise le candidat face au naïf.</p>
 <p>Les identités exactes d’artefact donnent un ratio déterministe 1 sans intervalle. Plusieurs labels pour ce même artefact ne sont pas plusieurs mesures indépendantes.</p>
-{chart_html}{study_aggregate_table(summary)}{direct_comparison_table(report['direct_comparison_views'])}
+{chart_html}{study_aggregate_table(summary)}{workload_dispersion_table(summary)}{direct_comparison_table(report['direct_comparison_views'])}
 {case_comparison_table(summary, report['direct_comparison_views'])}
 <p>{escape(report['method_outcome_policy'])} Les points représentent l’artefact retenu, y compris un candidat de repli.</p>
 <p>Les agrégats incluent les retours au noyau naïf. Le compteur « Régressions » dénombre les ratios ponctuels inférieurs à 1 ;

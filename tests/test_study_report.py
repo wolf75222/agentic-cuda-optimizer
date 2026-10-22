@@ -13,7 +13,8 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
 from scripts.report_study_fr import (study_aggregate_table, study_campaign_table, case_comparison_table,
-    campaign_metric_views, campaign_metrics_panel, campaign_call_observations, campaign_call_panel)
+    campaign_metric_views, campaign_metrics_panel, campaign_call_observations, campaign_call_panel,
+    workload_dispersion_table)
 from scripts.report_study_fr import campaign_research_model_consumption, campaign_research_model_panel
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
@@ -1549,6 +1550,89 @@ def metric_summary(mode="full", metrics=None, **fields):
     return {"rows": [{"run_id": "fixture.<campaign>", "workload": "matmul", "seed": 17,
         "mode": mode, "generation_method_status": "failed", "status": "pending_common_final",
         "model_tokens": 999999, "model_calls": 99, "metrics": metrics, **fields}]}
+
+
+def test_workload_dispersion_uses_recorded_family_aggregates_without_repooling():
+    summary = {"aggregates": {"full": {"gain_stddev_between_campaigns": 999, "per_workload": {
+        "matmul": {"planned": 3, "measured": 2, "unmeasured_or_failed": 1,
+            "geometric_mean_gain": 1.125, "gain_stddev_between_independent_seeds": .375,
+            "seeds": [{"seed": 1, "gain": 1, "status": "validated_no_gain"},
+                      {"seed": 2, "gain": None, "status": "<missing>"}]},
+        "scan": {"planned": 3, "measured": 1, "unmeasured_or_failed": 2,
+            "geometric_mean_gain": 1, "gain_stddev_between_independent_seeds": None, "seeds": []}}}}}
+    original = deepcopy(summary)
+    html = workload_dispersion_table(summary)
+    assert "GEMM" in html and "Scan inclusif" in html and "Écart-type entre graines" in html
+    assert "0.375" in html and "1.12" in html and "999" not in html
+    assert "<td>1</td><td>inconnu</td><td>non enregistrées</td>" in html
+    assert "&lt;missing&gt;" in html and "<missing>" not in html
+    assert "sans regrouper des opérations différentes" in html
+    assert summary == original
+
+
+def closure_fixture(**fields):
+    cost = {"observed_rpc_calls": 0, "unique_request_ids": 0, "rpc_wall_seconds": 0,
+            "reported_native_reservation_seconds": None, "reported_compile_seconds": None,
+            "native_duration_missing_request_ids": [], "native_duration_conflict_request_ids": []}
+    return {"status": "closed", "outcome": "validated_no_gain", "group_id": "shared-group",
+            "seconds_since_generation_task_start": 300, "final_group_wall_seconds": 20,
+            "reported_generation_usage": {"model_tokens": 17, "model_calls": 7, "gpu_seconds": None},
+            "candidate_request_cost": cost,
+            "shared_group_request_cost": {**cost, "unique_request_ids": 2, "observed_rpc_calls": 3,
+                "reported_native_reservation_seconds": 2.25, "rpc_wall_seconds": 4.5},
+            "cost_evidence": {"path": "final-cost-observation.json", "sha256": "a" * 64},
+            "final_model_tokens": None, "final_model_calls": None, "cost_usd": None, **fields}
+
+
+@pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])
+def test_final_closure_view_preserves_recorded_usage_and_shared_costs_once(mode):
+    closure = closure_fixture()
+    summary = metric_summary(mode, {"method_consumption": {"model_tokens": 123}}, final_closure=closure)
+    summary["rows"].append({**summary["rows"][0], "run_id": "second", "mode": "no_pmpp"})
+    original = deepcopy(summary)
+    views = campaign_metric_views(summary)
+    assert views[0]["final_closure"] == closure
+    html = campaign_metrics_panel(views)
+    assert html.count("<td>shared-group</td>") == 1  # The group cost is never allocated or summed across methods.
+    assert "<td>Tokens génération enregistrés à la clôture</td><td>17</td>" in html
+    assert "<td>Compteur méthode génération à la clôture</td><td>7</td>" in html
+    assert "<td>Tokens / appels modèles pendant FINAL</td><td>inconnu / inconnu</td>" in html
+    assert "<td>RPC observés du candidat</td><td>0</td>" in html
+    assert "<td>Durées natives rapportées : sous-total connu</td><td>inconnu</td>" in html
+    assert "close / validated_no_gain" in html and "ni réparties" in html
+    assert summary == original
+
+
+@pytest.mark.parametrize("closure", [None, {}, {"status": "pending", "seconds_since_generation_task_start": 500}])
+def test_absent_or_pending_final_closure_cannot_be_inferred_from_old_task_or_gain_times(closure):
+    summary = metric_summary(metrics={}, final_closure=closure, total_generation_task_wall_seconds=100,
+        task_finished_at_unix=999, time_to_independently_confirmed_final_gain_seconds=200)
+    view = campaign_metric_views(summary)[0]
+    html = campaign_metrics_panel([view])
+    assert "<td>Statut / résultat</td><td>inconnu / non enregistré</td>" in html
+    assert "<td>Délai depuis le début de génération (s)</td><td>inconnu</td>" in html
+    assert "Coûts FINAL partagés, une fois par groupe et reçu" not in html
+    assert view["independent_final_gain"]["seconds"] == 200
+
+
+def test_closed_numerically_failed_evaluation_is_not_relabelled_as_final_gain():
+    summary = metric_summary(metrics={}, status="final_validation_failed", final_qualified=False,
+        final_closure=closure_fixture(outcome="final_validation_failed"))
+    view = campaign_metric_views(summary)[0]
+    html = campaign_metrics_panel([view])
+    assert "close / final_validation_failed" in html
+    assert view["independent_final_gain"]["seconds"] is None
+    assert view["generation_method_status"] == "failed"
+
+
+def test_conflicting_shared_cost_copies_do_not_select_or_sum_a_duration():
+    closure = closure_fixture()
+    summary = metric_summary(metrics={}, final_closure=closure)
+    summary["rows"].append({**summary["rows"][0], "run_id": "second",
+        "final_closure": {**closure, "shared_group_request_cost": {"rpc_wall_seconds": 9999}}})
+    html = campaign_metrics_panel(campaign_metric_views(summary))
+    shared = html.split("<h3>Coûts FINAL partagés", 1)[1]
+    assert "9999" not in shared and "<td>inconnu</td>" in shared
 
 
 @pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])

@@ -15,7 +15,7 @@ from optimizer_agent.suite_report import write_report
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation", "recover-unscored", "resume-unscored-preparation"))
+    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation", "recover-unscored", "resume-unscored-preparation", "recover-evaluation", "resume-evaluation-preparation"))
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--config", type=Path)
     parser.add_argument("--seeds", type=int, nargs="+", default=(1729, 2718, 3141))
@@ -25,6 +25,7 @@ def main(argv=None):
                         help="Explicit per-requirement implementation/local/GPU proof catalog")
     parser.add_argument("--task", help="Exact incomplete task ID for explicit infrastructure recovery")
     parser.add_argument("--reason", help="Concrete audited infrastructure incident; required for recovery")
+    parser.add_argument("--request", help="Exact unfinished canonical evaluation request SHA for recover-evaluation")
     args = parser.parse_args(argv)
     directory = args.directory.resolve()
     if args.command == "plan":
@@ -59,6 +60,14 @@ def main(argv=None):
         if not args.task:
             parser.error("resume-unscored-preparation requires --task")
         recovery = orchestrator.resume_unscored_preparation(args.task)
+    elif args.command == "recover-evaluation":
+        if not args.task or not args.request or not args.reason:
+            parser.error("recover-evaluation requires --task, --request and --reason")
+        recovery = orchestrator.recover_evaluation(args.task, args.request, args.reason)
+    elif args.command == "resume-evaluation-preparation":
+        if not args.task:
+            parser.error("resume-evaluation-preparation requires --task")
+        recovery = orchestrator.resume_evaluation_preparation(args.task)
     status = orchestrator.run() if args.command == "run" else orchestrator.status()
     evidence = read_json(args.requirement_evidence) if args.requirement_evidence else None
     write_report(directory, status, evidence=evidence)

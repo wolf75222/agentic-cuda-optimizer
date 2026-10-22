@@ -332,11 +332,26 @@ class CampaignRuntime:
     def generation_evidence(self, state, trial=None):
         evidence = {"previous_error": state.get("error"),
                     "diagnostic": self.diagnostic_context(state, trial)}
+        explicit_absence = "evaluation_id" in state and not state.get("evaluation_id")
+        if explicit_absence and not getattr(self, "rehost_context", None):
+            # An explicit absence is not a legacy checkpoint without a binding.
+            # Keep archived receipts, but do not present an old alias as this
+            # proposal's preceding evaluator observation.
+            return evidence
         if state.get("candidate_id") and state.get("repair", 0) > 0:
             path = self._evaluation_path(state)
             if path.exists():
                 receipt = read_json(path)
+                if (receipt.get("candidate_id", state["candidate_id"]) != state["candidate_id"] or
+                        "evaluation_id" in state and not explicit_absence and (
+                            receipt.get("evaluation_id") != state["evaluation_id"] or
+                            receipt.get("status") != state.get("evaluation_status"))):
+                    return evidence
                 receipt = self._historical_error_context(receipt)
+                # A verified old-allocation compilation failure remains useful
+                # as explicitly non-ranking history, never a current measure.
+                if explicit_absence and not receipt.get("historical_context"):
+                    return evidence
                 evidence["previous_evaluation"] = evaluation_summary(receipt)
                 evidence["previous_evaluation_reference"] = evidence_reference(path, self.directory,
                     kind="evaluation", identity=receipt.get("evaluation_id"))
@@ -614,6 +629,8 @@ class CampaignRuntime:
             if prior["repair"] == state["repair"] and prior["research_round"] == state["research_round"]:
                 candidate = self.candidate(prior["template"]["candidate_id"])
         request, proposal = self._evaluation_request(state, candidate)
+        from .evaluation_recovery import recovery_request
+        request = recovery_request(self.directory, request)
         request_id = digest(request)
         directory = self.trial_dir(state) / "evaluation-requests" / request_id
         for path in (self.trial_dir(state), directory.parent, directory):
@@ -855,17 +872,41 @@ class CampaignRuntime:
 
     def diagnose(self, state):
         directory = self.trial_dir(state)
+        explicit_evaluation = "evaluation_id" in state
+        measurement_path, measurement = None, None
+        unbound_evaluation = explicit_evaluation and not state.get("evaluation_id")
+        if not unbound_evaluation:
+            path = self._evaluation_path(state)
+            if path.exists():
+                value = read_json(path)
+                bound = (value.get("candidate_id", state.get("candidate_id")) == state.get("candidate_id") and
+                    (not explicit_evaluation or (
+                        value.get("evaluation_id") == state["evaluation_id"] and
+                        value.get("status") == state.get("evaluation_status"))))
+                if bound:
+                    measurement_path, measurement = path, value
+                else:
+                    unbound_evaluation = True
+            elif explicit_evaluation:
+                unbound_evaluation = True
         stage = "result" if (directory / "result.json").exists() else "proposal"
-        marker = directory / ("diagnostic-" + digest({"stage": stage,
+        marker_identity = {"stage": stage,
             "candidate_id": state.get("candidate_id"), "repair": state.get("repair", 0),
             "research_round": state.get("research_round", 0), "error": state.get("error"),
-            "needs_research": state.get("needs_research", False)})[:24] + ".json")
+            "needs_research": state.get("needs_research", False)}
+        if explicit_evaluation or unbound_evaluation:
+            # Do not reuse an earlier diagnostic that inherited an unbound
+            # alias. Leave that historical diagnostic at its original path.
+            marker_identity["evaluation_binding"] = {"explicit": explicit_evaluation,
+                "evaluation_id": state.get("evaluation_id"), "status": state.get("evaluation_status"),
+                "current_receipt_available": measurement_path is not None}
+        marker = directory / ("diagnostic-" + digest(marker_identity)[:24] + ".json")
         if marker.exists():
             diagnostic = verify_diagnostic(read_json(marker), self.directory,
                 contract_hash=self.contract_hash, environment_fingerprint=self.environment_hash)
             return {"diagnostic_id": diagnostic["diagnostic_id"],
                     "research_refresh_required": diagnostic["requires_targeted_research"]}
-        if self.config.profile and state.get("valid"):
+        if self.config.profile and state.get("valid") and measurement is not None:
             path = directory / "profile.json"
             if not path.exists():
                 reservation = "profile-"+uuid.uuid4().hex
@@ -916,17 +957,19 @@ class CampaignRuntime:
                 if trace and trace.is_file():
                     references.append(evidence_reference(trace, self.directory,
                         kind="blocked_proposal_model_receipt", identity=calls[-1].call_id))
-        measurement = receipt(self._evaluation_path(state), "evaluation", "evaluation_id")
         if measurement is not None:
+            references.append(evidence_reference(measurement_path, self.directory,
+                kind="evaluation", identity=measurement.get("evaluation_id")))
             measurement = self._historical_error_context(measurement)
-        measurement_path = self._evaluation_path(state)
-        if measurement_path.name == "measurement.json":
+        if measurement_path is not None and measurement_path.name == "measurement.json":
             for name, kind in (("request.json", "evaluation_request"), ("constraints.json", "tuning_constraints"),
                                ("autotuning.json", "autotuning")):
                 receipt(measurement_path.parent / name, kind)
-        confirmation_path = (measurement_path.parent if measurement_path.name == "measurement.json" else directory) / "confirmation.json"
-        confirmation = receipt(confirmation_path, "confirmation", "evaluation_id")
-        profile = receipt(directory / "profile.json", "profile")
+        confirmation, profile = None, None
+        if measurement_path is not None:
+            confirmation_path = (measurement_path.parent if measurement_path.name == "measurement.json" else directory) / "confirmation.json"
+            confirmation = receipt(confirmation_path, "confirmation", "evaluation_id")
+            profile = receipt(directory / "profile.json", "profile")
         history = []
         for result_path in (self.directory / "trials").glob("*/result.json"):
             trial_path = result_path.parent / "trial.json"

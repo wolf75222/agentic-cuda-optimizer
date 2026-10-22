@@ -1,6 +1,7 @@
 """CPU-only final-group identity controls, without CUDA/Slurm/model execution."""
 import hashlib
 import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -136,3 +137,119 @@ def test_path_sensitive_same_source_is_freshly_qualified_without_derived_gain_on
     summary = summarize_suite({"entries":entries,"modes":[entry["mode"] for entry in entries],"workloads":["matmul"]},
                               generations,{entries[0]["group_id"]:result})
     assert all(row["gain"] is None and row["final_qualified"] for row in summary["rows"])
+    costs = [row["final_closure"]["candidate_request_cost"] for row in result["candidates"].values()]
+    assert all(cost["unique_request_ids"] > 0 for cost in costs)
+    shared = result["final_cost_observation"]["shared_group_request_cost"]
+    assert shared["unique_request_ids"] + sum(cost["unique_request_ids"] for cost in costs) == len(runner.calls) + len(runner.sanitizer_calls)
+
+
+def test_no_gain_closes_final_independently_with_shared_costs_and_partial_generation_snapshot(tmp_path):
+    entries, generations, runner = fixture(tmp_path)
+    for generation in generations.values():
+        generation.update(task_started_at_unix=time.time() - 100, usage={"model_tokens": 13, "model_calls": 7},
+                          method_status="failed")
+    directory = tmp_path / "final"
+    result = run(entries, generations, runner, directory)
+    evidence = json.loads((directory / "final-cost-observation.json").read_text())
+    assert evidence["kind"] == "final_group_request_cost_observation"
+    shared = evidence["request_costs"]["shared"]
+    assert shared["unique_request_ids"] == len(runner.calls) + len(runner.sanitizer_calls)
+    assert shared["observed_rpc_calls"] == shared["unique_request_ids"]
+    assert shared["reported_native_reservation_seconds"] is None
+    assert shared["native_duration_missing_request_ids"] == shared["request_ids"]
+    for entry in entries:
+        candidate = result["candidates"][entry["mode"]]
+        closure = candidate["final_closure"]
+        assert closure["status"] == "closed" and closure["outcome"] == "validated_no_gain"
+        assert candidate["generation_method_status"] == "failed"  # Valid artifact is not method success.
+        assert closure["seconds_since_generation_task_start"] >= 100
+        assert closure["reported_generation_usage"] == {"model_tokens": 13, "model_calls": 7, "gpu_seconds": None}
+        assert closure["final_model_tokens"] is None and closure["final_model_calls"] is None and closure["cost_usd"] is None
+        assert closure["candidate_request_cost"]["unique_request_ids"] == 0  # Exact aliases generated no fresh RPCs.
+        assert closure["candidate_request_cost"]["reported_native_reservation_seconds"] is None
+        assert closure["shared_group_request_cost"] == shared
+        assert closure["cost_evidence"]["sha256"] == hashlib.sha256((directory / "final-cost-observation.json").read_bytes()).hexdigest()
+        assert "time_to_independently_confirmed_final_gain_seconds" not in candidate
+    public_trace = json.dumps(evidence)
+    assert "input_file" not in public_trace and "outputs" not in public_trace and "arguments" not in public_trace
+    assert "final_seed" not in public_trace and "sealed-inputs" not in public_trace
+
+
+def test_numerical_failure_is_closed_without_becoming_qualified_or_gained(tmp_path):
+    entries, generations, runner = fixture(tmp_path, incorrect=True)
+    result = run(entries, generations, runner, tmp_path / "final")
+    for candidate in result["candidates"].values():
+        assert not candidate["qualified"]
+        assert candidate["final_closure"]["status"] == "closed"
+        assert candidate["final_closure"]["outcome"] == "baseline_validation_failed"
+        assert candidate["final_closure"]["seconds_since_generation_task_start"] is None
+        assert candidate["final_closure"]["reported_generation_usage_source"] == "unreported"
+
+
+def test_transport_failure_returned_after_qualification_does_not_create_a_final_closure(tmp_path, monkeypatch):
+    import optimizer_agent.campaign as campaign
+    entries, generations, runner = fixture(tmp_path)
+    monkeypatch.setattr(campaign.Evaluator, "benchmark", lambda self, candidate: {
+        "ok": False, "error": "ssh: connect to host example.invalid port 22: Connection timed out"})
+    directory = tmp_path / "final"
+    result = run(entries, generations, runner, directory)
+    assert result["infrastructure_interrupted"] and not result["evaluation_finished"]
+    assert all("final_closure" not in candidate for candidate in result["candidates"].values())
+    assert not (directory / "final-cost-observation.json").exists()
+
+
+@pytest.mark.parametrize("failure", [{"ok": False, "status": "infrastructure_failure"},
+                                      {"ok": False, "status": "tool_unavailable", "worker_poisoned": True}])
+def test_explicit_infrastructure_or_poisoned_worker_never_creates_a_closure_or_retry_permission(tmp_path, failure):
+    entries, generations, runner = fixture(tmp_path)
+    runner.run_sanitizer = lambda run_id, request, tool: {
+        "environment": runner.get_device_properties(0), "tool": tool, **failure}
+    directory = tmp_path / "final"
+    result = run(entries, generations, runner, directory)
+    assert result["infrastructure_interrupted"] and not result["evaluation_finished"]
+    assert result["infrastructure_category"] == "final_request_infrastructure_failure"
+    assert all("final_closure" not in candidate for candidate in result["candidates"].values())
+    assert not (directory / "final-cost-observation.json").exists()
+
+
+@pytest.mark.parametrize("conflict", [False, True])
+def test_native_cost_deduplicates_replayed_physical_ids_and_preserves_conflicts(tmp_path, monkeypatch, conflict):
+    import optimizer_agent.campaign as campaign
+    entries, generations, _ = fixture(tmp_path)
+    class Runner:
+        count = 0
+        def get_device_properties(self, device):
+            return {"uuid": "CPU-CONTROL-NOT-A-GPU"}
+        def run(self, run_id, request):
+            self.count += 1
+            return {"ok": True, "request_fingerprint": "a" * 64,
+                    "reservation_wall_seconds": 2 if not conflict or self.count == 1 else 3,
+                    "compile_ms": 500}
+    class Evaluator:
+        contract_hash = "contract-fixture"
+        def __init__(self, runner, *args):
+            self.runner = runner
+        def qualification_context(self, candidate, suite):
+            return {"key": "same-baseline-context"}
+        def qualify_sanitizers(self, candidate, suite):
+            self.runner.run("same-physical-request", object())
+            self.runner.run("same-physical-request", object())
+            return {"evaluation_id": "fixture-eval", "artifact_hash": candidate.artifact_hash,
+                    "contract_hash": self.contract_hash, "suite": suite, "ok": True, "status": "passed"}
+        def benchmark(self, candidate):
+            self.runner.run("same-physical-request", object())
+            return {"ok": True}
+        def confirm(self, candidate, baseline):
+            return {"ok": True, "status": "exact_artifact_identity"}
+    monkeypatch.setattr(campaign, "Evaluator", Evaluator)
+    directory = tmp_path / "final"
+    result = run(entries, generations, Runner(), directory)
+    shared = result["final_cost_observation"]["shared_group_request_cost"]
+    assert shared["unique_request_ids"] == 1 and shared["observed_rpc_calls"] == 3
+    assert shared["reported_compile_seconds"] == .5  # Replays never multiply native compilation.
+    assert shared["reported_native_reservation_seconds"] == (None if conflict else 2)
+    assert shared["native_duration_conflict_request_ids"] == (["same-physical-request"] if conflict else [])
+    observation = json.loads((directory / "final-cost-observation.json").read_text())
+    assert len(observation["observations"]) == 3
+    assert all(row["candidate_request_cost"]["unique_request_ids"] == 0 for row in
+               (candidate["final_closure"] for candidate in result["candidates"].values()))

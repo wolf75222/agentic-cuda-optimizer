@@ -87,3 +87,21 @@ def test_unproven_or_missing_predeclared_direct_pair_prevents_study_qualificatio
         assert not summary["direct_comparisons_qualified"] and not summary["scientific_qualified"]
     group["method_comparisons"] = {"full_vs_native_codex_vanilla":{"ok":True,"status":"exact_artifact_identity"}}
     assert summarize_suite(plan, {}, {full["group_id"]:group})["scientific_qualified"]
+
+
+def test_final_closure_is_projected_separately_from_qualification_and_legacy_timestamps():
+    from copy import deepcopy
+    entry = plan_suite(CampaignConfig(run_id="closure"), seeds=(1, 2))["entries"][0]
+    plan = {"entries": [entry], "modes": [entry["mode"]], "workloads": [entry["workload"]]}
+    closure = {"status": "closed", "outcome": "final_validation_failed", "closed_at_unix": 123,
+               "reported_generation_usage": {"model_calls": 0, "model_tokens": None}}
+    candidate = {"status": "final_validation_failed", "qualified": False, "final_closure": closure}
+    group = {"candidates": {entry["mode"]: candidate}}
+    original = deepcopy(group)
+    row = summarize_suite(plan, {}, {entry["group_id"]: group})["rows"][0]
+    assert row["final_closure"] == closure and not row["final_qualified"] and row["gain"] is None
+    assert group == original
+    del candidate["final_closure"]
+    group.update(task_started_at_unix=100, task_finished_at_unix=200, total_task_wall_seconds_including_queue=100)
+    row = summarize_suite(plan, {}, {entry["group_id"]: group})["rows"][0]
+    assert row["final_closure"] is None  # Old task completion is not an exact final-decision milestone.

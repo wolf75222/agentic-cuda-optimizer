@@ -565,6 +565,88 @@ class RecordingRunner:
 def evaluate_group(entries, generations, runner, directory, seed, commitment):
     """Freeze all methods, then reveal fresh data once on one borrowed GPU."""
     from .campaign import WorkloadSuite, WorkloadContract, Evaluator, device_identity
+    group_started = time.monotonic()
+
+    def duration(value):
+        return value if type(value) in (int, float) and math.isfinite(value) and value >= 0 else None
+
+    class FinalCostRunner:
+        """Observe existing RPCs, without retaining requests, buffers or outputs."""
+        def __init__(self, delegate):
+            self.delegate, self.observations = delegate, []
+            self.stage, self.owner = "setup", None
+
+        def __getattr__(self, name):
+            if name == "run_sanitizer":
+                getattr(self.delegate, name)  # Preserve capability detection.
+                return lambda run_id, request, *args, **kwargs: self.observe(name, run_id, request, *args, **kwargs)
+            return getattr(self.delegate, name)
+
+        def observe(self, operation, run_id, request, *args, **kwargs):
+            started = time.monotonic()
+            item = {"request_id": run_id if isinstance(run_id, str) and run_id else None,
+                    "operation": operation, "stage": self.stage, "candidate_mode": self.owner}
+            try:
+                report = getattr(self.delegate, operation)(run_id, request, *args, **kwargs)
+                if isinstance(report, dict):
+                    fingerprint = report.get("request_fingerprint")
+                    item.update(request_fingerprint=fingerprint if isinstance(fingerprint, str)
+                                and re.fullmatch(r"[0-9a-f]{64}", fingerprint) else None,
+                                ok=report.get("ok") if type(report.get("ok")) is bool else None,
+                                reported_native_reservation_seconds=duration(report.get("reservation_wall_seconds")),
+                                reported_compile_seconds=(duration(report.get("compile_ms")) / 1000
+                                    if duration(report.get("compile_ms")) is not None else None))
+                return report
+            except Exception as error:
+                item["exception_type"] = type(error).__name__
+                raise
+            finally:
+                item["rpc_wall_seconds"] = time.monotonic() - started
+                self.observations.append(item)
+
+        def run(self, run_id, request):
+            return self.observe("run", run_id, request)
+
+        def costs(self):
+            by_id = {}
+            for item in self.observations:
+                if item["request_id"] is not None:
+                    by_id.setdefault(item["request_id"], []).append(item)
+            # A physical request observed in more than one candidate/stage is
+            # shared; it never contributes to several candidate subtotals.
+            owners = {key: (items[0]["candidate_mode"] if all(
+                item["candidate_mode"] == items[0]["candidate_mode"] and item["stage"] == items[0]["stage"]
+                for item in items) else None) for key, items in by_id.items()}
+
+            def subtotal(owner):
+                keys = sorted(key for key in by_id if owners[key] == owner)
+                items = [item for key in keys for item in by_id[key]]
+                unidentified = [item for item in self.observations if item["request_id"] is None] if owner is None else []
+                items += unidentified  # Unidentifiable RPCs stay unallocated; never deduplicate their native costs.
+                totals, missing, conflicts = {}, set(), set()
+                for field in ("reported_native_reservation_seconds", "reported_compile_seconds"):
+                    values = []
+                    for key in keys:
+                        observations = by_id[key]
+                        fingerprints = {item.get("request_fingerprint") for item in observations
+                                        if item.get("request_fingerprint") is not None}
+                        observed = {item.get(field) for item in observations if item.get(field) is not None}
+                        if len(fingerprints) > 1 or len(observed) > 1:
+                            conflicts.add(key)
+                        elif observed:
+                            values.append(next(iter(observed)))
+                        else:
+                            missing.add(key)
+                    totals[field] = sum(values) if values else None
+                return {"observed_rpc_calls": len(items), "unique_request_ids": len(keys),
+                        "unidentified_rpc_calls": len(unidentified),
+                        "request_ids": keys, "rpc_wall_seconds": sum(item["rpc_wall_seconds"] for item in items),
+                        **totals, "native_duration_missing_request_ids": sorted(missing),
+                        "native_duration_conflict_request_ids": sorted(conflicts)}
+            return {"shared": subtotal(None), "candidates": {entry["mode"]: subtotal(entry["mode"]) for entry in entries},
+                    "unidentified_rpc_calls": sum(item["request_id"] is None for item in self.observations)}
+
+    runner = FinalCostRunner(runner)
     directory = Path(directory)
     config = config_from_dict(entries[0]["config"])
     config = replace(config, run_id=entries[0]["group_id"], seed=seed, final_sizes=config.search_sizes)
@@ -628,6 +710,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
                     "canonical_sha256": _hash(original),
                     "evaluation_id": original["evaluation_id"], "artifact_hash": original["artifact_hash"]}}
         else:
+            runner.stage, runner.owner = "qualification", None if mode == "baseline" else mode
             qualifications[mode] = {**evaluator.qualify_sanitizers(candidate, suite="search"),
                 "qualification_context": context, "qualification_execution": "fresh"}
             qualification = qualifications[mode]
@@ -645,6 +728,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         return proof
     baseline_ok = qualifications["baseline"].get("ok") is True
     if baseline_ok:
+        runner.stage, runner.owner = "baseline_measurement", None
         proof["baseline_measurement"] = evaluator.benchmark(baseline)
         baseline_ok = proof["baseline_measurement"].get("ok") is True
         write_json(directory / "group-result.pending.json", proof)
@@ -670,6 +754,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
                     result["status"] = "final_comparison_identity_unproven"
                     result["gain_basis"] = "unproven_artifact_context"
             else:
+                runner.stage, runner.owner = "candidate_baseline_confirmation", mode
                 confirmation = evaluator.confirm(candidate, baseline)
                 result["confirmation"] = confirmation
                 result["confirmation_completed_at_unix"] = time.time()
@@ -693,14 +778,55 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
     # Predeclared direct pairs; one fixed confirmation each, including losses.
     for other in (entry["mode"] for entry in entries if entry["mode"] != "full"):
         if all(mode in candidates and qualifications[mode].get("ok") is True for mode in ("full", other)):
+            runner.stage, runner.owner = "direct_method_comparison", None
             proof["method_comparisons"]["full_vs_" + other] = evaluator.confirm(candidates["full"], candidates[other])
             write_json(directory / "group-result.pending.json", proof)
     if all(mode in candidates and qualifications[mode].get("ok") is True for mode in ("pmpp_permanent_only", "no_pmpp")):
+        runner.stage, runner.owner = "direct_method_comparison", None
         proof["method_comparisons"]["pmpp_permanent_only_vs_no_pmpp"] = evaluator.confirm(
             candidates["pmpp_permanent_only"], candidates["no_pmpp"])
         write_json(directory / "group-result.pending.json", proof)
     proof["all_modes_available"] = all(e["mode"] in candidates for e in entries)
+    transport_failures = [row for row in _walk(proof) if infrastructure_category(row.get("error", ""))]
+    explicit_infrastructure_failure = any(row.get("status") == "infrastructure_failure" or row.get("worker_poisoned") is True
+                                          for row in _walk(proof))
+    if transport_failures or explicit_infrastructure_failure:
+        proof.update(infrastructure_category=infrastructure_category(transport_failures[0]["error"]) if transport_failures
+                     else "final_request_infrastructure_failure",
+                     infrastructure_interrupted=True, evaluation_finished=False)
+        write_json(directory / "group-result.pending.json", proof)
+        return proof
     proof["evaluation_finished"] = True
+    closed_at, group_wall = time.time(), time.monotonic() - group_started
+    costs = runner.costs()
+    cost_observation = {"schema_version": 1, "kind": "final_group_request_cost_observation",
+        "group_id": config.run_id, "status": "closed", "closed_at_unix": closed_at,
+        "contract_hash": evaluator.contract_hash, "environment": proof["environment"],
+        "baseline_artifact_hash": baseline.artifact_hash,
+        "candidate_artifact_hashes": {mode: candidate.artifact_hash for mode, candidate in candidates.items() if mode != "baseline"},
+        "final_group_wall_seconds": group_wall, "request_costs": costs, "observations": runner.observations,
+        "scope": "RPC wall time includes transport and waiting. Native durations are reported subtotals over unique worker request IDs; missing/conflicting values remain unknown. Shared baseline/direct-pair costs are not allocated to candidates. No Slurm allocation, model usage, USD or input buffers are inferred."}
+    cost_path = directory / "final-cost-observation.json"
+    write_json(cost_path, cost_observation)
+    cost_evidence = {"path": "final-cost-observation.json", "sha256": hashlib.sha256(cost_path.read_bytes()).hexdigest()}
+    proof["final_cost_observation"] = {**cost_evidence, "shared_group_request_cost": costs["shared"]}
+    for entry in entries:
+        generation = generations.get(entry["config"]["run_id"], {})
+        result = proof["candidates"][entry["mode"]]
+        started = duration(generation.get("task_started_at_unix"))
+        usage = generation.get("usage", generation.get("budgets", {}).get("spent", {}))
+        usage = usage if isinstance(usage, dict) else {}
+        result["final_closure"] = {"status": "closed", "outcome": result["status"], "group_id": config.run_id,
+            "closed_at_unix": closed_at,
+            "seconds_since_generation_task_start": closed_at - started if started is not None and started <= closed_at else None,
+            "final_group_wall_seconds": group_wall,
+            "reported_generation_usage": {key: usage.get(key) for key in ("model_tokens", "model_calls", "gpu_seconds")},
+            "reported_generation_usage_source": "generation.usage" if "usage" in generation else
+                "generation.budgets.spent" if "spent" in generation.get("budgets", {}) else "unreported",
+            "candidate_request_cost": costs["candidates"][entry["mode"]],
+            "shared_group_request_cost": costs["shared"], "cost_evidence": cost_evidence,
+            "final_model_tokens": None, "final_model_calls": None, "cost_usd": None,
+            "scope": "Final evaluation attempt closed after all group comparisons, independently of gain and numerical qualification; not a worker-terminal assertion or the exact instant of an individual candidate verdict. Elapsed since generation start includes queue/interruption. Generation ledger usage is a recorded, possibly partial snapshot; model usage at FINAL and USD are unknown. Candidate-specific confirmation includes both sides of its baseline comparison; other shared baseline/direct-pair costs are excluded."}
     return proof
 
 
@@ -857,6 +983,10 @@ class SuiteOrchestrator:
                             # An interrupted local preparation must finish its
                             # own transaction before any scheduler/model work.
                             return
+                from .evaluation_recovery import preparation_pending, validate_task_recovery
+                if preparation_pending(self, task):
+                    return
+                validate_task_recovery(self, task)
                 from .dispatch_attestation import capture_dispatch_attestation
                 capture_dispatch_attestation(self.directory, task=task, controller_epoch=self._controller_epoch)
                 self._execute_task(task)
@@ -1011,6 +1141,14 @@ class SuiteOrchestrator:
     def resume_unscored_preparation(self, task_id):
         from .unscored_rehost import resume_unscored_preparation
         return resume_unscored_preparation(self,task_id)
+
+    def recover_evaluation(self, task_id, request_id, reason):
+        from .evaluation_recovery import prepare_evaluation_recovery
+        return prepare_evaluation_recovery(self, task_id, request_id, reason)
+
+    def resume_evaluation_preparation(self, task_id):
+        from .evaluation_recovery import resume_evaluation_preparation
+        return resume_evaluation_preparation(self, task_id)
 
     def recover_final(self, task_id, reason):
         """Explicit new independent attempt after a proven infrastructure loss.

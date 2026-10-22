@@ -102,6 +102,7 @@ def summarize_suite(plan, manifests, groups=None, *, protocol_incidents=None, pr
             final_evidence=group.get("task_evidence_path"),
             total_generation_task_wall_seconds=generation.get("total_task_wall_seconds_including_queue"),
             time_to_independently_confirmed_final_gain_seconds=result.get("time_to_independently_confirmed_final_gain_seconds"),
+            final_closure=result.get("final_closure"),
             final_terminal=group.get("worker_terminal"), final_environment=group.get("environment"))
         incidents = protocol_incidents.get(run_id, [])
         if incidents:
