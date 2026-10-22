@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-22T03:48:33.944179+00:00",
+  "generated_at_utc": "2026-10-22T05:04:10.600334+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -286,6 +286,41 @@
       "peer_evidence": "cold_copy_input_identity_peer30781de",
       "published_or_ROMEO_accepted": false,
       "scope": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
+    },
+    "latest_published_input_identity_recovery_release_observation": {
+      "published_commit": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "publication_evidence": "published_input_identity_recovery_0338daa",
+      "ci_evidence": "ci_0338daa",
+      "peer_scope_evidence": [
+        "published_0338daa_peer_scope_erratum",
+        "published_0338daa_peer_scope_later_review"
+      ],
+      "scope": "Publication 0338 et CI exacte acquises, distinctes des captures prospectives antérieures. La dernière annotation de disponibilité a une revue indépendante ultérieure, pas rétroactive. Les source_current report/helper en édition ne sont pas mis à jour dans ce lot."
+    },
+    "latest_explicit_evaluation_recovery_ROMEO_observation": {
+      "source_head": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "evidence": [
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
+      ],
+      "observed_at_utc": "2026-10-22T04:06:52.697069+00:00",
+      "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise.",
+      "supersedes_current_remaining_from": "latest_cold_copy_input_identity_candidate",
+      "historical_failures_preserved": [
+        "recovery_functional_control001_failed",
+        "recovery_functional_control002_incomplete"
+      ]
+    },
+    "controller_0338daa_transition_observation": {
+      "source_HEAD": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "evidence": [
+        "handoff_edef_terminal_to_0338daa_after_recovery003",
+        "controller_0338daa_observation",
+        "dispatch_0338daa_first_epochs"
+      ],
+      "state": "first_four_dispatches_authenticated_at_observation",
+      "scope": "Archive disponible avant les epochs ; première vague de 4 workers uniquement, aucune terminaison nouvelle ni qualification scientifique. Dernier compte acquis de 46/1 daté de 03:36:07 UTC inchangé."
     }
   },
   "policy": {
@@ -380,9 +415,9 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 256,
-    "latest_local_junit_entries": 1718,
-    "latest_local_testcase_nodes": 1705,
+    "evidence_entries": 284,
+    "latest_local_junit_entries": 1838,
+    "latest_local_testcase_nodes": 1825,
     "study_v2_completed_generation_receipts": 46,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
@@ -392,11 +427,13 @@
     "latest_ci_subtests_passed": null,
     "latest_ci_tests_skipped": null,
     "study_v2_generation_observation_at_utc": "2026-10-22T03:36:07.815369+00:00",
-    "latest_focused_report_tests_passed": 313,
-    "latest_ci_test_count_evidence": "ci_30781de",
+    "latest_focused_report_tests_passed": 47,
+    "latest_ci_test_count_evidence": "ci_0338daa",
     "study_v2_generation_count_scope": "Public task count and result/terminal metadata, not 46 successful methods or qualified comparisons. Old 38 histories not numerically re-audited.",
     "latest_local_tests_skipped": 0,
-    "latest_local_test_count_evidence": "local_cold_copy_input_identity_full1705_30781de"
+    "latest_local_test_count_evidence": "local_post_recovery_export_full1825_0338",
+    "study_v2_audited_generation_minimum_latest": 48,
+    "study_v2_audited_generation_minimum_scope": "46 tâches publiquement observées au constat daté antérieur, puis terminaux distincts775145 et775143 audités ; minimum de tâches terminées, pas48méthodes réussies ni comparaison FINAL."
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -7601,11 +7638,8 @@
     "source_current:optimizer_agent/portable_export.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/portable_export.py",
-      "sha256": "8333ca1b7b1c8da1c476da2a19035238e20b0b5a12f7dd0908c571efb9f56ae3",
-      "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
-      "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+      "sha256": "20ec8178ed691c16657720d5c89c9f70d6c6f5b277cfaabca501b5b2f4db197e",
+      "bytes": 60534,
       "definitions": [
         {
           "name": "encoded",
@@ -7688,14 +7722,27 @@
           "line": 433
         },
         {
-          "name": "export_study",
+          "name": "_classify_pending_trials",
           "line": 535
         },
         {
+          "name": "export_study",
+          "line": 716
+        },
+        {
           "name": "reconstruct_candidate",
-          "line": 693
+          "line": 891
         }
       ],
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338",
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -7795,6 +7842,107 @@
               "line": 692
             }
           ]
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/portable_export.py",
+          "sha256": "8333ca1b7b1c8da1c476da2a19035238e20b0b5a12f7dd0908c571efb9f56ae3",
+          "HEAD_before_publication": "55da43ebe2575c76c8e309dcd79cd9d19c1e82de",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T21:41:29.435576+00:00",
+          "scope": "Source bytes and top-level definitions only; testing, publication, actual model calls and ROMEO execution require separate receipts.",
+          "definitions": [
+            {
+              "name": "encoded",
+              "line": 39
+            },
+            {
+              "name": "digest",
+              "line": 43
+            },
+            {
+              "name": "file_hash",
+              "line": 47
+            },
+            {
+              "name": "_plain",
+              "line": 55
+            },
+            {
+              "name": "_safe_member",
+              "line": 75
+            },
+            {
+              "name": "sqlite_backup",
+              "line": 82
+            },
+            {
+              "name": "readable_database",
+              "line": 95
+            },
+            {
+              "name": "_git",
+              "line": 135
+            },
+            {
+              "name": "_Archive",
+              "line": 139
+            },
+            {
+              "name": "_source_snapshot",
+              "line": 157
+            },
+            {
+              "name": "_historical_adapter_archives",
+              "line": 200
+            },
+            {
+              "name": "_recorded_bridge_sources",
+              "line": 279
+            },
+            {
+              "name": "_walk",
+              "line": 323
+            },
+            {
+              "name": "_reference_file_kind",
+              "line": 333
+            },
+            {
+              "name": "_reference_metadata",
+              "line": 345
+            },
+            {
+              "name": "_candidate_records",
+              "line": 359
+            },
+            {
+              "name": "_source_path",
+              "line": 380
+            },
+            {
+              "name": "_context",
+              "line": 395
+            },
+            {
+              "name": "_include_options",
+              "line": 408
+            },
+            {
+              "name": "_portable_candidate",
+              "line": 433
+            },
+            {
+              "name": "export_study",
+              "line": 535
+            },
+            {
+              "name": "reconstruct_candidate",
+              "line": 693
+            }
+          ],
+          "published_commit": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+          "git_blob_sha256_verified_at_history_link": "8333ca1b7b1c8da1c476da2a19035238e20b0b5a12f7dd0908c571efb9f56ae3"
         }
       ]
     },
@@ -9319,194 +9467,207 @@
     "source_current:scripts/report_study_fr.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/report_study_fr.py",
-      "sha256": "4426ed48f2f9697ec3f8c61c139a2d4782907d4a59d96b7f65adb15d3a4256ec",
-      "bytes": 160363,
+      "sha256": "26ff9fc698b13f52ee9547312a4de5d8f2e7a4c692ec5e9d66048a2e6a81dba8",
+      "bytes": 175634,
       "definitions": [
         {
           "name": "load",
-          "line": 87
+          "line": 104
         },
         {
           "name": "fmt",
-          "line": 91
+          "line": 108
         },
         {
           "name": "comparison_view",
-          "line": 95
+          "line": 112
         },
         {
           "name": "direct_comparison_views",
-          "line": 114
+          "line": 131
         },
         {
           "name": "direct_comparison_table",
-          "line": 120
+          "line": 137
         },
         {
           "name": "table",
-          "line": 138
+          "line": 155
         },
         {
           "name": "study_aggregate_table",
-          "line": 143
+          "line": 160
         },
         {
           "name": "workload_dispersion_table",
-          "line": 156
+          "line": 173
         },
         {
           "name": "study_campaign_table",
-          "line": 174
+          "line": 191
         },
         {
           "name": "campaign_call_observations",
-          "line": 189
+          "line": 206
         },
         {
           "name": "campaign_call_panel",
-          "line": 276
+          "line": 293
         },
         {
           "name": "_research_context_identity",
-          "line": 298
+          "line": 315
         },
         {
           "name": "_research_phase_receipts",
-          "line": 316
+          "line": 333
         },
         {
           "name": "campaign_research_model_consumption",
-          "line": 346
+          "line": 363
         },
         {
           "name": "campaign_research_model_panel",
-          "line": 446
+          "line": 463
         },
         {
           "name": "campaign_metric_views",
-          "line": 473
+          "line": 490
         },
         {
           "name": "campaign_metrics_panel",
-          "line": 539
+          "line": 556
         },
         {
           "name": "case_comparison_table",
-          "line": 635
+          "line": 652
         },
         {
           "name": "audit_table",
-          "line": 681
+          "line": 698
         },
         {
           "name": "checkout_source_identity",
-          "line": 688
+          "line": 705
         },
         {
           "name": "ci_qualifies_checkout",
-          "line": 712
-        },
-        {
-          "name": "_mapping",
-          "line": 717
-        },
-        {
-          "name": "_records",
-          "line": 721
-        },
-        {
-          "name": "_hash",
-          "line": 725
-        },
-        {
-          "name": "_linked_receipt_verified",
           "line": 729
         },
         {
+          "name": "_mapping",
+          "line": 734
+        },
+        {
+          "name": "_records",
+          "line": 738
+        },
+        {
+          "name": "_hash",
+          "line": 742
+        },
+        {
+          "name": "_linked_receipt_verified",
+          "line": 746
+        },
+        {
           "name": "_verified_json",
-          "line": 752
+          "line": 769
         },
         {
           "name": "_required_checks",
-          "line": 763
+          "line": 780
         },
         {
           "name": "_original_execution_control",
-          "line": 768
+          "line": 785
         },
         {
           "name": "_common_freeze_control",
-          "line": 842
+          "line": 859
         },
         {
           "name": "_standalone_final_control",
-          "line": 903
+          "line": 920
         },
         {
           "name": "_accepted_eleven_source_checks",
-          "line": 922
+          "line": 939
         },
         {
           "name": "_research_refresh_control",
-          "line": 1037
+          "line": 1054
         },
         {
           "name": "_diagnostic_v2_control",
-          "line": 1281
+          "line": 1298
+        },
+        {
+          "name": "_evaluation_recovery_control",
+          "line": 1344
         },
         {
           "name": "control_receipts",
-          "line": 1327
+          "line": 1488
         },
         {
           "name": "execution_evidence_panel",
-          "line": 1391
+          "line": 1562
+        },
+        {
+          "name": "evaluation_recovery_panel",
+          "line": 1623
         },
         {
           "name": "_receipt_snapshot",
-          "line": 1452
+          "line": 1642
         },
         {
           "name": "_reported_tokens",
-          "line": 1457
-        },
-        {
-          "name": "_elapsed_seconds",
-          "line": 1478
-        },
-        {
-          "name": "gpu_lease_consumption",
-          "line": 1496
-        },
-        {
-          "name": "project_consumption",
-          "line": 1550
-        },
-        {
-          "name": "frozen_pilot_summary",
           "line": 1647
         },
         {
+          "name": "_elapsed_seconds",
+          "line": 1668
+        },
+        {
+          "name": "gpu_lease_consumption",
+          "line": 1686
+        },
+        {
+          "name": "project_consumption",
+          "line": 1740
+        },
+        {
+          "name": "frozen_pilot_summary",
+          "line": 1837
+        },
+        {
           "name": "plot_frozen_pilot",
-          "line": 1720
+          "line": 1910
         },
         {
           "name": "frozen_pilot_panel",
-          "line": 1776
+          "line": 1966
         },
         {
           "name": "plot",
-          "line": 1809
+          "line": 1999
         },
         {
           "name": "main",
-          "line": 1843
+          "line": 2033
         }
       ],
-      "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-22T02:09:45.088842+00:00",
-      "scope": "HTML/JSON : clôture FINAL distincte du gain, coûts rapportés dédupliqués et partagés séparément, dispersion par famille ; 313 tests CPU et aperçu synthétique, aucune nouvelle preuve réelle. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338",
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -10712,9 +10873,203 @@
           "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08",
           "published_commit": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
           "git_blob_sha256_verified_at_publication_link": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af"
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "4426ed48f2f9697ec3f8c61c139a2d4782907d4a59d96b7f65adb15d3a4256ec",
+          "bytes": 160363,
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "workload_dispersion_table",
+              "line": 156
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 174
+            },
+            {
+              "name": "campaign_call_observations",
+              "line": 189
+            },
+            {
+              "name": "campaign_call_panel",
+              "line": 276
+            },
+            {
+              "name": "_research_context_identity",
+              "line": 298
+            },
+            {
+              "name": "_research_phase_receipts",
+              "line": 316
+            },
+            {
+              "name": "campaign_research_model_consumption",
+              "line": 346
+            },
+            {
+              "name": "campaign_research_model_panel",
+              "line": 446
+            },
+            {
+              "name": "campaign_metric_views",
+              "line": 473
+            },
+            {
+              "name": "campaign_metrics_panel",
+              "line": 539
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 635
+            },
+            {
+              "name": "audit_table",
+              "line": 681
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 688
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 712
+            },
+            {
+              "name": "_mapping",
+              "line": 717
+            },
+            {
+              "name": "_records",
+              "line": 721
+            },
+            {
+              "name": "_hash",
+              "line": 725
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 729
+            },
+            {
+              "name": "_verified_json",
+              "line": 752
+            },
+            {
+              "name": "_required_checks",
+              "line": 763
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 768
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 842
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 903
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 922
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 1037
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 1281
+            },
+            {
+              "name": "control_receipts",
+              "line": 1327
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 1391
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 1452
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 1457
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1478
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1496
+            },
+            {
+              "name": "project_consumption",
+              "line": 1550
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1647
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1720
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1776
+            },
+            {
+              "name": "plot",
+              "line": 1809
+            },
+            {
+              "name": "main",
+              "line": 1843
+            }
+          ],
+          "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-22T02:09:45.088842+00:00",
+          "scope": "HTML/JSON : clôture FINAL distincte du gain, coûts rapportés dédupliqués et partagés séparément, dispersion par famille ; 313 tests CPU et aperçu synthétique, aucune nouvelle preuve réelle. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
+          "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
+          "published_commit": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+          "git_blob_sha256_verified_at_history_link": "4426ed48f2f9697ec3f8c61c139a2d4782907d4a59d96b7f65adb15d3a4256ec"
         }
-      ],
-      "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed"
+      ]
     },
     "source_current:scripts/gpu_final_suite_acceptance.py": {
       "kind": "current_implementation_source_snapshot",
@@ -18664,6 +19019,560 @@
       "coherent_local_evidence": [
         "local_cold_copy_input_identity_full1705_30781de"
       ]
+    },
+    "published_input_identity_recovery_0338daa": {
+      "path": "work/live/input-identity-recovery-0338daa-release.json",
+      "sha256": "aaad0900327cf2d2012e8d439d5f7b3c043f86eed3e711746c4fd25635757d99",
+      "bytes": 24302,
+      "kind": "published_source_and_exact_CI",
+      "scope": "Publication 0338 et CI 39719513331 acquises. Le champ de revue du reçu original est limité par l’erratum additif ; aucune revue indépendante rétroactive de la dernière annotation ni qualification globale déduite.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:00:37.372314+00:00",
+      "peer_scope_evidence": [
+        "published_0338daa_peer_scope_erratum",
+        "published_0338daa_peer_scope_later_review"
+      ]
+    },
+    "ci_0338daa": {
+      "path": "work/live/ci-0338daa.json",
+      "sha256": "fb21a09a44a82d6d7c501805af11067165e9ed7106fd32ee8c2ce1822940bef5",
+      "bytes": 1993,
+      "kind": "exact_commit_CI",
+      "scope": "CI 39719513331 terminée avec succès au SHA exact 0338daad. Aucun nombre de tests déduit du seul JSON ; aucun contrôle GPU ni changement ultérieur couvert.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00"
+    },
+    "published_0338daa_peer_scope_erratum": {
+      "path": "work/live/input-identity-recovery-0338daa-release-peer-scope-erratum.json",
+      "sha256": "c43dbb5b2daa986117a3353cd07281b556ce4075cc5abf3aef4e322c2b629499",
+      "bytes": 1421,
+      "kind": "additive_release_peer_scope_erratum",
+      "scope": "Corrige uniquement la portée du champ de revue du reçu aaad, sans le réécrire : le GO antérieur porte sur e04aba2c ; la dernière annotation 7455 était vérifiée par le primaire, sans GO indépendant établi à la capture originale.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:03:06.210131+00:00"
+    },
+    "published_0338daa_peer_scope_later_review": {
+      "path": "work/live/input-identity-recovery-0338daa-release-peer-scope-independent-review.json",
+      "sha256": "12274d1dc81d0d40fd02809a965d7d5a7ea24ca6fa7dc66d801795b77e44196e",
+      "bytes": 5205,
+      "kind": "later_independent_readonly_scope_review",
+      "scope": "Revue indépendante réellement datée du 22 octobre à 04:12:19 UTC : ancien mauvais lien préservé, alternative 1ceb égale Git 307, retrait de la seule annotation reconstruit e04. Aucun GO antidaté, nouvelle exécution ou réqualification de CI/tests.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:12:19.607271+00:00"
+    },
+    "recovery_functional_control003_authority": {
+      "path": "results/evaluation-recovery-functional-control-003/evaluation-recovery-acceptance.json",
+      "sha256": "bc49c4e89a06393dccac97b5c4ed2a3439fdc81e895e5ac13d714fd2eacbf1a9",
+      "bytes": 3359,
+      "kind": "ROMEO_functional_static_recovery_acceptance",
+      "scope": "15 vérifications vraies au source 0338. Deux allocations sur le même UUID/contrat/outillage, ancienne mesure incertaine conservée, nouvelle mesure indépendante et un seul tell ; rejeu sans nouveau RPC ni récompense. Contrôle statique sans modèle, hors §16/FINAL, aucun gain revendiqué.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "validation": {
+        "authority_checks": 15,
+        "all_authority_checks_true": true,
+        "source_head": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+        "jobs": [
+          {
+            "job_id": "775139",
+            "elapsed": "00:00:35",
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          },
+          {
+            "job_id": "775140",
+            "elapsed": "00:00:37",
+            "state": "COMPLETED",
+            "exit_code": "0:0"
+          }
+        ],
+        "same_UUID": "bf3763ef1d475405e20b9fc83b083e6e",
+        "same_contract_hash": "f045214dc3a5f7bbc665cc6cd48a9849b99c08328eda6e767077557c45d41388",
+        "model_calls": 0,
+        "excluded_from_quality_cohorts": true,
+        "old_cost_status": "uncertain_preserved",
+        "new_evaluation_id": "3ee316ac26e24ea9acf99b781cbc7863",
+        "old_evaluation_id": "b4be1dcaca314492aba4a70ec69f8147",
+        "new_request_id": "9816f418eaa04926fda69e972d1affd52eed04c77327a6d4ebdc9cd0057687b6",
+        "old_request_id": "c36195db1d00a05f3a3d0715b757ffe43590992c1eb909713377baf4e40a1903",
+        "replay": {
+          "gpu_rpc_calls_before_evaluation_replay": 15,
+          "gpu_rpc_calls_after_evaluation_replay": 15,
+          "gpu_rpc_calls_before_replay": 33,
+          "gpu_rpc_calls_after_replay": 33,
+          "tree_rewards_before_replay": 1,
+          "tree_rewards_after_replay": 1
+        },
+        "scope": "Scénario explicite statique même matériel seulement ; aucune garantie de réallocation future du même GPU ni acquisition d’autres fenêtres d’interruption."
+      }
+    },
+    "recovery_functional_control003_public_audit": {
+      "path": "work/live/evaluation-recovery-functional-control-003-terminal-audit.json",
+      "sha256": "ea0ffd00172bb9db27478064f88c719368e94bf75015f4e0cd35ff163d117670",
+      "bytes": 30219,
+      "kind": "independent_public_ROMEO_terminal_audit",
+      "scope": "Audit public borné : 14 vérifications, 94 liens publics de l’inventaire authentifiés. Jobs 775139 et 775140 COMPLETED 0:0 en 35 s et 37 s, même GPU ; 63 reçus natifs anciens/nouveaux authentifiés sans relire buffers/DB/RNG. Les échecs 001/002 restent inchangés.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:06:52.697069+00:00",
+      "validation": {
+        "audit_checks": 14,
+        "all_audit_checks_true": true,
+        "bounded_public_links_verified": 94,
+        "declared_inventory_files": 915,
+        "scope": "Scope de l’audit archivé, sans réexécution documentaire des63 requêtes ou lecture des inputs."
+      }
+    },
+    "recovery_functional_control003_proof_inventory": {
+      "path": "results/evaluation-recovery-functional-control-003/proof-sha256.json",
+      "sha256": "ea43ab7623ab133e1bc533b7696906bb1b92fa1e5278d6833d0eb480035f3f58",
+      "bytes": 190656,
+      "kind": "declared_public_file_inventory",
+      "scope": "Inventaire de 915 fichiers déclarés, non preuve universelle de qualification. Son SHA est lié à l’autorité 003 ; audit public borné séparé de 94 liens. Aucun contenu de base ou buffer privé relu par cette mise à jour documentaire.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00"
+    },
+    "handoff_edef_terminal_to_0338daa_after_recovery003": {
+      "path": "work/live/handoff-edef4ed-terminal-to-0338daa-after-recovery003.json",
+      "sha256": "82b5000fbcc16221b769c3250ed584984e4dbb9850cf1c2080265bd275241e1f",
+      "bytes": 3155,
+      "kind": "source_transition_handoff_after_functional_acceptance",
+      "scope": "Handoff après terminaison naturelle du contrôleur edef et réussite 003. Les 46 générations et une FINAL conservées ; 307 n’a jamais été dispatché dans l’étude principale. Pas de nouveau succès de méthode ou de comparaison déduit.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:11:59.085503+00:00"
+    },
+    "controller_0338daa_observation": {
+      "path": "work/live/controller-0338daa-observed.json",
+      "sha256": "fa5ad0a71bb80c02a267ec87aee38f96bc8f50808f9902c14a234b31ed2147d4",
+      "bytes": 2645,
+      "kind": "dated_controller_command_and_source_observation",
+      "scope": "PID/commande/epoch observés au 22 octobre à 04:12:53 UTC. Archive du source 0338 disponible avant dispatch ; observation datée uniquement, sans identité mémoire/poids fournisseur ni nouveau résultat modèle/GPU terminé.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:12:53.502748+00:00"
+    },
+    "dispatch_0338daa_first_epochs": {
+      "path": "work/live/dispatch-0338daa-first-epochs.json",
+      "sha256": "fa0d70046aac98d31020f24796e1962654a6460a1904451a96a5706fc1f99d03",
+      "bytes": 27284,
+      "kind": "bounded_first_four_source_ACK_dispatch_observation",
+      "scope": "12 vérifications de première vague : archive de 195 fichiers présente au contrôleur et aux quatre epochs avant dispatch ; ACK des jobs 775143/775144/775145/775146, UUID distincts, long/48 h et 1 GPU. Métadonnées CLI préparées/démarrées datées, aucune génération terminée ni comparaison qualifiée ajoutée.",
+      "catalogued_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "receipt_observed_at_utc": "2026-10-22T04:18:11.664733+00:00",
+      "validation": {
+        "checks": 12,
+        "all_checks_true": true,
+        "source_archive_available_before_controller_and_four_task_epochs": true,
+        "new_completed_generations_established": false,
+        "new_FINAL_qualification_established": false
+      }
+    },
+    "local_recovery_report47_0338": {
+      "path": "work/live/recovery-global-control-report-hardened-local-0338daa.json",
+      "sha256": "0a0bbc216a27b6f0c31fe96fe4172e42ab742fa6d72121ed0bd7f4cb9a7a5a15",
+      "bytes": 6284,
+      "kind": "targeted_CPU_regressions",
+      "scope": "47 tests CPU du renderer final 26ff : identités présentes/distinctes, compteurs entiers stricts, jobIDs canoniques et preuves publiques. Le lot 323 précédent reste historique ; aucune nouvelle exécution ROMEO.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "peer_recovery_report26ff_0338": {
+      "path": "work/live/report-recovery-controls-26ff9fc-peer.json",
+      "sha256": "1be3bec233925d9d080458a8ebb1fb5c2701cf69441e0e32f5b8e46f2d5bd361",
+      "bytes": 2085,
+      "kind": "independent_readonly_source_review",
+      "scope": "GO du renderer26ff/tests94a5, portée publique bornée ; aucune exécution modèle/GPU.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "local_study_reconstruction52_0338": {
+      "path": "work/live/gpu-study-reconstructed-options-cpu-acceptance.json",
+      "sha256": "c3f26b191a0e830cef1b4cfb3d5ddbab837b2394804493d550feb55eacedd12b",
+      "bytes": 2417,
+      "kind": "targeted_CPU_regressions",
+      "scope": "52 tests CPU du helper 7427 : six opérations, quiescence avant ZIP/buffers, contrats et options portables authentifiés ; nouveau ZIP réel et GPU non exécutés.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "peer_study_reconstruction7427_0338": {
+      "path": "work/live/gpu-study-reconstructed-7427f8db-peer.json",
+      "sha256": "401c86443f954e714f5ddc1080118ac23d480db2fc6204bac37d6eeefba33e6f",
+      "bytes": 2506,
+      "kind": "independent_readonly_source_review",
+      "scope": "GO helper7427/tests2925 après correction options ; refus conservateur des -I relatifs, aucun vrai ZIP ni GPU lu/exécuté.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "local_portable_ancestors176_0338": {
+      "path": "work/live/portable-ancestor-omissions-cpu-acceptance.json",
+      "sha256": "b3a309cd4386a75605b98d14db80160eb21885a713b9356d0ec67fd2af3af3fe",
+      "bytes": 2848,
+      "kind": "targeted_CPU_regressions",
+      "scope": "176 tests CPU dont 21 scénarios ancêtres. Chaîne de reprise commise/terminal/inventaire RAW exigés ; anciens pending conservés, tips/copies inconnues restent partial. Corps et verrous omis mais hashés ; aucun export réel de l’étude.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "primary_post_recovery_export_review_0338": {
+      "path": "work/live/post-recovery-export-primary-prepublication-review.json",
+      "sha256": "2ad3223de3dfb3ad936f179c8193c394dd8a5fc7b0b93ee2b5480353781840b1",
+      "bytes": 1715,
+      "kind": "primary_readonly_source_review",
+      "scope": "Lecture primaire des trois changements cohérents ; full et peer export restaient à venir à la capture de ce reçu. Le résultat acquis ensuite possède son reçu séparé.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "local_post_recovery_export_full1825_0338": {
+      "path": "work/live/post-recovery-export-integration.json",
+      "sha256": "4226cd7d33e7871484397e5bbed8ab975817c340e56a81d8eb1a4edad9bd3b6b",
+      "bytes": 19642,
+      "kind": "coherent_local_CPU_integration",
+      "scope": "1 825 tests et 13 sous-tests passent, zéro échec/skip, 15 avertissements, 126,63 s pytest et compileall réussi ; 167 fichiers déclarés stables hors docs et Git global. Aucun export/ZIP/GPU réel déduit.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "post_recovery_export_junit_counts_0338": {
+      "path": "work/live/post-recovery-export-integration-junit-counts.json",
+      "sha256": "3b7a562f014eb5d113bc37b018b3db5dfd79be8e839bc6a5a5bf640e67286996",
+      "bytes": 1091,
+      "kind": "JUnit_count_clarification",
+      "scope": "JUnit : 1 825 éléments testcase, attribut tests 1 838 incluant 13 sous-tests ; distinction de compte, aucune exécution supplémentaire.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "study_reconstruction_runbook7427": {
+      "path": "work/live/final-study-reconstruction-runbook-7427.json",
+      "sha256": "828b3bd1acc12e981512432a3056806d49a37b0e8cbdcf6a3db3d611b1de1ebb",
+      "bytes": 9633,
+      "kind": "future_execution_runbook",
+      "scope": "Commandes et prérequis futurs ; aucune attestation, sélection ni exécution créée. Ancien runbook d6b2 conservé.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "original_matmul3141_775145_0338_terminal": {
+      "path": "work/live/section16-0338daa-original-matmul3141-775145-verified.json",
+      "sha256": "e59eef8beaf181380be23088d920702b8463a02bca0bd2045a072c5672fcf684",
+      "bytes": 49462,
+      "kind": "public_ROMEO_generation_audit",
+      "scope": "775145 COMPLETED0:0/19:48 ; vrai original1e,10 CLI Luna/max et732 782 tokens observés ; export retenu3 validé SEARCH14 réponses, ratio0,9641076 IC[0,9524732;0,9799432], aucun gain utile ni FINAL déduit.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "native_normalization1729_775155_live_process_0338": {
+      "path": "work/live/native-normalization1729-775155-live-local-process-0338daa.json",
+      "sha256": "4be6771f88e5ae901d85331cc41376e821ff271d7e925475c7c4a860c0f00671",
+      "bytes": 3140,
+      "kind": "dated_live_local_CLI_observation",
+      "scope": "PID19081 réellement observé, Luna/max demandé et un thread natif ; métadonnées mutables datées, aucune clôture/artefact/gain ou identité fournisseur déduits.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "post_recovery_export_source_capture_0338": {
+      "path": "work/live/post-recovery-export-source-capture/manifest.json",
+      "sha256": "a825c4aab9ca73b5fb80b4fbc4634f0c3f146c2440b5bcc7d18dc74f8bb2d55c",
+      "bytes": 1962,
+      "kind": "exact_source_and_test_capture",
+      "scope": "Six fichiers candidats exacts, sources/tests/AST seuls ; validation1825+13 séparée, future CI et vraie reconstruction restent à acquérir.",
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00"
+    },
+    "source_current:scripts/gpu_study_reconstructed_acceptance.py": {
+      "kind": "current_implementation_source_snapshot",
+      "path": "scripts/gpu_study_reconstructed_acceptance.py",
+      "sha256": "7427f8db81d505be278feb500d8202062e5aac73c251dd2eaf9cb0d5af0073a1",
+      "bytes": 30319,
+      "definitions": [
+        {
+          "name": "sha",
+          "line": 41
+        },
+        {
+          "name": "_regular",
+          "line": 45
+        },
+        {
+          "name": "_member",
+          "line": 52
+        },
+        {
+          "name": "authenticate_quiescence",
+          "line": 61
+        },
+        {
+          "name": "request_identity",
+          "line": 93
+        },
+        {
+          "name": "cpu_oracle",
+          "line": 105
+        },
+        {
+          "name": "_same_artifact",
+          "line": 124
+        },
+        {
+          "name": "authenticate_portable_options",
+          "line": 129
+        },
+        {
+          "name": "_archive_authority",
+          "line": 180
+        },
+        {
+          "name": "prepare",
+          "line": 233
+        },
+        {
+          "name": "execute_one",
+          "line": 351
+        },
+        {
+          "name": "run_acceptance",
+          "line": 383
+        },
+        {
+          "name": "main",
+          "line": 440
+        }
+      ],
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338"
+    },
+    "source_current:tests/test_gpu_study_reconstructed_acceptance.py": {
+      "kind": "current_test_source_snapshot",
+      "path": "tests/test_gpu_study_reconstructed_acceptance.py",
+      "sha256": "2925e6b4b19c20160e61a722f04a83e3d0bf8697a254f9257bd14889557ac43d",
+      "bytes": 21024,
+      "definitions": [
+        {
+          "name": "encoded",
+          "line": 20
+        },
+        {
+          "name": "digest",
+          "line": 24
+        },
+        {
+          "name": "make_bundle",
+          "line": 28
+        },
+        {
+          "name": "parameters",
+          "line": 123
+        },
+        {
+          "name": "test_without_quiescence_default_opens_no_bundle_and_writes_no_output",
+          "line": 128
+        },
+        {
+          "name": "test_quiescence_refused_before_any_zip_or_reconstruction",
+          "line": 140
+        },
+        {
+          "name": "test_six_closed_operations_reconstruct_exact_artifact_new_paths_and_independent_oracle",
+          "line": 155
+        },
+        {
+          "name": "test_altered_contract_or_evidence_cannot_submit_or_materialize_final_data",
+          "line": 174
+        },
+        {
+          "name": "test_relative_dependency_binds_to_the_original_source_parent_without_reading_it",
+          "line": 181
+        },
+        {
+          "name": "test_only_exact_authenticated_include_relocations_are_permitted",
+          "line": 191
+        },
+        {
+          "name": "test_two_gpu_configuration_refuses_before_constructing_or_submitting_backend",
+          "line": 203
+        },
+        {
+          "name": "fake_report",
+          "line": 213
+        },
+        {
+          "name": "test_one_cpu_runner_observation_keeps_new_uuid_separate_and_rejects_failed_guards",
+          "line": 227
+        },
+        {
+          "name": "test_reconstructed_source_tree_and_artifact_mutation_refuse_before_gpu",
+          "line": 244
+        },
+        {
+          "name": "test_owned_allocation_lifecycle_preserves_partial_submission_and_never_closes_foreign_job",
+          "line": 259
+        }
+      ],
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338"
+    },
+    "source_current:tests/test_report_recovery_controls.py": {
+      "kind": "current_test_source_snapshot",
+      "path": "tests/test_report_recovery_controls.py",
+      "sha256": "94a55324996aa1f489cdd8debe15a174bdbcfd6bd7eb9f929d136fec88892c6a",
+      "bytes": 14675,
+      "definitions": [
+        {
+          "name": "save",
+          "line": 18
+        },
+        {
+          "name": "reference",
+          "line": 23
+        },
+        {
+          "name": "refresh",
+          "line": 28
+        },
+        {
+          "name": "fixture",
+          "line": 43
+        },
+        {
+          "name": "row",
+          "line": 86
+        },
+        {
+          "name": "before_submission_failure",
+          "line": 90
+        },
+        {
+          "name": "test_missing_controls_are_unknown_without_claiming_a_success",
+          "line": 97
+        },
+        {
+          "name": "test_three_separate_controls_keep_failed_history_and_scientific_scope",
+          "line": 105
+        },
+        {
+          "name": "test_each_essential_authority_guard_is_required",
+          "line": 129
+        },
+        {
+          "name": "test_re_pinned_receipts_cannot_override_semantic_guards",
+          "line": 138
+        },
+        {
+          "name": "test_missing_elapsed_is_unknown_cost_without_rejecting_functional_verdict",
+          "line": 165
+        },
+        {
+          "name": "test_link_tampering_does_not_fall_back_to_audit_ok",
+          "line": 172
+        },
+        {
+          "name": "test_forged_authority_paths_are_rejected_before_read",
+          "line": 182
+        },
+        {
+          "name": "test_symlink_receipts_are_rejected_before_read",
+          "line": 195
+        },
+        {
+          "name": "test_malformed_nested_json_keeps_the_global_report_available",
+          "line": 213
+        },
+        {
+          "name": "test_proof_inventory_never_opens_nonpublic_members",
+          "line": 225
+        },
+        {
+          "name": "test_evaluation_ids_must_be_present_hashes_distinct_and_bound_to_replay",
+          "line": 243
+        },
+        {
+          "name": "test_re_pinned_replay_counts_require_exact_integer_types",
+          "line": 273
+        },
+        {
+          "name": "test_job_identity_is_positive_and_canonical_before_counting_allocations",
+          "line": 283
+        }
+      ],
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338"
+    },
+    "source_current:tests/test_portable_recovery_ancestors.py": {
+      "kind": "current_test_source_snapshot",
+      "path": "tests/test_portable_recovery_ancestors.py",
+      "sha256": "0866dc230b09a785d5daa6275f439ee9f8df91cce2738fa13f54f83327b77976",
+      "bytes": 18164,
+      "definitions": [
+        {
+          "name": "sha",
+          "line": 19
+        },
+        {
+          "name": "tree_bytes",
+          "line": 23
+        },
+        {
+          "name": "concluded",
+          "line": 28
+        },
+        {
+          "name": "test_authenticated_stopped_ancestor_pending_remains_archived_but_does_not_mean_live_work",
+          "line": 86
+        },
+        {
+          "name": "test_two_authenticated_recoveries_preserve_each_pending_ancestor_and_exact_chain",
+          "line": 105
+        },
+        {
+          "name": "test_omitted_reference_and_lock_hashes_authenticate_cold_ancestor_without_redistributing_text",
+          "line": 116
+        },
+        {
+          "name": "test_uncertain_or_changed_recovery_authority_stays_partial_without_source_mutation",
+          "line": 149
+        },
+        {
+          "name": "test_unmapped_cold_copies_never_inherit_the_ancestor_authorization",
+          "line": 177
+        },
+        {
+          "name": "test_failed_method_completed_task_with_tip_pending_is_still_partial_without_fake_tell",
+          "line": 190
+        },
+        {
+          "name": "test_live_ancestor_is_not_historical_even_when_preparation_and_commits_agree",
+          "line": 201
+        },
+        {
+          "name": "test_real_unscored_transfer_authority_can_classify_only_its_exact_old_snapshot",
+          "line": 233
+        }
+      ],
+      "HEAD_before_publication": "0338daad5c6b2c25c828f00e5e694eb315e5d023",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "scope": "Octets et définitions candidats exacts, intégration locale1 825+13 acquise sur167 fichiers déclarés. Export réel, reconstruction GPU et CI de la future publication non déduits.",
+      "coherent_local_evidence": [
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338"
+      ],
+      "source_capture": "post_recovery_export_source_capture_0338"
+    },
+    "peer_portable_ancestors20ec_0338": {
+      "path": "work/live/portable-ancestor-20ec8178-independent-review.json",
+      "sha256": "cb72172c65204f93d4e21e05383ca7ef37d1737ed2c839c875feb6c6cf97d6b1",
+      "bytes": 3061,
+      "kind": "independent_readonly_source_review",
+      "scope": "GO de première main sur source20ec, tests0866 et reçu CPU176 b3a309 ; anciens pending préservés, seuls ancêtres authentifiés classés historiques. Aucun test ou export réel effectué par ce reviewer.",
+      "observed_at_utc": "2026-10-22T05:04:10.600002+00:00"
+    },
+    "greedy_normalization1729_775143_0338_terminal": {
+      "path": "work/live/section16-0338daa-greedy-normalization1729-775143-verified.json",
+      "sha256": "98061cfece14296fc29a7d6a3cb81cd211b65620a0b3999c5b6fd0f14983493d",
+      "bytes": 118799,
+      "kind": "public_ROMEO_generation_audit",
+      "scope": "775143 COMPLETED0:0/36:01 :3 essais,2 configurations fixes mesurées et1 annulation documentaire sans tell. Retenu SEARCH1,2499348 IC[1,2300706;1,2675145], régression du cas non critique17 explicite,8 CLI Luna/max et7 984 490 tokens connus. Aucun autotuning multiconfiguration ni gain FINAL déduit.",
+      "observed_at_utc": "2026-10-22T05:06:02.151247+00:00"
     }
   },
   "requirements": {
@@ -20990,7 +21899,10 @@
           "source_current:optimizer_agent/codex_backend.py",
           "source_current:optimizer_agent/pmpp_guidance.py",
           "source_current:optimizer_agent/diagnostics.py",
-          "source_current:optimizer_agent/campaign_workflow.py"
+          "source_current:optimizer_agent/campaign_workflow.py",
+          "source_current:optimizer_agent/portable_export.py",
+          "source_current:scripts/report_study_fr.py",
+          "source_current:scripts/gpu_study_reconstructed_acceptance.py"
         ]
       },
       "local_tested": {
@@ -20999,7 +21911,10 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_recovery_report47_0338",
+          "local_study_reconstruction52_0338",
+          "local_portable_ancestors176_0338"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -21020,7 +21935,9 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -21034,7 +21951,15 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Exports complets des futures cohortes requis; sources/version différentes jamais assimilées."
+        "Exports complets des futures cohortes requis; sources/version différentes jamais assimilées.",
+        "Nouveau lot export/reconstruction :1825CPU+13 acquis ; véritable export froid et reconstruction d’un finaliste §16 sur un nouveau GPU restent à exécuter après quiescence, avec gardes inchangées. Les anciens pending non authentifiables restent partial."
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-10.1": {
@@ -21174,7 +22099,10 @@
           "source_current:optimizer_agent/diagnostics.py",
           "source_current:optimizer_agent/autotuning.py",
           "source_current:optimizer_agent/tuning_constraints.py",
-          "source_current:optimizer_agent/campaign.py"
+          "source_current:optimizer_agent/campaign.py",
+          "source_current:optimizer_agent/portable_export.py",
+          "source_current:scripts/report_study_fr.py",
+          "source_current:scripts/gpu_study_reconstructed_acceptance.py"
         ]
       },
       "local_tested": {
@@ -21188,7 +22116,10 @@
           "local_recovery_export_release",
           "ci_0013118",
           "local_diagnostic_evaluation_binding_edef4ed",
-          "diagnostic_evaluation_binding_primary_review"
+          "diagnostic_evaluation_binding_primary_review",
+          "local_recovery_report47_0338",
+          "local_study_reconstruction52_0338",
+          "local_portable_ancestors176_0338"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -21214,7 +22145,9 @@
           "ci_dfd93d0",
           "local_diagnostic_evaluation_binding_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -21231,7 +22164,15 @@
         "scope": "Démarrage réelv2 surGEMM3141:guard,dossier,proposition et mesure/promotions de recherche acquis au45407a2. Autres reçus historiques limités à leurs versions;aucune finale commune déduite."
       },
       "remaining": [
-        "Interfaces et boucle documentaire AC-02 DFD acquises : diagnostic immuable → web réel → dossier vérifié → proposition admise, 14 appels CLI et zéro requête GPU. Les autorités historiques incomplete restent inchangées. Ce candidat n’est ni compilé ni mesuré ; le nouveau correctif d’attribution diagnostic n’est testé que sur CPU et les autres domaines restent à qualifier."
+        "Interfaces et boucle documentaire AC-02 DFD acquises : diagnostic immuable → web réel → dossier vérifié → proposition admise, 14 appels CLI et zéro requête GPU. Les autorités historiques incomplete restent inchangées. Ce candidat n’est ni compilé ni mesuré ; le nouveau correctif d’attribution diagnostic n’est testé que sur CPU et les autres domaines restent à qualifier.",
+        "Nouveau lot export/reconstruction :1825CPU+13 acquis ; véritable export froid et reconstruction d’un finaliste §16 sur un nouveau GPU restent à exécuter après quiescence, avec gardes inchangées. Les anciens pending non authentifiables restent partial."
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-11": {
@@ -21312,7 +22253,9 @@
           "local_uncertain_evaluation_recovery_edef4ed",
           "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -21322,13 +22265,16 @@
         "evidence": [
           "process_recovery",
           "study_v2_full_transport_failure",
-          "recovery_functional_control002_incomplete"
+          "recovery_functional_control002_incomplete",
+          "recovery_functional_control003_authority",
+          "recovery_functional_control003_public_audit",
+          "recovery_functional_control003_proof_inventory"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+        "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise. État global et autres responsabilités encore partiels."
       },
       "remaining": [
-        "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures.",
-        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
+        "Reprise explicite du résultat incertain acquise au contrôle 003 ; exports complets de l’étude, autres méthodes et changements de matériel restent bornés à leurs preuves propres.",
+        "Aucune qualification globale de 144 générations/18 finales ; plafonds globaux retirés par instruction utilisateur, coûts incertains préservés."
       ],
       "prospective_evaluation_history_evidence": [
         "local_campaign_evaluation_history_144_ed24b08",
@@ -21338,7 +22284,40 @@
       "recovery_control_evidence": [
         "recovery_functional_control001_failed",
         "local_recovery_helper_interface42_30781de",
-        "recovery_functional_control002_incomplete"
+        "recovery_functional_control002_incomplete",
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
+      ],
+      "historical_remaining_observations": [
+        {
+          "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "statement": "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures. Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
+        }
+      ],
+      "historical_romeo_execution_observations": [
+        {
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "phase": {
+            "ok": false,
+            "status": "partial",
+            "applicable": true,
+            "evidence": [
+              "process_recovery",
+              "study_v2_full_transport_failure",
+              "recovery_functional_control002_incomplete"
+            ],
+            "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+          }
+        }
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-11.1": {
@@ -21365,7 +22344,10 @@
           "source_current:optimizer_agent/evaluation_recovery.py",
           "source_current:scripts/run_quality_suite.py",
           "source_current:optimizer_agent/suite_orchestrator.py",
-          "source_current:optimizer_agent/campaign.py"
+          "source_current:optimizer_agent/campaign.py",
+          "source_current:optimizer_agent/portable_export.py",
+          "source_current:scripts/report_study_fr.py",
+          "source_current:scripts/gpu_study_reconstructed_acceptance.py"
         ]
       },
       "local_tested": {
@@ -21380,7 +22362,10 @@
           "codex_prompt_launch_provenance_primary_review_ed24b08",
           "local_campaign_evaluation_history_durable148_ed24b08",
           "local_uncertain_evaluation_recovery_edef4ed",
-          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed"
+          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
+          "local_recovery_report47_0338",
+          "local_study_reconstruction52_0338",
+          "local_portable_ancestors176_0338"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -21408,7 +22393,9 @@
           "local_uncertain_evaluation_recovery_edef4ed",
           "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -21416,13 +22403,17 @@
         "status": "partial",
         "applicable": true,
         "evidence": [
-          "process_recovery"
+          "process_recovery",
+          "recovery_functional_control003_authority",
+          "recovery_functional_control003_public_audit",
+          "recovery_functional_control003_proof_inventory"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise. État global et autres responsabilités encore partiels."
       },
       "remaining": [
-        "Mesure, crash et copie froide réels au contrôle 002 incomplet ; replay et reprise complète sur ROMEO restent à acquérir. Preuve locale antérieure conservée.",
-        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        "Contrôle 003 acquis pour mesure/crash/copie froide/nouvelle mesure et relecture idempotente. L’ensemble de la persistance applicative, des exports et des autres fenêtres d’interruption n’est pas qualifié par ce seul contrôle.",
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
+        "Nouveau lot export/reconstruction :1825CPU+13 acquis ; véritable export froid et reconstruction d’un finaliste §16 sur un nouveau GPU restent à exécuter après quiescence, avec gardes inchangées. Les anciens pending non authentifiables restent partial."
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
@@ -21435,6 +22426,39 @@
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "historical_remaining_observations": [
+        {
+          "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "statement": "Mesure, crash et copie froide réels au contrôle 002 incomplet ; replay et reprise complète sur ROMEO restent à acquérir. Preuve locale antérieure conservée. Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        }
+      ],
+      "historical_romeo_execution_observations": [
+        {
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "phase": {
+            "ok": false,
+            "status": "partial",
+            "applicable": true,
+            "evidence": [
+              "process_recovery"
+            ],
+            "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+          }
+        }
+      ],
+      "recovery_control_evidence": [
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-11.2": {
@@ -21513,21 +22537,27 @@
           "local_uncertain_evaluation_recovery_edef4ed",
           "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
-        "ok": false,
-        "status": "partial",
+        "ok": true,
+        "status": "verified",
         "applicable": true,
         "evidence": [
           "process_recovery",
-          "recovery_functional_control002_incomplete"
+          "recovery_functional_control002_incomplete",
+          "recovery_functional_control003_authority",
+          "recovery_functional_control003_public_audit",
+          "recovery_functional_control003_proof_inventory"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+        "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise.",
+        "qualified_scenario": "explicit_static_uncertain_measurement_recovery_same_UUID_contract_toolchain_only"
       },
       "remaining": [
-        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
+        "Acquis pour le scénario explicite003 seulement, même UUID/contrat/outillage. Autres méthodes, changement matériel et autres fenêtres de crash ne sont pas déduits de ce contrôle statique ; les bornes AC-16 après résultat durable/après tell gardent leurs preuves distinctes."
       ],
       "prospective_evaluation_history_evidence": [
         "local_campaign_evaluation_history_144_ed24b08",
@@ -21537,12 +22567,42 @@
       "recovery_control_evidence": [
         "recovery_functional_control001_failed",
         "local_recovery_helper_interface42_30781de",
-        "recovery_functional_control002_incomplete"
+        "recovery_functional_control002_incomplete",
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
       ],
       "historical_remaining_observations": [
         {
           "observed_at_utc": "2026-10-22T02:13:12.249212+00:00",
           "statement": "Reprise explicite d’évaluation inachevée testée initialement sur 195 fixtures CPU, puis 213 après correctif final 1ceb677e seulement ; scénario réel ROMEO de cette nouvelle procédure restant, même UUID/contrat/toolchain obligatoires. La préparation ne soumet aucun job ; dispatch séparé. Les anciennes preuves et coûts incertains sont préservés, jamais convertis en zéro. Étude de 144 générations/18 groupes et exports réels incomplets."
+        },
+        {
+          "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "statement": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
+        }
+      ],
+      "historical_romeo_execution_observations": [
+        {
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "phase": {
+            "ok": false,
+            "status": "partial",
+            "applicable": true,
+            "evidence": [
+              "process_recovery",
+              "recovery_functional_control002_incomplete"
+            ],
+            "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+          }
+        }
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
         }
       ]
     },
@@ -21723,7 +22783,8 @@
           "source_current:optimizer_agent/native_read_isolation.py",
           "source_current:scripts/render_search_tree.py",
           "source_current:optimizer_agent/dispatch_attestation.py",
-          "source_current:scripts/report_study_fr.py"
+          "source_current:scripts/report_study_fr.py",
+          "source_current:scripts/gpu_study_reconstructed_acceptance.py"
         ]
       },
       "local_tested": {
@@ -21746,7 +22807,10 @@
           "local_codex_prompt_launch_provenance_ed24b08",
           "codex_prompt_launch_provenance_primary_review_ed24b08",
           "local_campaign_evaluation_history_durable148_ed24b08",
-          "local_final_closure_family_dispersion_edef4ed"
+          "local_final_closure_family_dispersion_edef4ed",
+          "local_recovery_report47_0338",
+          "local_study_reconstruction52_0338",
+          "local_portable_ancestors176_0338"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -21783,7 +22847,9 @@
           "local_runtime_history_provenance_phase_integration_ed24b08",
           "local_final_closure_family_dispersion_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
@@ -21809,7 +22875,8 @@
       },
       "remaining": [
         "Bundle/rapport finaux §16 non acquis; exports incomplets explicitement non certifiés.",
-        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
+        "Nouveau lot export/reconstruction :1825CPU+13 acquis ; véritable export froid et reconstruction d’un finaliste §16 sur un nouveau GPU restent à exécuter après quiescence, avec gardes inchangées. Les anciens pending non authentifiables restent partial."
       ],
       "offline_presentation_evidence": [
         "historical_observed_metrics_view_dfd93d0",
@@ -21839,6 +22906,13 @@
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-14": {
@@ -22052,7 +23126,9 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -22070,6 +23146,13 @@
       },
       "remaining": [
         "Voir20AC individuels; présence de code/tests ne qualifie pas leur ensemble."
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-16": {
@@ -22151,7 +23234,9 @@
           "local_runtime_history_provenance_phase_integration_ed24b08",
           "local_final_closure_family_dispersion_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
@@ -22245,6 +23330,13 @@
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "SEC-17": {
@@ -23662,14 +24754,45 @@
         "evidence": [
           "study_v2_full_transport_failure",
           "study_v2_transport_drain",
-          "public_proposal_timeout_and_continuation_774659_00a"
+          "public_proposal_timeout_and_continuation_774659_00a",
+          "recovery_functional_control003_authority",
+          "recovery_functional_control003_public_audit",
+          "recovery_functional_control003_proof_inventory"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Incident public 774659 : timeout technique de proposition et recherche relancée avec diagnostic lié. Usage expiré inconnu, sans mesure CUDA de cet essai ni audit privé du tell ; aucune nouvelle campagne terminée déduite."
+        "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise. État global et autres responsabilités encore partiels."
       },
       "remaining": [
-        "Scénarios CPU de reprise explicite et refus sur matériel incompatible acquis à leur version ; nouvelle reprise ROMEO non acquise et même UUID obligatoire. Aucun plafond global n’est réintroduit, seules protections techniques et durée Slurm subsistent."
+        "Reprise compatible sur le même GPU effectivement acquise au contrôle 003 ; changement matériel réel, original/natif/FINAL et reprise réseau générale non qualifiés par ce contrôle. Les refus CPU de matériel incompatible et délais techniques gardent leur portée ; aucun plafond global réintroduit."
       ],
-      "expected_result": "Arrêt qualifié ou reprise compatible ; meilleur préservé ; scores incompatibles non mélangés."
+      "expected_result": "Arrêt qualifié ou reprise compatible ; meilleur préservé ; scores incompatibles non mélangés.",
+      "historical_remaining_observations": [
+        {
+          "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "statement": "Scénarios CPU de reprise explicite et refus sur matériel incompatible acquis à leur version ; nouvelle reprise ROMEO non acquise et même UUID obligatoire. Aucun plafond global n’est réintroduit, seules protections techniques et durée Slurm subsistent."
+        }
+      ],
+      "historical_romeo_execution_observations": [
+        {
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "phase": {
+            "ok": false,
+            "status": "partial",
+            "applicable": true,
+            "evidence": [
+              "study_v2_full_transport_failure",
+              "study_v2_transport_drain",
+              "public_proposal_timeout_and_continuation_774659_00a"
+            ],
+            "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Incident public 774659 : timeout technique de proposition et recherche relancée avec diagnostic lié. Usage expiré inconnu, sans mesure CUDA de cet essai ni audit privé du tell ; aucune nouvelle campagne terminée déduite."
+          }
+        }
+      ],
+      "recovery_control_evidence": [
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
+      ]
     },
     "AC-19": {
       "id": "AC-19",
@@ -23775,7 +24898,8 @@
           "source_current:optimizer_agent/portable_export.py",
           "source_current:optimizer_agent/optimization_history.py",
           "source_current:optimizer_agent/suite_report.py",
-          "source_current:scripts/report_study_fr.py"
+          "source_current:scripts/report_study_fr.py",
+          "source_current:scripts/gpu_study_reconstructed_acceptance.py"
         ]
       },
       "local_tested": {
@@ -23787,7 +24911,10 @@
           "ci_45407a2",
           "local_unscored_release",
           "local_recovery_export_release",
-          "ci_0013118"
+          "ci_0013118",
+          "local_recovery_report47_0338",
+          "local_study_reconstruction52_0338",
+          "local_portable_ancestors176_0338"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -23812,7 +24939,9 @@
           "local_research_cache_final_suite_release",
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
-          "local_observed_metrics_fix_dfd93d0"
+          "local_observed_metrics_fix_dfd93d0",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
@@ -23832,7 +24961,8 @@
       },
       "remaining": [
         "Finaliste réel reconstruit/validé n316, 0 benchmark/0 modèle; exports §16 restent à produire.",
-        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
+        "Nouveau lot export/reconstruction :1825CPU+13 acquis ; véritable export froid et reconstruction d’un finaliste §16 sur un nouveau GPU restent à exécuter après quiescence, avec gardes inchangées. Les anciens pending non authentifiables restent partial."
       ],
       "expected_result": "Source, paramètres, contrat, sources documentaires, versions et mesures accessibles par identifiants.",
       "availability_and_fixture_evidence": [
@@ -23841,6 +24971,13 @@
         "local_assembler_declared_inventory_28_fixtures",
         "source_availability_report_b402c2a",
         "source_availability_report_ed24b08"
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     },
     "USER-LOCAL": {
@@ -24744,7 +25881,9 @@
           "local_uncertain_evaluation_recovery_edef4ed",
           "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ]
       },
       "romeo_executed": {
@@ -24754,12 +25893,15 @@
         "evidence": [
           "process_recovery",
           "study_v2_full_transport_failure",
-          "recovery_functional_control002_incomplete"
+          "recovery_functional_control002_incomplete",
+          "recovery_functional_control003_authority",
+          "recovery_functional_control003_public_audit",
+          "recovery_functional_control003_proof_inventory"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+        "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise. État global et autres responsabilités encore partiels."
       },
       "remaining": [
-        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir.",
+        "Scénario réel003 acquis sans double tell, avec ancien coût incertain préservé. Persistance globale, exports complets, autres méthodes et changement de matériel restent partiels.",
         "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "derived_from": "SEC-11",
@@ -24771,12 +25913,43 @@
       "recovery_control_evidence": [
         "recovery_functional_control001_failed",
         "local_recovery_helper_interface42_30781de",
-        "recovery_functional_control002_incomplete"
+        "recovery_functional_control002_incomplete",
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory"
       ],
       "historical_remaining_observations": [
         {
           "observed_at_utc": "2026-10-22T02:13:12.249212+00:00",
           "statement": "Nouvelle reprise explicite d’évaluation inachevée : 195 tests CPU historiques puis 213 après correctif 1ceb677e, avec intégration CPU cohérente 1 636 + 13 sous-tests. Scénario ROMEO restant avec contrat/UUID/toolchain identiques et sans double récompense ; anciennes reprises bornées à leurs preuves propres."
+        },
+        {
+          "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "statement": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir. Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        }
+      ],
+      "historical_romeo_execution_observations": [
+        {
+          "source_catalogue_sha256": "7455a071bba11c9f5f1e599f5266e966d2e71340a9a03e4a7e01e4055d61eeab",
+          "phase": {
+            "ok": false,
+            "status": "partial",
+            "applicable": true,
+            "evidence": [
+              "process_recovery",
+              "study_v2_full_transport_failure",
+              "recovery_functional_control002_incomplete"
+            ],
+            "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
+          }
+        }
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
         }
       ]
     },
@@ -24859,7 +26032,9 @@
           "local_runtime_history_provenance_phase_integration_ed24b08",
           "local_final_closure_family_dispersion_edef4ed",
           "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
-          "recovery_diagnostic_closure_primary_prepublication_review"
+          "recovery_diagnostic_closure_primary_prepublication_review",
+          "local_post_recovery_export_full1825_0338",
+          "post_recovery_export_junit_counts_0338"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
@@ -24954,6 +26129,13 @@
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "post_recovery_export_observations": [
+        {
+          "observed_at_utc": "2026-10-22T05:02:19.190970+00:00",
+          "local_integration": "local_post_recovery_export_full1825_0338",
+          "scope": "Rapport/reconstruction/classement export validés CPU dans leurs scénarios ; aucune exécution supplémentaire du ZIP réel, du helper GPU ou de FINAL déduite."
+        }
       ]
     }
   },
@@ -25408,6 +26590,46 @@
         "local_cold_copy_input_identity_full1705_30781de"
       ],
       "scope": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir. 163 fichiers déclarés stables, documents et stabilité Git globale exclus."
+    },
+    {
+      "observed_at_utc": "2026-10-22T04:23:39.961817+00:00",
+      "kind": "published_0338_and_explicit_static_recovery003_acquired",
+      "evidence": [
+        "published_input_identity_recovery_0338daa",
+        "ci_0338daa",
+        "published_0338daa_peer_scope_erratum",
+        "published_0338daa_peer_scope_later_review",
+        "recovery_functional_control003_authority",
+        "recovery_functional_control003_public_audit",
+        "recovery_functional_control003_proof_inventory",
+        "handoff_edef_terminal_to_0338daa_after_recovery003",
+        "controller_0338daa_observation",
+        "dispatch_0338daa_first_epochs"
+      ],
+      "scope": "Scénario explicite 003 au source 0338 : interruption après mesure avant publication canonique, ancien coût incertain conservé, nouvelle tentative mesurée indépendamment sur le même UUID/contrat/outillage, un seul tell et relecture sans RPC ni récompense supplémentaire. Contrôle fonctionnel statique sans modèle, hors §16/FINAL ; aucune relance exactement une fois ni réussite sur un GPU différent promise. Publication et CI exactes acquises ; contrôles 001/002 inchangés. Quatre dispatchs ne changent pas les comptes datés de 46/1, ne terminent pas une nouvelle génération et ne qualifient pas l’étude."
+    },
+    {
+      "observed_at_utc": "2026-10-22T05:15:52.348820+00:00",
+      "kind": "coherent_post_recovery_export_CPU1825_plus13_no_new_real_export",
+      "evidence": [
+        "local_recovery_report47_0338",
+        "peer_recovery_report26ff_0338",
+        "local_study_reconstruction52_0338",
+        "peer_study_reconstruction7427_0338",
+        "local_portable_ancestors176_0338",
+        "primary_post_recovery_export_review_0338",
+        "local_post_recovery_export_full1825_0338",
+        "post_recovery_export_junit_counts_0338",
+        "study_reconstruction_runbook7427",
+        "original_matmul3141_775145_0338_terminal",
+        "native_normalization1729_775155_live_process_0338",
+        "post_recovery_export_source_capture_0338",
+        "peer_portable_ancestors20ec_0338",
+        "greedy_normalization1729_775143_0338_terminal"
+      ],
+      "scope": "167 fichiers déclarés stables ; trois lots sources/rapports/export cohérents. Les méthodes et résultats ROMEO courants restent source0338 ; aucun statut ROMEO requalifié par ces nouveaux tests, aucun nouveau compte global de générations ou FINAL affirmé.",
+      "source_capture_at_utc": "2026-10-22T05:02:19.190970+00:00",
+      "timestamp_scope": "Documentary aggregation observed after all cited receipts existed. The separate source_capture_at_utc records the earlier six-file capture; peer and terminal receipts are not backdated."
     }
   ]
 }

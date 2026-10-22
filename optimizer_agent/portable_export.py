@@ -532,6 +532,187 @@ def _portable_candidate(writer,study,path,name,receipt,documents,requests):
     return result
 
 
+def _classify_pending_trials(study, pending, documents, journals, raw_hashes):
+    """Recognize only exact cold ancestors of a concluded task.
+
+    A completed task never deactivates its own pending trial. Old immutable
+    databases remain in the archive; this merely distinguishes a proved former
+    execution context from a live/unknown pending context. No scheduler query,
+    checkpoint mutation, reward or pickle integration occurs here.
+    """
+    from types import SimpleNamespace
+    from .execution_backend import SlurmConfig, TERMINAL_STATES
+    from .suite_orchestrator import _local_session_job
+    docs = {path: value for path, value in documents}
+    suites = [value for path, value in journals if path == Path("suite.sqlite")]
+    active, historical, lineage_errors = [], [], []
+
+    def require(value, message):
+        if not value:
+            raise ValueError(message)
+
+    def document(path):
+        path = Path(path)
+        require(path.is_relative_to(study) and path in docs, "Missing owned local lineage receipt")
+        return docs[path]
+
+    def task_directory(task):
+        require(task.get("kind") == "generation" and re.fullmatch(r"[A-Za-z0-9_.-]+", str(task.get("id", "")))
+                and type(task.get("attempt")) is int and task["attempt"] >= 0, "Invalid generation task/attempt")
+        root = study / "campaigns" / task["id"]
+        return root if task["attempt"] == 0 else root / "attempts" / ("%03d" % task["attempt"])
+
+    def owned_terminal(task, terminal):
+        require(isinstance(terminal, dict) and terminal.get("terminal") is True
+                and str(terminal.get("state", "")).split()[0].split("+")[0] in TERMINAL_STATES
+                and str(terminal.get("job_id")) == str(task.get("job_id")), "Ancestor/tip has no matching terminal")
+        directory = task_directory(task)
+        ack = document(directory / "worker/slurm-session.json")
+        require(isinstance(ack.get("config"), dict), "Missing local worker configuration")
+        config = SlurmConfig(**ack["config"])
+        backend = SimpleNamespace(results_dir=directory / "worker", config=config,
+            session_id=task["session"], job_id=str(task["job_id"]),
+            remote_dir=str(PurePosixPath(config.remote_root) / "sessions" / task["session"]))
+        require(_local_session_job(task, backend) == str(task["job_id"]), "Worker ownership mismatch")
+
+    def inventory(generation, expected):
+        require(isinstance(expected, dict) and bool(expected), "Missing cold inventory")
+        prefix = str(generation.relative_to(study)) + "/"
+        actual = {name[len(prefix):]: pin for name, pin in raw_hashes.items() if name.startswith(prefix)
+                  and not name.endswith(("-wal", "-shm", "-journal"))}
+        require(actual == {name: pin for name, pin in expected.items()
+                           if not name.endswith(("-wal", "-shm", "-journal"))}, "Cold ancestor inventory changed")
+        for path in generation.rglob("*"):
+            require(not path.is_symlink() and (not path.is_file() or path.stat().st_nlink == 1), "Aliased ancestor evidence")
+            require(not (path.name.endswith(("-wal", "-journal")) and path.stat().st_size), "Ancestor journal is not cold")
+            if path.is_file() and path.suffix == ".lock":
+                require(file_hash(path) == raw_hashes.get(str(path.relative_to(study))), "Ancestor lock bytes changed")
+                # Keep only an observed cold hash, never restore lock state.
+                with path.open("rb") as handle:
+                    try:
+                        fcntl.flock(handle,fcntl.LOCK_SH|fcntl.LOCK_NB)
+                    except BlockingIOError as error:
+                        raise ValueError("Ancestor generation lock is still held") from error
+
+    def edge(old, following, snapshot):
+        require(following["attempt"] == old["attempt"] + 1 and following["id"] == old["id"]
+                and following["kind"] == old["kind"] and following["session"] != old["session"], "Attempt chain mismatch")
+        source, target = task_directory(old) / "generation", task_directory(following) / "generation"
+        binding = following.get("payload", {}).get("source_recovery", {})
+        if "unscored_rehost" in snapshot:
+            prepared = snapshot["unscored_rehost"]
+            audit = document(study / "unscored-rehost-intents" / (old["id"] + ".json"))
+            marker = document(target / "unscored-rehost.json")
+            require(audit == {**prepared, "phase": "committed"} and marker == audit
+                    and audit.get("kind") == "unscored_performance_context_transfer"
+                    and audit.get("task_id") == old["id"] and audit.get("original_task") == old
+                    and audit.get("previous_attempt") == old["attempt"] and audit.get("new_attempt") == following["attempt"]
+                    and audit.get("previous_session") == old["session"] and audit.get("new_session") == following["session"]
+                    and str(audit.get("previous_job_id")) == str(old.get("job_id"))
+                    and audit.get("marker_path") == str(target / "unscored-rehost.json"), "Unscored transfer binding mismatch")
+            expected = {"kind":audit["kind"], "context_id":audit["context_id"], "marker_path":audit["marker_path"], "fresh_research_required":True}
+            owned_terminal(old, audit.get("worker_terminal"))
+        elif "evaluation_recovery_preparation_sha256" in snapshot:
+            prep = study / "evaluation-recovery-intents" / (hashlib.sha256(old["id"].encode()).hexdigest()+"-%03d.json" % following["attempt"])
+            audit = document(prep)
+            pin = snapshot["evaluation_recovery_preparation_sha256"]
+            require(raw_hashes.get(str(prep.relative_to(study))) == pin and audit.get("original_task") == old
+                    and audit.get("kind") == "uncertain_evaluation_recovery_preparation"
+                    and audit.get("new_task_attempt") == following["attempt"] and audit.get("new_session") == following["session"],
+                    "Evaluation preparation binding mismatch")
+            marker = audit["marker"]
+            marker_path = target / "evaluation-recoveries" / (audit["request_id"] + ".json")
+            commit = {"epoch_id":audit["epoch_id"], "marker_sha256":raw_hashes.get(str(marker_path.relative_to(study))),
+                "preparation_sha256":pin, "new_session":following["session"], "new_task_attempt":following["attempt"]}
+            from .evaluation_recovery import _ready_record
+            require(document(marker_path) == marker and document(prep.with_suffix(".committed.json")) == commit
+                    and document(target / "evaluation-recoveries" / ("committed-"+audit["epoch_id"]+".json")) == commit
+                    and document(prep.with_suffix(".ready.json")) == _ready_record(audit,pin,commit["marker_sha256"])
+                    and marker.get("previous_session") == old["session"] and str(marker.get("previous_job_id")) == str(old.get("job_id")),
+                    "Evaluation authorization/commit mismatch")
+            if "input_identity" in marker:
+                copied = target / "evaluation-recoveries" / ("preparation-"+audit["epoch_id"]+".json")
+                require(document(copied) == audit and raw_hashes.get(str(copied.relative_to(study))) == pin,
+                        "Copied preparation is not bound to its original SHA")
+            expected = {"kind":"uncertain_evaluation_retry", "epoch_id":audit["epoch_id"], "marker_path":str(marker_path),
+                "preparation_path":str(prep), "preparation_sha256":pin}
+            owned_terminal(old, marker.get("previous_worker_observation"))
+        else:
+            raise ValueError("Unsupported or missing authenticated recovery lineage")
+        require(audit.get("old_generation") == str(source) and audit.get("new_generation") == str(target)
+                and binding == expected and following["payload"] == {**old["payload"], "source_recovery":expected}, "Recovery destination/payload mismatch")
+        inventory(source, audit.get("source_files_sha256"))
+        return {"old_attempt":old["attempt"], "new_attempt":following["attempt"], "old_session":old["session"],
+            "new_session":following["session"], "old_job_id":str(old["job_id"]), "kind":expected["kind"],
+            "raw_source_database_sha256":raw_hashes.get(str((source / "experiments.sqlite").relative_to(study)))}
+
+    def proof(run_id, first=None, database=None):
+            require(len(suites) == 1, "No unique root suite journal")
+            tables = suites[0]["tables"]
+            tips = [task for task in tables.get("tasks", []) if task.get("kind") == "generation" and task.get("id") == run_id]
+            require(len(tips) == 1, "No unique generation task")
+            tip = tips[0]
+            result = document(task_directory(tip) / "result.json")
+            require(tip.get("state") == "completed" and tip.get("result") == result
+                    and result.get("execution_complete") is True and result.get("generation_complete") is True
+                    and result.get("worker_terminal",{}).get("state") == "COMPLETED"
+                    and result.get("worker_terminal",{}).get("exit_code") == "0:0"
+                    and result.get("session_id") == tip["session"] and str(result.get("job_id")) == str(tip.get("job_id")), "Task tip is not concluded")
+            owned_terminal(tip, result.get("worker_terminal"))
+            attempts = [item for item in tables.get("task_attempts", []) if item.get("task_id") == tip["id"]]
+            archive = {}
+            for item in attempts:
+                require(item["attempt"] not in archive, "Ambiguous archived attempt")
+                value = item["snapshot"]
+                require(isinstance(value, dict) and value.get("task", {}).get("attempt") == item["attempt"], "Invalid archived task snapshot")
+                archive[item["attempt"]] = value
+            if first is None:
+                matches = [n for n, item in archive.items() if str((task_directory(item["task"]) / "generation/experiments.sqlite").relative_to(study)) == database]
+                require(len(matches) == 1, "Pending database is a tip or unknown copy, not an exact ancestor")
+                first = matches[0]
+            require(first < tip["attempt"], "Pending database is not an earlier attempt")
+            chain = []
+            for n in range(first, tip["attempt"]):
+                require(n in archive and (n+1 == tip["attempt"] or n+1 in archive), "Disconnected attempt lineage")
+                old = archive[n]["task"]
+                following = tip if n+1 == tip["attempt"] else archive[n+1]["task"]
+                chain.append(edge(old, following, archive[n]))
+            return tip, chain
+
+    failures = (ValueError, KeyError, TypeError, OSError, IndexError, AttributeError)
+    # Verify known references even when a missing/symlinked source DB yielded
+    # no pending observation. Absence must not turn an invalid lineage green.
+    if len(suites) == 1:
+        starts = set()
+        lineage_tasks = list(suites[0]["tables"].get("tasks", []))
+        for item in suites[0]["tables"].get("task_attempts", []):
+            snapshot = item.get("snapshot", {})
+            if isinstance(snapshot, dict) and ("unscored_rehost" in snapshot or "evaluation_recovery_preparation_sha256" in snapshot):
+                starts.add((item["task_id"],item["attempt"]))
+            if isinstance(snapshot, dict) and isinstance(snapshot.get("task"), dict):
+                lineage_tasks.append(snapshot["task"])
+        for task in lineage_tasks:
+            binding = task.get("payload",{}).get("source_recovery",{}) if isinstance(task.get("payload"),dict) else {}
+            if task.get("kind") == "generation" and binding.get("kind") in ("unscored_performance_context_transfer","uncertain_evaluation_retry"):
+                attempt = task.get("attempt")
+                starts.add((task["id"],attempt-1 if type(attempt) is int else -1))
+        for task_id, attempt in sorted(starts):
+            try:
+                proof(task_id,attempt)
+            except failures as error:
+                lineage_errors.append({"task_id":task_id, "attempt":attempt,
+                    "error":"Known ancestor recovery lineage is unverified: " + str(error)})
+    for row in pending:
+        try:
+            tip, chain = proof(row["run_id"], database=row["database"])
+            historical.append({**row, "classification":"historical_nonexecutable_ancestor", "task_id":tip["id"],
+                "current_attempt":tip["attempt"], "current_session":tip["session"], "lineage":chain,
+                "scope":"Pending state preserved byte for byte in a stopped former context; never consumed, resumed or scored by export"})
+        except failures as error:
+            active.append({**row, "classification":"active_or_unknown_pending_context", "classification_reason":str(error)})
+    return active, historical, lineage_errors
+
+
 def export_study(directory,output,*,repo_dir=REPO):
     """Export a complete or explicitly partial local study; submit no work."""
     study,output,repo = Path(directory).resolve(),Path(output).resolve(),Path(repo_dir).resolve()
@@ -542,7 +723,7 @@ def export_study(directory,output,*,repo_dir=REPO):
     archive_path = output/"study-evidence.zip"
     temporary_archive = output/"study-evidence.zip.tmp"
     errors,documents,requests,databases,observed_jobs,inflight_trials = [],[],[],[],[],[]
-    omitted_references,reference_metadata = [],[]
+    omitted_references,reference_metadata,raw_hashes,journals,omitted_locks = [],[],{},[],[]
     files = sorted(path for path in study.rglob("*") if path.is_file() and not path.is_symlink())
     before = {str(path): (path.stat().st_size,path.stat().st_mtime_ns) for path in files}
     with ExitStack() as stack,zipfile.ZipFile(temporary_archive,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
@@ -558,11 +739,17 @@ def export_study(directory,output,*,repo_dir=REPO):
         source = _source_snapshot(writer,repo)
         for path in files:
             relative = path.relative_to(study)
-            if path.name.endswith(("-wal","-shm")) or path.suffix == ".lock" or path.name == "controller.lock":
+            if path.name.endswith(("-wal","-shm")):
+                continue
+            if path.suffix == ".lock" or path.name == "controller.lock":
+                raw_hashes[str(relative)] = file_hash(path)
+                omitted_locks.append({"original_path":str(relative),"sha256":raw_hashes[str(relative)],"bytes":path.stat().st_size,
+                    "disposition":"Lock bytes/state not redistributed; raw hash retained for cold ancestor authentication"})
                 continue
             reference_kind = _reference_file_kind(relative)
             if reference_kind:
                 data = path.read_bytes()
+                raw_hashes[str(relative)] = digest(data)
                 omitted_references.append({"original_path":str(relative),"sha256":digest(data),"bytes":len(data),
                     "kind":reference_kind,"disposition":"body omitted; original receipt/hash remains unchanged"})
                 if path.suffix == ".json":
@@ -575,9 +762,14 @@ def export_study(directory,output,*,repo_dir=REPO):
                 with tempfile.TemporaryDirectory(prefix="cuda-export-db-") as temporary:
                     backup = Path(temporary)/path.name
                     try:
+                        raw_hashes[str(relative)] = file_hash(path)
                         metadata = sqlite_backup(path,backup)
+                        metadata["source_sha256"] = raw_hashes[str(relative)]
+                        if file_hash(path) != metadata["source_sha256"]:
+                            raise ValueError("Database source changed while being backed up")
                         member = writer.add_file("evidence/"+str(relative),backup)
                         readable = readable_database(backup)
+                        journals.append((relative, readable))
                         writer.add("observability/"+str(relative)+".json",encoded(readable))
                         databases.append({"path":member,**metadata})
                         for snapshot in readable["search_snapshots"]:
@@ -593,6 +785,7 @@ def export_study(directory,output,*,repo_dir=REPO):
                 continue
             try:
                 data = path.read_bytes()
+                raw_hashes[str(relative)] = digest(data)
                 writer.add("evidence/"+str(relative),data)
                 if path.suffix == ".json":
                     try:
@@ -619,6 +812,8 @@ def export_study(directory,output,*,repo_dir=REPO):
             if database["path"].endswith("suite.sqlite"):
                 readable = json.loads(archive.read("observability/"+database["path"].removeprefix("evidence/")+".json"))
                 suite_rows.extend(readable["tables"].get("tasks",[]))
+        inflight_trials, historical_trials, lineage_errors = _classify_pending_trials(study,inflight_trials,documents,journals,raw_hashes)
+        errors.extend(lineage_errors)
         terminal_ids = {str(row["job_id"]) for _,document in documents for row in _walk(document)
             if row.get("job_id") and row.get("state") in {"COMPLETED","FAILED","CANCELLED","TIMEOUT","NODE_FAIL","OUT_OF_MEMORY","PREEMPTED","BOOT_FAIL"}}
         for path,document in documents:
@@ -670,6 +865,9 @@ def export_study(directory,output,*,repo_dir=REPO):
             "database_snapshots":databases,"database_consistency":"Each backup is transactionally coherent; no cross-database atomicity claim during active execution",
             "controller_or_worker_lock_observed_active":controller_active,"active_jobs_observed":observed_jobs,
             "inflight_search_trials":inflight_trials,"source_head_changed_during_export":source_changed,
+            "historical_search_trials":historical_trials,
+            "pending_search_trial_observations":inflight_trials+historical_trials,
+            "lock_files_omitted":omitted_locks,
             "scheduler_observation":"Cached local receipts/journal only; scheduler was not queried",
             "changed_files_during_export":changed,"errors":errors,"candidates":candidates,"files":writer.files,
             "certification":"No certification is created by exporting; inspect original final qualification/confirmation receipts",

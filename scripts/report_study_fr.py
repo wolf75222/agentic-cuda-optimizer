@@ -81,7 +81,24 @@ PROOF_PATHS = (
     ("Isolation profil/benchmark et contrôle final négatif", "results/gpu-final-isolation-acceptance/20261021-current/allocation-receipt.json"),
     ("Finaliste natif reconstruit et revalidé", "results/gpu-reconstructed-acceptance/20261021-current/acceptance-summary.json"),
     ("Reprise après arrêt brutal", "results/process-recovery-acceptance-20261021-release/process-recovery-acceptance.json"),
+    ("§11.2 — contrôle 001, échec avant soumission", "work/live/evaluation-recovery-functional-control-001-terminal-audit.json"),
+    ("§11.2 — contrôle 002, reprise incomplète", "work/live/evaluation-recovery-functional-control-002-terminal-audit.json"),
+    ("§11.2 — contrôle 003, reprise statique sans modèle", "work/live/evaluation-recovery-functional-control-003-terminal-audit.json"),
     ("Codex vanilla natif", "results/native-vanilla-20261021/evidence/receipt.json"))
+
+RECOVERY_AUDITS = {"work/live/evaluation-recovery-functional-control-"+number+"-terminal-audit.json": number
+                   for number in ("001", "002", "003")}
+RECOVERY_ACCEPTANCE_CHECKS = (
+    "actual_predeclared_placement_before_measurement", "both_worker_terminal", "independent_oracle_measurement",
+    "new_epoch_request_attempt", "new_session_job", "old_canonical_unfinished_preserved", "old_cost_remains_uncertain",
+    "old_measurement_before_tell", "old_process_exit_exact", "preparation_submits_no_job", "real_native_both_jobs",
+    "replay_no_gpu_or_tell", "same_contract", "same_real_uuid_toolchain", "unique_native_request_ids")
+RECOVERY_AUDIT_CHECKS = (
+    "fifteen_authority_checks_true", "source_helper_api_pins", "phase1_crash73_after_real_measured_before_canonical_tell",
+    "owned_one_gpu_placement_same_uuid_two_distinct_jobs", "both_terminal_completed_zero", "new_epoch_request_attempt",
+    "old_uncertain_cost_not_zeroed", "same_contract_and_environment", "copied_input_identity_preparation_commit_sha_links",
+    "new_evaluation_id_same_exact_artifact", "all63_public_native_receipts_hash_job_uuid_source_guards_match",
+    "replay_no_additional_rpc_or_tell", "no_final_exposure_no_model", "bounded_public_manifest_subset_sha_verified")
 
 
 def load(path, default=None):
@@ -1324,12 +1341,164 @@ def _diagnostic_v2_control(repo, value):
                  "aucune finale commune ni qualification globale déduite."}
 
 
+def _evaluation_recovery_control(repo, value, number):
+    """Project only public control metadata; never follow the proof inventory."""
+    base = "results/evaluation-recovery-functional-control-"+number
+    scope = ("Contrôle fonctionnel statique du §11.2, sans modèle et hors cohortes §16 ; "
+             "aucune qualification FINAL ni aucun gain scientifique. Les preuves d’implémentation, "
+             "tests locaux et exécution ROMEO restent distinctes. ")
+    result = {"control_number": number, "functional_acceptance": None, "ok": None,
+              "final_qualified": False, "scientific_gain_qualified": False,
+              "excluded_from_quality_cohorts": True, "model_calls": None,
+              "jobs": [], "allocated_gpu_wall_seconds": None, "old_work_actual_cost": None,
+              "old_work_cost_status": "inconnu", "validation_level": "inconnu",
+              "scope": scope+"Reçu absent : résultat encore inconnu.", "verified_public_subset": []}
+    if not value:
+        return result
+    if number == "001":
+        verified = (value.get("kind") == "isolated_recovery_control_pre_submission_failure"
+                    and value.get("status") == "incomplete_retained" and value.get("returncode") == 2
+                    and type(value.get("recorded_owned_jobs")) is int and value["recorded_owned_jobs"] == 0
+                    and type(value.get("phase_launch_intents")) is int and value["phase_launch_intents"] == 0
+                    and type(value.get("model_calls")) is int and value["model_calls"] == 0
+                    and value.get("artifacts_retained") is True and value.get("retry_same_output") is False)
+        result.update(ok=False, functional_acceptance=False, evidence_verified=verified,
+                      status="incomplet — erreur du helper avant soumission" if verified else "reçu invalide — échec non authentifié",
+                      source_head=value.get("runtime_source_head"), source_status=value.get("status"),
+                      validation_level="échec avant soumission" if verified else "inconnu",
+                      model_calls=0 if verified else None, allocated_gpu_wall_seconds=0 if verified else None,
+                      scope=scope+("Échec du helper, aucune allocation atteinte ; aucun succès de reprise. "
+                                   "Ce résultat historique reste inchangé." if verified else
+                                   "Forme du reçu non reconnue ; aucune exécution déduite."))
+        return result
+
+    authority = _verified_json(repo, value.get("authority"), exact=base+"/evaluation-recovery-acceptance.json") or {}
+    proof = _verified_json(repo, value.get("proof_manifest"), exact=base+"/proof-sha256.json") or {}
+    files = _mapping(proof.get("files"))
+    public_names = ["uncertain-old-cost-observation.json", "control-proof/phase-1-placement.json",
+                    "control-proof/phase-2-placement.json"]
+    if number == "003":
+        public_names.append("control-proof/replay-observation.json")
+    linked = {name: _verified_json(Path(repo)/base, {"path": name, "sha256": files.get(name)}, exact=name)
+              for name in public_names}
+    old_cost = _mapping(linked.get(public_names[0]))
+    jobs = _records(authority.get("jobs"))
+    jobs_valid = (len(jobs) == 2 and [job.get("phase") for job in jobs] == [1, 2]
+                  and len({job.get("job_id") for job in jobs}) == 2
+                  and len({job.get("session") for job in jobs}) == 2)
+    for job, name in zip(jobs, public_names[1:3]):
+        placement = _mapping(linked.get(name))
+        terminal = _mapping(job.get("terminal"))
+        jobs_valid = jobs_valid and bool(
+            isinstance(job.get("job_id"), str) and re.fullmatch(r"[1-9][0-9]*", job["job_id"])
+            and isinstance(job.get("session"), str) and job["session"]
+            and re.fullmatch(r"gpu(?::[A-Za-z0-9_]+)?:1", str(job.get("allocated_gres")))
+            and terminal.get("job_id") == job["job_id"] and terminal.get("terminal") is True
+            and terminal.get("state") == "COMPLETED" and terminal.get("exit_code") == "0:0"
+            and placement.get("job_id") == job["job_id"] and placement.get("session_id") == job["session"]
+            and placement.get("gres") == job["allocated_gres"]
+            and placement.get("actual_hostname") == terminal.get("nodes")
+            and _hash(placement.get("device_uuid"), 32))
+    placements = [_mapping(linked.get(name)) for name in public_names[1:3]]
+    same_uuid = bool(jobs_valid and placements[0].get("device_uuid") == placements[1].get("device_uuid"))
+    checks = {
+        "authority_and_public_proof_links": bool(authority and proof and all(linked.values())),
+        "static_no_model_outside_quality": authority.get("kind") == "evaluation_recovery_acceptance"
+            and authority.get("control_method") == "functional_static_no_model"
+            and authority.get("excluded_from_quality_cohorts") is True
+            and type(authority.get("model_calls")) is int and authority["model_calls"] == 0,
+        "two_distinct_owned_terminal_one_gpu_allocations": jobs_valid and same_uuid,
+        "uncertain_old_work_preserved": authority.get("uncertain_old_work_preserved") is True
+            and old_cost.get("uncertain_preserved") is True and old_cost.get("old_attempt_status") == "running"
+            and "old_reservation_actual" in old_cost and old_cost["old_reservation_actual"] is None,
+    }
+    if number == "003":
+        replay = _mapping(linked.get("control-proof/replay-observation.json"))
+        audit_replay = _mapping(value.get("replay"))
+        pairs = (("gpu_rpc_calls_before_evaluation_replay", "gpu_rpc_calls_after_evaluation_replay"),
+                 ("gpu_rpc_calls_before_replay", "gpu_rpc_calls_after_replay"),
+                 ("tree_rewards_before_replay", "tree_rewards_after_replay"))
+        checks.update({
+            "required_authority_and_audit_checks": set(_mapping(authority.get("checks"))) == set(RECOVERY_ACCEPTANCE_CHECKS)
+                and _required_checks(authority, RECOVERY_ACCEPTANCE_CHECKS)
+                and _required_checks(value, RECOVERY_AUDIT_CHECKS),
+            "successful_separate_authority": authority.get("ok") is True
+                and authority.get("status") == "evaluation_recovery_acceptance_passed"
+                and not authority.get("error") and not authority.get("cleanup_error"),
+            "audit_source_and_job_bindings": value.get("kind") == "independent_public_terminal_audit"
+                and value.get("jobs") == jobs and value.get("uuid") == placements[0].get("device_uuid")
+                and value.get("old_uncertain_cost_preserved") is True
+                and value.get("excluded_from_quality_cohorts") is True
+                and type(value.get("model_calls")) is int and value["model_calls"] == 0
+                and _hash(authority.get("source_head"), 40)
+                and authority.get("source_head") == _mapping(value.get("source")).get("head")
+                and _hash(authority.get("helper_sha256"))
+                and authority.get("helper_sha256") == _mapping(value.get("source")).get("helper_sha256"),
+            "replay_has_no_new_rpc_or_tell": all(
+                type(replay.get(before)) is int and type(replay.get(after)) is int
+                and type(audit_replay.get(before)) is int and type(audit_replay.get(after)) is int
+                and replay[before] > 0 and replay[after] == replay[before]
+                and audit_replay[before] == replay[before] and audit_replay[after] == replay[after]
+                for before, after in pairs)
+                and replay.get("tree_rewards_before_replay") == 1
+                and type(replay.get("model_calls")) is int and replay["model_calls"] == 0
+                and replay.get("request_id") == value.get("new_request_id")
+                and replay.get("previous_request_id") == value.get("old_request_id")
+                and _hash(replay.get("request_id")) and _hash(replay.get("previous_request_id"))
+                and replay["request_id"] != replay["previous_request_id"]
+                and _hash(value.get("new_measured_evaluation_id"), 32)
+                and _hash(value.get("old_measured_evaluation_id"), 32)
+                and replay.get("evaluation_id") == value.get("new_measured_evaluation_id")
+                and value.get("new_measured_evaluation_id") != value.get("old_measured_evaluation_id"),
+        })
+    else:
+        checks["historical_failure_remains_incomplete"] = (
+            value.get("kind") == "evaluation_recovery_functional_control_terminal_audit"
+            and value.get("status") == "incomplete_contract_resume_refused"
+            and value.get("recovery_acceptance_ok") is False and authority.get("ok") is False
+            and authority.get("status") == "incomplete" and bool(authority.get("error"))
+            and _required_checks(authority, ("old_cost_remains_uncertain", "preparation_submits_no_job")))
+    verified = all(checks.values())
+    durations = [_elapsed_seconds(_mapping(job.get("terminal")).get("elapsed")) for job in jobs]
+    allocated = sum(durations) if verified and len(durations) == 2 and all(v is not None for v in durations) else None
+    accepted = verified and number == "003"
+    result.update(ok=accepted, functional_acceptance=accepted, evidence_verified=verified,
+                  status=("acquis — reprise fonctionnelle statique §11.2 sans modèle" if accepted else
+                          "incomplet — contrat refusé après copie froide" if verified else
+                          "reçu invalide — contrôle non authentifié"),
+                  source_status=authority.get("status"), authority=value.get("authority"),
+                  authentication_checks=checks, source_head=authority.get("source_head"),
+                  execution_source_sha256={"helper": authority.get("helper_sha256")},
+                  jobs=jobs if verified else [], job_id=", ".join(job["job_id"] for job in jobs) if verified else None,
+                  terminal={"state": "COMPLETED — deux allocations distinctes"} if verified else {},
+                  allocated_gpu_wall_seconds=allocated, model_calls=0 if verified else None,
+                  old_work_cost_status="incertain, jamais ramené à zéro" if verified else "inconnu",
+                  validation_level="ROMEO — contrôle statique" if verified else "inconnu",
+                  verified_public_subset=[name for name in public_names if linked.get(name)],
+                  scope=scope+("Deux allocations distinctes au même UUID, ancien travail non commis à coût incertain. "
+                               "Les durées Slurm sont séparées du temps CUDA et du ledger ; aucun ajout au bilan global. "
+                               "Le même UUID futur reste une condition, sans garantie de réallocation. "
+                               + ("Rejeu sans nouvelle requête ni nouveau tell acquis ; les échecs 001/002 restent inchangés. "
+                                  "La reprise avec agent modèle, les autres placements et les campagnes §16 restent des preuves séparées."
+                                  if accepted else "Le hash lié aux chemins bloque la suite avant toute nouvelle requête native ; aucune reprise complète acquise.")
+                               if verified else "Liens publics ou contrôles incomplets ; aucune réussite déduite."))
+    return result
+
+
 def control_receipts(repo):
     receipts = []
     for name, relative in PROOF_PATHS:
         path = Path(repo) / relative
         malformed = None
+        unsafe_audit = False
         try:
+            if relative in RECOVERY_AUDITS:
+                for component in (path, *path.parents):
+                    if component == Path(repo):
+                        break
+                    if component.is_symlink():
+                        unsafe_audit = True
+                        raise ValueError("Lien symbolique dans le chemin du contrôle")
             raw_value = load(path, {})
             if not isinstance(raw_value, dict):
                 malformed = "Le reçu doit être un objet JSON"
@@ -1339,7 +1508,7 @@ def control_receipts(repo):
         terminal = _mapping(value.get("terminal") or value.get("worker_terminal"))
         provenance = _mapping(value.get("source_provenance") or value.get("execution_source"))
         row = {"label": name, "path": relative,
-            "receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+            "receipt_sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() and not unsafe_audit else None,
             "status": value.get("status", "reçu disponible" if value else "en attente"),
             "ok": value.get("ok"), "job_id": terminal.get("job_id", value.get("job_id")),
             "terminal": terminal, "source_head": provenance.get("HEAD", value.get("source_HEAD")),
@@ -1356,10 +1525,12 @@ def control_receipts(repo):
             RESEARCH_REFRESH_RESUMED_3: lambda: _research_refresh_control(repo, value, path, resumed=True),
             STANDALONE_FINAL_SUITE: lambda: _standalone_final_control(value),
             DIAGNOSTIC_V2_AUDIT: lambda: _diagnostic_v2_control(repo, value)}
+        if relative in RECOVERY_AUDITS:
+            authenticators[relative] = lambda: _evaluation_recovery_control(repo, value, RECOVERY_AUDITS[relative])
         if relative in authenticators:
             try:
                 row.update(authenticators[relative]())
-            except (TypeError, AttributeError, KeyError, IndexError, ValueError) as error:
+            except (TypeError, AttributeError, KeyError, IndexError, ValueError, OSError) as error:
                 # Unknown nested JSON shapes are invalid evidence, not a reason
                 # to lose the report or silently qualify the remaining fields.
                 malformed = "Structure de preuve invalide : "+type(error).__name__
@@ -1446,7 +1617,26 @@ def execution_evidence_panel(receipts):
         html += ("Aucun succès de ce complément n’est acquis. Une recherche peut soutenir une alternative sans couvrir le nom exact demandé ; "
                  "son acceptation ne termine pas ce contrôle AC-02. ")
     html += "Aucun nouveau GPU ni résultat de performance §16 n’en est déduit.</p>"
-    return html
+    return html+evaluation_recovery_panel(receipts)
+
+
+def evaluation_recovery_panel(receipts):
+    rows = [row for row in receipts if row.get("path") in RECOVERY_AUDITS]
+    if not rows:
+        return ""
+    cells = [[row.get("control_number", RECOVERY_AUDITS[row["path"]]), row["status"], row.get("validation_level", "inconnu"),
+              row.get("job_id") or ("aucune allocation atteinte" if row.get("evidence_verified") else "inconnu"),
+              fmt(row.get("allocated_gpu_wall_seconds")), row.get("old_work_cost_status", "inconnu")]
+             for row in rows]
+    return ("<h2>Reprise d’évaluation — contrôles fonctionnels du §11.2</h2>"
+            +table(["Contrôle", "Résultat fonctionnel", "Preuve exécutée", "Allocations distinctes",
+                    "Secondes allouées Slurm (un GPU par allocation)", "Ancien coût du travail non commis"], cells)
+            +"<p>Contrôle statique sans modèle, hors cohortes §16 : aucune génération Codex vanilla, "
+             "aucun gain scientifique et aucune qualification FINAL. Implémentation et tests locaux ont leurs reçus séparés. "
+             "Les secondes additionnent seulement les durées terminales des allocations indiquées ; "
+             "elles ne sont ni du temps CUDA ni un coût ancien régularisé et ne s’ajoutent pas au bilan global déjà dédupliqué. "
+             "Les contrôles 001/002 conservent leurs statuts ; un succès séparé ne les requalifie pas. "
+             "Le même UUID reste obligatoire pour une future reprise, sans garantie Slurm.</p>")
 
 
 def _receipt_snapshot(path):

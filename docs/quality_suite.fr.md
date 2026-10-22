@@ -104,3 +104,87 @@ reçu `final-suite-acceptance.json`, ses requêtes natives et le terminal Slurm.
 Chaque phase reste indépendante. Un protocole préparé ou un test simulé ne prouve ni un gain GPU, ni la fin des 144 campagnes avec ablation gloutonne.
 
 Le contraste `full_vs_pmpp_permanent_only` isole l’ajout de consultation ciblée au guide original permanent. `pmpp_permanent_only_vs_no_pmpp` isole le guide permanent. Le mode permanent seul ne consulte ni cartes ni sources externes PMPP et ne prétend pas l’avoir fait.
+
+## Reconstruction d’un finaliste de l’étude complète
+
+Le contrôle `scripts/gpu_study_reconstructed_acceptance.py` est destiné à une
+exécution **future**, après la fin de toutes les générations et de tous les
+groupes FINAL. Un plan, un test CPU ou un dossier existant ne remplace pas cette
+exécution. Il faut disposer d’un export `study-evidence.zip` **complet**, exact
+et figé, puis choisir dans ses métadonnées publiques un candidat retenu d’un
+véritable groupe FINAL commun fermé, dont l’artefact est qualifié. Privilégier
+un artefact amélioré du mode `full` dont l’identité diffère du naïf, en
+identifiant sa transformation dans la source publique ; un hash différent ne
+prouve pas un gain. Le pilote GEMM 316 et
+le candidat amélioré de convolution 1729 identique au naïf ne remplissent pas
+cet objectif. Si aucun finaliste de ce type n’est disponible, conserver cette
+validation en attente ; ne pas lui substituer un pilote.
+
+Consigner le critère et la sélection après les résultats publics, sans lire
+de graine, RNG ou entrée FINAL privée pour les choisir. `RECON_SELECTION` est
+l’identifiant exact `final-groups/<groupe>/frozen-candidates.json#full` du
+bundle. `RECON_REQUEST_INDEX` est l’indice, en base zéro, d’une requête archivée
+explicitement inspectée dans la liste de ce candidat : elle doit être de mode
+`run`, avec gardes d’entrées/sorties, `warmup=0`, `iterations=1` et `series=1`.
+Une requête de benchmark ou un index choisi par défaut est à exclure.
+
+Avant **même le plan**, acquérir séparément une attestation manuelle de
+quiescence, avec ses preuves publiques et son SHA-256. Elle doit lier le SHA
+exact du bundle et la sélection, nommer son auteur et sa date, et établir les
+six conditions attendues : modèles et contrôleurs concernés terminés, jobs
+possédés terminaux, aucune intention de soumission en attente, racines froides
+figées, et aucune entrée FINAL encore secrète à publier. Le helper vérifie les
+pins ; il ne sonde pas les processus ou le scheduler et ne crée pas cette
+attestation. Sans elle, son mode par défaut affiche les prérequis sans ouvrir
+le ZIP ni les buffers. Avec elle, le plan ouvre l’export, reconstruit les
+fichiers et calcule l’oracle CPU ; ce n’est donc pas une simple liste de
+métadonnées à utiliser sur une étude encore active.
+
+Les variables suivantes doivent désigner les valeurs réellement acquises :
+`RECON_BUNDLE` est le chemin absolu du ZIP complet,
+`RECON_BUNDLE_SHA256` son empreinte, `RECON_QUIESCENCE` le JSON de quiescence
+authentifié et `RECON_QUIESCENCE_SHA256` son empreinte. La sélection et l’indice
+ne sont pas fixés par cet exemple.
+
+```bash
+# Après quiescence et export complet : préparer une reconstruction locale.
+.venv/bin/python scripts/gpu_study_reconstructed_acceptance.py \
+  --bundle "$RECON_BUNDLE" --bundle-sha256 "$RECON_BUNDLE_SHA256" \
+  --selection "$RECON_SELECTION" --request-index "$RECON_REQUEST_INDEX" \
+  --quiescence "$RECON_QUIESCENCE" \
+  --quiescence-sha256 "$RECON_QUIESCENCE_SHA256" \
+  --output results/reconstruction-finaliste-plan-unique
+
+# Après revue du plan : même bundle/sélection/requête, autre sortie fraîche.
+.venv/bin/python scripts/gpu_study_reconstructed_acceptance.py --run \
+  --bundle "$RECON_BUNDLE" --bundle-sha256 "$RECON_BUNDLE_SHA256" \
+  --selection "$RECON_SELECTION" --request-index "$RECON_REQUEST_INDEX" \
+  --quiescence "$RECON_QUIESCENCE" \
+  --quiescence-sha256 "$RECON_QUIESCENCE_SHA256" \
+  --output results/reconstruction-finaliste-run-unique \
+  --run-id reconstruction-finaliste-run-unique \
+  --execution-config configs/romeo.json
+```
+
+Les deux sorties doivent être absentes et distinctes de l’étude et du bundle.
+Le `--run` refait la préparation dans sa propre sortie ; il ne réutilise pas
+le répertoire du plan. Il soumet une seule allocation possédée, avec **un GPU,
+partition `long` et durée Slurm obligatoire de 48 h**. La source, les options,
+dépendances, paramètres, règle de lancement et entrées exactes sont liées aux
+reçus archivés. Une seule requête `run` confronte la sortie à un oracle NumPy
+indépendant : **zéro appel modèle, zéro benchmark et aucun nouveau score**.
+
+L’UUID et l’environnement du FINAL d’origine restent archivés séparément de
+ceux du nouveau worker. Le GPU peut être différent si le lancement figé est
+admissible ; aucune performance, position dans un classement ou qualification
+ancienne n’est transférée à cette allocation. L’acquis futur exige le reçu
+`allocation-receipt.json`, ses gardes de correction et d’intégrité, les
+identités réelles et le terminal Slurm `COMPLETED 0:0`. Un échec conserve
+l’intention et les preuves ; il ne justifie ni un autre index ni une nouvelle
+soumission depuis la même sortie.
+
+Le supplément préparatoire
+`work/live/final-study-reconstruction-runbook-7427.json` détaille les champs et
+conditions de l’attestation, en complément du runbook d’assemblage historique
+`final-validation-assembly-runbook-d6b2.json`, conservé inchangé. Il ne crée
+aucune attestation, export ou preuve d’exécution réelle.

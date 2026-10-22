@@ -200,6 +200,29 @@ son intention, ses résultats et ses coûts ; une nouvelle tentative nécessite
 un nouvel identifiant et un nouveau répertoire. La réussite du contrôle ne
 prouve ni un gain de performance ni la certification de l'étude §16.
 
+La reprise a effectivement été exécutée au source publié **0338daa**, dont la
+[CI exacte 39719513331](https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39719513331)
+réussit. Le [contrôle 003](../results/evaluation-recovery-functional-control-003/evaluation-recovery-acceptance.json)
+passe ses **15 vérifications** : les jobs 775139 et 775140 terminent `COMPLETED 0:0`,
+en 35 s et 37 s, sur le même UUID à romeo-a001. La première mesure reste
+non publiée et son coût incertain ; après copie froide, une nouvelle tentative
+produit une mesure indépendante. Un seul `tell` est enregistré, puis les
+relectures de l’évaluation et de l’intégration ajoutent **zéro RPC GPU et zéro
+récompense**. L’[audit public](../work/live/evaluation-recovery-functional-control-003-terminal-audit.json)
+et l’[inventaire déclaré](../results/evaluation-recovery-functional-control-003/proof-sha256.json)
+portent respectivement les SHA-256 `ea0ffd00…` et `ea43ab76…` ; l’autorité
+du contrôle porte `bc49c4e8…`.
+
+Cet acquis concerne le scénario fonctionnel statique **sans modèle**, hors
+§16 et FINAL. Il ne garantit pas qu’une allocation future retrouve le même
+GPU, ni la reprise des méthodes original/natif ou d’un contrat différent.
+Les contrôles 001 (échec du helper avant tout job) et 002 (benchmark et copie
+froide réels, puis refus du contrat avant nouvelle mesure) restent inchangés
+et échoués. La publication est liée au [reçu original](../work/live/input-identity-recovery-0338daa-release.json),
+à son [erratum additif de portée](../work/live/input-identity-recovery-0338daa-release-peer-scope-erratum.json)
+et à la [revue indépendante ultérieure](../work/live/input-identity-recovery-0338daa-release-peer-scope-independent-review.json) ;
+cette dernière ne constitue pas une revue rétroactive du reçu original.
+
 ## Portée des preuves
 
 L'incident du 21 octobre a révélé une perte de lien Wi-Fi et la suppression de
