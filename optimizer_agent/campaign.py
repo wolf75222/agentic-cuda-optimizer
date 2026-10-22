@@ -350,17 +350,39 @@ class CampaignRuntime:
         events = self.store.events(self.config.run_id)
         orphan_ledger = {key:value for key,value in ledger["spent"].items()
             if key in {"model_calls", "model_tokens"}}
-        if orphan_ledger and not any(isinstance(event, dict) and event.get("kind") in
-                                    {"model", "model_uncertain"} for event in events):
+        model_events = [event for event in events if isinstance(event, dict)
+                        and event.get("kind") in {"model", "model_uncertain"}]
+        orphan_reservations = []
+        reader = getattr(self.store, "reconciled_model_reservations", None)
+        if callable(reader):
+            reservations = reader(self.config.run_id)
+            observed_reservations = {event["payload"]["reservation_id"] for event in model_events
+                if isinstance(event.get("payload"), dict)
+                and isinstance(event["payload"].get("reservation_id"), str)}
+            orphan_reservations = [record for record in reservations
+                if record["reservation_id"] not in observed_reservations]
+            if orphan_reservations:
+                orphan_ledger = {}
+                for record in orphan_reservations:
+                    for key, value in record["actual"].items():
+                        orphan_ledger[key] = orphan_ledger.get(key, 0) + value
+                events = [*events, *({"kind":"model_uncertain", "payload":{
+                    "reservation_id":record["reservation_id"],
+                    "reason":"reconciled_model_reservation_without_observation"}}
+                    for record in orphan_reservations)]
+            elif reservations:
+                orphan_ledger = {}
+        if orphan_ledger and not orphan_reservations and not model_events:
             # An old/imported charge without its observation cannot turn an
             # otherwise empty event stream into evidence of zero consumption.
             events = [*events, {"kind":"model_uncertain", "payload":{
                 "reason":"recorded_ledger_without_model_observations"}}]
-        else:
+        elif not orphan_reservations:
             orphan_ledger = {}
         observed = summarize_recorded_model_usage(events,
                                                  pending_model_calls=int(pending))
         observed["unattributed_recorded_ledger_model_entries"] = orphan_ledger
+        observed["unattributed_recorded_ledger_model_reservations"] = orphan_reservations
         consumption = {**ledger["spent"], "model_tokens": observed["model_tokens"],
                        "model_calls": observed["model_calls"],
                        **{key: observed[key] for key in ("input_tokens", "output_tokens", "cached_input_tokens",

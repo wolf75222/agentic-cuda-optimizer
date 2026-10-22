@@ -147,6 +147,24 @@ class ExperimentStore:
         with self.connection() as db:
             return self._budget(db, run_id)
 
+    def reconciled_model_reservations(self, run_id):
+        """Return model-charge identities, without interpreting them as calls.
+
+        Reconciliation precedes publication of its model event. Consumers need
+        the reservation ID to detect that interruption window even when older
+        calls already have complete observations. Pending reservations remain
+        in budget_state(); this view neither reconciles nor replays anything.
+        """
+        records = []
+        with self.connection() as db:
+            for row in db.execute("SELECT reservation_id,actual FROM reservations "
+                                  "WHERE run_id=? AND actual IS NOT NULL ORDER BY reservation_id", (run_id,)):
+                actual = {key: value for key, value in json.loads(row["actual"]).items()
+                          if key in {"model_calls", "model_tokens"}}
+                if actual:
+                    records.append({"reservation_id": row["reservation_id"], "actual": actual})
+        return records
+
     def _reserve(self, db, run_id, reservation_id, amount, purpose, expires_at):
         amount = self._amount(amount)
         existing = db.execute("SELECT amount,purpose FROM reservations WHERE run_id=? AND reservation_id=?",

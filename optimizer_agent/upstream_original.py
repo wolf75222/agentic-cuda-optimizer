@@ -277,15 +277,17 @@ class OriginalCodexTransport:
             if not completed or any(event.get("type") in {"error","turn.failed"} for event in events):
                 raise ValueError("CLI completion evidence is missing or failed")
             usage = receipt["usage"]
-            if not isinstance(usage,dict) or not {"input_tokens","output_tokens"} <= set(usage):
-                raise ValueError("Completed CLI token receipt is incomplete")
             turn_usage = completed[-1].get("usage")
-            if (not isinstance(turn_usage,dict) or not {"input_tokens","output_tokens"} <= set(turn_usage)
-                    or any(type(usage[key]) is not int or usage[key] < 0 for key in ("input_tokens","output_tokens"))):
-                raise ValueError("CLI completed turn has no exact token consumption")
-            for key,value in turn_usage.items():
-                if usage.get(key) != value:
-                    raise ValueError("CLI usage differs from its completed turn")
+            if turn_usage is not None and not isinstance(turn_usage,dict):
+                raise ValueError("CLI completed turn usage is not a valid envelope")
+            # Missing/malformed counters do not invalidate a completed reply.
+            # Authenticate the exact normalization performed by CodexBackend,
+            # preserving unknown values instead of requiring invented zeros.
+            expected_usage = {**(turn_usage or {}), "cost_usd":None}
+            if not isinstance(usage,dict) or content_hash(usage) != content_hash(expected_usage):
+                raise ValueError("CLI usage differs from its completed turn")
+            if "provider_usage_raw" in receipt and content_hash(receipt["provider_usage_raw"]) != content_hash(turn_usage):
+                raise ValueError("CLI raw usage differs from its completed turn")
             return {key:receipt.get(key) for key in
                 ("payload","usage","events","model","reasoning_effort","elapsed_seconds","call_id")}
         except (OSError,ValueError,KeyError,TypeError) as error:

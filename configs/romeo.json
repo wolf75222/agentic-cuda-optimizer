@@ -1,14 +1,14 @@
 {
-  "description": "Verified 2026-10-21: AArch64 GH200 120GB, Slurm resource label gpu:h100:1; login host is x86_64. Long partition admits ARM GPU jobs; a 48-hour mandatory lease was accepted by sbatch --test-only. Build and GPU operations occur within Slurm only.",
+  "description": "AArch64 GH200 120GB, Slurm resource label gpu:h100:1; login host is x86_64. Future test allocations use short with a mandatory two-hour walltime. Live partition compatibility checked 2026-10-22; admission evidence is recorded separately. Build and GPU operations occur within Slurm only.",
   "host": "romeo",
   "remote_root": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021",
   "account": "r250127",
-  "partition": "long",
+  "partition": "short",
   "gres": "gpu:h100:1",
   "constraint": "armgpu",
   "cpus": 4,
   "memory": "8G",
-  "walltime": "48:00:00",
+  "walltime": "02:00:00",
   "modules": [
     "cuda/12.6"
   ],
