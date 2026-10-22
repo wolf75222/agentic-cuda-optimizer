@@ -34,6 +34,7 @@ from .greedy_search_policy import GreedySearchPolicy
 from .treequest_eligibility import NoEligibleActions
 from .research_service import ResearchService, ResearchConfig, ResearchDossier, ResearchBlocked
 from .autotuning import Autotuner
+from .compile_cache import compilation_manifest
 from .tuning_constraints import compile_constraints, ConstraintSpecificationError
 from .pmpp_guidance import PMPP_GUIDANCE
 from .diagnostics import (build_diagnostic, evidence_reference, verify_diagnostic, evaluation_summary,
@@ -61,6 +62,91 @@ def write_json(path, value):
 
 def read_json(path):
     return json.loads(Path(path).read_text())
+
+
+def _fsync_evaluation_directory(path):
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _mkdir_evaluation_durable(path):
+    # As for dispatch epochs, also finish an existing directory publication
+    # whose parent's fsync was interrupted before a previous call returned.
+    if path.is_symlink():
+        raise ValueError("Unsafe canonical evaluation directory")
+    if path.is_dir():
+        _fsync_evaluation_directory(path.parent)
+        return
+    _mkdir_evaluation_durable(path.parent)
+    try:
+        path.mkdir()
+    except FileExistsError:
+        if not path.is_dir() or path.is_symlink():
+            raise
+    _fsync_evaluation_directory(path.parent)
+
+
+def write_immutable_json(path, value):
+    """Publish a complete canonical receipt exclusively, never replace it."""
+    path = Path(path)
+    encoded = json.dumps(value, indent=2, default=str, allow_nan=False).encode()
+    _mkdir_evaluation_durable(path.parent)
+    temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        with temporary.open("xb") as stream:
+            stream.write(encoded)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError:
+            if path.is_symlink() or path.read_bytes() != encoded:
+                raise ValueError("Immutable evaluation receipt differs: " + str(path))
+        # Also finish a previous publication whose directory fsync failed.
+        _fsync_evaluation_directory(path.parent)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def evaluation_record(directory):
+    """Read a completed request only after authenticating its linked bytes."""
+    directory = Path(directory)
+    if any(path.is_symlink() for path in (directory, directory.parent, directory.parent.parent)):
+        raise ValueError("Unsafe canonical evaluation directory")
+    if any((directory / name).is_symlink() for name in ("request.json", "completion.json", "intent.json", "measurement.json")):
+        raise ValueError("Unsafe canonical evaluation file")
+    request = read_json(directory / "request.json")
+    if (directory.name != digest(request) or request.get("trial_id") != directory.parent.parent.name or
+            request.get("kind") != "campaign_evaluation_request" or request.get("schema_version") != 1):
+        raise ValueError("Evaluation request identity mismatch")
+    completion = read_json(directory / "completion.json")
+    if completion.get("request_id") != directory.name:
+        raise ValueError("Evaluation completion identity mismatch")
+    for name, expected in completion["files"].items():
+        if name not in {"request.json", "intent.json", "constraints.json", "autotuning.json", "measurement.json"}:
+            raise ValueError("Unsafe evaluation receipt link")
+        path = directory / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Evaluation receipt checksum mismatch: " + name)
+    if not {"request.json", "intent.json", "measurement.json"} <= completion["files"].keys():
+        raise ValueError("Incomplete evaluation receipt links")
+    measurement = read_json(directory / "measurement.json")
+    binding = measurement.get("evaluation_request", {})
+    intent = read_json(directory / "intent.json")
+    expected = {"request_id": directory.name, "trial_id": request["trial_id"], "repair": request["repair"],
+        "research_round": request["research_round"], "proposal_sha256": request["proposal"]["sha256"],
+        "template_candidate_id": request["template"]["candidate_id"],
+        "template_artifact_hash": request["template"]["artifact_hash"], "attempt_id": completion.get("attempt_id")}
+    if (not expected["attempt_id"] or binding != expected or
+            any(intent.get(key) != value or completion.get(key) != value for key, value in expected.items()) or
+            intent.get("reservation_id") != "evaluation-" + directory.name or
+            any(measurement.get(key) != completion.get(key) for key in ("evaluation_id", "candidate_id", "status")) or
+            not measurement.get("evaluation_id")):
+        raise ValueError("Evaluation measurement binding mismatch")
+    return request, completion, measurement
 
 
 def device_identity(properties):
@@ -247,13 +333,19 @@ class CampaignRuntime:
         evidence = {"previous_error": state.get("error"),
                     "diagnostic": self.diagnostic_context(state, trial)}
         if state.get("candidate_id") and state.get("repair", 0) > 0:
-            path = self.trial_dir(state) / f'evaluation-{state["candidate_id"]}.json'
+            path = self._evaluation_path(state)
             if path.exists():
                 receipt = read_json(path)
                 receipt = self._historical_error_context(receipt)
                 evidence["previous_evaluation"] = evaluation_summary(receipt)
                 evidence["previous_evaluation_reference"] = evidence_reference(path, self.directory,
                     kind="evaluation", identity=receipt.get("evaluation_id"))
+                if path.name == "measurement.json":
+                    evidence["previous_evaluation_request"] = receipt["evaluation_request"]
+                    evidence["previous_tuning_references"] = [evidence_reference(path.parent / name, self.directory,
+                        kind=kind, identity=path.parent.name) for name, kind in (
+                            ("request.json", "evaluation_request"), ("constraints.json", "tuning_constraints"),
+                            ("autotuning.json", "autotuning")) if (path.parent / name).exists()]
         return evidence
 
     def _historical_error_context(self, receipt):
@@ -441,30 +533,126 @@ class CampaignRuntime:
         except (BudgetExceeded, RuntimeError) as error:
             return {**unevaluated, "error": str(error)}
 
+    def _evaluation_request(self, state, candidate):
+        # Research round and complete proposal are part of the request identity.
+        # Never use a template-only cache or a lexicographically latest round.
+        path = self.trial_dir(state) / f'proposal-{state["repair"]}-{state["research_round"]}.json'
+        proposal = read_json(path)
+        guard = getattr(self.evaluator, "_guard", None)
+        if callable(guard):
+            guard(candidate)
+        parameters = proposal.get("parameters", candidate.parameters)
+        if isinstance(parameters, list):
+            if len({item["name"] for item in parameters}) != len(parameters):
+                raise ValueError("Proposal has duplicate concrete parameters")
+            parameters = {item["name"]: item["value"] for item in parameters}
+        if ("source" in proposal and proposal["source"] != candidate.source.read_text() or
+                "kernel" in proposal and proposal["kernel"] != candidate.kernel or
+                "launch_rule" in proposal and asdict(LaunchRule(**proposal["launch_rule"])) != asdict(candidate.launch_rule) or
+                parameters != candidate.parameters):
+            raise ValueError("Proposal does not match its immutable template candidate")
+        toolchain = {key: self.properties[key] for key in ("driver_version", "nvrtc_version",
+            "cuda_toolkit_version", "harness_build_id") if key in self.properties}
+        build_inputs = {}
+        for suite in ("search", "performance"):
+            for case in self.evaluator._suites[suite]:
+                manifest = compilation_manifest(candidate.source, dependencies=case.request.dependencies,
+                    options=case.request.compiler_options, architecture=self.properties["architecture"], toolchain=toolchain)
+                build_inputs[manifest["key"]] = manifest
+        request = {"schema_version": 1, "kind": "campaign_evaluation_request", "run_id": self.config.run_id,
+            "trial_id": state["trial_id"], "repair": state["repair"], "research_round": state["research_round"],
+            "proposal": {"path": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "payload": proposal},
+            "template": {"candidate_id": candidate.candidate_id, "artifact_hash": candidate.artifact_hash,
+                "source_sha256": hashlib.sha256(candidate.source.read_bytes()).hexdigest(), "kernel": candidate.kernel,
+                "launch_rule": asdict(candidate.launch_rule), "parameters": candidate.parameters},
+            "contract_hash": self.contract_hash, "environment_fingerprint": self.environment_hash,
+            "compilation_inputs": build_inputs,
+            "hardware_limits": {key: self.properties[key] for key in ("max_threads_per_block", "max_block_dimensions",
+                "max_shared_memory_per_block_bytes", "max_shared_memory_bytes") if key in self.properties},
+            "autotuning_enabled": self.config.autotuning_enabled, "experimental_mode": self.config.experimental_mode,
+            "max_configurations_per_trial": self.config.max_configurations_per_trial}
+        return request, proposal
+
+    def _evaluation_path(self, state):
+        """Locate the immutable measurement using the existing checkpoint ID."""
+        identity = state.get("evaluation_id")
+        matches = []
+        if identity:
+            for path in (self.trial_dir(state) / "evaluation-requests").glob("*/completion.json"):
+                if not path.parent.resolve().is_relative_to(self.directory.resolve()):
+                    raise ValueError("Unsafe canonical evaluation directory")
+                if read_json(path).get("evaluation_id") == identity:
+                    evaluation_record(path.parent)
+                    matches.append(path.parent / "measurement.json")
+        if len(matches) > 1:
+            raise ValueError("Ambiguous canonical evaluation identity")
+        return matches[0] if matches else self.trial_dir(state) / f'evaluation-{state.get("candidate_id")}.json'
+
+    def _evaluation_aliases(self, state, directory, measurement):
+        metadata = {"authority": "non_authoritative_latest_alias", "canonical_path":
+                    str(directory.relative_to(self.directory)), "request_id": directory.name}
+        template = read_json(directory / "request.json")["template"]["candidate_id"]
+        def publish(path, value):
+            # Preserve pre-canonical evidence at its exact historical path and
+            # hash. Only our explicitly nonauthoritative projections can move.
+            if path.exists() and not read_json(path).get("receipt_alias"):
+                path = path.with_name(path.stem + ".latest.json")
+            write_json(path, {**value, "receipt_alias": metadata})
+
+        for candidate_id in {template, measurement.get("candidate_id", template)}:
+            publish(self.trial_dir(state) / f'evaluation-{candidate_id}.json', measurement)
+        for name in ("constraints.json", "autotuning.json"):
+            if (directory / name).exists():
+                publish(self.trial_dir(state) / name, read_json(directory / name))
+
     def evaluate(self, state):
         self.policy.assert_eligible(state["trial_id"])
         candidate = self.candidate(state["candidate_id"])
-        path = self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json'
-        if path.exists():
-            measurement = read_json(path)
-            if measurement.get("ok") and measurement.get("candidate_id") != candidate.candidate_id:
-                candidate = self.candidate(measurement["candidate_id"])
+        previous = self._evaluation_path(state)
+        if previous.name == "measurement.json":
+            prior, _, _ = evaluation_record(previous.parent)
+            if prior["repair"] == state["repair"] and prior["research_round"] == state["research_round"]:
+                candidate = self.candidate(prior["template"]["candidate_id"])
+        request, proposal = self._evaluation_request(state, candidate)
+        request_id = digest(request)
+        directory = self.trial_dir(state) / "evaluation-requests" / request_id
+        for path in (self.trial_dir(state), directory.parent, directory):
+            if path.is_symlink() or not path.resolve().is_relative_to(self.directory.resolve()):
+                raise ValueError("Unsafe canonical evaluation directory")
+        if (directory / "completion.json").exists():
+            archived, completion, measurement = evaluation_record(directory)
+            if archived != json.loads(json.dumps(request, default=str)):
+                raise ValueError("Evaluation request differs on replay")
         else:
-            reservation = "evaluation-" + uuid.uuid4().hex
+            if (directory / "intent.json").exists():
+                raise RuntimeError("Evaluation request is unfinished; preserve uncertain work without automatic GPU replay: " + request_id)
+            legacy = self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json'
+            if legacy.exists() and "evaluation_request" not in read_json(legacy):
+                refusal = {"kind": "legacy_evaluation_unbound", "request_id": request_id,
+                    "trial_id": state["trial_id"], "candidate_id": candidate.candidate_id,
+                    "legacy_path": legacy.name, "legacy_sha256": hashlib.sha256(legacy.read_bytes()).hexdigest(),
+                    "scope": "Historical snapshot preserved; no new GPU request, confirmation or tree observation"}
+                write_immutable_json(self.trial_dir(state) / ("legacy-evaluation-unbound-" + request_id + ".json"), refusal)
+                return {"candidate_id": candidate.candidate_id, "valid": False, "retryable": False,
+                    "evaluation_id": None, "evaluation_status": "legacy_evaluation_unbound", "error": json.dumps(refusal)}
+            write_immutable_json(directory / "request.json", request)
+            reservation = "evaluation-" + request_id
             self.store.reserve(self.config.run_id, reservation, {"configurations": 1})
-            attempt_id = self.store.new_attempt(self.config.run_id, state["trial_id"], {"candidate_id": candidate.candidate_id})
+            attempt_id = self.store.new_attempt(self.config.run_id, state["trial_id"], {"candidate_id": candidate.candidate_id, "evaluation_request_id": request_id})
+            binding = {"request_id": request_id, "trial_id": state["trial_id"], "repair": state["repair"],
+                "research_round": state["research_round"], "proposal_sha256": request["proposal"]["sha256"],
+                "template_candidate_id": candidate.candidate_id, "template_artifact_hash": candidate.artifact_hash,
+                "attempt_id": attempt_id}
+            write_immutable_json(directory / "intent.json", {**binding, "reservation_id": reservation})
             started = time.monotonic()
             try:
-                proposal_paths = sorted(self.trial_dir(state).glob(f'proposal-{state["repair"]}-*.json'))
-                proposal = read_json(proposal_paths[-1])
                 space = {p["name"]: p["values"] for p in proposal.get("parameter_space", [])}
                 constraints = proposal.get("constraints", [])
                 restrictions = compile_constraints(constraints, space.keys())
                 constraint_receipt = {"status": "compiled", "parameter_names": list(space),
                                       "constraints": [restriction.to_dict() for restriction in restrictions]}
-                write_json(self.trial_dir(state) / "constraints.json", constraint_receipt)
                 self.store.event(self.config.run_id, "tuning_constraints", {"trial_id": state["trial_id"],
-                    "candidate_id": candidate.candidate_id, **constraint_receipt})
+                    "candidate_id": candidate.candidate_id, **binding, **constraint_receipt})
                 if self.config.autotuning_enabled and space and self.config.experimental_mode != "vanilla":
                     tuner = Autotuner(self.evaluator, self.store, self.config.run_id)
                     materialize = tuner.materialize
@@ -481,9 +669,12 @@ class CampaignRuntime:
                     tuner.materialize = archive_variant
                     tuned = tuner.search(proposal, space, {"configurations": self.config.max_configurations_per_trial,
                         "compilations": self.config.max_configurations_per_trial}, restrictions=restrictions, hardware_limits=self.properties)
-                    write_json(self.trial_dir(state) / "autotuning.json", {"configurations": [asdict(x) for x in tuned.configurations],
+                    write_immutable_json(directory / "autotuning.json", {**binding, "configurations": [asdict(x) for x in tuned.configurations],
                         "termination_reason": tuned.termination_reason,
                         "winner": tuned.best_candidate.candidate_id if tuned.best_candidate else None,
+                        "winner_selection_evaluation": tuned.evaluation, "winner_remeasurement": tuned.remeasurement,
+                        "winner_validation": next((x.validation for x in tuned.configurations if tuned.best_candidate and
+                            x.candidate_id == tuned.best_candidate.candidate_id), None),
                         "constraints": constraint_receipt["constraints"]})
                     if tuned.best_candidate is not None:
                         candidate, measurement = tuned.best_candidate, tuned.remeasurement
@@ -501,22 +692,33 @@ class CampaignRuntime:
                         raise ConstraintSpecificationError("Concrete candidate violates declared tuning constraints")
                     measurement = self.evaluator.benchmark(candidate)
             except ConstraintSpecificationError as error:
-                write_json(self.trial_dir(state) / "constraints.json", {"status": "rejected", "error": str(error),
-                    "constraints": proposal.get("constraints", [])})
+                constraint_receipt = {"status": "rejected", "error": str(error), "constraints": proposal.get("constraints", [])}
                 self.store.event(self.config.run_id, "tuning_constraints_rejected", {"trial_id": state["trial_id"],
                     "candidate_id": candidate.candidate_id, "constraints": proposal.get("constraints", []), "error": str(error)})
                 measurement = {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": "contract_violation", "error": str(error)}
             except Exception as error:
                 measurement = {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": "infrastructure_failure", "error": str(error)}
-            measurement["attempt_id"] = attempt_id
-            write_json(path, measurement)
-            self.store.finish_attempt(attempt_id, measurement["status"], {"path": str(path), "elapsed_seconds": time.monotonic()-started})
-            self.store.reconcile(self.config.run_id, reservation, {"configurations": 1})
-            if measurement.get("ok"):
-                # The selected tuner winner has a distinct immutable source ID.
-                write_json(self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json', measurement)
-        self.store.event(self.config.run_id, "measurement", {"trial_id": state["trial_id"], "candidate_id": candidate.candidate_id,
-                        "evaluation_id": measurement["evaluation_id"], "status": measurement["status"]})
+            if "constraint_receipt" in locals():
+                write_immutable_json(directory / "constraints.json", {**binding, **constraint_receipt})
+            measurement = {**measurement, "candidate_id": candidate.candidate_id, "attempt_id": attempt_id,
+                           "evaluation_request": binding}
+            write_immutable_json(directory / "measurement.json", measurement)
+            completion = {**binding, "evaluation_id": measurement["evaluation_id"], "candidate_id": candidate.candidate_id,
+                "status": measurement["status"], "elapsed_seconds": time.monotonic()-started,
+                "files": {name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
+                          for name in ("request.json", "intent.json", "constraints.json", "autotuning.json", "measurement.json")
+                          if (directory / name).exists()}}
+            write_immutable_json(directory / "completion.json", completion)
+        candidate = self.candidate(measurement["candidate_id"])
+        self.store.finish_attempt(completion["attempt_id"], measurement["status"],
+            {"path": str(directory / "measurement.json"), "elapsed_seconds": completion["elapsed_seconds"],
+             "evaluation_request_id": request_id})
+        self.store.reconcile(self.config.run_id, "evaluation-" + request_id, {"configurations": 1})
+        self._evaluation_aliases(state, directory, measurement)
+        if not any(row["kind"] == "measurement" and row["payload"].get("evaluation_request_id") == request_id
+                   for row in self.store.events(self.config.run_id)):
+            self.store.event(self.config.run_id, "measurement", {"trial_id": state["trial_id"], "candidate_id": candidate.candidate_id,
+                "evaluation_request_id": request_id, "evaluation_id": measurement["evaluation_id"], "status": measurement["status"]})
         retryable = measurement["status"] in ("compilation_error", "numerical_error", "memory_error", "contract_violation")
         return {"candidate_id": candidate.candidate_id, "valid": bool(measurement.get("ok")), "retryable": retryable,
                 "evaluation_id": measurement["evaluation_id"], "evaluation_status": measurement["status"],
@@ -577,8 +779,13 @@ class CampaignRuntime:
         if state.get("needs_research") or not state.get("research_ready") or not state.get("candidate_id"):
             return {**result, "integration_status": "suspended_without_performance_observation"}
         candidate = self.candidate(state["candidate_id"])
-        measurement_path = self.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json'
+        measurement_path = self._evaluation_path(state)
         measurement = read_json(measurement_path) if measurement_path.exists() else {}
+        if measurement_path.name == "measurement.json":
+            request, _, _ = evaluation_record(measurement_path.parent)
+            if (request["run_id"] != self.config.run_id or request["contract_hash"] != self.contract_hash or
+                    request["environment_fingerprint"] != self.environment_hash):
+                return {**result, "integration_status": "suspended_without_performance_observation"}
         if "evaluation_id" in state:
             bound = bool(state["evaluation_id"] and state["evaluation_id"] == measurement.get("evaluation_id")
                          and state.get("evaluation_status") == measurement.get("status"))
@@ -597,13 +804,36 @@ class CampaignRuntime:
                 return {**result, "integration_status": "suspended_without_performance_observation"}
             incumbent = self.store.incumbent(self.config.run_id)
             incumbent_candidate = self.candidate(incumbent["candidate_id"] or "baseline")
-            confirmation_path = self.trial_dir(state) / "confirmation.json"
+            canonical = measurement_path.name == "measurement.json"
+            confirmation_path = (measurement_path.parent if canonical else self.trial_dir(state)) / "confirmation.json"
             if confirmation_path.exists():
                 confirmation = read_json(confirmation_path)
+                if canonical and (confirmation.get("evaluation_request_id") != measurement_path.parent.name or
+                                  confirmation.get("measurement_evaluation_id") != measurement["evaluation_id"]):
+                    raise ValueError("Confirmation differs from its canonical evaluation request")
             else:
                 confirmation = self.evaluator.confirm(candidate, incumbent_candidate)
                 confirmation["incumbent_version"] = incumbent["version"]
-                write_json(confirmation_path, confirmation)
+                if canonical:
+                    confirmation.update(evaluation_request_id=measurement_path.parent.name,
+                                        measurement_evaluation_id=measurement["evaluation_id"])
+                    write_immutable_json(confirmation_path, confirmation)
+                else:
+                    write_json(confirmation_path, confirmation)
+            if canonical:
+                alias = self.trial_dir(state) / "confirmation.json"
+                if alias.exists() and not read_json(alias).get("receipt_alias"):
+                    alias = alias.with_name("confirmation.latest.json")
+                write_json(alias, {**confirmation,
+                    "receipt_alias": {"authority": "non_authoritative_latest_alias",
+                                      "canonical_path": str(confirmation_path.relative_to(self.directory))}})
+                result["evaluation_evidence"] = {"request_id": measurement_path.parent.name,
+                    "measurement": evidence_reference(measurement_path, self.directory, kind="evaluation",
+                                                      identity=measurement["evaluation_id"]),
+                    "completion": evidence_reference(measurement_path.parent / "completion.json", self.directory,
+                                                     kind="evaluation_request", identity=measurement_path.parent.name),
+                    "confirmation": evidence_reference(confirmation_path, self.directory, kind="confirmation",
+                                                       identity=confirmation["evaluation_id"])}
             self.store.add_evaluation(self.config.run_id, confirmation)
             if confirmation["status"] == "promoted":
                 result["promotion"] = {"expected_version": confirmation["incumbent_version"],
@@ -686,10 +916,16 @@ class CampaignRuntime:
                 if trace and trace.is_file():
                     references.append(evidence_reference(trace, self.directory,
                         kind="blocked_proposal_model_receipt", identity=calls[-1].call_id))
-        measurement = receipt(directory / f'evaluation-{state.get("candidate_id")}.json', "evaluation", "evaluation_id")
+        measurement = receipt(self._evaluation_path(state), "evaluation", "evaluation_id")
         if measurement is not None:
             measurement = self._historical_error_context(measurement)
-        confirmation = receipt(directory / "confirmation.json", "confirmation", "evaluation_id")
+        measurement_path = self._evaluation_path(state)
+        if measurement_path.name == "measurement.json":
+            for name, kind in (("request.json", "evaluation_request"), ("constraints.json", "tuning_constraints"),
+                               ("autotuning.json", "autotuning")):
+                receipt(measurement_path.parent / name, kind)
+        confirmation_path = (measurement_path.parent if measurement_path.name == "measurement.json" else directory) / "confirmation.json"
+        confirmation = receipt(confirmation_path, "confirmation", "evaluation_id")
         profile = receipt(directory / "profile.json", "profile")
         history = []
         for result_path in (self.directory / "trials").glob("*/result.json"):

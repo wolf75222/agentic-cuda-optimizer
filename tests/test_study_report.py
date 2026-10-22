@@ -14,6 +14,7 @@ from scripts.report_study_fr import checkout_source_identity, ci_qualifies_check
 from scripts.report_study_fr import gpu_lease_consumption
 from scripts.report_study_fr import (study_aggregate_table, study_campaign_table, case_comparison_table,
     campaign_metric_views, campaign_metrics_panel, campaign_call_observations, campaign_call_panel)
+from scripts.report_study_fr import campaign_research_model_consumption, campaign_research_model_panel
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
@@ -1678,6 +1679,8 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
     assert report["independent_frozen_gemm_pilot"] == pilot
     assert inventory_calls == [True]
     assert report["campaign_call_observations"]["inventory_available"] is True
+    assert "Coûts modèles du service de recherche" in html
+    assert report["campaign_research_model_consumption"]["phase_inventory_available"] is False
 
 
 @pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])
@@ -1845,3 +1848,225 @@ def test_origin_metadata_cannot_override_campaign_derived_from_exact_path(tmp_pa
     assert view["campaigns"][0]["observed_unique_cli_receipts"]==1
     assert view["campaigns"][0]["calls"][0]["canonical_receipts"][0]["run_id"]=="campaign-a"
     assert call["receipts"][0]["run_id"]=="forged-other-campaign"
+
+
+def research_phase_fixture(study, *, run="campaign-a", phase="search", research_id="b"*32,
+                           call_id="a"*32, status="completed", usage=None, elapsed=1.25,
+                           result=True, cli=True, payload=None):
+    directory = study/"campaigns"/run/"generation"
+    intent_path = directory/"research"/(research_id+"-"+phase+"-context-intent.json")
+    result_path = directory/"research"/(research_id+"-"+phase+"-context-result.json")
+    cli_path = directory/"model"/(call_id+".json")
+    payload = payload if payload is not None else {"fixture": "returned model payload"}
+    intent = {"schema_version":1,"kind":"research_prompt_context_intent","status":"intent",
+        "research_id":research_id,"phase":phase,"prompt_sha256":"c"*64,
+        "public_context":{"fixture_private_input":"must not be copied"}}
+    save(intent_path,intent)
+    returned = {"schema_version":1,"kind":"research_prompt_context_result","status":"completed",
+        "research_id":research_id,"phase":phase,"call_id":call_id,
+        "intent":{"path":str(intent_path),"sha256":hashlib.sha256(intent_path.read_bytes()).hexdigest()},
+        "returned_payload_sha256":hashlib.sha256(json.dumps(payload,sort_keys=True).encode()).hexdigest()}
+    if result:save(result_path,returned)
+    if cli:
+        value={"call_id":call_id,"purpose":"research" if phase=="search" else "proposal",
+            "status":status,"elapsed_seconds":elapsed}
+        if usage is not None:value["usage"]=usage
+        if status=="completed":value["payload"]=payload
+        save(cli_path,value)
+    return {"intent":intent_path,"result":result_path,"cli":cli_path,"returned":returned}
+
+
+def research_projection(study, consumption, *, runs=("campaign-a",)):
+    summary=metric_summary(run_id=runs[0])
+    for run in runs[1:]:summary["rows"]+=metric_summary(run_id=run)["rows"]
+    calls=campaign_call_observations(summary,consumption,study)
+    return campaign_research_model_consumption(calls,consumption,study)
+
+
+def test_research_costs_include_both_phases_and_refused_dossiers_without_second_CLI_read(tmp_path,monkeypatch):
+    results=tmp_path/"results";study=results/"study"
+    search=research_phase_fixture(study,usage={"input_tokens":100,"cached_input_tokens":80,"output_tokens":20})
+    synthesis=research_phase_fixture(study,phase="synthesis",call_id="d"*32,
+        usage={"input_tokens":40,"output_tokens":10},elapsed=2.5)
+    # Neither admission nor a second aggregate invoice establishes phase cost.
+    save(search["intent"].parent/("b"*32+"-blocked.json"),{"error":"guard refused after synthesis"})
+    save(search["intent"].parent/("b"*32+".json"),{"usage":{"input_tokens":9999999},"research_ready":False})
+    reads=[];original_read=Path.read_bytes
+    def observed_read(path):
+        reads.append(path)
+        return original_read(path)
+    monkeypatch.setattr(Path,"read_bytes",observed_read)
+    consumption=project_consumption(results)
+    assert reads.count(search["cli"])==reads.count(synthesis["cli"])==1
+    assert consumption["model_tokens"]==170 and consumption["cli_call_receipts"]==2
+    assert "fixture_private_input" not in json.dumps(consumption["research_phase_receipts"])
+    raw=deepcopy(consumption)
+    monkeypatch.setattr(Path,"rglob",lambda *_: pytest.fail("pure phase projection rescanned"))
+    monkeypatch.setattr(Path,"read_bytes",lambda *_: pytest.fail("pure phase projection reread"))
+    view=research_projection(study,consumption);row=view["campaigns"][0]
+    assert row["phases"]["search"]["known_usage_lower_bounds"]["model_tokens"]==120
+    assert row["phases"]["synthesis"]["known_usage_lower_bounds"]["model_tokens"]==50
+    assert row["attributed_total"]["observed_unique_cli_calls"]==2
+    assert row["attributed_total"]["known_usage_lower_bounds"]["model_tokens"]==170
+    assert row["attributed_total"]["sum_known_CLI_elapsed_seconds"]==3.75
+    assert row["outside_identified_phases"]["observed_unique_cli_calls"]==0
+    assert not row["intents_without_result"] and not row["unverified_results_or_receipts"]
+    assert row["documentary_end_to_end_seconds"] is row["cost_usd"] is None
+    html=campaign_research_model_panel(view)
+    assert "Recherche" in html and "Synthèse" in html and "<td>170</td><td>3.75</td>" in html
+    assert "dossier est ensuite refusé" in html and "bout en bout, qui reste inconnu" in html
+    assert "USD inconnus" in html and "hors phases identifiées" in html
+    assert consumption==raw
+
+
+@pytest.mark.parametrize("status",["timeout","failed","prepared"])
+def test_research_intent_without_return_never_assigns_failed_or_prepared_CLI_to_a_phase(tmp_path,status):
+    study=tmp_path/"study"
+    research_phase_fixture(study,phase="synthesis",status=status,result=False,elapsed=9)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert row["attributed_total"]["observed_unique_cli_calls"]==0
+    assert row["attributed_total"]["known_usage_lower_bounds"]["model_tokens"] is None
+    assert row["outside_identified_phases"]["observed_unique_cli_calls"]==1
+    assert row["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"] is None
+    assert row["outside_identified_phases"]["sum_known_CLI_elapsed_seconds"]==9
+    assert row["outside_identified_phases"]["status_counts"]["incomplete" if status=="prepared" else "failed"]==1
+    assert len(row["intents_without_result"])==1 and row["intent_counts"]=={"search":0,"synthesis":1}
+
+
+def test_research_intent_alone_is_not_an_invocation_or_zero_invoice(tmp_path):
+    study=tmp_path/"study";research_phase_fixture(study,result=False,cli=False)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert consumption["cli_call_receipts"]==0 and row["intent_counts"]["search"]==1
+    assert row["attributed_total"]["known_usage_lower_bounds"]["model_tokens"] is None
+    assert row["attributed_total"]["sum_known_CLI_elapsed_seconds"] is None
+    assert len(row["intents_without_result"])==1
+
+
+@pytest.mark.parametrize("change",["phase","research_id","kind","status","intent_sha","intent_path","malformed_intent","payload","call_id","missing_CLI","malformed_root","boolean_schema"])
+def test_research_phase_join_fails_closed_without_losing_global_CLI_consumption(tmp_path,change):
+    study=tmp_path/"study"
+    paths=research_phase_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    value=paths["returned"]
+    if change=="phase":value["phase"]="synthesis"
+    elif change=="research_id":value["research_id"]="f"*32
+    elif change=="kind":value["kind"]="research_prompt_context_intent"
+    elif change=="status":value["status"]="intent"
+    elif change=="intent_sha":value["intent"]["sha256"]="f"*64
+    elif change=="intent_path":value["intent"]["path"]=str(tmp_path/"private.sqlite")
+    elif change=="malformed_intent":value["intent"]={"path":[1],"sha256":[2]}
+    elif change=="payload":value["returned_payload_sha256"]="f"*64
+    elif change=="call_id":value["call_id"]="e"*32
+    elif change=="malformed_root":value=[1]
+    elif change=="boolean_schema":value["schema_version"]=True
+    else:paths["cli"].unlink()
+    save(paths["result"],value)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert row["attributed_total"]["observed_unique_cli_calls"]==0 and row["unverified_results_or_receipts"]
+    assert consumption["model_tokens"]==(0 if change=="missing_CLI" else 120)
+    assert row["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"]==(None if change=="missing_CLI" else 120)
+
+
+def test_research_phase_copies_and_attempts_are_one_cost(tmp_path):
+    results=tmp_path/"results";study=results/"study"
+    paths=research_phase_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    source=study/"campaigns/campaign-a/generation"
+    shutil.copytree(source,study/"campaigns/campaign-a/attempts/001/generation")
+    shutil.copytree(source,results/"archive/study/campaigns/campaign-a/generation")
+    consumption=project_consumption(results)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert consumption["cli_call_receipts"]==row["attributed_total"]["observed_unique_cli_calls"]==1
+    assert row["attributed_total"]["known_usage_lower_bounds"]["model_tokens"]==120
+    assert row["attributed_total"]["sum_known_CLI_elapsed_seconds"]==1.25
+    assert row["intent_counts"]["search"]==1
+    assert len(row["phases"]["search"]["calls"][0]["phase_evidence"])==2
+
+
+def test_research_phase_cannot_reassign_another_campaigns_CLI(tmp_path):
+    study=tmp_path/"study"
+    research_phase_fixture(study,run="campaign-a",cli=False)
+    research_phase_fixture(study,run="campaign-b",usage={"input_tokens":100,"output_tokens":20},result=False)
+    consumption=project_consumption(tmp_path)
+    rows=research_projection(study,consumption,runs=("campaign-a","campaign-b"))["campaigns"]
+    assert all(row["attributed_total"]["observed_unique_cli_calls"]==0 for row in rows)
+    assert rows[0]["unverified_results_or_receipts"] and rows[1]["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"]==120
+
+
+def test_research_phase_rejects_an_intent_owned_by_another_campaign(tmp_path):
+    study=tmp_path/"study"
+    first=research_phase_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    second=research_phase_fixture(study,run="campaign-b",cli=False,result=False)
+    value=first["returned"];value["intent"]={"path":str(second["intent"]),"sha256":hashlib.sha256(second["intent"].read_bytes()).hexdigest()}
+    save(first["result"],value)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption,runs=("campaign-a","campaign-b"))["campaigns"][0]
+    assert row["attributed_total"]["observed_unique_cli_calls"]==0
+    assert row["unverified_results_or_receipts"][0]["reason"]=="intent_link_unverified"
+    assert row["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"]==120
+
+
+def test_shared_CLI_identity_and_conflicting_phase_evidence_are_not_counted_twice(tmp_path):
+    study=tmp_path/"study"
+    research_phase_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    research_phase_fixture(study,phase="synthesis",research_id="d"*32,usage={"input_tokens":100,"output_tokens":20})
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert row["ambiguous_phase_identities"]==["structured:"+"a"*32]
+    assert row["attributed_total"]["observed_unique_cli_calls"]==0
+    assert row["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"]==120
+    research_phase_fixture(study,run="campaign-b",usage={"input_tokens":100,"output_tokens":20})
+    consumption=project_consumption(tmp_path)
+    for row in research_projection(study,consumption,runs=("campaign-a","campaign-b"))["campaigns"]:
+        assert row["attributed_total"]["observed_unique_cli_calls"]==0
+        assert row["ambiguous_campaign_identities"]==["structured:"+"a"*32]
+    assert consumption["cli_call_receipts"]==1 and consumption["model_tokens"]==120
+
+
+@pytest.mark.parametrize("elapsed,other,expected,reason",[(0,0,0,None),(None,None,None,"unreported"),(1,2,None,"conflicting"),(1,-2,None,"invalid"),(1,True,None,"invalid")])
+def test_research_CLI_durations_preserve_zero_unknown_and_conflicting_snapshots(tmp_path,elapsed,other,expected,reason):
+    study=tmp_path/"study";paths=research_phase_fixture(study,elapsed=elapsed,usage={"input_tokens":0,"output_tokens":0})
+    value=json.loads(paths["cli"].read_text());value["elapsed_seconds"]=other
+    save(tmp_path/"copy/model"/paths["cli"].name,value)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]["attributed_total"]
+    assert row["sum_known_CLI_elapsed_seconds"]==expected
+    assert row["known_usage_lower_bounds"]["model_tokens"]==0
+    assert row["CLI_duration_complete_for_observed_calls"] is (reason is None)
+    if reason:assert row["CLI_duration_unknown_calls"][0]["reason"]==reason
+
+
+def test_research_phase_partial_usage_and_uninstrumented_methods_remain_explicit(tmp_path):
+    study=tmp_path/"study";research_phase_fixture(study,usage={"input_tokens":0})
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]["attributed_total"]
+    assert row["usage_reporting_counts"]=={"complete":0,"partial":1,"unreported":0}
+    assert row["known_usage_lower_bounds"]["model_tokens"]==0 and row["known_usage_lower_bounds"]["output_tokens"] is None
+    for kind in ["native","structured"]:
+        call=call_inventory_fixture(study,kind=kind,usage={"input_tokens":100,"output_tokens":20})
+        call["cli_metadata"]=[{"purpose":"research","elapsed_seconds":2}]
+        raw={"call_provenance":[call],"research_phase_receipts":[]}
+        view=research_projection(study,raw)["campaigns"][0]
+        assert view["attributed_total"]["known_usage_lower_bounds"]["model_tokens"] is None
+        assert view["outside_identified_phases"]["known_usage_lower_bounds"]["model_tokens"]==120
+
+
+@pytest.mark.parametrize("symlink",["file","directory"])
+def test_research_phase_index_never_reads_symlinks_or_follows_a_supplied_private_reference(tmp_path,monkeypatch,symlink):
+    study=tmp_path/"study";paths=research_phase_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    private=tmp_path/"private.sqlite";private.write_text("NEVER OPEN")
+    value=paths["returned"];value["intent"]={"path":str(private),"sha256":"c"*64};save(paths["result"],value)
+    if symlink=="file":
+        extra=paths["intent"].parent/("f"*32+"-search-context-intent.json");extra.symlink_to(private)
+    else:
+        target=tmp_path/"private-directory";target.mkdir();(target/("f"*32+"-search-context-intent.json")).write_text("NEVER OPEN")
+        extra=study/"campaigns/campaign-a/attempts/001/generation/research";extra.parent.mkdir(parents=True);extra.symlink_to(target)
+    original=Path.read_bytes
+    def guarded(path):
+        assert path!=private and not path.is_symlink() and "private-directory" not in path.parts
+        return original(path)
+    monkeypatch.setattr(Path,"read_bytes",guarded)
+    consumption=project_consumption(tmp_path)
+    row=research_projection(study,consumption)["campaigns"][0]
+    assert row["attributed_total"]["observed_unique_cli_calls"]==0 and row["unverified_results_or_receipts"]

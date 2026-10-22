@@ -433,13 +433,44 @@ def observed_metrics(directory, result):
         tell = row.get("tell", {})
         trials.append({"trial_id": path.parent.name, "valid": tell.get("valid"),
                        "evaluation_id": row.get("evaluation_id", tell.get("evaluation_id"))})
-    configurations = []
-    for path in sorted((directory / "generation/trials").glob("*/autotuning.json")):
-        row = read_json(path)
-        configurations.extend(row.get("configurations", row.get("trials", row.get("observations", []))))
+    configurations, configuration_sources, legacy_snapshots, unfinished_requests = [], [], [], []
+    canonical_measurements = []
+    # Canonical request receipts retain every repair. Compatibility aliases must
+    # never be counted again, nor presented as complete historical coverage.
+    from .campaign import evaluation_record
+    for trial in sorted((directory / "generation/trials").glob("*")):
+        for path in sorted((trial / "evaluation-requests").glob("*/request.json")):
+            if not (path.parent / "completion.json").exists():
+                unfinished_requests.append({"request_id": path.parent.name,
+                    "path": str(path.relative_to(directory)), "scope": "unfinished; configuration history may be incomplete"})
+        for path in sorted((trial / "evaluation-requests").glob("*/completion.json")):
+            _, completion, measurement = evaluation_record(path.parent)
+            canonical_measurements.append(measurement)
+            tuning = path.parent / "autotuning.json"
+            if "autotuning.json" in completion["files"]:
+                row = read_json(tuning)
+                configurations.extend(row["configurations"])
+                configuration_sources.append({"path": str(tuning.relative_to(directory)),
+                    "request_id": path.parent.name, "attempt_id": completion["attempt_id"],
+                    "evaluation_id": completion["evaluation_id"], "observations": len(row["configurations"]),
+                    "scope": "immutable_completed_evaluation_request"})
+        path = trial / "autotuning.json"
+        if path.exists():
+            row = read_json(path)
+            if not row.get("receipt_alias"):
+                observations = row.get("configurations", row.get("trials", row.get("observations", [])))
+                configurations.extend(observations)
+                legacy_snapshots.append({"path": str(path.relative_to(directory)), "observations": len(observations),
+                    "scope": "legacy_latest_snapshot_only; earlier overwritten repairs are not recoverable here"})
     evaluated = {}
     for path in sorted((directory / "generation/trials").glob("*/evaluation-*.json")):
         row = read_json(path)
+        if row.get("receipt_alias"):
+            continue
+        identity = row.get("artifact_hash", row.get("candidate_id", row.get("evaluation_id")))
+        if identity:
+            evaluated[identity] = {"artifact_or_candidate_id": identity, "valid": row.get("ok"), "status": row.get("status")}
+    for row in canonical_measurements:
         identity = row.get("artifact_hash", row.get("candidate_id", row.get("evaluation_id")))
         if identity:
             evaluated[identity] = {"artifact_or_candidate_id": identity, "valid": row.get("ok"), "status": row.get("status")}
@@ -479,6 +510,10 @@ def observed_metrics(directory, result):
         "correct_candidate_fraction": (sum(row["valid"] for row in known_validity)/len(known_validity)) if known_validity else None,
         "trial_results": trials, "candidate_validation_results": list(evaluated.values()),
         "configuration_observations": len(configurations) + len(native_configurations),
+        "configuration_observation_sources": configuration_sources,
+        "legacy_configuration_snapshots": legacy_snapshots,
+        "unfinished_evaluation_requests": unfinished_requests,
+        "configuration_history_scope": "Canonical completed requests counted once; legacy snapshots cannot establish complete repair history",
         "native_gpu_service_requests": len(native_audit) if native_audit_path.exists() else None,
         "native_rejected_service_requests": sum(row.get("status") != "complete" for row in native_audit) if native_audit_path.exists() else None,
         "first_valid_search_measurement_unix": first_provisional,

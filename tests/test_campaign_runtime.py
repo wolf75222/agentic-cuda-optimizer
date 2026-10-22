@@ -449,3 +449,340 @@ def test_final_receipt_cannot_certify_different_late_incumbent_on_resume(runtime
     exported = campaign.read_json(runtime.directory/"best-launch.json")
     assert (outcome["certification_status"] == "finalization_incomplete"
             or exported["artifact_hash"] == receipt["artifact_hash"])
+
+
+# These regressions use the non-CUDA fixture above. They establish receipt
+# identity/repair history and recovery, never real kernel performance.
+def tuning_request(runtime, state, *, values=(16, 32), constraints=(), bindings=None):
+    source = "#ifndef TILE\n#define TILE 16\n#endif\n" + runtime.baseline.source.read_text()
+    candidate = archive_candidate(runtime, state, candidate_id="request-template", source=source, parameters={"TILE":16})
+    state.update(candidate_id=candidate.candidate_id, repair=state.get("repair", 0),
+                 research_round=state.get("research_round") or 1, research_ready=True)
+    proposal = {"source": source, "kernel": candidate.kernel, "launch_rule": asdict(candidate.launch_rule),
+        "parameter_space": [{"name": "TILE", "values": list(values)}],
+        "parameter_bindings": bindings or [{"parameter": "TILE", "target": "source_macro"}],
+        "constraints": list(constraints)}
+    campaign.write_json(runtime.trial_dir(state) / f'proposal-{state["repair"]}-{state["research_round"]}.json', proposal)
+    return candidate, proposal
+
+
+def completed_requests(runtime, state):
+    return sorted((runtime.trial_dir(state) / "evaluation-requests").glob("*/completion.json"))
+
+
+def test_repair_history_is_immutable_and_collector_counts_no_winner_alias_twice(runtime_setup, tmp_path, monkeypatch):
+    import shutil
+    from optimizer_agent.suite_orchestrator import observed_metrics
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    validate = runtime.evaluator.validate
+    monkeypatch.setattr(runtime.evaluator, "validate", lambda *args, **kwargs:
+        {"evaluation_id": uuid.uuid4().hex, "ok": False, "status": "compilation_error"})
+    first = runtime.evaluate(state)
+    assert not first["valid"] and first["retryable"]
+    original = completed_requests(runtime, state)[0].parent
+    frozen = {p.name: p.read_bytes() for p in original.glob("*.json")}
+    state.update(first, repair=1)
+    tuning_request(runtime, state, values=(8, 16, 32), constraints=({"op":"le", "parameters":["TILE"], "values":[16]},))
+    monkeypatch.setattr(runtime.evaluator, "validate", validate)
+    second = runtime.evaluate(state)
+    assert second["valid"]
+    assert {p.name:p.read_bytes() for p in original.glob("*.json")} == frozen
+    records = [campaign.evaluation_record(p.parent) for p in completed_requests(runtime, state)]
+    assert {row[0]["repair"] for row in records} == {0, 1}
+    assert len({row[1]["attempt_id"] for row in records}) == 2
+    latest = campaign.read_json(runtime.trial_dir(state) / "autotuning.json")
+    assert latest["receipt_alias"]["authority"] == "non_authoritative_latest_alias"
+    assert latest["winner_remeasurement"]["evaluation_id"] == second["evaluation_id"]
+    assert latest["winner_selection_evaluation"]["evaluation_id"] != second["evaluation_id"]
+    assert latest["winner_validation"]["ok"]
+    scope = tmp_path / "study"
+    shutil.copytree(runtime.trial_dir(state).parent, scope / "generation/trials")
+    metrics = observed_metrics(scope, {})
+    assert metrics["configuration_observations"] == 5
+    assert metrics["configurations_filtered_before_compilation"] == 1
+    assert len(metrics["configuration_observation_sources"]) == 2
+    assert metrics["legacy_configuration_snapshots"] == []
+
+
+@pytest.mark.parametrize("change", ["domain", "binding", "constraint", "compiler_options", "hardware_limit"])
+def test_changed_request_same_template_cannot_use_previous_measurement(runtime_setup, change):
+    runtime, config, _, _ = runtime_setup
+    state = selected(runtime)
+    _, proposal = tuning_request(runtime, state)
+    first = runtime.evaluate(state)
+    before = len(runtime.evaluator.benchmarks)
+    if change == "domain":
+        proposal["parameter_space"][0]["values"] = [16]
+    elif change == "binding":
+        proposal["parameter_bindings"][0]["target"] = "tile_x"
+    elif change == "constraint":
+        proposal["constraints"] = [{"op":"le", "parameters":["TILE"], "values":[16]}]
+    elif change == "compiler_options":
+        runtime.evaluator._suites["performance"][0].request.compiler_options.append("-DREQUEST_CHANGE=1")
+    else:
+        runtime.properties["max_threads_per_block"] = 512
+    campaign.write_json(runtime.trial_dir(state) / "proposal-0-1.json", proposal)
+    second = runtime.evaluate(state)
+    assert second["valid"] and first["evaluation_id"] != second["evaluation_id"]
+    assert len(runtime.evaluator.benchmarks) > before
+    assert len(completed_requests(runtime, state)) == 2
+    count = len(runtime.evaluator.benchmarks)
+    spent = runtime.store.budget_state(config.run_id)
+    measurement_events = [e for e in runtime.store.events(config.run_id) if e["kind"] == "measurement"]
+    # Replay both a pre-evaluate template checkpoint and a post-evaluate winner.
+    assert runtime.evaluate(state) == second
+    assert runtime.evaluate({**state, **second}) == second
+    assert len(runtime.evaluator.benchmarks) == count
+    assert runtime.store.budget_state(config.run_id) == spent
+    assert len([e for e in runtime.store.events(config.run_id) if e["kind"] == "measurement"]) == len(measurement_events)
+
+
+def test_exact_research_round_is_used_before_any_evaluation_cache(runtime_setup):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    state["research_round"] = 9
+    _, proposal = tuning_request(runtime, state, values=(16,))
+    proposal["parameter_space"][0]["values"] = [32]
+    campaign.write_json(runtime.trial_dir(state) / "proposal-0-10.json", proposal)
+    update = runtime.evaluate(state)
+    assert runtime.candidate(update["candidate_id"]).parameters == {"TILE":16}
+
+
+def test_durable_canonical_measurement_survives_failure_before_latest_alias(runtime_setup, monkeypatch):
+    runtime, config, runner, model = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    monkeypatch.setattr(runtime, "_evaluation_aliases", lambda *args: (_ for _ in ()).throw(RuntimeError("alias publication interrupted")))
+    with pytest.raises(RuntimeError, match="alias publication"):
+        runtime.evaluate(state)
+    record = campaign.evaluation_record(completed_requests(runtime, state)[0].parent)
+    assert not (runtime.trial_dir(state) / "autotuning.json").exists()
+    resumed = campaign.CampaignRuntime(config, runner, runtime.directory, model_backend=model)
+    result = resumed.evaluate(state)
+    assert result["evaluation_id"] == record[2]["evaluation_id"]
+    assert resumed.evaluator.benchmarks == [] and resumed.evaluator.validations == []
+    bound = {**state, **result}
+    resumed.integrate(bound)
+    confirmations = list(resumed.evaluator.confirmations)
+    resumed.integrate(bound)
+    assert resumed.evaluator.confirmations == confirmations
+    rewards = [e for e in resumed.store.events(config.run_id) if e["kind"] == "tree_reward"]
+    assert len(rewards) == 1
+    assert campaign.read_json(resumed.trial_dir(state)/"result.json")["evaluation_evidence"]["request_id"] == record[1]["request_id"]
+
+
+def test_new_request_with_only_unbound_legacy_cache_suspends_without_work(runtime_setup):
+    runtime, config, _, _ = runtime_setup
+    state = selected(runtime)
+    candidate, _ = tuning_request(runtime, state)
+    record_measurement(runtime, state, candidate)
+    path = runtime.trial_dir(state) / f'evaluation-{candidate.candidate_id}.json'
+    original = path.read_bytes()
+    count = len(runtime.evaluator.benchmarks)
+    update = runtime.evaluate(state)
+    assert update["evaluation_status"] == "legacy_evaluation_unbound"
+    assert not update["retryable"] and update["evaluation_id"] is None
+    runtime.integrate({**state, **update})
+    assert path.read_bytes() == original and len(runtime.evaluator.benchmarks) == count
+    assert runtime.evaluator.confirmations == []
+    assert not [e for e in runtime.store.events(config.run_id) if e["kind"] == "tree_reward"]
+
+
+def test_legacy_bound_integrate_replay_preserves_old_guard_and_one_reward(runtime_setup):
+    runtime, config, _, _ = runtime_setup
+    state = selected(runtime)
+    candidate = archive_candidate(runtime, state)
+    record_measurement(runtime, state, candidate)
+    count = len(runtime.evaluator.benchmarks)
+    runtime.integrate(state)
+    original = (runtime.trial_dir(state)/"result.json").read_bytes()
+    runtime.integrate(state)
+    assert (runtime.trial_dir(state)/"result.json").read_bytes() == original
+    assert len(runtime.evaluator.benchmarks) == count
+    assert len(runtime.evaluator.confirmations) == 1
+    assert len([e for e in runtime.store.events(config.run_id) if e["kind"] == "tree_reward"]) == 1
+
+
+def test_canonical_corruption_and_unfinished_intent_never_rerun_evaluator(runtime_setup):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    runtime.evaluate(state)
+    directory = completed_requests(runtime, state)[0].parent
+    count = len(runtime.evaluator.benchmarks)
+    original = (directory / "measurement.json").read_bytes()
+    (directory / "measurement.json").write_text("{}")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        runtime.evaluate(state)
+    (directory / "measurement.json").write_bytes(original)
+    (directory / "completion.json").unlink()
+    with pytest.raises(RuntimeError, match="unfinished"):
+        runtime.evaluate(state)
+    assert len(runtime.evaluator.benchmarks) == count
+
+
+def test_immutable_publication_refuses_different_content_and_symlink(tmp_path):
+    path = tmp_path / "receipt.json"
+    campaign.write_immutable_json(path, {"value":1})
+    campaign.write_immutable_json(path, {"value":1})
+    with pytest.raises(ValueError, match="Immutable"):
+        campaign.write_immutable_json(path, {"value":2})
+    link = tmp_path / "alias.json"
+    link.symlink_to(path)
+    with pytest.raises(ValueError, match="Immutable"):
+        campaign.write_immutable_json(link, {"value":1})
+
+
+
+def test_preserved_legacy_flat_files_cannot_replace_current_diagnostic_evidence(runtime_setup, tmp_path):
+    import shutil
+    from optimizer_agent.suite_orchestrator import observed_metrics
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    _, proposal = tuning_request(runtime, state)
+    directory = runtime.trial_dir(state)
+    legacy = {
+        "constraints.json": {"status":"legacy_compiled", "constraints":["stale constraints"]},
+        "autotuning.json": {"winner":"old-winner", "configurations":[{"status":"filtered"}]},
+        "evaluation-old-winner.json": {"evaluation_id":"old-evaluation", "candidate_id":"old-winner",
+                                       "status":"numerical_error", "ok":False}}
+    for name, value in legacy.items():
+        campaign.write_json(directory/name, value)
+    frozen = {name:(directory/name).read_bytes() for name in legacy}
+    update = runtime.evaluate(state)
+    state.update(update)
+    assert update["valid"]
+    assert {name:(directory/name).read_bytes() for name in legacy} == frozen
+    for name in ("constraints.latest.json", "autotuning.latest.json"):
+        assert campaign.read_json(directory/name)["receipt_alias"]["authority"] == "non_authoritative_latest_alias"
+    # Even a stale flat winner alias cannot override the checkpoint-bound bytes.
+    campaign.write_json(directory/f'evaluation-{state["candidate_id"]}.json', legacy["evaluation-old-winner.json"])
+    update = runtime.diagnose(state)
+    diagnostic = campaign.read_json(runtime.directory/"diagnostics"/(update["diagnostic_id"]+".json"))
+    observed = next(row["value"] for row in diagnostic["observations"] if row["kind"] == "evaluation")
+    assert observed["evaluation_id"] == state["evaluation_id"] and observed["ok"]
+    refs = {row["kind"]:row["path"] for row in diagnostic["evidence_references"]}
+    assert all("/evaluation-requests/" in refs[kind] for kind in ("evaluation", "evaluation_request", "tuning_constraints", "autotuning"))
+    evidence = runtime.generation_evidence({**state, "repair":1})
+    assert evidence["previous_evaluation"]["evaluation_id"] == state["evaluation_id"]
+    assert evidence["previous_evaluation_request"]["request_id"] in refs["evaluation"]
+    scope=tmp_path/"legacy-study"
+    shutil.copytree(directory.parent, scope/"generation/trials")
+    metrics=observed_metrics(scope,{})
+    assert metrics["configuration_observations"] == 3
+    assert len(metrics["configuration_observation_sources"]) == 1
+    assert len(metrics["legacy_configuration_snapshots"]) == 1
+    assert "earlier overwritten repairs" in metrics["legacy_configuration_snapshots"][0]["scope"]
+
+
+def test_canonical_request_directory_cannot_be_replaced_by_external_symlink(runtime_setup, tmp_path):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    result = runtime.evaluate(state)
+    directory = completed_requests(runtime, state)[0].parent
+    external = tmp_path / "external-receipt"
+    directory.rename(external)
+    directory.symlink_to(external, target_is_directory=True)
+    count = len(runtime.evaluator.benchmarks)
+    with pytest.raises(ValueError, match="Unsafe canonical"):
+        runtime.evaluate({**state, **result})
+    assert len(runtime.evaluator.benchmarks) == count
+
+
+def test_volatile_gpu_properties_do_not_change_a_completed_request(runtime_setup):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    result = runtime.evaluate(state)
+    count = len(runtime.evaluator.benchmarks)
+    runtime.properties.update(free_memory_bytes=1234, temperature=75, observed_at=1000, slurm_job_id="dynamic")
+    assert runtime.evaluate(state) == result
+    assert len(runtime.evaluator.benchmarks) == count
+
+
+
+def test_request_parent_publication_is_durable_before_reservation_and_evaluator(runtime_setup, monkeypatch):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    flushed = []
+    flush = campaign._fsync_evaluation_directory
+    def record_flush(path):
+        flush(path)
+        flushed.append(path)
+    monkeypatch.setattr(campaign, "_fsync_evaluation_directory", record_flush)
+    reserve = runtime.store.reserve
+    observed = []
+    def checked_reserve(run_id, reservation_id, amount, **kwargs):
+        if reservation_id.startswith("evaluation-"):
+            request_directory = runtime.trial_dir(state) / "evaluation-requests" / reservation_id.removeprefix("evaluation-")
+            required = [runtime.trial_dir(state).parent, runtime.trial_dir(state), request_directory.parent, request_directory]
+            assert all(path in flushed for path in required)
+            assert [flushed.index(path) for path in required] == sorted(flushed.index(path) for path in required)
+            assert runtime.evaluator.validations == []
+            observed.append(reservation_id)
+        return reserve(run_id, reservation_id, amount, **kwargs)
+    monkeypatch.setattr(runtime.store, "reserve", checked_reserve)
+    assert runtime.evaluate(state)["valid"]
+    assert len(observed) == 1
+
+
+def test_failed_parent_fsync_cannot_reserve_or_evaluate(runtime_setup, monkeypatch):
+    runtime, config, _, _ = runtime_setup
+    state = selected(runtime)
+    tuning_request(runtime, state)
+    spent = runtime.store.budget_state(config.run_id)
+    count = len(runtime.evaluator.benchmarks)
+    def interrupted(path):
+        raise OSError("parent fsync interrupted")
+    monkeypatch.setattr(campaign, "_fsync_evaluation_directory", interrupted)
+    with pytest.raises(OSError, match="parent fsync interrupted"):
+        runtime.evaluate(state)
+    assert runtime.store.budget_state(config.run_id) == spent
+    assert len(runtime.evaluator.benchmarks) == count and runtime.evaluator.validations == []
+
+
+
+def test_equivalent_launch_defaults_and_parameter_list_match_candidate(runtime_setup):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    candidate, proposal = tuning_request(runtime, state)
+    # Persisted helpers may omit defaults that LaunchRule fills identically.
+    for key in ("grid", "shared_memory_bytes", "version"):
+        proposal["launch_rule"].pop(key)
+    proposal["parameters"] = [{"name":key,"value":value} for key,value in candidate.parameters.items()]
+    campaign.write_json(runtime.trial_dir(state)/"proposal-0-1.json",proposal)
+    result = runtime.evaluate(state)
+    assert result["valid"]
+    assert runtime.evaluate(state) == result
+
+
+def test_local_angle_header_content_change_invalidates_same_template_cache(runtime_setup, tmp_path):
+    runtime, _, _, _ = runtime_setup
+    state = selected(runtime)
+    include = tmp_path/"include"
+    include.mkdir()
+    header = include/"parameter.cuh"
+    header.write_text("#define CONSTANT 1\n")
+    source = '#include <parameter.cuh>\n' + runtime.baseline.source.read_text()
+    candidate = archive_candidate(runtime, state, "header-template", source=source)
+    state.update(candidate_id=candidate.candidate_id,repair=0,research_round=1,research_ready=True)
+    for name in ("search","performance"):
+        for case in runtime.evaluator._suites[name]:
+            case.request.compiler_options = ["-I",str(include)]
+    proposal = {"source":source,"kernel":candidate.kernel,"launch_rule":asdict(candidate.launch_rule),
+                "parameters":candidate.parameters,"parameter_space":[],"constraints":[]}
+    campaign.write_json(runtime.trial_dir(state)/"proposal-0-1.json",proposal)
+    first = runtime.evaluate(state)
+    before = len(runtime.evaluator.benchmarks)
+    header.write_text("#define CONSTANT 2\n")
+    second = runtime.evaluate(state)
+    assert first["valid"] and second["valid"] and first["evaluation_id"] != second["evaluation_id"]
+    assert len(runtime.evaluator.benchmarks) == before+1
+    records = [campaign.evaluation_record(p.parent)[0] for p in completed_requests(runtime,state)]
+    header_hashes = {manifest["files"][str(header.resolve())] for record in records
+                     for manifest in record["compilation_inputs"].values()}
+    assert len(header_hashes) == 2

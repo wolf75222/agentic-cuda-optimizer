@@ -213,7 +213,7 @@ def campaign_call_observations(summary, consumption, study):
             status, code = origin.get("status"), origin.get("returncode")
             failed = status in ("failed", "timeout", "cancelled", "canceled") or (type(code) is int and code != 0)
             categories.add("mixed" if status == "completed" and failed else "failed" if failed else
-                           "completed" if status == "completed" else "incomplete" if status in ("pending", "running", "started", "interrupted") else "unknown")
+                           "completed" if status == "completed" else "incomplete" if status in ("prepared", "pending", "running", "started", "interrupted") else "unknown")
         category = next(iter(categories)) if len(categories) == 1 else "mixed" if categories else "unknown"
         entry = {"identity": call.get("identity"), "aliases": call.get("aliases", []), "kind": call.get("kind"),
                  "canonical_campaigns": owners, "canonical_receipts": canonical,
@@ -271,9 +271,185 @@ def campaign_call_panel(observations):
         "Les reçus sont regroupés une seule fois par identité, y compris leurs copies et aliases. Une identité présente sous plusieurs campagnes reste ambiguë, sans double comptage. "
         "Les statuts mixtes conservent les snapshots divergents ; les catégories ne se chevauchent pas. L’usage complet concerne les entrées/sorties déclarées des seuls groupes observés, pas un inventaire exhaustif ni le cache toujours connu. "
         "Le JSON conserve chemins, empreintes, statuts et champs d’usage manquants. Les tokens connus sont une borne inférieure ; cache et raisonnement ne sont pas ajoutés une seconde fois. "
+        "Une identité prepared atteste une tentative préparée, sans prouver le lancement du CLI. "
         "Zéro reçu observé ne prouve ni zéro appel exécuté ni zéro coût. Aucun nombre de cycles HTTP ou de processus lancés sans PID attesté n’est déduit. "
         + str(len(observations["ambiguous_shared_identities"])) + " identités ambiguës et " + str(len(observations["unattributed_identities"])) +
         " identités extérieures/non attribuables restent visibles dans le JSON ; leurs coûts ne sont pas répartis entre campagnes.</p></details>")
+
+
+def _research_context_identity(path, campaign_root=None):
+    """Recognize a public phase receipt layout without following its references."""
+    raw = str(path)
+    if not Path(raw).is_absolute() or str(Path(raw)) != raw or ".." in raw.split("/"):
+        return None
+    if campaign_root is not None:
+        try:
+            raw = "/" + str(Path(raw).relative_to(campaign_root))
+        except ValueError:
+            return None
+        prefix = r"/"
+    else:
+        prefix = r".*/campaigns/"
+    match = re.fullmatch(prefix + r"([^/]+)/(?:attempts/[0-9]+/)?generation/research/"
+                         r"([A-Za-z0-9_-]+)-(search|synthesis)-context-(intent|result)\.json", raw)
+    return dict(zip(("run_id", "research_id", "phase", "role"), match.groups())) if match else None
+
+
+def _research_phase_receipts(results):
+    """One bounded public index; never open a path supplied inside a receipt."""
+    root, records = Path(results).resolve(), []
+    paths = set(root.rglob("generation/research/*-context-intent.json")) | set(root.rglob("generation/research/*-context-result.json"))
+    for path in sorted(paths):
+        identity = _research_context_identity(path)
+        if not identity or any(part.is_symlink() for part in (path, *path.parents)) or not path.is_file():
+            continue
+        try:
+            body = path.read_bytes()
+        except OSError:
+            records.append({"path": str(path), **identity, "valid": False, "error": "unreadable_public_phase_receipt"})
+            continue
+        record = {"path": str(path), "sha256": hashlib.sha256(body).hexdigest(), "layout": identity}
+        try:
+            value = json.loads(body)
+        except (ValueError, UnicodeError):
+            value = None
+        value = _mapping(value)
+        # No public_context, supplied corpus, prompt, or linked file is copied/read.
+        for key in ("schema_version", "kind", "status", "research_id", "phase", "call_id", "returned_payload_sha256"):
+            record[key] = value.get(key)
+        record["intent"] = {key: _mapping(value.get("intent")).get(key) for key in ("path", "sha256")}
+        record["valid"] = (type(value.get("schema_version")) is int and value["schema_version"] == 1 and value.get("research_id") == identity["research_id"]
+            and value.get("phase") == identity["phase"] and value.get("kind") == "research_prompt_context_" + identity["role"]
+            and value.get("status") == ("intent" if identity["role"] == "intent" else "completed"))
+        records.append(record)
+    return records
+
+
+def campaign_research_model_consumption(call_observations, consumption, study):
+    """Pure phase projection of the existing CLI inventory, including refusals."""
+    root = Path(study).resolve() / "campaigns"
+    contexts = consumption.get("research_phase_receipts")
+    available = isinstance(contexts, list)
+    contexts = [_mapping(value) for value in contexts] if available else []
+    metadata = {call.get("identity"): call for call in _records(consumption.get("call_provenance"))}
+    indexed = {(record.get("path"), record.get("sha256")): record for record in contexts if _hash(record.get("sha256"))}
+    rows, outside, by_run = [], [], {}
+    known_runs = {row["run_id"] for row in call_observations["campaigns"]}
+    for record in contexts:
+        owner = _research_context_identity(record.get("path", ""), root)
+        if owner and owner["run_id"] in known_runs:
+            by_run.setdefault(owner["run_id"], []).append(record)
+        else:
+            outside.append(record)
+    for source in call_observations["campaigns"]:
+        run, calls = source["run_id"], {call["identity"]: call for call in source["calls"]}
+        records = by_run.get(run, [])
+        intents, results, failures, bindings = {}, {}, [], {}
+        for record in records:
+            layout = _research_context_identity(record["path"], root)
+            key = (layout["research_id"], layout["phase"], record.get("sha256"))
+            if (not record.get("valid") or record.get("research_id") != layout["research_id"]
+                    or record.get("phase") != layout["phase"]):
+                failures.append({"receipt": record, "reason": "invalid_phase_receipt"})
+            elif layout["role"] == "intent":
+                intents.setdefault(key, []).append(record)
+            else:
+                results.setdefault(key, []).append(record)
+        resolved_intents = set()
+        for copies in results.values():
+            for record in copies:
+                intent_ref = _mapping(record.get("intent"))
+                intent = indexed.get((intent_ref.get("path"), intent_ref.get("sha256"))) if isinstance(intent_ref.get("path"), str) and _hash(intent_ref.get("sha256")) else None
+                owner = _research_context_identity(intent_ref.get("path", ""), root)
+                valid_intent = (intent and intent.get("valid") and owner and owner["role"] == "intent" and owner["run_id"] == run
+                    and intent.get("research_id") == record["research_id"] and intent.get("phase") == record["phase"])
+                if not valid_intent:
+                    failures.append({"receipt": record, "reason": "intent_link_unverified"})
+                    continue
+                resolved_intents.add((intent["research_id"], intent["phase"], intent["sha256"]))
+                call_id = record.get("call_id")
+                identity = "structured:" + call_id if isinstance(call_id, str) and re.fullmatch(r"[0-9a-f]{32}", call_id) else None
+                call = calls.get(identity)
+                cli = _records(_mapping(metadata.get(identity)).get("cli_metadata"))
+                canonical = {origin["path"] for origin in call["canonical_receipts"]} if call else set()
+                payloads = {item.get("payload_sha256") for item in cli if item.get("path") in canonical
+                    and item.get("call_id") == call_id and Path(item["path"]).stem == call_id and _hash(item.get("payload_sha256"))}
+                if (not call or call.get("kind") != "structured" or not _hash(record.get("returned_payload_sha256"))
+                        or payloads != {record["returned_payload_sha256"]}):
+                    failures.append({"receipt": record, "reason": "CLI_identity_owner_or_payload_unverified"})
+                    continue
+                bindings.setdefault(identity, []).append({"phase": record["phase"], "research_id": record["research_id"],
+                    "result": {key: record[key] for key in ("path", "sha256")}, "intent": intent_ref})
+        ambiguous = sorted(identity for identity, links in bindings.items() if len({link["phase"] for link in links}) != 1)
+        phase_calls = {phase: [] for phase in ("search", "synthesis")}
+        for identity, links in bindings.items():
+            if identity not in ambiguous:
+                phase_calls[links[0]["phase"]].append({**calls[identity], "phase_evidence": links})
+        attributed = {call["identity"] for group in phase_calls.values() for call in group}
+        def aggregate(group):
+            known, durations, duration_issues = {}, [], []
+            def valid_duration(value):
+                try:
+                    return type(value) in (int, float) and value >= 0 and math.isfinite(value)
+                except OverflowError:
+                    return False
+            for field in ("input_tokens", "cached_input_tokens", "output_tokens"):
+                values = [call["observed_usage"][field] for call in group if type(call["observed_usage"].get(field)) is int and call["observed_usage"][field] >= 0]
+                known[field] = sum(values) if values else None
+            known["model_tokens"] = sum(known[field] or 0 for field in ("input_tokens", "output_tokens")) if any(known[field] is not None for field in ("input_tokens", "output_tokens")) else None
+            for call in group:
+                observations = _records(_mapping(metadata.get(call["identity"])).get("cli_metadata"))
+                values = {item["elapsed_seconds"] for item in observations if valid_duration(item.get("elapsed_seconds"))}
+                invalid = any(item.get("elapsed_seconds") is not None and not valid_duration(item["elapsed_seconds"]) for item in observations)
+                if len(values) == 1 and not invalid:
+                    durations.append(next(iter(values)))
+                else:
+                    duration_issues.append({"identity": call["identity"], "reason": "invalid" if invalid else "conflicting" if values else "unreported", "observations": observations})
+            return {"observed_unique_cli_calls": len(group), "known_usage_lower_bounds": known,
+                "status_counts": {status: sum(call["status_category"] == status for call in group) for status in ("completed", "failed", "incomplete", "mixed", "unknown")},
+                "usage_reporting_counts": {status: sum(call["usage_reporting"] == status for call in group) for status in ("complete", "partial", "unreported")},
+                "sum_known_CLI_elapsed_seconds": sum(durations) if durations else None,
+                "duration_estimator": "CLI receipt elapsed_seconds only; outer model-event duration not combined",
+                "CLI_duration_complete_for_observed_calls": not duration_issues if group else None,
+                "CLI_duration_unknown_calls": duration_issues, "calls": group}
+        phases = {phase: aggregate(group) for phase, group in phase_calls.items()}
+        rows.append({"run_id": run, "mode": source["mode"], "phases": phases,
+            "attributed_total": aggregate([call for group in phase_calls.values() for call in group]),
+            "outside_identified_phases": aggregate([call for identity, call in calls.items() if identity not in attributed]),
+            "intent_counts": {phase: sum(key[1] == phase for key in intents) for phase in phase_calls},
+            "intents_without_result": [copies[0] for key, copies in intents.items() if key not in resolved_intents],
+            "unverified_results_or_receipts": failures, "ambiguous_phase_identities": ambiguous,
+            "ambiguous_campaign_identities": source["ambiguous_identities"],
+            "phase_inventory_available": available, "documentary_end_to_end_seconds": None, "cost_usd": None})
+    return {"campaigns": rows, "unattributed_context_receipts": outside, "phase_inventory_available": available,
+        "scope": "Explicit ResearchService search/synthesis links only, including calls whose dossier is later refused. No admission filter, timestamp/purpose inference, extra dossier usage, provider-internal cycles or exhaustive inventory claim. Intent-only records do not attest an executed call. Other/unresolved CLI consumption stays visible separately; documentary end-to-end latency and USD are unknown."}
+
+
+def campaign_research_model_panel(view):
+    html = "<details><summary>Coûts modèles du service de recherche : recherche et synthèse</summary>"
+    for row in view["campaigns"]:
+        values = []
+        for label, group in [("Recherche", row["phases"]["search"]), ("Synthèse", row["phases"]["synthesis"]),
+                             ("Total explicitement attribué", row["attributed_total"]),
+                             ("CLI hors phases identifiées / phase inconnue", row["outside_identified_phases"])]:
+            values.append([label, group["observed_unique_cli_calls"],
+                " / ".join(str(group["status_counts"][status]) for status in ("completed", "failed", "incomplete", "mixed", "unknown")),
+                " / ".join(str(group["usage_reporting_counts"][status]) for status in ("complete", "partial", "unreported")),
+                fmt(group["known_usage_lower_bounds"]["model_tokens"], 9), fmt(group["sum_known_CLI_elapsed_seconds"], 9),
+                len(group["CLI_duration_unknown_calls"])])
+        html += "<details><summary>" + escape(str(row["run_id"])) + "</summary>" + table(
+            ["Phase", "Identités CLI", "Terminé / échec / incomplet / mixte / inconnu", "Usage complet / partiel / absent",
+             "Tokens connus : borne inférieure", "Somme des durées CLI connues (s)", "Durées inconnues ou divergentes"], values)
+        html += ("<p>Intents recherche / synthèse observés : " + str(row["intent_counts"]["search"]) + " / " + str(row["intent_counts"]["synthesis"]) +
+                 " ; sans résultat lié : " + str(len(row["intents_without_result"])) + " ; liens non vérifiés : " + str(len(row["unverified_results_or_receipts"])) +
+                 " ; identités de phase ambiguës : " + str(len(row["ambiguous_phase_identities"])) + ". " +
+                 "Identités de campagne ambiguës exclues : " + str(len(row["ambiguous_campaign_identities"])) + ". " +
+                 ("Index de phases disponible." if row["phase_inventory_available"] else "Index de phases indisponible : attribution inconnue.") + "</p></details>")
+    return html + ("<p>Ces coûts comprennent les appels explicitement liés même si le dossier est ensuite refusé. Une intention seule ne prouve pas un appel exécuté ; les échecs sans résultat lié restent hors phases identifiées. "
+        "Les copies ne multiplient pas les coûts et aucune phase n’est inférée pour vanilla/original. Zéro lien ne prouve pas zéro consommation. "
+        "La somme des durées CLI connues est distincte du temps modèle extérieur des événements et du temps documentaire de bout en bout, qui reste inconnu. "
+        "Les durées divergentes sont exclues de cette somme et conservées dans le JSON. Les tokens sont des bornes inférieures ; le cache est déjà inclus, sans addition de ResearchDossier.usage. "
+        "USD inconnus ; aucun compteur historique, override, résultat ou classement n’est réécrit.</p></details>")
 
 
 def campaign_metric_views(summary):
@@ -1381,7 +1557,11 @@ def project_consumption(results):
         provenance.append({"identity": identity, "aliases": all_aliases, "kind": group[0]["kind"],
             "identity_bases": sorted({item["identity_basis"] for item in group}), "receipts": origins,
             "usage_reporting": "complete" if complete else "partial" if merged else "unreported",
-            "observed_usage": merged, "missing_usage_fields": [key for key in totals if key not in merged]})
+            "observed_usage": merged, "missing_usage_fields": [key for key in totals if key not in merged],
+            "cli_metadata": [{**item["origin"], "call_id": item["value"].get("call_id"),
+                "purpose": item["value"].get("purpose"), "elapsed_seconds": item["value"].get("elapsed_seconds"),
+                "payload_sha256": hashlib.sha256(json.dumps(item["value"]["payload"], sort_keys=True).encode()).hexdigest()
+                    if isinstance(item["value"].get("payload"), dict) else None} for item in group]})
     totals.update(cli_call_receipts=len(groups), unreported_call_usage=sum(row["usage_reporting"] != "complete" for row in provenance),
         calls_without_any_reported_usage=sum(row["usage_reporting"] == "unreported" for row in provenance),
         partly_reported_call_usage=sum(row["usage_reporting"] == "partial" for row in provenance),
@@ -1390,6 +1570,7 @@ def project_consumption(results):
         observed_lower_bounds=True,
         scope="All retained CLI-call receipts including original intent-scoped CLI traces, failures, pilots, diagnostics and copied archives; deduplicated by structured call ID or linked native invocation/thread identities. Original transport ACKs/calls.json are not additional calls. Missing/partial usage remains unknown, not a zero invoice.",
         cached_tokens_included_in_input=True, reasoning_tokens_included_in_output=True)
+    totals["research_phase_receipts"] = _research_phase_receipts(results)
     totals.update(gpu_lease_consumption(results))
     return totals
 
@@ -1626,6 +1807,8 @@ def main():
     report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"))
     report["campaign_metric_views"] = campaign_metric_views(summary)
     report["campaign_call_observations"] = campaign_call_observations(summary, report["project_observed_consumption"], args.study)
+    report["campaign_research_model_consumption"] = campaign_research_model_consumption(
+        report["campaign_call_observations"], report["project_observed_consumption"], args.study)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
                  value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis",
@@ -1687,6 +1870,7 @@ Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les ou
 Les coûts absents sont inconnus. Les vues suivantes présentent les jalons, la compilation, le cache, la recherche et les coûts méthode/observateur enregistrés, sans recalculer les métriques historiques.</p>
 <details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{study_campaign_table(summary)}</details>
 {campaign_call_panel(report['campaign_call_observations'])}
+{campaign_research_model_panel(report['campaign_research_model_consumption'])}
 {campaign_metrics_panel(report['campaign_metric_views'])}
 <h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu','Périmètre et limites'], receipts)}
 <p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.

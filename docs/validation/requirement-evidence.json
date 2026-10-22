@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-22T00:23:42.671508+00:00",
+  "generated_at_utc": "2026-10-22T00:58:47.645184+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -184,6 +184,36 @@
       "offline_recipe_evidence": "terminal_campaign_cli_receipt_view_774659_offline",
       "visual_evidence": "terminal_campaign_cli_receipt_view_774659_visual",
       "scope": "249 tests ciblés, recette de présentation publique 774659 et aperçu inspecté ; compteur brut 7 et huit identités CLI distingués. Pas de nouvelle suite complète, de CI du futur SHA ni de mise à jour du minimum global daté 27/1."
+    },
+    "latest_published_cli_receipt_release_observation": {
+      "HEAD": "ed24b089485863fb34c44acd8323623c076781d0",
+      "evidence": [
+        "published_campaign_cli_receipts_ed24b08",
+        "ci_ed24b08",
+        "source_availability_report_ed24b08"
+      ],
+      "scope": "Publication/CI/archives ed24 historiques ; nouveaux changements postérieurs non couverts, aucun handoff runtime par cette publication."
+    },
+    "latest_research_phase_snapshot_observation": {
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "focused_test_evidence": "local_research_model_phase_view_ed24b08",
+      "preview_evidence": "research_model_phase_view_774658_primary_visual",
+      "scope": "Source 23a60 avec 278 tests ciblés et aperçu public ; aucune nouvelle suite complète ou CI du futur SHA."
+    },
+    "latest_backend_prompt_launch_observation": {
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
+      "source_evidence": "source_current:optimizer_agent/codex_backend.py",
+      "focused_test_evidence": "local_codex_prompt_launch_provenance_ed24b08",
+      "peer_evidence": "codex_prompt_launch_provenance_primary_review_ed24b08",
+      "scope": "CPU prospectif uniquement ; vraie invocation Codex/ROMEO future encore à acquérir."
+    },
+    "latest_coherent_CPU_release": {
+      "base_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+      "evidence": "local_runtime_history_provenance_phase_integration_ed24b08",
+      "source_and_test_files": 157,
+      "documentation_in_stability_scope": false,
+      "scope": "Local CPU cohérent sur nouveaux changements, pas arbre Git entier stable, publication et CI exactes futures encore à acquérir."
     }
   },
   "policy": {
@@ -230,7 +260,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "at_least_twenty_seven_generation_results_one_common_final_unqualified_native_export",
+      "state": "at_least_thirty_five_audited_generations_one_common_final",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -252,7 +282,7 @@
         "dispatch_00a67a3_first_epochs",
         "original_convolution3141_774657_00a_terminal"
       ],
-      "remaining": "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+      "remaining": "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -272,21 +302,23 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 193,
-    "latest_local_junit_entries": 1453,
-    "latest_local_testcase_nodes": 1440,
-    "study_v2_completed_generation_receipts": 27,
+    "evidence_entries": 216,
+    "latest_local_junit_entries": 1578,
+    "latest_local_testcase_nodes": 1565,
+    "study_v2_completed_generation_receipts": 35,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
     "latest_local_subtests": 13,
-    "latest_ci_tests_passed": 1486,
+    "latest_ci_tests_passed": 1505,
     "latest_ci_subtests_passed": 13,
     "latest_ci_tests_skipped": 2,
-    "study_v2_generation_observation_at_utc": "2026-10-21T23:38:52.667936+00:00",
-    "latest_focused_report_tests_passed": 249,
-    "latest_ci_test_count_evidence": "published_campaign_metrics_b402c2a",
-    "study_v2_generation_count_scope": "Lower bound of authenticated terminal receipts; not an exhaustive live scheduler/controller inventory."
+    "study_v2_generation_observation_at_utc": "2026-10-22T00:49:17.713843+00:00",
+    "latest_focused_report_tests_passed": 278,
+    "latest_ci_test_count_evidence": "published_campaign_cli_receipts_ed24b08",
+    "study_v2_generation_count_scope": "Lower bound of authenticated terminal receipts; not an exhaustive live scheduler/controller inventory.",
+    "latest_local_tests_skipped": 0,
+    "latest_local_test_count_evidence": "local_runtime_history_provenance_phase_integration_ed24b08"
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -6372,69 +6404,163 @@
     "source_current:optimizer_agent/campaign.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/campaign.py",
-      "sha256": "5a4d27738ac6e5e8383ad0c938b75c539a2742333fd6deefaf6e4d4d1c877714",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "sha256": "ca3d994a7c611d17f0e31ec49381b2a85ec7811d2a5c502fa2c2e6508ced7145",
+      "bytes": 89211,
       "definitions": [
         {
           "name": "digest",
-          "line": 50
+          "line": 51
         },
         {
           "name": "write_json",
-          "line": 54
+          "line": 55
         },
         {
           "name": "read_json",
-          "line": 62
+          "line": 63
+        },
+        {
+          "name": "_fsync_evaluation_directory",
+          "line": 67
+        },
+        {
+          "name": "_mkdir_evaluation_durable",
+          "line": 75
+        },
+        {
+          "name": "write_immutable_json",
+          "line": 92
+        },
+        {
+          "name": "evaluation_record",
+          "line": 114
         },
         {
           "name": "device_identity",
-          "line": 66
+          "line": 152
         },
         {
           "name": "RecordedCodex",
-          "line": 73
+          "line": 159
         },
         {
           "name": "CampaignRuntime",
-          "line": 95
+          "line": 181
         },
         {
           "name": "run_on_runner",
-          "line": 807
+          "line": 1043
         },
         {
           "name": "execute",
-          "line": 824
+          "line": 1060
         },
         {
           "name": "compare",
-          "line": 854
+          "line": 1090
         },
         {
           "name": "load_direct_candidates",
-          "line": 905
+          "line": 1141
         },
         {
           "name": "direct_evaluator",
-          "line": 926
+          "line": 1162
         },
         {
           "name": "compare_generated_candidates",
-          "line": 942
+          "line": 1178
         },
         {
           "name": "comparison_completed",
-          "line": 962
+          "line": 1198
         },
         {
           "name": "main",
-          "line": 1028
+          "line": 1264
         }
-      ]
+      ],
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T00:56:30.542438+00:00",
+      "scope": "Source final du correctif d’identité/cache/historique des évaluations : 148 tests CPU et capture exacte. Identité et compilation incluent proposition/round/réparation/contraintes/lancement/dépendances ; collector canonique sans double compte d’aliases. Aucun nouveau GPU, vraie invocation Codex ou CI de ces octets acquis.",
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/campaign.py",
+          "sha256": "5a4d27738ac6e5e8383ad0c938b75c539a2742333fd6deefaf6e4d4d1c877714",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "digest",
+              "line": 50
+            },
+            {
+              "name": "write_json",
+              "line": 54
+            },
+            {
+              "name": "read_json",
+              "line": 62
+            },
+            {
+              "name": "device_identity",
+              "line": 66
+            },
+            {
+              "name": "RecordedCodex",
+              "line": 73
+            },
+            {
+              "name": "CampaignRuntime",
+              "line": 95
+            },
+            {
+              "name": "run_on_runner",
+              "line": 807
+            },
+            {
+              "name": "execute",
+              "line": 824
+            },
+            {
+              "name": "compare",
+              "line": 854
+            },
+            {
+              "name": "load_direct_candidates",
+              "line": 905
+            },
+            {
+              "name": "direct_evaluator",
+              "line": 926
+            },
+            {
+              "name": "compare_generated_candidates",
+              "line": 942
+            },
+            {
+              "name": "comparison_completed",
+              "line": 962
+            },
+            {
+              "name": "main",
+              "line": 1028
+            }
+          ],
+          "published_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+          "published_release_evidence": [
+            "published_campaign_cli_receipts_ed24b08",
+            "ci_ed24b08"
+          ]
+        }
+      ],
+      "focused_test_evidence": "local_campaign_evaluation_history_durable148_ed24b08",
+      "preserved_source_capture": "campaign_evaluation_history_final_source_capture_ed24b08",
+      "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08"
     },
     "source_current:optimizer_agent/campaign_config.py": {
       "kind": "current_implementation_source_snapshot",
@@ -6481,69 +6607,146 @@
     "source_current:optimizer_agent/codex_backend.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/codex_backend.py",
-      "sha256": "0b554761d84fa6b0915079b2551655864d10b73632a3dc195fbdbb7391f906ca",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "sha256": "8ce2acd4743fbf11849aa6e1444380d41c26748be7cde580c4ed037f00a8973b",
+      "bytes": 40096,
       "definitions": [
         {
           "name": "CodexError",
-          "line": 32
+          "line": 33
         },
         {
           "name": "_parse_codex_event",
-          "line": 36
+          "line": 37
         },
         {
           "name": "_SearchBudgetExceeded",
-          "line": 57
+          "line": 58
         },
         {
           "name": "CodexConfig",
-          "line": 64
+          "line": 65
         },
         {
           "name": "default_codex_executable",
-          "line": 81
+          "line": 82
         },
         {
           "name": "CodexResult",
-          "line": 90
+          "line": 91
         },
         {
           "name": "plain",
-          "line": 100
+          "line": 101
         },
         {
           "name": "schema_object",
-          "line": 110
+          "line": 111
         },
         {
           "name": "observed_web_activity",
-          "line": 143
+          "line": 144
         },
         {
           "name": "proposal_schema_for_dossier",
-          "line": 170
+          "line": 171
         },
         {
           "name": "validate_json_shape",
-          "line": 182
+          "line": 183
         },
         {
           "name": "CodexBackend",
-          "line": 214
+          "line": 215
         },
         {
           "name": "Proposal",
-          "line": 415
+          "line": 474
         },
         {
           "name": "CandidateGenerator",
-          "line": 516
+          "line": 575
         }
-      ]
+      ],
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T00:53:57.687113+00:00",
+      "scope": "Provenance prospective du prompt/lancement : 20 tests CPU et 8 sous-tests, revue primaire. UTF-8 exact, prepared durable, PID après lancement. Aucune vraie invocation Codex/ROMEO de cette version ni reconstitution historique.",
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/codex_backend.py",
+          "sha256": "0b554761d84fa6b0915079b2551655864d10b73632a3dc195fbdbb7391f906ca",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "CodexError",
+              "line": 32
+            },
+            {
+              "name": "_parse_codex_event",
+              "line": 36
+            },
+            {
+              "name": "_SearchBudgetExceeded",
+              "line": 57
+            },
+            {
+              "name": "CodexConfig",
+              "line": 64
+            },
+            {
+              "name": "default_codex_executable",
+              "line": 81
+            },
+            {
+              "name": "CodexResult",
+              "line": 90
+            },
+            {
+              "name": "plain",
+              "line": 100
+            },
+            {
+              "name": "schema_object",
+              "line": 110
+            },
+            {
+              "name": "observed_web_activity",
+              "line": 143
+            },
+            {
+              "name": "proposal_schema_for_dossier",
+              "line": 170
+            },
+            {
+              "name": "validate_json_shape",
+              "line": 182
+            },
+            {
+              "name": "CodexBackend",
+              "line": 214
+            },
+            {
+              "name": "Proposal",
+              "line": 415
+            },
+            {
+              "name": "CandidateGenerator",
+              "line": 516
+            }
+          ],
+          "published_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+          "published_release_evidence": [
+            "published_campaign_cli_receipts_ed24b08",
+            "ci_ed24b08"
+          ]
+        }
+      ],
+      "focused_test_evidence": "local_codex_prompt_launch_provenance_ed24b08",
+      "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08"
     },
     "source_current:optimizer_agent/compile_cache.py": {
       "kind": "current_implementation_source_snapshot",
@@ -7727,11 +7930,8 @@
     "source_current:optimizer_agent/suite_orchestrator.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/suite_orchestrator.py",
-      "sha256": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6",
-      "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T22:23:22.807677+00:00",
-      "scope": "Correction postérieure à DFD limitée à unknown_metrics, fondée sur les valeurs déjà calculées et leurs noms exacts. Aucun autre calcul de coût, mesure ou classement modifié. 63 tests CPU ciblés, puis publication et CI exacte de38abb des octets b00d927. Le contrôleur DFD conserve ses anciens octets ; cette CI ne couvre pas le prompt de transport ee93e538.",
+      "sha256": "911b921dcee1fbd22a88bda79da53a04e736bfa248034a2c7b08e56b186ee917",
+      "bytes": 73795,
       "definitions": [
         {
           "name": "infrastructure_category",
@@ -7791,17 +7991,21 @@
         },
         {
           "name": "RecordingRunner",
-          "line": 510
+          "line": 545
         },
         {
           "name": "evaluate_group",
-          "line": 530
+          "line": 565
         },
         {
           "name": "SuiteOrchestrator",
-          "line": 672
+          "line": 707
         }
       ],
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T00:56:30.542438+00:00",
+      "scope": "Source final du correctif d’identité/cache/historique des évaluations : 148 tests CPU et capture exacte. Identité et compilation incluent proposition/round/réparation/contraintes/lancement/dépendances ; collector canonique sans double compte d’aliases. Aucun nouveau GPU, vraie invocation Codex ou CI de ces octets acquis.",
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -7884,14 +8088,103 @@
           "published_commit": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
           "publication_evidence": "ci_dfd93d0",
           "identity_evidence": "catalog_integrity_dfd93d0"
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/suite_orchestrator.py",
+          "sha256": "b00d927631b3a2aa58a1c2d36edb43845c062dafdc1e16efaac7b6eb75adade6",
+          "HEAD_before_publication": "dfd93d07d101be13b1b1d82deb35b817551e91dc",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T22:23:22.807677+00:00",
+          "scope": "Correction postérieure à DFD limitée à unknown_metrics, fondée sur les valeurs déjà calculées et leurs noms exacts. Aucun autre calcul de coût, mesure ou classement modifié. 63 tests CPU ciblés, puis publication et CI exacte de38abb des octets b00d927. Le contrôleur DFD conserve ses anciens octets ; cette CI ne couvre pas le prompt de transport ee93e538.",
+          "definitions": [
+            {
+              "name": "infrastructure_category",
+              "line": 36
+            },
+            {
+              "name": "_local_session_job",
+              "line": 105
+            },
+            {
+              "name": "_walk",
+              "line": 141
+            },
+            {
+              "name": "_hash",
+              "line": 151
+            },
+            {
+              "name": "write_json",
+              "line": 155
+            },
+            {
+              "name": "read_json",
+              "line": 163
+            },
+            {
+              "name": "write_native_preflight",
+              "line": 167
+            },
+            {
+              "name": "config_from_dict",
+              "line": 212
+            },
+            {
+              "name": "candidate_receipt",
+              "line": 220
+            },
+            {
+              "name": "load_candidate",
+              "line": 227
+            },
+            {
+              "name": "SuiteJournal",
+              "line": 249
+            },
+            {
+              "name": "_script",
+              "line": 345
+            },
+            {
+              "name": "generation_adapter",
+              "line": 352
+            },
+            {
+              "name": "observed_metrics",
+              "line": 427
+            },
+            {
+              "name": "RecordingRunner",
+              "line": 510
+            },
+            {
+              "name": "evaluate_group",
+              "line": 530
+            },
+            {
+              "name": "SuiteOrchestrator",
+              "line": 672
+            }
+          ],
+          "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
+          "published_release_evidence": [
+            "published_report_metrics_de38abb",
+            "ci_de38abb",
+            "ci_de38abb_skipped_scope"
+          ],
+          "subsequent_same_bytes_publication": {
+            "published_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+            "published_release_evidence": [
+              "published_campaign_cli_receipts_ed24b08",
+              "ci_ed24b08"
+            ]
+          }
         }
       ],
-      "published_commit": "de38abbd6b73353e7758481addb869ea2ea0170b",
-      "published_release_evidence": [
-        "published_report_metrics_de38abb",
-        "ci_de38abb",
-        "ci_de38abb_skipped_scope"
-      ]
+      "focused_test_evidence": "local_campaign_evaluation_history_durable148_ed24b08",
+      "preserved_source_capture": "campaign_evaluation_history_final_source_capture_ed24b08",
+      "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08"
     },
     "source_current:optimizer_agent/suite_report.py": {
       "kind": "current_implementation_source_snapshot",
@@ -8538,8 +8831,8 @@
     "source_current:scripts/report_study_fr.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/report_study_fr.py",
-      "sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
-      "bytes": 138950,
+      "sha256": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af",
+      "bytes": 153606,
       "definitions": [
         {
           "name": "load",
@@ -8582,130 +8875,146 @@
           "line": 258
         },
         {
+          "name": "_research_context_identity",
+          "line": 280
+        },
+        {
+          "name": "_research_phase_receipts",
+          "line": 298
+        },
+        {
+          "name": "campaign_research_model_consumption",
+          "line": 328
+        },
+        {
+          "name": "campaign_research_model_panel",
+          "line": 428
+        },
+        {
           "name": "campaign_metric_views",
-          "line": 279
+          "line": 455
         },
         {
           "name": "campaign_metrics_panel",
-          "line": 344
+          "line": 520
         },
         {
           "name": "case_comparison_table",
-          "line": 390
+          "line": 566
         },
         {
           "name": "audit_table",
-          "line": 436
+          "line": 612
         },
         {
           "name": "checkout_source_identity",
-          "line": 443
+          "line": 619
         },
         {
           "name": "ci_qualifies_checkout",
-          "line": 467
+          "line": 643
         },
         {
           "name": "_mapping",
-          "line": 472
+          "line": 648
         },
         {
           "name": "_records",
-          "line": 476
+          "line": 652
         },
         {
           "name": "_hash",
-          "line": 480
+          "line": 656
         },
         {
           "name": "_linked_receipt_verified",
-          "line": 484
+          "line": 660
         },
         {
           "name": "_verified_json",
-          "line": 507
+          "line": 683
         },
         {
           "name": "_required_checks",
-          "line": 518
+          "line": 694
         },
         {
           "name": "_original_execution_control",
-          "line": 523
+          "line": 699
         },
         {
           "name": "_common_freeze_control",
-          "line": 597
+          "line": 773
         },
         {
           "name": "_standalone_final_control",
-          "line": 658
+          "line": 834
         },
         {
           "name": "_accepted_eleven_source_checks",
-          "line": 677
+          "line": 853
         },
         {
           "name": "_research_refresh_control",
-          "line": 792
+          "line": 968
         },
         {
           "name": "_diagnostic_v2_control",
-          "line": 1036
-        },
-        {
-          "name": "control_receipts",
-          "line": 1082
-        },
-        {
-          "name": "execution_evidence_panel",
-          "line": 1146
-        },
-        {
-          "name": "_receipt_snapshot",
-          "line": 1207
-        },
-        {
-          "name": "_reported_tokens",
           "line": 1212
         },
         {
+          "name": "control_receipts",
+          "line": 1258
+        },
+        {
+          "name": "execution_evidence_panel",
+          "line": 1322
+        },
+        {
+          "name": "_receipt_snapshot",
+          "line": 1383
+        },
+        {
+          "name": "_reported_tokens",
+          "line": 1388
+        },
+        {
           "name": "_elapsed_seconds",
-          "line": 1233
+          "line": 1409
         },
         {
           "name": "gpu_lease_consumption",
-          "line": 1251
+          "line": 1427
         },
         {
           "name": "project_consumption",
-          "line": 1305
+          "line": 1481
         },
         {
           "name": "frozen_pilot_summary",
-          "line": 1397
+          "line": 1578
         },
         {
           "name": "plot_frozen_pilot",
-          "line": 1470
+          "line": 1651
         },
         {
           "name": "frozen_pilot_panel",
-          "line": 1526
+          "line": 1707
         },
         {
           "name": "plot",
-          "line": 1559
+          "line": 1740
         },
         {
           "name": "main",
-          "line": 1593
+          "line": 1774
         }
       ],
-      "HEAD_before_publication": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "HEAD_before_publication": "ed24b089485863fb34c44acd8323623c076781d0",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-22T00:23:42.671508+00:00",
-      "scope": "Vue additive des reçus CLI par campagne depuis le seul inventaire call_provenance déjà produit. 249 tests locaux, recette publique 774659 sans mutation et inspection visuelle séparées ; aucune CI des nouveaux octets ni nouvelle performance ROMEO déduite. Compteurs méthode et métriques raw conservés ; snapshot historique d1d97584 publié au b402c2a et autres captures préservés.",
+      "observed_at_utc": "2026-10-22T00:53:57.687113+00:00",
+      "scope": "Vue additive search+synthesis jointe uniquement par preuves explicites depuis l’inventaire global unique. 278 tests locaux, recette publique et aperçu inspecté ; future CI séparée. Aucun résultat/override/runtime ou prix inventé.",
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -9539,11 +9848,190 @@
             "published_campaign_metrics_b402c2a",
             "ci_b402c2a"
           ]
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+          "bytes": 138950,
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "campaign_call_observations",
+              "line": 171
+            },
+            {
+              "name": "campaign_call_panel",
+              "line": 258
+            },
+            {
+              "name": "campaign_metric_views",
+              "line": 279
+            },
+            {
+              "name": "campaign_metrics_panel",
+              "line": 344
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 390
+            },
+            {
+              "name": "audit_table",
+              "line": 436
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 443
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 467
+            },
+            {
+              "name": "_mapping",
+              "line": 472
+            },
+            {
+              "name": "_records",
+              "line": 476
+            },
+            {
+              "name": "_hash",
+              "line": 480
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 484
+            },
+            {
+              "name": "_verified_json",
+              "line": 507
+            },
+            {
+              "name": "_required_checks",
+              "line": 518
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 523
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 597
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 658
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 677
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 792
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 1036
+            },
+            {
+              "name": "control_receipts",
+              "line": 1082
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 1146
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 1207
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 1212
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1233
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1251
+            },
+            {
+              "name": "project_consumption",
+              "line": 1305
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1397
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1470
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1526
+            },
+            {
+              "name": "plot",
+              "line": 1559
+            },
+            {
+              "name": "main",
+              "line": 1593
+            }
+          ],
+          "HEAD_before_publication": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-22T00:23:42.671508+00:00",
+          "scope": "Vue additive des reçus CLI par campagne depuis le seul inventaire call_provenance déjà produit. 249 tests locaux, recette publique 774659 sans mutation et inspection visuelle séparées ; aucune CI des nouveaux octets ni nouvelle performance ROMEO déduite. Compteurs méthode et métriques raw conservés ; snapshot historique d1d97584 publié au b402c2a et autres captures préservés.",
+          "focused_test_evidence": "local_campaign_cli_receipt_attribution_b402",
+          "offline_recipe_evidence": "terminal_campaign_cli_receipt_view_774659_offline",
+          "visual_evidence": "terminal_campaign_cli_receipt_view_774659_visual",
+          "published_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+          "published_release_evidence": [
+            "published_campaign_cli_receipts_ed24b08",
+            "ci_ed24b08"
+          ]
         }
       ],
-      "focused_test_evidence": "local_campaign_cli_receipt_attribution_b402",
-      "offline_recipe_evidence": "terminal_campaign_cli_receipt_view_774659_offline",
-      "visual_evidence": "terminal_campaign_cli_receipt_view_774659_visual"
+      "focused_test_evidence": "local_research_model_phase_view_ed24b08",
+      "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08"
     },
     "source_current:scripts/gpu_final_suite_acceptance.py": {
       "kind": "current_implementation_source_snapshot",
@@ -14015,6 +14503,1287 @@
       },
       "study_campaigns_complete": false,
       "scope": "Publication du lot de métriques au b402c2a avec 188 fichiers suivis identiques au commit et archive source exacte disponible. CI séparée acquise au même SHA. La preuve locale 230 reste attachée à 5cb7304a ; la CI couvre ensuite d1d97584. Aucun nouveau modèle/GPU ni achèvement de l’étude inféré ; catalogue à 187 entrées et minimum 27/1 historiques à cette publication."
+    },
+    "ci_ed24b08": {
+      "path": "work/live/ci-ed24b08.json",
+      "sha256": "932458cbfc4b26b809590b950354eb0154286493de35e150f34f58c83319d106",
+      "bytes": 2883,
+      "kind": null,
+      "scope": "CI terminée au SHA exact ed24b08 : 1 505 tests et 13 sous-tests passent, deux tests sont sautés, compileall réussit. Elle couvre renderer 5cdb0f3e / tests 0babb0cd ; les nouveaux changements de phases modèles, backend et autotuning sont postérieurs et non couverts.",
+      "headSha": "ed24b089485863fb34c44acd8323623c076781d0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39699960555",
+      "test_count_evidence": "published_campaign_cli_receipts_ed24b08"
+    },
+    "published_campaign_cli_receipts_ed24b08": {
+      "path": "work/live/campaign-cli-receipt-ed24b08-release.json",
+      "sha256": "ee41054d667b1833aad336520efde27b1b24c60be091736f37407d369ac3d4fb",
+      "bytes": 22552,
+      "kind": "published_exact_git_release_with_ci",
+      "scope": "Publication exacte du correctif de comptage : 188 fichiers Git authentifiés et CI du même SHA. Les 249 tests locaux sont attachés aux sources désormais publiées. Contrôleur de campagnes conservé au source 00a ; aucune nouvelle qualification modèle/GPU ou étude achevée par cette publication.",
+      "published_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+      "source_files_match_commit": {
+        "scripts/report_study_fr.py": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+        "tests/test_study_report.py": "0babb0cd5df74dac0807e77cfff7dd9ad0e662257cfefb09d9c91efb2f71c722",
+        "docs/SPEC_AUDIT.fr.md": "9addd461cdf571a4a0304f1664c709336e09a8354a28d5c0d3a861494f0190aa",
+        "docs/validation/requirement-evidence.json": "eefc4ae6a8d3a4e159ae09daaa54eb5c3093df48b9ece1bcdbf438db027ddce4"
+      },
+      "ci": {
+        "run_id": 39699960555,
+        "headSha": "ed24b089485863fb34c44acd8323623c076781d0",
+        "conclusion": "success",
+        "passed": 1505,
+        "skipped": 2,
+        "warnings": 15,
+        "subtests_passed": 13,
+        "pytest_seconds": 84.95,
+        "compileall": "success",
+        "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39699960555"
+      },
+      "file_count": 188,
+      "evidence": [
+        {
+          "path": "work/live/ci-ed24b08.json",
+          "sha256": "932458cbfc4b26b809590b950354eb0154286493de35e150f34f58c83319d106"
+        },
+        {
+          "path": "work/live/ci-ed24b08.log",
+          "sha256": "09e3d4bbd222fd1f381b225321aca7cddf0ddac8e665e39e4f956209f1c84604"
+        },
+        {
+          "path": "work/live/final-export-report-source-supplement-ed24b08.json",
+          "sha256": "6659d2f10ffa2f9353abb7f0d4781e012027dde11492988316d6ce7b1966c7ce"
+        },
+        {
+          "path": "work/live/campaign-cli-receipt-attribution-b402-local.json",
+          "sha256": "a1d3c3784cf374ba7668e19d24fa1594a82662247a68a799046f46ad373d7158"
+        },
+        {
+          "path": "work/live/campaign-cli-receipt-attribution-774659-offline.json",
+          "sha256": "4786ebbfdcf9525677bbd15575dd843d0aec046e4b0b91650afb7df16da3532a"
+        },
+        {
+          "path": "work/live/campaign-cli-receipt-attribution-774659-visual-inspection.json",
+          "sha256": "cee481962da901afb45c51da396f4fd13ea360d7021780fedf9e4b00606998b2"
+        }
+      ],
+      "runtime_controller_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "runtime_qualification_by_this_release": false
+    },
+    "source_availability_report_b402c2a": {
+      "path": "work/live/final-export-report-source-supplement-b402c2a.json",
+      "sha256": "d5ba9a02d8b7174acf67607283d2e5b021327c11259442b9af5ae5f23b1473a7",
+      "bytes": 4956,
+      "kind": "report_release_source_availability_supplement",
+      "scope": "Disponibilité de l’archive source exacte seulement : fichiers/membres et blobs Git vérifiés. Aucun export scientifique §16 produit ni nouvelle exécution modèle/GPU ou qualification CI. Anciennes archives, trois snapshots dirty manquants et prompts historiques inchangés.",
+      "commit": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "regular_file_count": 188,
+      "tar_member_count": 202,
+      "source_archive": {
+        "bytes": 1721678,
+        "path": "work/release-source-archives/b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7/source.tar.gz",
+        "sha256": "e4c175208aa75a91a11c841ed5c990f0c7fe94d373bc17cd85f0c9aacaeb9440"
+      },
+      "source_metadata": {
+        "bytes": 21197,
+        "path": "work/release-source-archives/b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7/source.json",
+        "sha256": "b65c9fe722ca72934bc147991111b2560aecf451068ad189b44e21e629f8d73c"
+      },
+      "availability_only": true
+    },
+    "source_availability_report_ed24b08": {
+      "path": "work/live/final-export-report-source-supplement-ed24b08.json",
+      "sha256": "6659d2f10ffa2f9353abb7f0d4781e012027dde11492988316d6ce7b1966c7ce",
+      "bytes": 2440,
+      "kind": "report_release_source_availability_supplement",
+      "scope": "Disponibilité de l’archive source exacte seulement : fichiers/membres et blobs Git vérifiés. Aucun export scientifique §16 produit ni nouvelle exécution modèle/GPU ou qualification CI. Anciennes archives, trois snapshots dirty manquants et prompts historiques inchangés.",
+      "commit": "ed24b089485863fb34c44acd8323623c076781d0",
+      "regular_file_count": 188,
+      "tar_member_count": 202,
+      "source_archive": {
+        "bytes": 1732072,
+        "path": "work/release-source-archives/ed24b089485863fb34c44acd8323623c076781d0/source.tar.gz",
+        "sha256": "20bf18b16400c7d4518a22b2ad7b5a731a04b552ea589477e2343150a26d533c"
+      },
+      "source_metadata": {
+        "bytes": 21198,
+        "path": "work/release-source-archives/ed24b089485863fb34c44acd8323623c076781d0/source.json",
+        "sha256": "d04b42d691786651e8b7155887f07a494724dec9f71f608183df7497fd96ea1a"
+      },
+      "availability_only": true
+    },
+    "local_research_model_phase_view_ed24b08": {
+      "path": "work/live/research-model-phase-view-ed24b08-local.json",
+      "sha256": "86e552668ac4339fdf39557e4a89d75041cd9c49e9915aadd39ad6bf48a8cc1f",
+      "bytes": 4630,
+      "kind": "focused_local_research_service_model_phase_presentation",
+      "scope": "278 tests ciblés du rapport, dont 29 cas supplémentaires : recherche+synthèse explicitement liées, refus ultérieurs inclus, intents sans résultat et appels non attribuables séparés. Copies/ambiguïtés/durées partielles ou divergentes conservées. Une seule lecture CLI par le producteur ; projection pure sans modification des compteurs, métriques, overrides ou résultats. Pas de nouvelle suite complète ni CI du futur SHA.",
+      "git_base": "ed24b089485863fb34c44acd8323623c076781d0",
+      "tests_passed": 278,
+      "new_regression_cases": 29,
+      "junit": {
+        "path": "work/live/research-model-phase-view-ed24b08-local.xml",
+        "sha256": "a60ef168437059a253d3e9a7066db6608a3f12f66a2571b9caedc2be611c7f6d",
+        "bytes": 45009
+      },
+      "log": {
+        "path": "work/live/research-model-phase-view-ed24b08-local.log",
+        "sha256": "8f9f1b050d0dced5c729ccd74184c2fe896427707c0ed3e716aa0128124d6c74",
+        "bytes": 340
+      },
+      "source_files_after": {
+        "scripts/report_study_fr.py": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af",
+        "tests/test_study_report.py": "dc646cd27adb09a6ffb6c190615463932d54a2e4de59773bb0c69451ad274937"
+      },
+      "source_files_unchanged_during_tests_and_recipe": true,
+      "test_source_snapshot": {
+        "path": "tests/test_study_report.py",
+        "sha256": "dc646cd27adb09a6ffb6c190615463932d54a2e4de59773bb0c69451ad274937",
+        "bytes": 140065,
+        "definitions": [
+          {
+            "name": "save",
+            "line": 28
+          },
+          {
+            "name": "method_outcome_summary",
+            "line": 33
+          },
+          {
+            "name": "test_html_separates_failed_method_from_qualified_measured_fallback",
+            "line": 59
+          },
+          {
+            "name": "test_markdown_preserves_failure_reason_fallback_gain_and_raw_json",
+            "line": 77
+          },
+          {
+            "name": "test_initial_fallback_iteration_zero_and_unknown_method_are_not_successes",
+            "line": 92
+          },
+          {
+            "name": "test_consumption_deduplicates_calls_and_preserves_unknown_failures",
+            "line": 103
+          },
+          {
+            "name": "test_same_call_with_conflicting_usage_cannot_silently_change_totals",
+            "line": 124
+          },
+          {
+            "name": "test_original_intent_cli_and_legacy_copies_share_one_call_without_counting_acks",
+            "line": 131
+          },
+          {
+            "name": "test_original_intent_unknown_failures_survive_rehost_without_zero_invoice",
+            "line": 156
+          },
+          {
+            "name": "test_original_intent_conflicting_legacy_usage_fails_closed",
+            "line": 167
+          },
+          {
+            "name": "test_original_distinct_attempts_are_not_deduplicated_by_prompt_key",
+            "line": 175
+          },
+          {
+            "name": "test_failed_timeout_and_unreported_structured_receipts_remain_visible",
+            "line": 183
+          },
+          {
+            "name": "native_before_thread",
+            "line": 199
+          },
+          {
+            "name": "test_native_started_before_first_thread_is_unknown_and_deduplicated_by_invocation",
+            "line": 205
+          },
+          {
+            "name": "test_native_later_thread_snapshot_links_the_initial_invocation_and_copies",
+            "line": 217
+          },
+          {
+            "name": "test_distinct_native_invocations_without_threads_are_not_merged",
+            "line": 231
+          },
+          {
+            "name": "test_requested_native_thread_identity_and_unidentifiable_receipt_fail_closed",
+            "line": 238
+          },
+          {
+            "name": "test_complementary_cached_usage_and_partial_failure_are_not_zero_invoices",
+            "line": 248
+          },
+          {
+            "name": "test_impossible_usage_cannot_be_reported_as_a_lower_bound",
+            "line": 263
+          },
+          {
+            "name": "lease",
+            "line": 269
+          },
+          {
+            "name": "test_gpu_leases_use_recorded_slurm_elapsed_formats",
+            "line": 278
+          },
+          {
+            "name": "test_failed_timeout_leases_and_rehost_copies_retain_cost_once",
+            "line": 286
+          },
+          {
+            "name": "test_active_unparsed_or_unverified_leases_remain_unknown_not_zero",
+            "line": 298
+          },
+          {
+            "name": "test_inconsistent_slurm_receipts_cannot_falsify_allocation_cost",
+            "line": 310
+          },
+          {
+            "name": "frozen_receipt",
+            "line": 324
+          },
+          {
+            "name": "test_frozen_pilot_preserves_raw_regression_native_identity_and_separate_scope",
+            "line": 348
+          },
+          {
+            "name": "test_partial_or_mismatched_pilot_cannot_produce_a_qualified_plot",
+            "line": 373
+          },
+          {
+            "name": "test_frozen_plot_and_missing_receipt",
+            "line": 388
+          },
+          {
+            "name": "test_green_ci_on_same_head_does_not_qualify_tracked_or_untracked_changes",
+            "line": 399
+          },
+          {
+            "name": "test_new_gpu_receipts_keep_executed_source_head_and_hashes_separate_from_report_head",
+            "line": 425
+          },
+          {
+            "name": "test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope",
+            "line": 441
+          },
+          {
+            "name": "diagnostic_v2_audit_fixture",
+            "line": 458
+          },
+          {
+            "name": "test_actual_diagnostic_audit_replaces_pending_only_with_verified_measured_chain_links",
+            "line": 493
+          },
+          {
+            "name": "test_present_but_unproved_diagnostic_receipt_is_not_qualification",
+            "line": 511
+          },
+          {
+            "name": "test_partial_authorities_and_secondary_parent_observation_remain_separate",
+            "line": 518
+          },
+          {
+            "name": "test_tuning_constraint_control_remains_pending_until_success_is_explicit",
+            "line": 543
+          },
+          {
+            "name": "linked_report_fixture",
+            "line": 552
+          },
+          {
+            "name": "original_execution_fixture",
+            "line": 559
+          },
+          {
+            "name": "test_original_actual_generation_links_are_presented_without_final_success_or_attested_model",
+            "line": 595
+          },
+          {
+            "name": "test_original_source_or_cli_or_method_failures_cannot_be_relabelled_completed",
+            "line": 608
+          },
+          {
+            "name": "common_freeze_fixture",
+            "line": 632
+          },
+          {
+            "name": "test_final_freeze_aliases_are_identities_not_eight_distinct_kernels_or_gains",
+            "line": 667
+          },
+          {
+            "name": "test_frozen_identity_links_and_alias_declarations_fail_closed",
+            "line": 681
+          },
+          {
+            "name": "refresh_documentary_fixture",
+            "line": 698
+          },
+          {
+            "name": "test_absent_documentary_result_is_pending_or_unknown_never_gpu_success",
+            "line": 734
+          },
+          {
+            "name": "test_documentary_control_success_is_limited_to_authenticated_json_subset",
+            "line": 743
+          },
+          {
+            "name": "test_documentary_authentication_never_opens_manifest_databases_rng_or_numeric_inputs",
+            "line": 754
+          },
+          {
+            "name": "test_documentary_partial_or_unverified_proof_never_becomes_acquired",
+            "line": 773
+          },
+          {
+            "name": "test_malformed_control_root_cannot_crash_or_qualify_other_receipts",
+            "line": 797
+          },
+          {
+            "name": "test_nested_list_or_scalar_fields_fail_closed_without_global_report_loss",
+            "line": 817
+          },
+          {
+            "name": "test_hash_matched_linked_manifest_must_still_be_expected_json_object",
+            "line": 826
+          },
+          {
+            "name": "test_new_control_links_are_role_whitelisted_before_any_protected_read",
+            "line": 836
+          },
+          {
+            "name": "test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequence",
+            "line": 866
+          },
+          {
+            "name": "test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals",
+            "line": 883
+          },
+          {
+            "name": "test_explicit_unproven_context_cannot_be_normalized_to_an_identity_ratio",
+            "line": 904
+          },
+          {
+            "name": "test_unmeasured_failure_is_unavailable_instead_of_a_paired_measurement",
+            "line": 922
+          },
+          {
+            "name": "test_legacy_valid_identity_stays_available_without_an_interval",
+            "line": 932
+          },
+          {
+            "name": "test_case_table_exposes_regression_intervals_and_uses_independent_direct_pairs",
+            "line": 938
+          },
+          {
+            "name": "test_case_table_never_turns_identity_or_unproven_context_into_measured_cases",
+            "line": 956
+          },
+          {
+            "name": "test_case_table_keeps_incomplete_or_invalid_intervals_unknown",
+            "line": 972
+          },
+          {
+            "name": "test_case_table_does_not_require_percentile_bootstrap_interval_to_contain_point_estimate",
+            "line": 979
+          },
+          {
+            "name": "test_case_table_displays_partial_measurement_failure_and_artifact_qualification_separately",
+            "line": 985
+          },
+          {
+            "name": "test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only",
+            "line": 998
+          },
+          {
+            "name": "identity_pilot_receipt",
+            "line": 1004
+          },
+          {
+            "name": "test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot",
+            "line": 1018
+          },
+          {
+            "name": "test_pilot_refuses_explicit_unproven_context_before_qualification_and_plot",
+            "line": 1038
+          },
+          {
+            "name": "resumed_documentary_fixture",
+            "line": 1060
+          },
+          {
+            "name": "test_resumed_documentary_authority_preserves_incomplete_original_and_separates_new_calls",
+            "line": 1116
+          },
+          {
+            "name": "test_missing_resumption_is_an_independent_unknown_result",
+            "line": 1134
+          },
+          {
+            "name": "test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls",
+            "line": 1146
+          },
+          {
+            "name": "_documentary_proof",
+            "line": 1161
+          },
+          {
+            "name": "twice_resumed_documentary_fixture",
+            "line": 1169
+          },
+          {
+            "name": "_repin_second_resume",
+            "line": 1257
+          },
+          {
+            "name": "third_resumed_documentary_fixture",
+            "line": 1268
+          },
+          {
+            "name": "test_third_resume_accepted_research_lineage_keeps_all_prior_incomplete_authorities_separate",
+            "line": 1367
+          },
+          {
+            "name": "test_third_resume_rejects_tampered_accepted_lineage_or_explicit_refresh",
+            "line": 1380
+          },
+          {
+            "name": "test_third_resume_absent_is_unknown_and_does_not_complete_old_accepted_research",
+            "line": 1428
+          },
+          {
+            "name": "test_standalone_final_control_absent_or_plan_cannot_prove_execution",
+            "line": 1437
+          },
+          {
+            "name": "test_standalone_final_control_requires_result_checks_owned_terminal_and_sources",
+            "line": 1447
+          },
+          {
+            "name": "test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain",
+            "line": 1464
+          },
+          {
+            "name": "test_second_resumption_rejects_hash_resealed_but_unsupported_ancestry",
+            "line": 1478
+          },
+          {
+            "name": "test_absent_second_resumption_remains_separate_unknown_authority",
+            "line": 1497
+          },
+          {
+            "name": "test_second_resume_authenticates_source_trial_bytes_not_only_manifest_claim",
+            "line": 1503
+          },
+          {
+            "name": "test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval",
+            "line": 1512
+          },
+          {
+            "name": "test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload",
+            "line": 1524
+          },
+          {
+            "name": "metric_summary",
+            "line": 1548
+          },
+          {
+            "name": "test_metric_view_keeps_merged_method_values_and_raw_unknown_list",
+            "line": 1555
+          },
+          {
+            "name": "test_metric_view_distinguishes_recorded_zero_from_unknown",
+            "line": 1586
+          },
+          {
+            "name": "test_metric_view_never_infers_gain_or_milestone_usage_from_totals",
+            "line": 1605
+          },
+          {
+            "name": "test_metric_view_does_not_fill_a_missing_research_metric_from_legacy_spelling",
+            "line": 1616
+          },
+          {
+            "name": "test_metric_panel_handles_absent_or_malformed_optional_metadata",
+            "line": 1625
+          },
+          {
+            "name": "test_report_artifact_exports_additive_metric_view_and_prioritizes_section16",
+            "line": 1632
+          },
+          {
+            "name": "test_recorded_validity_view_preserves_method_overrides_without_deriving_fraction",
+            "line": 1687
+          },
+          {
+            "name": "test_recorded_validity_view_distinguishes_missing_null_and_explicit_zero",
+            "line": 1713
+          },
+          {
+            "name": "call_inventory_fixture",
+            "line": 1727
+          },
+          {
+            "name": "test_campaign_receipts_distinguish_seven_completed_ledger_calls_from_eight_attempts",
+            "line": 1739
+          },
+          {
+            "name": "test_campaign_receipts_reuse_global_alias_dedup_for_copies_and_attempts",
+            "line": 1762
+          },
+          {
+            "name": "test_shared_identity_is_ambiguous_even_when_other_campaign_is_not_in_summary",
+            "line": 1780
+          },
+          {
+            "name": "test_campaign_attribution_requires_exact_canonical_root_run_and_cli_layout",
+            "line": 1793
+          },
+          {
+            "name": "test_campaign_unknown_usage_is_not_a_zero_cost_or_total",
+            "line": 1807
+          },
+          {
+            "name": "test_absent_campaign_receipts_do_not_establish_zero_usage",
+            "line": 1818
+          },
+          {
+            "name": "test_mixed_snapshots_and_partial_usage_have_disjoint_status_categories",
+            "line": 1825
+          },
+          {
+            "name": "test_completed_receipt_stderr_does_not_by_itself_mean_failed_call",
+            "line": 1837
+          },
+          {
+            "name": "test_origin_metadata_cannot_override_campaign_derived_from_exact_path",
+            "line": 1844
+          },
+          {
+            "name": "research_phase_fixture",
+            "line": 1853
+          },
+          {
+            "name": "research_projection",
+            "line": 1879
+          },
+          {
+            "name": "test_research_costs_include_both_phases_and_refused_dossiers_without_second_CLI_read",
+            "line": 1886
+          },
+          {
+            "name": "test_research_intent_without_return_never_assigns_failed_or_prepared_CLI_to_a_phase",
+            "line": 1923
+          },
+          {
+            "name": "test_research_intent_alone_is_not_an_invocation_or_zero_invoice",
+            "line": 1937
+          },
+          {
+            "name": "test_research_phase_join_fails_closed_without_losing_global_CLI_consumption",
+            "line": 1948
+          },
+          {
+            "name": "test_research_phase_copies_and_attempts_are_one_cost",
+            "line": 1972
+          },
+          {
+            "name": "test_research_phase_cannot_reassign_another_campaigns_CLI",
+            "line": 1987
+          },
+          {
+            "name": "test_research_phase_rejects_an_intent_owned_by_another_campaign",
+            "line": 1997
+          },
+          {
+            "name": "test_shared_CLI_identity_and_conflicting_phase_evidence_are_not_counted_twice",
+            "line": 2010
+          },
+          {
+            "name": "test_research_CLI_durations_preserve_zero_unknown_and_conflicting_snapshots",
+            "line": 2028
+          },
+          {
+            "name": "test_research_phase_partial_usage_and_uninstrumented_methods_remain_explicit",
+            "line": 2040
+          },
+          {
+            "name": "test_research_phase_index_never_reads_symlinks_or_follows_a_supplied_private_reference",
+            "line": 2056
+          }
+        ]
+      },
+      "peer_review": {
+        "status": "GO",
+        "reviewer": "/root/codex_research",
+        "source_sha256": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af",
+        "tests_sha256": "dc646cd27adb09a6ffb6c190615463932d54a2e4de59773bb0c69451ad274937",
+        "scope": "Read-only review of source/tests, no tests or real campaign/model/GPU/SSH/DB actions by reviewer."
+      }
+    },
+    "research_model_phase_view_774658_offline": {
+      "path": "work/live/research-model-phase-view-774658-offline.json",
+      "sha256": "867235e5c1734574aa324684c223554eafd1e333a99aa4f98548d870a4058116",
+      "bytes": 67284,
+      "kind": "offline_public_research_model_phase_projection",
+      "scope": "Recette publique hors ligne 774658 : 28 JSON CLI/context épinglés lus une seule fois chacun ; quatre recherches + quatre synthèses = 12 998 696 tokens connus et somme CLI 2 234,681133168022 s. Quatre autres identités et coûts séparés. Aucun dossier admis exigé, résultat historique réécrit ou nouveau modèle/GPU ; latence documentaire complète et USD inconnus.",
+      "authority": {
+        "path": "work/live/section16-00a67a3-774658-model-phase-attribution.json",
+        "sha256": "e713f10a0336cfef8ede762f8a311c5137e307f7d3c236ce13b56b06b36e47ac"
+      },
+      "source_files": {
+        "scripts/report_study_fr.py": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af",
+        "tests/test_study_report.py": "dc646cd27adb09a6ffb6c190615463932d54a2e4de59773bb0c69451ad274937"
+      },
+      "producer_passes": 1,
+      "producer_public_JSON_read_count": 28,
+      "project_observed_counts": {
+        "unique_CLI_identities": 12,
+        "known_model_tokens": 13353127
+      },
+      "known_search_plus_synthesis_tokens": 12998696,
+      "known_CLI_duration_sum_seconds": 2234.681133168022,
+      "outer_model_event_duration_sum_from_authority_seconds": 2234.696101957961,
+      "documentary_end_to_end_seconds": null,
+      "cost_usd": null
+    },
+    "research_model_phase_view_774658_preview": {
+      "path": "work/live/research-model-phase-view-774658-preview.json",
+      "sha256": "de70fead49187769570b484c9ba3362713d3c3f9bd0e9f9b7b4a6d1615a612c8",
+      "bytes": 977,
+      "kind": "bounded_research_model_phase_preview",
+      "scope": "Aperçu autonome depuis la projection acquise, inspecté à 1600 px par l’agent reporting. Aucun autre scan de campagne, rapport actif, modèle/GPU ou mesure de performance.",
+      "HTML": {
+        "path": "work/live/research-model-phase-view-774658-preview.html",
+        "sha256": "948529775c5368f519c81e7f8126cf3812a3474fce6ab0ced47134b02ed6f3fb"
+      },
+      "PNG": {
+        "path": "work/live/research-model-phase-view-774658-preview.html.png",
+        "sha256": "8bb7967084433cbcc236601ed4ce8843f939168400f105e9be46eaf0a4884a2c",
+        "bytes": 383150
+      },
+      "projection": {
+        "path": "work/live/research-model-phase-view-774658-offline.json",
+        "sha256": "867235e5c1734574aa324684c223554eafd1e333a99aa4f98548d870a4058116"
+      },
+      "source_report_sha256": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af"
+    },
+    "research_model_phase_view_774658_primary_visual": {
+      "path": "work/live/research-model-phase-view-774658-primary-visual-inspection.json",
+      "sha256": "c16762f23b4116bb09d5ab701f9b6c179e6ec4a29fc49fdf6d33ad8c285e9306",
+      "bytes": 1915,
+      "kind": "primary_public_projection_visual_inspection",
+      "scope": "Inspection visuelle indépendante par le primaire : recherche, synthèse, total explicite et autres CLI distincts, compteurs et limites lisibles. Aucune nouvelle lecture de campagne ou qualification scientifique.",
+      "source_report_sha256": "23a60de0cfc6a665ca5a0c79270873efbf384d85a6d7bcc0b4b5b1cdccba68af",
+      "checks": {
+        "search_and_synthesis_distinct_rows_readable": true,
+        "four_plus_four_calls_visible": true,
+        "known_tokens_lower_bound_12998696_visible": true,
+        "cli_duration_sum_2234_681133_visible": true,
+        "four_other_identities_separate_visible": true,
+        "documentary_end_to_end_time_and_usd_unknown_explicit": true,
+        "no_double_sum_of_cached_or_dossier_usage_claimed": true
+      },
+      "evidence": [
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/research-model-phase-view-774658-preview.html",
+          "sha256": "948529775c5368f519c81e7f8126cf3812a3474fce6ab0ced47134b02ed6f3fb"
+        },
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/research-model-phase-view-774658-preview.html.png",
+          "sha256": "8bb7967084433cbcc236601ed4ce8843f939168400f105e9be46eaf0a4884a2c"
+        },
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/research-model-phase-view-774658-preview.json",
+          "sha256": "de70fead49187769570b484c9ba3362713d3c3f9bd0e9f9b7b4a6d1615a612c8"
+        },
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/research-model-phase-view-774658-offline.json",
+          "sha256": "867235e5c1734574aa324684c223554eafd1e333a99aa4f98548d870a4058116"
+        }
+      ]
+    },
+    "local_codex_prompt_launch_provenance_ed24b08": {
+      "path": "work/live/codex-prompt-provenance-local-ed24b08.json",
+      "sha256": "52fe71717cd0e74636582a9c0282da705960e779d3641795ce528f8e3750e2b9",
+      "bytes": 1794,
+      "kind": "focused_mocked_codex_prompt_and_launch_provenance_tests",
+      "scope": "20 tests et 8 sous-tests CPU du backend : Popen simulé et émetteurs Python synthétiques, aucune vraie invocation Codex ni modèle/GPU. Futurs reçus v2 : empreinte UTF-8, prepared durable avant lancement puis PID après lancement ; trace_dir configuré nécessaire. Aucun prompt historique reconstruit ni appariement d’échec historique ajouté.",
+      "git_base": "ed24b089485863fb34c44acd8323623c076781d0",
+      "tests_passed": 20,
+      "subtests_passed": 8,
+      "junit_entries": 28,
+      "junit": {
+        "path": "work/live/codex-prompt-provenance-local-ed24b08.xml",
+        "sha256": "eb7a7f16570e3fbdd06ff42c832f6b290241dbea7542bb65e1a093f333ea183c"
+      },
+      "log": {
+        "path": "work/live/codex-prompt-provenance-local-ed24b08.log",
+        "sha256": "807063666b8ac0d790b3777f5350fc91f11d234f14df9fa5108b1eb0647be0ea"
+      },
+      "source_files_after": {
+        "optimizer_agent/codex_backend.py": "8ce2acd4743fbf11849aa6e1444380d41c26748be7cde580c4ed037f00a8973b",
+        "tests/test_codex_receipt_provenance.py": "0d24f05029d6a31a7ba8ceb727827a11fe5780a99a72e5f2f1fc748bca3f2a24"
+      },
+      "source_files_unchanged_during_tests": true,
+      "test_source_snapshot": {
+        "path": "tests/test_codex_receipt_provenance.py",
+        "sha256": "0d24f05029d6a31a7ba8ceb727827a11fe5780a99a72e5f2f1fc748bca3f2a24",
+        "bytes": 9540,
+        "definitions": [
+          {
+            "name": "completed_output",
+            "line": 20
+          },
+          {
+            "name": "saved_receipt",
+            "line": 27
+          },
+          {
+            "name": "assert_prompt_identity",
+            "line": 33
+          },
+          {
+            "name": "test_utf8_intent_is_durable_before_popen_and_pid_precedes_submission",
+            "line": 42
+          },
+          {
+            "name": "test_launch_error_keeps_exact_prepared_identity_without_fictional_pid_or_usage",
+            "line": 101
+          },
+          {
+            "name": "test_completed_or_provider_parse_failure_retains_prompt_and_started_identity",
+            "line": 123
+          },
+          {
+            "name": "test_timeout_keeps_prompt_launch_identity_and_unknown_usage",
+            "line": 137
+          },
+          {
+            "name": "test_prepare_fsync_failure_never_launches_a_cli",
+            "line": 155
+          },
+          {
+            "name": "test_running_receipt_failure_reaps_only_owned_child_without_submitting_prompt",
+            "line": 166
+          },
+          {
+            "name": "test_atomic_receipt_replace_failure_preserves_previous_snapshot",
+            "line": 193
+          }
+        ]
+      },
+      "future_actual_Codex_and_ROMEO_validation_acquired": false
+    },
+    "codex_prompt_launch_provenance_primary_review_ed24b08": {
+      "path": "work/live/codex-prompt-provenance-primary-review-ed24b08.json",
+      "sha256": "23855278d914ff1c09cb1f4473a6c4f398fc05fc384c89719046c6a78dd5c1f6",
+      "bytes": 1343,
+      "kind": "primary_read_only_review",
+      "scope": "Revue primaire en lecture seule : publication atomique/fsync, prepared avant Popen, lancement owned et PID ensuite, enfant réconcilié sans soumission du prompt si échec de publication. CPU seulement ; aucune preuve fournisseur, HTTP, vie courante de processus ou poids modèle.",
+      "decision": "GO",
+      "source_pins": {
+        "optimizer_agent/codex_backend.py": "8ce2acd4743fbf11849aa6e1444380d41c26748be7cde580c4ed037f00a8973b",
+        "tests/test_codex_receipt_provenance.py": "0d24f05029d6a31a7ba8ceb727827a11fe5780a99a72e5f2f1fc748bca3f2a24"
+      },
+      "local_acceptance": {
+        "path": "work/live/codex-prompt-provenance-local-ed24b08.json",
+        "sha256": "52fe71717cd0e74636582a9c0282da705960e779d3641795ce528f8e3750e2b9"
+      },
+      "limitations": [
+        "Durable trace persistence requires configured trace_dir; standalone trace_dir=None retains its existing no-trace behavior.",
+        "Prepared and started CLI observations do not attest provider receipt, HTTP cycles, current liveness or model weights.",
+        "No new historical jointure or past receipt reconstruction claimed."
+      ]
+    },
+    "study_v2_no_research_774656_00a_terminal": {
+      "path": "work/live/section16-00a67a3-no-research-774656.json",
+      "sha256": "065d14b641153171bcf73f455e2a105259784a23fb84a8041852ea593e0ea726",
+      "bytes": 21924,
+      "kind": "bounded_no_research_convolution3141_terminal_under_00a67a3",
+      "scope": "Sans recherche, convolution 3141 : trois essais, huit artefacts mesurés et un filtré ; trois CLI / 252 956 tokens. Baseline retenue, FINAL différé ; pas de qualification générale ni du futur correctif de cache.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false
+    },
+    "study_v2_full_matmul1729_774659_00a_terminal": {
+      "path": "work/live/matmul-1729-full-774659-00a67a3-terminal-audit-verified.json",
+      "sha256": "1ae25126c2d2e099c4c681444ea2dd6c78a4cc9db9af208bdae6acee3fa650be",
+      "bytes": 27833,
+      "kind": "independent_generation_terminal_audit",
+      "scope": "Full GEMM 1729 : méthode completed, baseline retenue. Huit identités CLI, sept usages complets et un timeout sans usage ; 6 861 892 tokens connus seulement, ledger brut 7 préservé. Un candidat correct mesuré : SEARCH 0,97145 IC [0,96157 ; 0,97918], sans promotion ni FINAL. Autorité vérifiée, pas le draft antérieur ; aucun tell privé audité.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false,
+      "checks_verified_count": 31
+    },
+    "study_v2_permanent_only_774658_00a_terminal": {
+      "path": "work/live/section16-00a67a3-permanent-only-774658.json",
+      "sha256": "70c706d1fedaac694b38d4be8964bb7b2e05d8732b4ed12c3c2f933ea09ac52b",
+      "bytes": 55565,
+      "kind": "bounded_read_only_public_terminal_audit",
+      "scope": "Guide PMPP permanent seul, convolution 3141 : méthode completed, trois essais avec trois artefacts corrects mesurés. Douze CLI / 13 353 127 tokens, quatre dossiers admis et reprise ciblée réelle après rejet d’hypothèse. Baseline retenue, profil ROMEO refusé et repli local indisponible documentés ; FINAL différé.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false
+    },
+    "study_v2_greedy_matmul1729_774706_00a_terminal": {
+      "path": "work/live/section16-00a67a3-greedy-matmul1729-774706.json",
+      "sha256": "c658624418361cdd51eabb59618f85713f716b009046055333da791c5d96eda6",
+      "bytes": 92354,
+      "kind": "bounded_terminal_greedy_matmul1729_00a_public_audit",
+      "scope": "Parent glouton GEMM 1729 : méthode completed, neuf CLI / 10 272 647 tokens complets. Trois candidats corrects, deux promotions SEARCH ; artefact amélioré 4750f162… retenu. Ratio 1,066604 IC [1,052259 ; 1,070407] contre le premier incumbent déjà promu, pas contre le naïf. Aucune FINAL ni gain final certifié.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false,
+      "checks_verified_count": 59
+    },
+    "study_v2_no_research_774763_00a_terminal": {
+      "path": "work/live/section16-00a67a3-no-research-774763.json",
+      "sha256": "3e00ac5d24328ab9a1b3f9306bad201a3b9549af0c07604ba02b6dfa67b3d3f7",
+      "bytes": 92412,
+      "kind": "bounded_read_only_public_terminal_audit",
+      "scope": "Sans recherche GEMM 1729 : méthode completed, sept CLI / 176 518 tokens. Trois essais, quatre configurations mesurées ; six propositions échouent tôt à la compilation et quatre réparations ne corrigent pas ces échecs. Baseline retenue et FINAL différé ; pas de recherche ou profil inventé.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false
+    },
+    "study_v2_noauto_native_774721_774807_00a_terminals": {
+      "path": "work/live/section16-00a67a3-noauto-native-774721-774807.json",
+      "sha256": "1cfa99dd05fa2d4dea295d36e2b2ac1fd23c8d7b433d95b335b20a510c3805dd",
+      "bytes": 63647,
+      "kind": "two_new_terminal_public_audit",
+      "scope": "Deux terminaux : sans autotuning GEMM 1729, dix CLI / 12 667 662 tokens, un essai annulé pour recherche et deux mesurés, promotion SEARCH 72c3be… retenue. Vanilla natif : un CLI, un thread, un tour / 802 768 tokens ; export exact f245… / 98514… distinct de a464… / 7f418… essayé sur SEARCH. Cet export reste non validé sur SEARCH ; FINAL différé pour les deux.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false
+    },
+    "study_v2_no_pmpp_matmul1729_774747_00a_terminal": {
+      "path": "work/live/section16-00a67a3-no-pmpp-matmul1729-774747.json",
+      "sha256": "3b73674a04b770829a518d40c8177b312a9feee913b7be8cb683b0183b3e4101",
+      "bytes": 134625,
+      "kind": "bounded_no_pmpp_matmul1729_terminal_public_audit",
+      "scope": "Sans PMPP GEMM 1729 : méthode completed, onze CLI complets / 12 372 453 tokens. Trois essais clos, deux candidats corrects mesurés et une annulation documentaire sans tell. Trois dossiers admis et un bloqué ; quatre corpus sans PMPP et refus avant admission conservés. Artefact 1da5214d… retenu : SEARCH contre naïf 1,133029 IC [1,116450 ; 1,146745], sans FINAL.",
+      "generation_runtime_source": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+      "new_FINAL_acquired": false,
+      "checks_verified_count": 77
+    },
+    "research_model_phase_attribution_774658_historical": {
+      "path": "work/live/section16-00a67a3-774658-model-phase-attribution.json",
+      "sha256": "e713f10a0336cfef8ede762f8a311c5137e307f7d3c236ce13b56b06b36e47ac",
+      "bytes": 30685,
+      "kind": "offline_explicit_model_phase_attribution",
+      "scope": "Annotation publique hors ligne : douze identités séparées en quatre recherches, quatre synthèses et quatre autres propositions. Search 12 541 849 + synthesis 456 847 = 12 998 696 tokens ; somme CLI 2 234,681133168022 s distincte de l’estimateur extérieur 2 234,696101957961 s. research_model_* filtre seulement research ; aucun chiffre brut modifié, USD et latence documentaire complète inconnus.",
+      "phase_totals": {
+        "kernel_proposal": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens_subset": 0,
+          "cost_usd": null,
+          "cost_usd_known_call_count": 0,
+          "input_plus_output_tokens": 354431,
+          "input_tokens": 327480,
+          "output_tokens": 26951,
+          "public_model_event_minus_CLI_seconds": 0.004886167036602274,
+          "reasoning_output_tokens_subset": 21988,
+          "sum_CLI_elapsed_seconds": 218.27815749996807,
+          "sum_public_model_event_wall_seconds": 218.28304366700468,
+          "unique_calls": 4
+        },
+        "search": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens_subset": 11425920,
+          "cost_usd": null,
+          "cost_usd_known_call_count": 0,
+          "input_plus_output_tokens": 12541849,
+          "input_tokens": 12378580,
+          "output_tokens": 163269,
+          "public_model_event_minus_CLI_seconds": 0.00879074796102941,
+          "reasoning_output_tokens_subset": 138645,
+          "sum_CLI_elapsed_seconds": 1507.560130917991,
+          "sum_public_model_event_wall_seconds": 1507.568921665952,
+          "unique_calls": 4
+        },
+        "synthesis": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens_subset": 0,
+          "cost_usd": null,
+          "cost_usd_known_call_count": 0,
+          "input_plus_output_tokens": 456847,
+          "input_tokens": 365205,
+          "output_tokens": 91642,
+          "public_model_event_minus_CLI_seconds": 0.006178041978273541,
+          "reasoning_output_tokens_subset": 81442,
+          "sum_CLI_elapsed_seconds": 727.1210022500309,
+          "sum_public_model_event_wall_seconds": 727.1271802920091,
+          "unique_calls": 4
+        }
+      },
+      "documentary_model_calls": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens_subset": 11425920,
+        "cost_usd": null,
+        "cost_usd_known_call_count": 0,
+        "input_plus_output_tokens": 12998696,
+        "input_tokens": 12743785,
+        "output_tokens": 254911,
+        "public_model_event_minus_CLI_seconds": 0.014968789939302951,
+        "reasoning_output_tokens_subset": 220087,
+        "sum_CLI_elapsed_seconds": 2234.681133168022,
+        "sum_public_model_event_wall_seconds": 2234.696101957961,
+        "unique_calls": 8
+      },
+      "partition_checks": {
+        "all_twelve_CLI_raw_hashes_and_usage_equal_primary_receipt": true,
+        "cached_input_and_reasoning_output_are_subsets_not_added": true,
+        "context_result_count": 8,
+        "each_phase_result_has_one_unique_call_id": true,
+        "exact_intent_bytes_and_CLI_payload_links_match": true,
+        "input_plus_output_totals_equal_historical_all_model_total": true,
+        "raw_CLI_trace_copies_are_not_counted_as_new_calls": true,
+        "search_and_synthesis_and_other_proposal_disjoint": true,
+        "union_equals_twelve_original_CLI_identities": true
+      }
+    },
+    "study_v2_thirty_five_audited_minimum_00a": {
+      "path": "work/live/section16-thirty-five-audited-minimum-00a67a3.json",
+      "sha256": "db31b07ddb660fcb1700e1ccd2086a2ef26223652034449d041caca226293592",
+      "bytes": 3272,
+      "kind": "incremental_audited_campaign_minimum",
+      "scope": "Agrégation documentaire publique au 22 octobre 00:49:17 UTC : ancien minimum 27/1 conservé, huit générations additionnelles disjointes couvertes par sept audits authentifiés, soit au moins 35/144 et 1/18 finale commune. Aucun inventaire brut, nouveau GPU, réaudit privé ou source uniforme affirmée sur les 35 générations.",
+      "observed_at_utc": "2026-10-22T00:49:17.713843+00:00",
+      "base_minimum": {
+        "generations": 27,
+        "final_groups": 1,
+        "observed_at_utc": "2026-10-21T23:38:52.667936Z",
+        "source_commit": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+        "document": "docs/SPEC_AUDIT.fr.md",
+        "document_sha256": "af558739d27a5f1c5704362e63338443c02d3243efba0afd96992351e6d2a1e5",
+        "scope": "Previously acquired dated audit minimum, not re-executed or re-audited here"
+      },
+      "additional_distinct_generation_audits": [
+        {
+          "job_id": "774656",
+          "run_id": "quality-20261021-v2.convolution.3141.no_research",
+          "audit_path": "work/live/section16-00a67a3-no-research-774656.json",
+          "audit_sha256": "065d14b641153171bcf73f455e2a105259784a23fb84a8041852ea593e0ea726"
+        },
+        {
+          "job_id": "774659",
+          "run_id": "quality-20261021-v2.matmul.1729.full",
+          "audit_path": "work/live/matmul-1729-full-774659-00a67a3-terminal-audit-verified.json",
+          "audit_sha256": "1ae25126c2d2e099c4c681444ea2dd6c78a4cc9db9af208bdae6acee3fa650be"
+        },
+        {
+          "job_id": "774658",
+          "run_id": "quality-20261021-v2.convolution.3141.pmpp_permanent_only",
+          "audit_path": "work/live/section16-00a67a3-permanent-only-774658.json",
+          "audit_sha256": "70c706d1fedaac694b38d4be8964bb7b2e05d8732b4ed12c3c2f933ea09ac52b"
+        },
+        {
+          "job_id": "774706",
+          "run_id": "quality-20261021-v2.matmul.1729.greedy_parent",
+          "audit_path": "work/live/section16-00a67a3-greedy-matmul1729-774706.json",
+          "audit_sha256": "c658624418361cdd51eabb59618f85713f716b009046055333da791c5d96eda6"
+        },
+        {
+          "job_id": "774763",
+          "run_id": "quality-20261021-v2.matmul.1729.no_research",
+          "audit_path": "work/live/section16-00a67a3-no-research-774763.json",
+          "audit_sha256": "3e00ac5d24328ab9a1b3f9306bad201a3b9549af0c07604ba02b6dfa67b3d3f7"
+        },
+        {
+          "job_id": "774721",
+          "run_id": "quality-20261021-v2.matmul.1729.no_autotuning",
+          "audit_path": "work/live/section16-00a67a3-noauto-native-774721-774807.json",
+          "audit_sha256": "1cfa99dd05fa2d4dea295d36e2b2ac1fd23c8d7b433d95b335b20a510c3805dd"
+        },
+        {
+          "job_id": "774807",
+          "run_id": "quality-20261021-v2.matmul.1729.native_codex_vanilla",
+          "audit_path": "work/live/section16-00a67a3-noauto-native-774721-774807.json",
+          "audit_sha256": "1cfa99dd05fa2d4dea295d36e2b2ac1fd23c8d7b433d95b335b20a510c3805dd"
+        },
+        {
+          "job_id": "774747",
+          "run_id": "quality-20261021-v2.matmul.1729.no_pmpp",
+          "audit_path": "work/live/section16-00a67a3-no-pmpp-matmul1729-774747.json",
+          "audit_sha256": "3b73674a04b770829a518d40c8177b312a9feee913b7be8cb683b0183b3e4101"
+        }
+      ],
+      "current_audited_minimum": {
+        "generations": 35,
+        "planned_generations": 144,
+        "final_groups": 1,
+        "planned_final_groups": 18
+      }
+    },
+    "local_campaign_evaluation_history_144_ed24b08": {
+      "path": "work/live/campaign-evaluation-history-local-ed24b08.json",
+      "sha256": "eb9323acbd0f531ed5e93715742bce8a503ac7cc7c2ddf245af9caf79ef97022",
+      "bytes": 4882,
+      "kind": "cpu_campaign_evaluation_request_history_regression",
+      "exact_source_capture": {
+        "path": "work/live/runtime-history/478801938b4e/manifest.json",
+        "sha256": "0fca32c476ddb2e96f352a7e8ffd3c97a82a3e98b676c42d029b11bd5cc3a104",
+        "bytes": 774
+      },
+      "tests_passed": 144,
+      "scope": "État CPU intermédiaire à 144 tests conservé exactement avec sources 478801938b4e et tests correspondants. Il précède le correctif fsync des nouveaux parents ; il ne qualifie pas le source final ca3d994a. Aucun modèle/GPU ni résultat historique réécrit."
+    },
+    "local_campaign_evaluation_history_durable148_ed24b08": {
+      "path": "work/live/campaign-evaluation-history-durable-local-ed24b08.json",
+      "sha256": "e2f7eb1fabd6c9ed42fcdd3947995ae792d06ee358ba65e276eaadcc6e0e16b6",
+      "bytes": 3433,
+      "kind": "cpu_campaign_evaluation_history_durability_regression",
+      "git_base": "ed24b089485863fb34c44acd8323623c076781d0",
+      "source_files_after": {
+        "optimizer_agent/campaign.py": "ca3d994a7c611d17f0e31ec49381b2a85ec7811d2a5c502fa2c2e6508ced7145",
+        "optimizer_agent/suite_orchestrator.py": "911b921dcee1fbd22a88bda79da53a04e736bfa248034a2c7b08e56b186ee917",
+        "tests/test_campaign_runtime.py": "ba6d4d11e6bbc32de30b2d0f6f45ac3f07f23f96e11a6ad3319cfbfb91ec2519"
+      },
+      "tests_passed": 148,
+      "junit": {
+        "path": "work/live/campaign-evaluation-history-durable-final.xml",
+        "sha256": "2e8f657c1c22673ba6c036d8abe032c3c3898a7f247558770bb02e5c00e67ed0",
+        "bytes": 21859
+      },
+      "testsuites": [
+        {
+          "name": "pytest",
+          "errors": "0",
+          "failures": "0",
+          "skipped": "0",
+          "tests": "148",
+          "time": "5.494",
+          "timestamp": "2026-10-22T02:52:54.742908+02:00",
+          "hostname": "macbookpro.home"
+        }
+      ],
+      "test_source_snapshot": {
+        "path": "tests/test_campaign_runtime.py",
+        "sha256": "ba6d4d11e6bbc32de30b2d0f6f45ac3f07f23f96e11a6ad3319cfbfb91ec2519",
+        "bytes": 42880,
+        "definitions": [
+          {
+            "name": "RunnerFixture",
+            "line": 19
+          },
+          {
+            "name": "ModelFixture",
+            "line": 29
+          },
+          {
+            "name": "EvaluatorFixture",
+            "line": 37
+          },
+          {
+            "name": "runtime_setup",
+            "line": 68
+          },
+          {
+            "name": "selected",
+            "line": 78
+          },
+          {
+            "name": "test_generator_memory_facts_are_bound_into_immutable_contract",
+            "line": 82
+          },
+          {
+            "name": "test_real_runtime_initialization_and_pending_trial_resume",
+            "line": 93
+          },
+          {
+            "name": "test_actual_runtime_graph_blocks_model_on_negative_research",
+            "line": 108
+          },
+          {
+            "name": "test_runtime_missing_dossier_reenters_research",
+            "line": 128
+          },
+          {
+            "name": "test_runtime_closed_pending_does_not_block_other_selection",
+            "line": 136
+          },
+          {
+            "name": "test_runtime_changed_gpu_rejects_resume",
+            "line": 147
+          },
+          {
+            "name": "archive_candidate",
+            "line": 153
+          },
+          {
+            "name": "record_measurement",
+            "line": 163
+          },
+          {
+            "name": "test_only_current_exhausted_cuda_failure_is_a_zero_observation",
+            "line": 174
+          },
+          {
+            "name": "test_cached_legacy_documentary_zero_is_preserved_but_never_newly_told",
+            "line": 206
+          },
+          {
+            "name": "test_cached_real_exhausted_cuda_failure_keeps_legacy_stable_reward_id",
+            "line": 233
+          },
+          {
+            "name": "test_confirmation_and_promotion_replay_reuses_durable_evidence",
+            "line": 255
+          },
+          {
+            "name": "test_runtime_tuner_uses_exact_variant_and_fresh_reward_measurement",
+            "line": 279
+          },
+          {
+            "name": "test_runtime_unknown_constraint_reference_rejected_before_candidate_gpu_evaluation",
+            "line": 307
+          },
+          {
+            "name": "test_runtime_no_autotuning_still_applies_constraints_to_concrete_parameters",
+            "line": 324
+          },
+          {
+            "name": "test_same_tuned_executable_in_distinct_trials_preserves_both_lineages",
+            "line": 340
+          },
+          {
+            "name": "test_runtime_no_tree_ablation_uses_genuine_confirmed_greedy_parent",
+            "line": 364
+          },
+          {
+            "name": "test_closed_pending_trial_records_elapsed_gpu_usage",
+            "line": 380
+          },
+          {
+            "name": "test_profile_records_actual_gpu_usage_without_global_cap",
+            "line": 392
+          },
+          {
+            "name": "test_model_can_exceed_2_9_million_tokens_and_continue_without_global_cap",
+            "line": 417
+          },
+          {
+            "name": "test_final_receipt_cannot_certify_different_late_incumbent_on_resume",
+            "line": 441
+          },
+          {
+            "name": "tuning_request",
+            "line": 456
+          },
+          {
+            "name": "completed_requests",
+            "line": 469
+          },
+          {
+            "name": "test_repair_history_is_immutable_and_collector_counts_no_winner_alias_twice",
+            "line": 473
+          },
+          {
+            "name": "test_changed_request_same_template_cannot_use_previous_measurement",
+            "line": 510
+          },
+          {
+            "name": "test_exact_research_round_is_used_before_any_evaluation_cache",
+            "line": 542
+          },
+          {
+            "name": "test_durable_canonical_measurement_survives_failure_before_latest_alias",
+            "line": 553
+          },
+          {
+            "name": "test_new_request_with_only_unbound_legacy_cache_suspends_without_work",
+            "line": 576
+          },
+          {
+            "name": "test_legacy_bound_integrate_replay_preserves_old_guard_and_one_reward",
+            "line": 593
+          },
+          {
+            "name": "test_canonical_corruption_and_unfinished_intent_never_rerun_evaluator",
+            "line": 608
+          },
+          {
+            "name": "test_immutable_publication_refuses_different_content_and_symlink",
+            "line": 626
+          },
+          {
+            "name": "test_preserved_legacy_flat_files_cannot_replace_current_diagnostic_evidence",
+            "line": 639
+          },
+          {
+            "name": "test_canonical_request_directory_cannot_be_replaced_by_external_symlink",
+            "line": 680
+          },
+          {
+            "name": "test_volatile_gpu_properties_do_not_change_a_completed_request",
+            "line": 695
+          },
+          {
+            "name": "test_request_parent_publication_is_durable_before_reservation_and_evaluator",
+            "line": 707
+          },
+          {
+            "name": "test_failed_parent_fsync_cannot_reserve_or_evaluate",
+            "line": 733
+          },
+          {
+            "name": "test_equivalent_launch_defaults_and_parameter_list_match_candidate",
+            "line": 749
+          },
+          {
+            "name": "test_local_angle_header_content_change_invalidates_same_template_cache",
+            "line": 763
+          }
+        ]
+      },
+      "previous_144_test_state": {
+        "receipt": "work/live/campaign-evaluation-history-local-ed24b08.json",
+        "sha256": "eb9323acbd0f531ed5e93715742bce8a503ac7cc7c2ddf245af9caf79ef97022",
+        "exact_source_capture": "work/live/runtime-history/478801938b4e/manifest.json",
+        "capture_sha256": "0fca32c476ddb2e96f352a7e8ffd3c97a82a3e98b676c42d029b11bd5cc3a104",
+        "scope": "Historical pre-parent-fsync-fix state preserved exactly, not relabelled as this final source"
+      },
+      "final_source_capture": {
+        "path": "work/live/runtime-history/ca3d994a7c61/manifest.json",
+        "sha256": "b6d410e98f3ff77ca559020119a3acde8c6bd982b00628445e11dda60cecbfd0",
+        "bytes": 769
+      },
+      "scope": "148 tests CPU sur reçus canoniques immuables par demande complète : proposition/round/réparation, contraintes, lancement et entrées de compilation. Cache invalidé par changement réel d’un header résolu via -I ; publications de parents durables avant réservation/évaluation. Historique de chaque réparation conservé, aliases legacy non comptés deux fois, intents inachevés incertains sans replay automatique. Aucune nouvelle exécution GPU/Slurm/Codex ni reconstruction des réparations historiques écrasées."
+    },
+    "campaign_evaluation_history_final_source_capture_ed24b08": {
+      "path": "work/live/runtime-history/ca3d994a7c61/manifest.json",
+      "sha256": "b6d410e98f3ff77ca559020119a3acde8c6bd982b00628445e11dda60cecbfd0",
+      "bytes": 769,
+      "kind": "exact_final_CPU_source_capture",
+      "source_files_after": {
+        "optimizer_agent/campaign.py": "ca3d994a7c611d17f0e31ec49381b2a85ec7811d2a5c502fa2c2e6508ced7145",
+        "optimizer_agent/suite_orchestrator.py": "911b921dcee1fbd22a88bda79da53a04e736bfa248034a2c7b08e56b186ee917",
+        "tests/test_campaign_runtime.py": "ba6d4d11e6bbc32de30b2d0f6f45ac3f07f23f96e11a6ad3319cfbfb91ec2519"
+      },
+      "scope": "Copie exacte des trois fichiers du lot CPU final à 148 tests. Disponibilité/identité source uniquement ; état intermédiaire 144 conservé séparément. Pas de qualification ROMEO, publication, CI ou reconstruction d’une ancienne exécution."
+    },
+    "local_runtime_history_provenance_phase_integration_ed24b08": {
+      "path": "work/live/runtime-history-provenance-phase-integration.json",
+      "sha256": "412db677f12113621061d9d5468fbb5bc80039d5ac1358526d8d6c4a9fdf6fa4",
+      "bytes": 35506,
+      "kind": "coherent_local_cpu_integration",
+      "base_commit": "ed24b089485863fb34c44acd8323623c076781d0",
+      "finished_at_utc": "2026-10-22T00:56:43.516457+00:00",
+      "tests_passed": 1565,
+      "subtests_passed": 13,
+      "tests_skipped": 0,
+      "warnings": 15,
+      "junit_entries": 1578,
+      "testcase_elements": 1565,
+      "pytest_exit_code": 0,
+      "compileall_exit_code": 0,
+      "junit": {
+        "path": "work/live/runtime-history-provenance-phase-integration.xml",
+        "sha256": "2b444f76c2d071d3bb73fd3a23ea80efd7d452ac3e363c05d3b4e8fb67855b00"
+      },
+      "log": {
+        "path": "work/live/runtime-history-provenance-phase-integration.log",
+        "sha256": "3c22f2991feb9fe99f5b71c1375bb0645b85a556c680fc13927e29201aedef25"
+      },
+      "source_and_test_files": 157,
+      "source_and_tests_stable": true,
+      "source_inventory_scope": "Runtime, scripts, tests, configs and dependency declarations; documentation may be edited independently and is not covered by this local content-stability claim. No ROMEO/GPU/model test is implied. Exact published CI remains a separate validation.",
+      "scope": "Suite CPU locale cohérente sur le parent Git ed24 et les nouveaux changements non encore publiés : 1 565 tests et 13 sous-tests, zéro skip, compileall réussi. 157 fichiers runtime/scripts/tests/configs/dépendances identiques avant/après ; documentation éditée indépendamment et arbre Git entier exclus de cette stabilité. Aucune exécution modèle/GPU/Slurm/ROMEO ou CI du futur SHA déduite."
     }
   },
   "requirements": {
@@ -14294,12 +16063,21 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ]
     },
     "SEC-3": {
@@ -14399,12 +16177,21 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ]
     },
     "SEC-3.1": {
@@ -14499,12 +16286,21 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ]
     },
     "SEC-3.2": {
@@ -14625,7 +16421,9 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -14633,11 +16431,12 @@
           "test_gpu_final_isolation_acceptance": 12,
           "test_compare_frozen_kernels": 4
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -14931,7 +16730,13 @@
           "ac02_third_resumption_execution_audit"
         ],
         "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
-      }
+      },
+      "additional_production_observation_evidence": [
+        "study_v2_full_matmul1729_774659_00a_terminal",
+        "study_v2_permanent_only_774658_00a_terminal",
+        "study_v2_greedy_matmul1729_774706_00a_terminal",
+        "study_v2_no_pmpp_matmul1729_774747_00a_terminal"
+      ]
     },
     "SEC-5.1": {
       "id": "SEC-5.1",
@@ -15038,7 +16843,9 @@
           "ci_45407a2",
           "local_ac02_renderer_release",
           "local_recovery_export_release",
-          "ci_0013118"
+          "ci_0013118",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08"
         ],
         "test_modules": {
           "test_codex_research": 23,
@@ -15048,11 +16855,12 @@
           "test_campaign_workflow": 5,
           "test_campaign_runtime": 18
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. AC02 protocol regression now traverses actual structured backend (fake Popen), generator, runtime and graph. A new technique is rejected before candidate creation and routed to research; live model sequence remains separate. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -15083,7 +16891,13 @@
           "ac02_third_resumption_execution_audit"
         ],
         "scope": "Scénario documentaire AC-02 réel au DFD : famille → ajustement réutilisé → proposition non couverte refusée → diagnostic → recherche complémentaire → dossier applicable → nouvelle proposition admise. 14 appels CLI cumulés et zéro requête GPU. Les anciennes autorités incomplete restent préservées ; l’admission ne prouve ni compilation, ni exactitude numérique, ni gain."
-      }
+      },
+      "additional_production_observation_evidence": [
+        "study_v2_full_matmul1729_774659_00a_terminal",
+        "study_v2_permanent_only_774658_00a_terminal",
+        "study_v2_greedy_matmul1729_774706_00a_terminal",
+        "study_v2_no_pmpp_matmul1729_774747_00a_terminal"
+      ]
     },
     "SEC-5.3": {
       "id": "SEC-5.3",
@@ -15930,7 +17744,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -15938,11 +17753,12 @@
           "test_gpu_autotuning_acceptance": 2,
           "test_gpu_contract_acceptance": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -15959,6 +17775,11 @@
       },
       "remaining": [
         "Contrôle statique DSL/source_macro réel acquis au 773755 :12 filtré,8/16 mesurés, gagnant16 remesuré. Aucune campagne modèle ou supériorité générale déduite ; plafonds globaux toujours retirés par demande humaine."
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-9": {
@@ -16520,7 +18341,10 @@
           "ci_45407a2",
           "local_unscored_release",
           "local_recovery_export_release",
-          "ci_0013118"
+          "ci_0013118",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -16528,7 +18352,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16543,7 +18367,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -16558,6 +18383,11 @@
       },
       "remaining": [
         "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures."
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-11.1": {
@@ -16590,7 +18420,10 @@
         "evidence": [
           "local_release",
           "ci_45407a2",
-          "local_unscored_release"
+          "local_unscored_release",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -16598,7 +18431,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16613,7 +18446,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -16632,7 +18466,14 @@
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
-        "local_assembler_declared_inventory_28_fixtures"
+        "local_assembler_declared_inventory_28_fixtures",
+        "source_availability_report_b402c2a",
+        "source_availability_report_ed24b08"
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-11.2": {
@@ -16669,7 +18510,10 @@
           "ci_45407a2",
           "local_unscored_release",
           "local_recovery_export_release",
-          "ci_0013118"
+          "ci_0013118",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -16677,7 +18521,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16692,7 +18536,8 @@
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -16706,6 +18551,11 @@
       },
       "remaining": [
         "Reprise complète144 générations/18 groupes non acquise; preuves locales ne sont pas nouveau GPU."
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-11.3": {
@@ -16903,7 +18753,11 @@
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
           "local_campaign_metric_validity_view_00a67a3",
-          "local_campaign_cli_receipt_attribution_b402"
+          "local_campaign_cli_receipt_attribution_b402",
+          "local_research_model_phase_view_ed24b08",
+          "local_codex_prompt_launch_provenance_ed24b08",
+          "codex_prompt_launch_provenance_primary_review_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -16919,7 +18773,7 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite. CI ed24 publiée ensuite : 1 505 tests et 13 sous-tests, deux skips, sur renderer 5cdb seulement. Nouvelle vue search+synthesis 23a60 : 278 tests ciblés et recette publique 774658, future CI séparée ; ce n’est pas une nouvelle suite CPU complète. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16936,14 +18790,17 @@
           "local_research_cache_final_suite_release",
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
-          "local_observed_metrics_fix_dfd93d0"
+          "local_observed_metrics_fix_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
           "ci_de38abb_skipped_scope",
           "published_campaign_metrics_b402c2a",
-          "ci_b402c2a"
+          "ci_b402c2a",
+          "published_campaign_cli_receipts_ed24b08",
+          "ci_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -16972,12 +18829,24 @@
         "local_campaign_cli_receipt_attribution_b402",
         "terminal_campaign_cli_receipt_view_774659_offline",
         "terminal_campaign_cli_receipt_view_774659_preview",
-        "terminal_campaign_cli_receipt_view_774659_visual"
+        "terminal_campaign_cli_receipt_view_774659_visual",
+        "local_research_model_phase_view_ed24b08",
+        "research_model_phase_attribution_774658_historical",
+        "research_model_phase_view_774658_offline",
+        "research_model_phase_view_774658_preview",
+        "research_model_phase_view_774658_primary_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
-        "local_assembler_declared_inventory_28_fixtures"
+        "local_assembler_declared_inventory_28_fixtures",
+        "source_availability_report_b402c2a",
+        "source_availability_report_ed24b08"
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-14": {
@@ -17252,7 +19121,9 @@
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
           "local_campaign_metric_validity_view_00a67a3",
-          "local_campaign_cli_receipt_attribution_b402"
+          "local_campaign_cli_receipt_attribution_b402",
+          "local_research_model_phase_view_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -17265,7 +19136,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite. CI ed24 publiée ensuite : 1 505 tests et 13 sous-tests, deux skips, sur renderer 5cdb seulement. Nouvelle vue search+synthesis 23a60 : 278 tests ciblés et recette publique 774658, future CI séparée ; ce n’est pas une nouvelle suite CPU complète. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -17283,14 +19154,17 @@
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
           "local_observed_metrics_fix_dfd93d0",
-          "local_upstream_transport_prompt_v2_de38abb"
+          "local_upstream_transport_prompt_v2_de38abb",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
           "ci_de38abb_skipped_scope",
           "published_campaign_metrics_b402c2a",
-          "ci_b402c2a"
+          "ci_b402c2a",
+          "published_campaign_cli_receipts_ed24b08",
+          "ci_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -17317,13 +19191,22 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
-        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ],
       "offline_presentation_evidence": [
         "historical_observed_metrics_view_dfd93d0",
@@ -17335,12 +19218,24 @@
         "local_campaign_cli_receipt_attribution_b402",
         "terminal_campaign_cli_receipt_view_774659_offline",
         "terminal_campaign_cli_receipt_view_774659_preview",
-        "terminal_campaign_cli_receipt_view_774659_visual"
+        "terminal_campaign_cli_receipt_view_774659_visual",
+        "local_research_model_phase_view_ed24b08",
+        "research_model_phase_attribution_774658_historical",
+        "research_model_phase_view_774658_offline",
+        "research_model_phase_view_774658_preview",
+        "research_model_phase_view_774658_primary_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
-        "local_assembler_declared_inventory_28_fixtures"
+        "local_assembler_declared_inventory_28_fixtures",
+        "source_availability_report_b402c2a",
+        "source_availability_report_ed24b08"
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     },
     "SEC-17": {
@@ -18923,7 +20818,9 @@
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
-        "local_assembler_declared_inventory_28_fixtures"
+        "local_assembler_declared_inventory_28_fixtures",
+        "source_availability_report_b402c2a",
+        "source_availability_report_ed24b08"
       ]
     },
     "USER-LOCAL": {
@@ -19082,12 +20979,21 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ]
     },
     "USER-PROFILE": {
@@ -19227,12 +21133,21 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
-        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -19597,7 +21512,8 @@
         "applicable": true,
         "evidence": [
           "local_release",
-          "ci_45407a2"
+          "ci_45407a2",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_evaluation": 43,
@@ -19605,11 +21521,12 @@
           "test_gpu_autotuning_acceptance": 2,
           "test_gpu_contract_acceptance": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "current_release_evidence": [
           "local_protocol_runtime_release",
           "local_research_cache_final_suite_release",
-          "ci_dfd93d0"
+          "ci_dfd93d0",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -19627,7 +21544,12 @@
       "remaining": [
         "Mécanisme statique et chaîne modèle réelle acquis dans les contrôles et ablations cités. Le mode full multiconfiguration et une supériorité générale de la stratégie ne sont pas qualifiés. Aucun plafond global réintroduit."
       ],
-      "derived_from": "SEC-8"
+      "derived_from": "SEC-8",
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
+      ]
     },
     "EXEC-01": {
       "id": "EXEC-01",
@@ -19816,7 +21738,9 @@
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
           "local_campaign_metric_validity_view_00a67a3",
-          "local_campaign_cli_receipt_attribution_b402"
+          "local_campaign_cli_receipt_attribution_b402",
+          "local_research_model_phase_view_ed24b08",
+          "local_campaign_evaluation_history_durable148_ed24b08"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -19829,7 +21753,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite. CI ed24 publiée ensuite : 1 505 tests et 13 sous-tests, deux skips, sur renderer 5cdb seulement. Nouvelle vue search+synthesis 23a60 : 278 tests ciblés et recette publique 774658, future CI séparée ; ce n’est pas une nouvelle suite CPU complète. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -19847,14 +21771,17 @@
           "ci_dfd93d0",
           "local_report_per_case_v2_dfd93d0",
           "local_observed_metrics_fix_dfd93d0",
-          "local_upstream_transport_prompt_v2_de38abb"
+          "local_upstream_transport_prompt_v2_de38abb",
+          "local_runtime_history_provenance_phase_integration_ed24b08"
         ],
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
           "ci_de38abb_skipped_scope",
           "published_campaign_metrics_b402c2a",
-          "ci_b402c2a"
+          "ci_b402c2a",
+          "published_campaign_cli_receipts_ed24b08",
+          "ci_ed24b08"
         ]
       },
       "romeo_executed": {
@@ -19881,13 +21808,22 @@
           "native_convolution3141_774528_dfd_terminal",
           "study_v2_dfd_full_greedy_774525_774526",
           "study_v2_dfd_noauto_nopmpp_774556_774563",
-          "original_convolution3141_774657_00a_terminal"
+          "original_convolution3141_774657_00a_terminal",
+          "study_v2_no_research_774656_00a_terminal",
+          "study_v2_full_matmul1729_774659_00a_terminal",
+          "study_v2_permanent_only_774658_00a_terminal",
+          "study_v2_greedy_matmul1729_774706_00a_terminal",
+          "study_v2_no_research_774763_00a_terminal",
+          "study_v2_noauto_native_774721_774807_00a_terminals",
+          "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+          "study_v2_thirty_five_audited_minimum_00a"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
-        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
+        "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
+        "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
       ],
       "derived_from": "SEC-16",
       "offline_presentation_evidence": [
@@ -19900,12 +21836,24 @@
         "local_campaign_cli_receipt_attribution_b402",
         "terminal_campaign_cli_receipt_view_774659_offline",
         "terminal_campaign_cli_receipt_view_774659_preview",
-        "terminal_campaign_cli_receipt_view_774659_visual"
+        "terminal_campaign_cli_receipt_view_774659_visual",
+        "local_research_model_phase_view_ed24b08",
+        "research_model_phase_attribution_774658_historical",
+        "research_model_phase_view_774658_offline",
+        "research_model_phase_view_774658_preview",
+        "research_model_phase_view_774658_primary_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
-        "local_assembler_declared_inventory_28_fixtures"
+        "local_assembler_declared_inventory_28_fixtures",
+        "source_availability_report_b402c2a",
+        "source_availability_report_ed24b08"
+      ],
+      "prospective_evaluation_history_evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
       ]
     }
   },
@@ -20252,6 +22200,41 @@
         "published_campaign_metrics_b402c2a"
       ],
       "scope": "Compteur brut de méthode conservé et libellé corrigé ; huit identités CLI observées pour le cas public 774659, dont un timeout sans usage, sans modifier résultats ou ledger. Publication/CI b402 historiques séparées du nouveau source local. Le minimum global reste 27 générations et une finale au constat daté précédent ; aucune nouvelle qualification de campagne."
+    },
+    {
+      "observed_at_utc": "2026-10-22T00:49:17.713843+00:00",
+      "kind": "public_minimum35_and_post_ed24_report_backend_CPU_preparation",
+      "evidence": [
+        "study_v2_no_research_774656_00a_terminal",
+        "study_v2_full_matmul1729_774659_00a_terminal",
+        "study_v2_permanent_only_774658_00a_terminal",
+        "study_v2_greedy_matmul1729_774706_00a_terminal",
+        "study_v2_no_research_774763_00a_terminal",
+        "study_v2_noauto_native_774721_774807_00a_terminals",
+        "study_v2_no_pmpp_matmul1729_774747_00a_terminal",
+        "study_v2_thirty_five_audited_minimum_00a",
+        "local_research_model_phase_view_ed24b08",
+        "local_codex_prompt_launch_provenance_ed24b08"
+      ],
+      "scope": "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Lot CPU global et correctif autotuning/cache/historique encore en cours de validation primaire ; aucune qualification globale ou nouvelle CI anticipée."
+    },
+    {
+      "observed_at_utc": "2026-10-22T00:53:51.371793+00:00",
+      "kind": "canonical_evaluation_history_durable148_CPU_source_frozen",
+      "evidence": [
+        "local_campaign_evaluation_history_144_ed24b08",
+        "local_campaign_evaluation_history_durable148_ed24b08",
+        "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "scope": "Correction prospective CPU acquise : ancien cache lié au template remplacé par demande complète authentifiée, historique immuable par réparation et collector sans double compte des aliases. Nouveaux parents fsync avant travail ; source ca3d/911 et 148 tests figés. Suite locale globale primaire et CI après publication encore attendues à cette capture ; aucune ancienne mesure réécrite."
+    },
+    {
+      "observed_at_utc": "2026-10-22T00:56:43.516457+00:00",
+      "kind": "coherent_local_CPU_integration1565_plus13_before_publication",
+      "evidence": [
+        "local_runtime_history_provenance_phase_integration_ed24b08"
+      ],
+      "scope": "Sources des lots backend, rapport et historique canonique qualifiées par une suite locale cohérente. Stabilité des 157 fichiers explicitement bornée hors documentation ; aucun GPU/modèle/ROMEO ou CI post-publication acquis. Le minimum scientifique daté reste de 35 générations et une finale, sans budgets globaux réintroduits."
     }
   ]
 }

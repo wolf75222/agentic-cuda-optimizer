@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, is_dataclass
 from copy import deepcopy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -228,6 +229,7 @@ class CodexBackend:
             raise CodexError("Codex request timeout has expired")
         if max_web_search_calls is not None and (type(max_web_search_calls) is not int or max_web_search_calls < 1):
             raise ValueError("Search-call budget must be a positive integer")
+        prompt_bytes = prompt.encode("utf-8", errors="strict")
         with tempfile.TemporaryDirectory(prefix="cuda-codex-") as temporary:
             directory = Path(temporary)
             schema_path = directory / "schema.json"
@@ -242,12 +244,43 @@ class CodexBackend:
                        "-c", "features.shell_tool=false", "-c", "project_doc_max_bytes=0",
                        "--output-schema", str(schema_path),
                        "--output-last-message", str(output_path), "-"]
-            receipt = {"call_id": call_id, "purpose": purpose, "model": self.config.model,
-                       "reasoning_effort": self.config.reasoning_effort, "status": "running"}
+            receipt = {"receipt_schema_version": 2, "call_id": call_id, "purpose": purpose,
+                       "model": self.config.model, "reasoning_effort": self.config.reasoning_effort,
+                       "status": "prepared", "prompt_sha256": hashlib.sha256(prompt_bytes).hexdigest(),
+                       "prompt_utf8_bytes": len(prompt_bytes),
+                       "prompt_provenance_scope": "Exact UTF-8 input fingerprint; preparation alone does not attest stdin delivery, provider acceptance or model execution.",
+                       "cli_launch": {"state": "prepared", "prepared_at_unix": time.time(),
+                                      "invoking_pid": os.getpid(), "command_argv": list(command),
+                                      "cwd": str(Path(cwd or directory).resolve()),
+                                      "stdin_encoding": "utf-8", "stdin_errors": "strict",
+                                      "scope": "Local CLI launch observations; no HTTP, current process liveness or model-weight identity attested."}}
+            # Fail before Popen if the intent cannot be durably published.
+            try:
+                self._save_receipt(call_id, receipt)
+            except OSError as error:
+                raise CodexError("Cannot persist prepared Codex invocation: " + str(error)) from error
             try:
                 process = subprocess.Popen(command, cwd=str(cwd or directory), stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                           text=True, start_new_session=True)
+                                           text=True, encoding="utf-8", errors="strict", start_new_session=True)
+                receipt.update(status="running")
+                receipt["cli_launch"].update(state="started", started_at_unix=time.time())
+                if type(getattr(process, "pid", None)) is int and process.pid > 0:
+                    receipt["cli_launch"]["child_pid"] = process.pid
+                try:
+                    self._save_receipt(call_id, receipt)
+                except BaseException:
+                    # No prompt has been submitted. Reap only the child group
+                    # created above rather than leave an unlogged CLI alive.
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    stdout, stderr = process.communicate()
+                    receipt.update(returncode=process.returncode,
+                                   stdout=stdout[-self.config.max_output_bytes:], stderr=stderr[-4000:])
+                    receipt["cli_launch"]["reaped_after_receipt_publication_failure"] = True
+                    raise
                 try:
                     if max_web_search_calls is None:
                         stdout, stderr = process.communicate(prompt, timeout=timeout)
@@ -317,6 +350,8 @@ class CodexBackend:
                 self._save_receipt(call_id, receipt)
                 return result
             except (OSError, ValueError, CodexError) as error:
+                if receipt["cli_launch"]["state"] == "prepared":
+                    receipt["cli_launch"].update(state="launch_failed", launch_error=str(error))
                 if receipt["status"] not in ("timeout", "tool_budget_exhausted"):
                     receipt.update(status="failed", error=str(error), elapsed_seconds=time.monotonic() - started)
                     self._save_receipt(call_id, receipt)
@@ -406,9 +441,33 @@ class CodexBackend:
 
     def _save_receipt(self, call_id: str, receipt: dict) -> None:
         if self.config.trace_dir is not None:
-            directory = Path(self.config.trace_dir)
-            directory.mkdir(parents=True, exist_ok=True)
-            (directory / f"{call_id}.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+            directory = Path(self.config.trace_dir).absolute()
+            missing = []
+            ancestor = directory
+            while not ancestor.exists():
+                missing.append(ancestor)
+                ancestor = ancestor.parent
+            for created in reversed(missing):
+                created.mkdir(exist_ok=True)
+                self._fsync_directory(created.parent)
+            descriptor, temporary = tempfile.mkstemp(prefix=f".{call_id}.", suffix=".tmp", dir=directory)
+            try:
+                with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                    stream.write(json.dumps(receipt, indent=2))
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary, directory / f"{call_id}.json")
+                self._fsync_directory(directory)
+            finally:
+                Path(temporary).unlink(missing_ok=True)
+
+    @staticmethod
+    def _fsync_directory(directory: Path) -> None:
+        descriptor = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
 
 
 @dataclass
