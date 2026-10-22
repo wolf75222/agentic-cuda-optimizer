@@ -165,7 +165,115 @@ def study_campaign_table(summary):
              row.get("artifact_hash") or "absent"] for row in summary["rows"]]
     return table(["Famille", "Graine", "Méthode", "Statut méthode", "Défaillance méthode",
                   "Candidat de repli", "Statut final de l’artefact", "Origine du ratio", "Ratio final", "IC95%",
-                  "Tokens", "Appels CLI", "Durée génération (s)", "Artefact"], rows)
+                  "Tokens bruts méthode", "Compteur brut d’appels méthode", "Durée génération (s)", "Artefact"], rows)
+
+
+def campaign_call_observations(summary, consumption, study):
+    """Attribute the existing deduplicated inventory once; never reopen receipts."""
+    campaign_root = Path(study).resolve() / "campaigns"
+    rows, by_run = [], {}
+    for source in summary["rows"]:
+        run = source.get("run_id")
+        row = {"run_id": run, "mode": source.get("mode"), "ledger_model_calls": source.get("model_calls"),
+               "ledger_model_tokens": source.get("model_tokens"), "calls": [], "ambiguous_identities": []}
+        rows.append(row)
+        if isinstance(run, str) and run and run not in (".", "..") and "/" not in run:
+            if run in by_run:
+                raise ValueError("Duplicate campaign run_id in summary: " + run)
+            by_run[run] = row
+    inventory = consumption.get("call_provenance")
+    available = isinstance(inventory, list)
+    ambiguous, unattributed = [], []
+    def owner(origin, kind):
+        raw = origin.get("path")
+        if not isinstance(raw, str) or not Path(raw).is_absolute() or str(Path(raw)) != raw or ".." in raw.split("/"):
+            return None
+        try:
+            parts = Path(raw).relative_to(campaign_root).parts
+        except ValueError:
+            return None
+        if len(parts) < 2 or not _hash(origin.get("sha256")):
+            return None
+        suffix = "/".join(parts[1:])
+        prefix = r"(?:attempts/[0-9]+/)?generation/"
+        layout = (r"(?:model/[0-9a-f]{32}\.json|model-transport/intents/[^/]+/[0-9]+/cli/[0-9a-f]{32}\.json)"
+                  if kind == "structured" else r"evidence/receipt\.json" if kind == "native" else r"(?!)")
+        return parts[0] if re.fullmatch(prefix + layout, suffix) else None
+    for call in inventory if available else []:
+        call = _mapping(call)
+        raw_origins = call.get("receipts")
+        origins = [origin for origin in raw_origins if isinstance(origin, dict)] if isinstance(raw_origins, list) else []
+        canonical, other_origins = [], []
+        for origin in origins:
+            run = owner(origin, call.get("kind"))
+            (canonical if run is not None else other_origins).append({**origin, "run_id": run} if run is not None else origin)
+        owners = sorted({origin["run_id"] for origin in canonical})
+        categories = set()
+        for origin in origins:
+            status, code = origin.get("status"), origin.get("returncode")
+            failed = status in ("failed", "timeout", "cancelled", "canceled") or (type(code) is int and code != 0)
+            categories.add("mixed" if status == "completed" and failed else "failed" if failed else
+                           "completed" if status == "completed" else "incomplete" if status in ("pending", "running", "started", "interrupted") else "unknown")
+        category = next(iter(categories)) if len(categories) == 1 else "mixed" if categories else "unknown"
+        entry = {"identity": call.get("identity"), "aliases": call.get("aliases", []), "kind": call.get("kind"),
+                 "canonical_campaigns": owners, "canonical_receipts": canonical,
+                 "other_receipt_origins": other_origins,
+                 "statuses_observed": sorted({str(origin.get("status")) for origin in origins}),
+                 "status_category": category, "usage_reporting": call.get("usage_reporting"),
+                 "observed_usage": _mapping(call.get("observed_usage")),
+                 "missing_usage_fields": call.get("missing_usage_fields", [])}
+        if len(owners) > 1:
+            ambiguous.append(entry)
+            for run in owners:
+                if run in by_run:
+                    by_run[run]["ambiguous_identities"].append(entry["identity"])
+        elif len(owners) == 1 and owners[0] in by_run:
+            by_run[owners[0]]["calls"].append(entry)
+        else:
+            unattributed.append(entry)
+    for row in rows:
+        calls = row["calls"]
+        row["observed_unique_cli_receipts"] = len(calls) if available else None
+        row["status_counts"] = {status: sum(call["status_category"] == status for call in calls)
+                                for status in ("completed", "failed", "incomplete", "mixed", "unknown")}
+        row["usage_reporting_counts"] = {status: sum(call["usage_reporting"] == status for call in calls)
+                                         for status in ("complete", "partial", "unreported")}
+        row["usage_incomplete_calls"] = sum(call["usage_reporting"] != "complete" for call in calls) if available else None
+        row["provider_usage_complete_for_observed_calls"] = all(call["usage_reporting"] == "complete" for call in calls) if calls else None
+        known = {}
+        for key in ("input_tokens", "cached_input_tokens", "output_tokens"):
+            values = [call["observed_usage"][key] for call in calls if type(call["observed_usage"].get(key)) is int and call["observed_usage"][key] >= 0]
+            known[key] = sum(values) if values else None
+        known["model_tokens"] = sum(known[key] or 0 for key in ("input_tokens", "output_tokens")) if any(
+            known[key] is not None for key in ("input_tokens", "output_tokens")) else None
+        row["known_usage_lower_bounds"] = known
+        row["calls_without_reported_cached_usage"] = sum("cached_input_tokens" not in call["observed_usage"] for call in calls) if available else None
+        row["attribution_status"] = ("inventory_unavailable" if not available else "attributed_with_ambiguous_exclusions" if row["ambiguous_identities"] else
+                                     "attributed" if calls else "no_retained_canonical_receipt")
+    return {"campaigns": rows, "ambiguous_shared_identities": ambiguous, "unattributed_identities": unattributed,
+            "inventory_available": available, "canonical_campaign_root": str(campaign_root),
+            "scope": "Unique groups from the already-deduplicated retained inventory, attributed only by absolute canonical campaign receipt layouts, including attempts. Shared campaign identities are excluded from every campaign count. Outside archive copies do not establish ownership. No HTTP-cycle or exact launched-process count; missing receipts/usage do not establish zero cost."}
+
+
+def campaign_call_panel(observations):
+    rows = []
+    for row in observations["campaigns"]:
+        statuses, usage = row["status_counts"], row["usage_reporting_counts"]
+        rows.append([str(row["run_id"]) + " · " + str(LABELS.get(row["mode"], row["mode"])),
+            fmt(row["ledger_model_calls"], 9), fmt(row["observed_unique_cli_receipts"], 9),
+            " / ".join(str(statuses[key]) for key in ("completed", "failed", "incomplete", "mixed", "unknown")) if observations["inventory_available"] else "inconnu",
+            " / ".join(str(usage[key]) for key in ("complete", "partial", "unreported")) if observations["inventory_available"] else "inconnu",
+            fmt(row["known_usage_lower_bounds"]["model_tokens"], 9), len(row["ambiguous_identities"]), row["attribution_status"]])
+    return ("<details><summary>Reçus CLI attribués aux campagnes</summary>" + table(
+        ["Campagne", "Compteur brut méthode", "Reçus uniques / tentatives documentées", "Statuts terminé / échec / incomplet / mixte / inconnu",
+         "Usage entrée-sortie complet / partiel / absent", "Tokens connus : borne inférieure", "Identités ambiguës exclues", "Attribution"], rows) +
+        "<p>Le compteur brut de la méthode peut ne compter que les appels achevés ; il n’est pas remplacé par le nombre de reçus. "
+        "Les reçus sont regroupés une seule fois par identité, y compris leurs copies et aliases. Une identité présente sous plusieurs campagnes reste ambiguë, sans double comptage. "
+        "Les statuts mixtes conservent les snapshots divergents ; les catégories ne se chevauchent pas. L’usage complet concerne les entrées/sorties déclarées des seuls groupes observés, pas un inventaire exhaustif ni le cache toujours connu. "
+        "Le JSON conserve chemins, empreintes, statuts et champs d’usage manquants. Les tokens connus sont une borne inférieure ; cache et raisonnement ne sont pas ajoutés une seconde fois. "
+        "Zéro reçu observé ne prouve ni zéro appel exécuté ni zéro coût. Aucun nombre de cycles HTTP ou de processus lancés sans PID attesté n’est déduit. "
+        + str(len(observations["ambiguous_shared_identities"])) + " identités ambiguës et " + str(len(observations["unattributed_identities"])) +
+        " identités extérieures/non attribuables restent visibles dans le JSON ; leurs coûts ne sont pas répartis entre campagnes.</p></details>")
 
 
 def campaign_metric_views(summary):
@@ -245,7 +353,7 @@ def campaign_metrics_panel(views):
         status = search["status"]
         label = (statuses.get(status, "statut non traduit") + " (" + status + ")"
                  if isinstance(status, str) and status else "inconnu")
-        milestones = table(["Jalon", "Statut enregistré", "Délai (s)", "Tokens au jalon", "Invocations CLI au jalon"], [
+        milestones = table(["Jalon", "Statut enregistré", "Délai (s)", "Tokens bruts au jalon", "Compteur méthode au jalon"], [
             ["Premier gain utile SEARCH", label, number(search["seconds"]), number(search["model_tokens"]), number(search["model_calls"])],
             ["Gain FINAL indépendant", final["status"] or "inconnu", number(final["seconds"]), "non enregistrés", "non enregistrées"]])
         costs = table(["Coût enregistré", "Valeur", "Unité", "Périmètre"],
@@ -1517,6 +1625,7 @@ def main():
     report["control_receipts"] = control_receipts(REPO)
     report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"))
     report["campaign_metric_views"] = campaign_metric_views(summary)
+    report["campaign_call_observations"] = campaign_call_observations(summary, report["project_observed_consumption"], args.study)
     receipts = [[value["label"], value["status"], value["ok"] if value["ok"] is not None else "voir périmètre",
                  value["job_id"] or "sans nouveau job", value["terminal"].get("state", "sans objet / en attente"),
                  value["source_head"] or "non enregistré", value["path"] or "aucun reçu acquis",
@@ -1524,7 +1633,7 @@ def main():
     links = " · ".join(f"<a href='{escape(p.name)}'>{escape(p.name)}</a>" for p in sorted(output.glob("*.zip")))
     ci_html = (f"<a href='{escape(ci.get('url',''))}'>CI du SHA publié</a> : " + ("réussie sur les sources propres de ce SHA" if ci_ok else "ne qualifie pas ce checkout source"))
     consumed = report["project_observed_consumption"]
-    consumption_html = table(["Périmètre", "Reçus appelsCLI", "Entrée observée", "Dont cache", "Sortie observée", "Appels à usage inconnu"],
+    consumption_html = table(["Périmètre", "Reçus CLI uniques (identités)", "Entrée observée", "Dont cache", "Sortie observée", "Appels à usage inconnu"],
         [["Tout le projet retenu, pilotes et diagnostics inclus", consumed["cli_call_receipts"], consumed["input_tokens"],
           consumed["cached_input_tokens"], consumed["output_tokens"], consumed["unreported_call_usage"]]])
     consumption_html += table(["Périmètre GPU", "Secondes GPU allouées observées", "Jobs terminaux authentifiés", "Jobs sans durée terminale connue"],
@@ -1577,6 +1686,7 @@ Les traces conservent séparément les tokens mis en cache. Aucun coût en dolla
 Le temps d'allocation inclut l'attente des modèles, les échanges SSH et les outils ; les CUDA Events ne mesurent que le kernel.
 Les coûts absents sont inconnus. Les vues suivantes présentent les jalons, la compilation, le cache, la recherche et les coûts méthode/observateur enregistrés, sans recalculer les métriques historiques.</p>
 <details><summary>Résultats des {planned_generations} campagnes, y compris les pertes et échecs</summary>{study_campaign_table(summary)}</details>
+{campaign_call_panel(report['campaign_call_observations'])}
 {campaign_metrics_panel(report['campaign_metric_views'])}
 <h2>Contrôles réellement exécutés et limites</h2>{table(['Contrôle','Statut','Résultat','Job','Terminal','HEAD des sources exécutées','Reçu','Périmètre et limites'], receipts)}
 <p>Sur le pilote GH200, Nsight Compute a signalé <code>ERR_NVGPUCTRPERM</code>. Ce Mac ne fournit pas de GPU CUDA pour le repli local.

@@ -13,7 +13,7 @@ from scripts.report_study_fr import (project_consumption, frozen_pilot_summary,
 from scripts.report_study_fr import checkout_source_identity, ci_qualifies_checkout, control_receipts
 from scripts.report_study_fr import gpu_lease_consumption
 from scripts.report_study_fr import (study_aggregate_table, study_campaign_table, case_comparison_table,
-    campaign_metric_views, campaign_metrics_panel)
+    campaign_metric_views, campaign_metrics_panel, campaign_call_observations, campaign_call_panel)
 from scripts.report_study_fr import DIAGNOSTIC_V2_AUDIT, POLICY_AUTHORITY, PARENT_OBSERVATION
 from scripts.report_study_fr import (ORIGINAL_EXECUTION, COMMON_FINAL_FREEZE, RESEARCH_REFRESH,
     UPSTREAM_COMMIT, REFRESH_CHECKS, FREEZE_METHOD_CHECKS, LABELS, execution_evidence_panel)
@@ -1648,9 +1648,13 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
         return {"summary": deepcopy(summary), "method_outcome_policy": "Fixture method policy", "final_groups": {}}
     monkeypatch.setattr(orchestrator, "SuiteOrchestrator", FixtureSuite)
     monkeypatch.setattr(suite_report, "write_report", fixture_report)
-    monkeypatch.setattr(renderer, "project_consumption", lambda _: {"cli_call_receipts": 0, "input_tokens": 0,
-        "cached_input_tokens": 0, "output_tokens": 0, "unreported_call_usage": 0,
-        "observed_terminal_allocated_gpu_seconds": None, "observed_terminal_job_count": 0, "nonterminal_or_unreported_jobIDs": []})
+    inventory_calls = []
+    def fixture_consumption(_):
+        inventory_calls.append(True)
+        return {"cli_call_receipts": 0, "input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0,
+            "unreported_call_usage": 0, "call_provenance": [], "observed_terminal_allocated_gpu_seconds": None,
+            "observed_terminal_job_count": 0, "nonterminal_or_unreported_jobIDs": []}
+    monkeypatch.setattr(renderer, "project_consumption", fixture_consumption)
     monkeypatch.setattr(renderer, "plot", lambda *_: None)
     pilot = {"receipt_verified": False, "validation_errors": ["Fixture only, no qualification"]}
     monkeypatch.setattr(renderer, "frozen_pilot_summary", lambda _: pilot)
@@ -1672,6 +1676,8 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
     assert report["campaign_metric_views"][0]["first_useful_search_gain"]["seconds"] == 3.125
     assert report["campaign_metric_views"][0]["raw_unknown_metrics"] == ["research_seconds"]
     assert report["independent_frozen_gemm_pilot"] == pilot
+    assert inventory_calls == [True]
+    assert report["campaign_call_observations"]["inventory_available"] is True
 
 
 @pytest.mark.parametrize("mode", ["full", "true_upstream", "native_codex_vanilla"])
@@ -1713,3 +1719,129 @@ def test_recorded_validity_view_distinguishes_missing_null_and_explicit_zero(pre
     assert "<td>Part correcte enregistrée</td><td>" + expected + "</td><td>fraction de 0 à 1</td>" in html
     assert "Fondement de validation enregistré : non enregistré" in html
     assert "Usage complet indiqué au dernier callback méthode de l’observateur : inconnu" in html
+
+
+def call_inventory_fixture(study, run="campaign-a", *, identity="a"*32, status="completed", usage=None,
+                           kind="structured", suffix=None):
+    suffix = suffix or ("generation/evidence/receipt.json" if kind == "native" else "generation/model/"+identity+".json")
+    return {"identity": ("native-thread:" if kind == "native" else "structured:")+identity,
+        "aliases": [("native-thread:" if kind == "native" else "structured:")+identity], "kind": kind,
+        "receipts": [{"path": str(study/"campaigns"/run/suffix), "sha256": "c"*64,
+                      "status": status, "returncode": 0 if status == "completed" else None}],
+        "usage_reporting": "complete" if usage and all(key in usage for key in ("input_tokens","output_tokens")) and status == "completed" else "partial" if usage else "unreported",
+        "observed_usage": usage or {},
+        "missing_usage_fields": [key for key in ("input_tokens", "cached_input_tokens", "output_tokens") if key not in (usage or {})]}
+
+
+def test_campaign_receipts_distinguish_seven_completed_ledger_calls_from_eight_attempts(tmp_path, monkeypatch):
+    study = tmp_path/"study"
+    calls = [call_inventory_fixture(study, identity=format(i+1,"032x"), usage={"input_tokens":100,"output_tokens":20}) for i in range(7)]
+    calls.append(call_inventory_fixture(study, identity="f"*32, status="timeout"))
+    summary = metric_summary(model_calls=7, model_tokens=840, run_id="campaign-a")
+    inventory = {"call_provenance": calls, "model_tokens": 840}
+    original = deepcopy((summary, inventory))
+    monkeypatch.setattr(Path, "rglob", lambda *_: pytest.fail("campaign view rescanned receipts"))
+    view = campaign_call_observations(summary, inventory, study)
+    row = view["campaigns"][0]
+    assert row["ledger_model_calls"] == 7 and row["observed_unique_cli_receipts"] == 8
+    assert row["status_counts"] == {"completed":7,"failed":1,"incomplete":0,"mixed":0,"unknown":0}
+    assert row["usage_reporting_counts"] == {"complete":7,"partial":0,"unreported":1}
+    assert row["usage_incomplete_calls"] == 1 and row["provider_usage_complete_for_observed_calls"] is False
+    assert row["known_usage_lower_bounds"]["model_tokens"] == 840
+    html = campaign_call_panel(view)
+    assert "<td>7</td><td>8</td>" in html and "7 / 1 / 0 / 0 / 0" in html
+    assert "borne inférieure" in html and "zéro coût" in html
+    assert "Compteur brut d’appels méthode" in study_campaign_table(method_outcome_summary())
+    assert (summary, inventory) == original
+
+
+@pytest.mark.parametrize("kind", ["structured", "native", "original"])
+def test_campaign_receipts_reuse_global_alias_dedup_for_copies_and_attempts(tmp_path, kind):
+    results = tmp_path/"results";study=results/"study";run=study/"campaigns/campaign-a"
+    suffix = ("evidence/receipt.json" if kind == "native" else
+              "model-transport/intents/"+"b"*64+"/0/cli/"+"a"*32+".json" if kind == "original" else "model/"+"a"*32+".json")
+    value = {"status":"completed","usage":{"input_tokens":100,"cached_input_tokens":80,"output_tokens":20}}
+    value.update({"model_started":True,"thread_ids":["native-thread"]} if kind == "native" else {"call_id":"a"*32})
+    for directory in [run/"generation",run/"attempts/001/generation",results/"copy-outside/generation"]:save(directory/suffix,value)
+    # Transport receipts and acknowledgements cannot manufacture an extra attempt.
+    save(run/"generation/model-transport/calls.json",[value])
+    save(run/"generation/model-transport/intents/key/0/result.json",value)
+    consumption = project_consumption(results)
+    assert consumption["cli_call_receipts"] == 1
+    row = campaign_call_observations(metric_summary(run_id="campaign-a"),consumption,study)["campaigns"][0]
+    assert row["observed_unique_cli_receipts"] == 1 and row["known_usage_lower_bounds"]["model_tokens"] == 120
+    assert len(row["calls"][0]["canonical_receipts"]) == 2 and len(row["calls"][0]["other_receipt_origins"]) == 1
+
+
+@pytest.mark.parametrize("other_known", [True,False])
+def test_shared_identity_is_ambiguous_even_when_other_campaign_is_not_in_summary(tmp_path, other_known):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    call["receipts"]+=call_inventory_fixture(study,"campaign-b",usage={"input_tokens":100,"output_tokens":20})["receipts"]
+    summary=metric_summary(run_id="campaign-a")
+    if other_known:summary["rows"]+=metric_summary(run_id="campaign-b")["rows"]
+    view=campaign_call_observations(summary,{"call_provenance":[call]},study)
+    assert len(view["ambiguous_shared_identities"])==1 and not view["unattributed_identities"]
+    for row in view["campaigns"]:
+        assert row["observed_unique_cli_receipts"]==0 and row["known_usage_lower_bounds"]["model_tokens"] is None
+        assert row["ambiguous_identities"]==[call["identity"]] and row["attribution_status"]=="attributed_with_ambiguous_exclusions"
+
+
+@pytest.mark.parametrize("layout", ["outside","substring","ack","relative","traversal"])
+def test_campaign_attribution_requires_exact_canonical_root_run_and_cli_layout(tmp_path, layout):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    receipt=call["receipts"][0]
+    if layout=="outside":receipt["path"]=str(tmp_path/"archive/study/campaigns/campaign-a/generation/model"/("a"*32+".json"))
+    elif layout=="substring":receipt["path"]=str(study/"campaigns/campaign-a-extra/generation/model"/("a"*32+".json"))
+    elif layout=="ack":receipt["path"]=str(study/"campaigns/campaign-a/generation/model-transport/intents/key/0/result.json")
+    elif layout=="relative":receipt["path"]="campaigns/campaign-a/generation/model/"+"a"*32+".json"
+    else:receipt["path"]=str(study/"campaigns/campaign-a/../campaign-a/generation/model"/("a"*32+".json"))
+    view=campaign_call_observations(metric_summary(run_id="campaign-a"),{"call_provenance":[call]},study)
+    assert view["campaigns"][0]["observed_unique_cli_receipts"]==0 and len(view["unattributed_identities"])==1
+    assert view["campaigns"][0]["known_usage_lower_bounds"]["model_tokens"] is None
+
+
+@pytest.mark.parametrize("usage", [None,{}, {"input_tokens":0,"output_tokens":0}])
+def test_campaign_unknown_usage_is_not_a_zero_cost_or_total(tmp_path, usage):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage=usage)
+    view=campaign_call_observations(metric_summary(run_id="campaign-a"),{"call_provenance":[call]},study)
+    row=view["campaigns"][0]
+    assert row["observed_unique_cli_receipts"]==1
+    assert row["known_usage_lower_bounds"]["model_tokens"]==(0 if usage else None)
+    assert row["provider_usage_complete_for_observed_calls"] is bool(usage)
+    assert row["calls_without_reported_cached_usage"]==1
+
+
+@pytest.mark.parametrize("consumption", [{},{"call_provenance":[]}])
+def test_absent_campaign_receipts_do_not_establish_zero_usage(tmp_path, consumption):
+    row=campaign_call_observations(metric_summary(run_id="campaign-a"),consumption,tmp_path/"study")["campaigns"][0]
+    assert row["observed_unique_cli_receipts"]==(0 if "call_provenance" in consumption else None)
+    assert row["known_usage_lower_bounds"]==dict.fromkeys(["input_tokens","cached_input_tokens","output_tokens","model_tokens"])
+    assert row["provider_usage_complete_for_observed_calls"] is None
+
+
+def test_mixed_snapshots_and_partial_usage_have_disjoint_status_categories(tmp_path):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage={"input_tokens":100})
+    call["usage_reporting"]="partial"
+    call["receipts"].append({**call["receipts"][0],"status":"running","returncode":None})
+    view=campaign_call_observations(metric_summary(run_id="campaign-a"),{"call_provenance":[call]},study)
+    row=view["campaigns"][0]
+    assert row["status_counts"]=={"completed":0,"failed":0,"incomplete":0,"mixed":1,"unknown":0}
+    assert row["calls"][0]["statuses_observed"]==["completed","running"]
+    assert row["usage_reporting_counts"]=={"complete":0,"partial":1,"unreported":0}
+    assert row["known_usage_lower_bounds"]["model_tokens"]==100 and row["known_usage_lower_bounds"]["output_tokens"] is None
+
+
+def test_completed_receipt_stderr_does_not_by_itself_mean_failed_call(tmp_path):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    call["receipts"][0]["has_error"]=True
+    row=campaign_call_observations(metric_summary(run_id="campaign-a"),{"call_provenance":[call]},study)["campaigns"][0]
+    assert row["status_counts"]["completed"]==1 and row["status_counts"]["failed"]==0
+
+
+def test_origin_metadata_cannot_override_campaign_derived_from_exact_path(tmp_path):
+    study=tmp_path/"study";call=call_inventory_fixture(study,usage={"input_tokens":100,"output_tokens":20})
+    call["receipts"][0]["run_id"]="forged-other-campaign"
+    view=campaign_call_observations(metric_summary(run_id="campaign-a"),{"call_provenance":[call]},study)
+    assert view["campaigns"][0]["observed_unique_cli_receipts"]==1
+    assert view["campaigns"][0]["calls"][0]["canonical_receipts"][0]["run_id"]=="campaign-a"
+    assert call["receipts"][0]["run_id"]=="forged-other-campaign"

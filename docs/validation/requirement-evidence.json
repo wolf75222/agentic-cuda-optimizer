@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-21T23:50:21.603884+00:00",
+  "generated_at_utc": "2026-10-22T00:23:42.671508+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -167,6 +167,23 @@
       "focused_test_evidence": "local_campaign_metric_validity_view_00a67a3",
       "post_test_editorial_evidence": "campaign_metric_validity_editorial_post230",
       "scope": "Dernier état après deux changements éditoriaux autorisés ; aucun nouveau lot local, prochain SHA CI à vérifier. Nombre de générations toujours au minimum daté de 27, une finale."
+    },
+    "latest_published_campaign_metric_release_observation": {
+      "HEAD": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "source_report_sha256": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
+      "evidence": [
+        "published_campaign_metrics_b402c2a",
+        "ci_b402c2a"
+      ],
+      "scope": "Publication et CI de b402c2a observées séparément ; elles ne qualifient pas le renderer modifié après ce commit."
+    },
+    "latest_renderer_snapshot_observation_v5": {
+      "HEAD_before_publication": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "source_evidence": "source_current:scripts/report_study_fr.py",
+      "focused_test_evidence": "local_campaign_cli_receipt_attribution_b402",
+      "offline_recipe_evidence": "terminal_campaign_cli_receipt_view_774659_offline",
+      "visual_evidence": "terminal_campaign_cli_receipt_view_774659_visual",
+      "scope": "249 tests ciblés, recette de présentation publique 774659 et aperçu inspecté ; compteur brut 7 et huit identités CLI distingués. Pas de nouvelle suite complète, de CI du futur SHA ni de mise à jour du minimum global daté 27/1."
     }
   },
   "policy": {
@@ -255,7 +272,7 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 187,
+    "evidence_entries": 193,
     "latest_local_junit_entries": 1453,
     "latest_local_testcase_nodes": 1440,
     "study_v2_completed_generation_receipts": 27,
@@ -263,12 +280,12 @@
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
     "latest_local_subtests": 13,
-    "latest_ci_tests_passed": 1457,
+    "latest_ci_tests_passed": 1486,
     "latest_ci_subtests_passed": 13,
     "latest_ci_tests_skipped": 2,
     "study_v2_generation_observation_at_utc": "2026-10-21T23:38:52.667936+00:00",
-    "latest_focused_report_tests_passed": 230,
-    "latest_ci_test_count_evidence": "ci_de38abb",
+    "latest_focused_report_tests_passed": 249,
+    "latest_ci_test_count_evidence": "published_campaign_metrics_b402c2a",
     "study_v2_generation_count_scope": "Lower bound of authenticated terminal receipts; not an exhaustive live scheduler/controller inventory."
   },
   "evidence_catalog": {
@@ -8521,12 +8538,8 @@
     "source_current:scripts/report_study_fr.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "scripts/report_study_fr.py",
-      "sha256": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
-      "bytes": 130070,
-      "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T23:50:21.603884+00:00",
-      "scope": "Source après deux seuls changements éditoriaux sur le périmètre des compteurs. Logique, schéma numérique et AST hors ces deux chaînes identiques au source 5cb7304a testé par 230 cas. Les sources/tests/reçus à 223 et 230 tests sont conservés exactement ; aucun test local de d1d97584 ni CI du futur SHA inféré.",
+      "sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+      "bytes": 138950,
       "definitions": [
         {
           "name": "load",
@@ -8561,126 +8574,138 @@
           "line": 156
         },
         {
-          "name": "campaign_metric_views",
+          "name": "campaign_call_observations",
           "line": 171
         },
         {
+          "name": "campaign_call_panel",
+          "line": 258
+        },
+        {
+          "name": "campaign_metric_views",
+          "line": 279
+        },
+        {
           "name": "campaign_metrics_panel",
-          "line": 236
+          "line": 344
         },
         {
           "name": "case_comparison_table",
-          "line": 282
+          "line": 390
         },
         {
           "name": "audit_table",
-          "line": 328
+          "line": 436
         },
         {
           "name": "checkout_source_identity",
-          "line": 335
+          "line": 443
         },
         {
           "name": "ci_qualifies_checkout",
-          "line": 359
+          "line": 467
         },
         {
           "name": "_mapping",
-          "line": 364
+          "line": 472
         },
         {
           "name": "_records",
-          "line": 368
+          "line": 476
         },
         {
           "name": "_hash",
-          "line": 372
+          "line": 480
         },
         {
           "name": "_linked_receipt_verified",
-          "line": 376
+          "line": 484
         },
         {
           "name": "_verified_json",
-          "line": 399
+          "line": 507
         },
         {
           "name": "_required_checks",
-          "line": 410
+          "line": 518
         },
         {
           "name": "_original_execution_control",
-          "line": 415
+          "line": 523
         },
         {
           "name": "_common_freeze_control",
-          "line": 489
+          "line": 597
         },
         {
           "name": "_standalone_final_control",
-          "line": 550
+          "line": 658
         },
         {
           "name": "_accepted_eleven_source_checks",
-          "line": 569
+          "line": 677
         },
         {
           "name": "_research_refresh_control",
-          "line": 684
+          "line": 792
         },
         {
           "name": "_diagnostic_v2_control",
-          "line": 928
+          "line": 1036
         },
         {
           "name": "control_receipts",
-          "line": 974
+          "line": 1082
         },
         {
           "name": "execution_evidence_panel",
-          "line": 1038
+          "line": 1146
         },
         {
           "name": "_receipt_snapshot",
-          "line": 1099
+          "line": 1207
         },
         {
           "name": "_reported_tokens",
-          "line": 1104
+          "line": 1212
         },
         {
           "name": "_elapsed_seconds",
-          "line": 1125
+          "line": 1233
         },
         {
           "name": "gpu_lease_consumption",
-          "line": 1143
+          "line": 1251
         },
         {
           "name": "project_consumption",
-          "line": 1197
+          "line": 1305
         },
         {
           "name": "frozen_pilot_summary",
-          "line": 1289
+          "line": 1397
         },
         {
           "name": "plot_frozen_pilot",
-          "line": 1362
+          "line": 1470
         },
         {
           "name": "frozen_pilot_panel",
-          "line": 1418
+          "line": 1526
         },
         {
           "name": "plot",
-          "line": 1451
+          "line": 1559
         },
         {
           "name": "main",
-          "line": 1485
+          "line": 1593
         }
       ],
+      "HEAD_before_publication": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T00:23:42.671508+00:00",
+      "scope": "Vue additive des reçus CLI par campagne depuis le seul inventaire call_provenance déjà produit. 249 tests locaux, recette publique 774659 sans mutation et inspection visuelle séparées ; aucune CI des nouveaux octets ni nouvelle performance ROMEO déduite. Compteurs méthode et métriques raw conservés ; snapshot historique d1d97584 publié au b402c2a et autres captures préservés.",
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -9344,9 +9369,181 @@
             "sha256": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
             "bytes": 115770
           }
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "scripts/report_study_fr.py",
+          "sha256": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
+          "bytes": 130070,
+          "HEAD_before_publication": "00a67a36be6252194b890cff781db7ee2d65c5c3",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T23:50:21.603884+00:00",
+          "scope": "Source après deux seuls changements éditoriaux sur le périmètre des compteurs. Logique, schéma numérique et AST hors ces deux chaînes identiques au source 5cb7304a testé par 230 cas. Les sources/tests/reçus à 223 et 230 tests sont conservés exactement ; aucun test local de d1d97584 ni CI du futur SHA inféré.",
+          "definitions": [
+            {
+              "name": "load",
+              "line": 87
+            },
+            {
+              "name": "fmt",
+              "line": 91
+            },
+            {
+              "name": "comparison_view",
+              "line": 95
+            },
+            {
+              "name": "direct_comparison_views",
+              "line": 114
+            },
+            {
+              "name": "direct_comparison_table",
+              "line": 120
+            },
+            {
+              "name": "table",
+              "line": 138
+            },
+            {
+              "name": "study_aggregate_table",
+              "line": 143
+            },
+            {
+              "name": "study_campaign_table",
+              "line": 156
+            },
+            {
+              "name": "campaign_metric_views",
+              "line": 171
+            },
+            {
+              "name": "campaign_metrics_panel",
+              "line": 236
+            },
+            {
+              "name": "case_comparison_table",
+              "line": 282
+            },
+            {
+              "name": "audit_table",
+              "line": 328
+            },
+            {
+              "name": "checkout_source_identity",
+              "line": 335
+            },
+            {
+              "name": "ci_qualifies_checkout",
+              "line": 359
+            },
+            {
+              "name": "_mapping",
+              "line": 364
+            },
+            {
+              "name": "_records",
+              "line": 368
+            },
+            {
+              "name": "_hash",
+              "line": 372
+            },
+            {
+              "name": "_linked_receipt_verified",
+              "line": 376
+            },
+            {
+              "name": "_verified_json",
+              "line": 399
+            },
+            {
+              "name": "_required_checks",
+              "line": 410
+            },
+            {
+              "name": "_original_execution_control",
+              "line": 415
+            },
+            {
+              "name": "_common_freeze_control",
+              "line": 489
+            },
+            {
+              "name": "_standalone_final_control",
+              "line": 550
+            },
+            {
+              "name": "_accepted_eleven_source_checks",
+              "line": 569
+            },
+            {
+              "name": "_research_refresh_control",
+              "line": 684
+            },
+            {
+              "name": "_diagnostic_v2_control",
+              "line": 928
+            },
+            {
+              "name": "control_receipts",
+              "line": 974
+            },
+            {
+              "name": "execution_evidence_panel",
+              "line": 1038
+            },
+            {
+              "name": "_receipt_snapshot",
+              "line": 1099
+            },
+            {
+              "name": "_reported_tokens",
+              "line": 1104
+            },
+            {
+              "name": "_elapsed_seconds",
+              "line": 1125
+            },
+            {
+              "name": "gpu_lease_consumption",
+              "line": 1143
+            },
+            {
+              "name": "project_consumption",
+              "line": 1197
+            },
+            {
+              "name": "frozen_pilot_summary",
+              "line": 1289
+            },
+            {
+              "name": "plot_frozen_pilot",
+              "line": 1362
+            },
+            {
+              "name": "frozen_pilot_panel",
+              "line": 1418
+            },
+            {
+              "name": "plot",
+              "line": 1451
+            },
+            {
+              "name": "main",
+              "line": 1485
+            }
+          ],
+          "post_test_editorial_evidence": "campaign_metric_validity_editorial_post230",
+          "published_commit": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+          "published_release_evidence": [
+            "published_campaign_metrics_b402c2a",
+            "ci_b402c2a"
+          ]
         }
       ],
-      "post_test_editorial_evidence": "campaign_metric_validity_editorial_post230"
+      "focused_test_evidence": "local_campaign_cli_receipt_attribution_b402",
+      "offline_recipe_evidence": "terminal_campaign_cli_receipt_view_774659_offline",
+      "visual_evidence": "terminal_campaign_cli_receipt_view_774659_visual"
     },
     "source_current:scripts/gpu_final_suite_acceptance.py": {
       "kind": "current_implementation_source_snapshot",
@@ -13202,6 +13399,622 @@
         "sha256": "eb77f386cf3c9694d2b6adf270acf91aa723a0b6c15907b58c14518c8dedbad2"
       },
       "scope": "Aperçu visuel par le primaire de l’ancienne campagne GEMM 3141 sur source 5cb7304a, antérieur aux deux changements éditoriaux d1d97584. Résultat brut inchangé, aucune étude active rendue ou nouvelle performance mesurée. Un candidat correct enregistré et des compteurs de configurations nuls reflètent des périmètres d’instrumentation distincts, pas une correction des nombres."
+    },
+    "local_campaign_cli_receipt_attribution_b402": {
+      "path": "work/live/campaign-cli-receipt-attribution-b402-local.json",
+      "sha256": "a1d3c3784cf374ba7668e19d24fa1594a82662247a68a799046f46ad373d7158",
+      "bytes": 4131,
+      "kind": "focused_local_per_campaign_deduplicated_CLI_receipt_presentation",
+      "git_base": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "tests_passed": 249,
+      "new_regression_cases": 19,
+      "junit": {
+        "path": "work/live/campaign-cli-receipt-attribution-b402-local.xml",
+        "sha256": "ae3e0a1fae5535b36b436349172b5cbd61660151a0164d8797de4c99c555f269",
+        "bytes": 40555
+      },
+      "log": {
+        "path": "work/live/campaign-cli-receipt-attribution-b402-local.log",
+        "sha256": "a055a5247eb3986f4101570495dd0acee41fd2efa6ab9b0533136c622aa41c93",
+        "bytes": 340
+      },
+      "source_files_after": {
+        "scripts/report_study_fr.py": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+        "tests/test_study_report.py": "0babb0cd5df74dac0807e77cfff7dd9ad0e662257cfefb09d9c91efb2f71c722"
+      },
+      "source_files_unchanged_during_tests_and_recipe": true,
+      "test_source_snapshot": {
+        "path": "tests/test_study_report.py",
+        "sha256": "0babb0cd5df74dac0807e77cfff7dd9ad0e662257cfefb09d9c91efb2f71c722",
+        "bytes": 125299,
+        "definitions": [
+          {
+            "name": "save",
+            "line": 27
+          },
+          {
+            "name": "method_outcome_summary",
+            "line": 32
+          },
+          {
+            "name": "test_html_separates_failed_method_from_qualified_measured_fallback",
+            "line": 58
+          },
+          {
+            "name": "test_markdown_preserves_failure_reason_fallback_gain_and_raw_json",
+            "line": 76
+          },
+          {
+            "name": "test_initial_fallback_iteration_zero_and_unknown_method_are_not_successes",
+            "line": 91
+          },
+          {
+            "name": "test_consumption_deduplicates_calls_and_preserves_unknown_failures",
+            "line": 102
+          },
+          {
+            "name": "test_same_call_with_conflicting_usage_cannot_silently_change_totals",
+            "line": 123
+          },
+          {
+            "name": "test_original_intent_cli_and_legacy_copies_share_one_call_without_counting_acks",
+            "line": 130
+          },
+          {
+            "name": "test_original_intent_unknown_failures_survive_rehost_without_zero_invoice",
+            "line": 155
+          },
+          {
+            "name": "test_original_intent_conflicting_legacy_usage_fails_closed",
+            "line": 166
+          },
+          {
+            "name": "test_original_distinct_attempts_are_not_deduplicated_by_prompt_key",
+            "line": 174
+          },
+          {
+            "name": "test_failed_timeout_and_unreported_structured_receipts_remain_visible",
+            "line": 182
+          },
+          {
+            "name": "native_before_thread",
+            "line": 198
+          },
+          {
+            "name": "test_native_started_before_first_thread_is_unknown_and_deduplicated_by_invocation",
+            "line": 204
+          },
+          {
+            "name": "test_native_later_thread_snapshot_links_the_initial_invocation_and_copies",
+            "line": 216
+          },
+          {
+            "name": "test_distinct_native_invocations_without_threads_are_not_merged",
+            "line": 230
+          },
+          {
+            "name": "test_requested_native_thread_identity_and_unidentifiable_receipt_fail_closed",
+            "line": 237
+          },
+          {
+            "name": "test_complementary_cached_usage_and_partial_failure_are_not_zero_invoices",
+            "line": 247
+          },
+          {
+            "name": "test_impossible_usage_cannot_be_reported_as_a_lower_bound",
+            "line": 262
+          },
+          {
+            "name": "lease",
+            "line": 268
+          },
+          {
+            "name": "test_gpu_leases_use_recorded_slurm_elapsed_formats",
+            "line": 277
+          },
+          {
+            "name": "test_failed_timeout_leases_and_rehost_copies_retain_cost_once",
+            "line": 285
+          },
+          {
+            "name": "test_active_unparsed_or_unverified_leases_remain_unknown_not_zero",
+            "line": 297
+          },
+          {
+            "name": "test_inconsistent_slurm_receipts_cannot_falsify_allocation_cost",
+            "line": 309
+          },
+          {
+            "name": "frozen_receipt",
+            "line": 323
+          },
+          {
+            "name": "test_frozen_pilot_preserves_raw_regression_native_identity_and_separate_scope",
+            "line": 347
+          },
+          {
+            "name": "test_partial_or_mismatched_pilot_cannot_produce_a_qualified_plot",
+            "line": 372
+          },
+          {
+            "name": "test_frozen_plot_and_missing_receipt",
+            "line": 387
+          },
+          {
+            "name": "test_green_ci_on_same_head_does_not_qualify_tracked_or_untracked_changes",
+            "line": 398
+          },
+          {
+            "name": "test_new_gpu_receipts_keep_executed_source_head_and_hashes_separate_from_report_head",
+            "line": 424
+          },
+          {
+            "name": "test_reconstructed_real_control_and_missing_diagnostic_v2_have_honest_scope",
+            "line": 440
+          },
+          {
+            "name": "diagnostic_v2_audit_fixture",
+            "line": 457
+          },
+          {
+            "name": "test_actual_diagnostic_audit_replaces_pending_only_with_verified_measured_chain_links",
+            "line": 492
+          },
+          {
+            "name": "test_present_but_unproved_diagnostic_receipt_is_not_qualification",
+            "line": 510
+          },
+          {
+            "name": "test_partial_authorities_and_secondary_parent_observation_remain_separate",
+            "line": 517
+          },
+          {
+            "name": "test_tuning_constraint_control_remains_pending_until_success_is_explicit",
+            "line": 542
+          },
+          {
+            "name": "linked_report_fixture",
+            "line": 551
+          },
+          {
+            "name": "original_execution_fixture",
+            "line": 558
+          },
+          {
+            "name": "test_original_actual_generation_links_are_presented_without_final_success_or_attested_model",
+            "line": 594
+          },
+          {
+            "name": "test_original_source_or_cli_or_method_failures_cannot_be_relabelled_completed",
+            "line": 607
+          },
+          {
+            "name": "common_freeze_fixture",
+            "line": 631
+          },
+          {
+            "name": "test_final_freeze_aliases_are_identities_not_eight_distinct_kernels_or_gains",
+            "line": 666
+          },
+          {
+            "name": "test_frozen_identity_links_and_alias_declarations_fail_closed",
+            "line": 680
+          },
+          {
+            "name": "refresh_documentary_fixture",
+            "line": 697
+          },
+          {
+            "name": "test_absent_documentary_result_is_pending_or_unknown_never_gpu_success",
+            "line": 733
+          },
+          {
+            "name": "test_documentary_control_success_is_limited_to_authenticated_json_subset",
+            "line": 742
+          },
+          {
+            "name": "test_documentary_authentication_never_opens_manifest_databases_rng_or_numeric_inputs",
+            "line": 753
+          },
+          {
+            "name": "test_documentary_partial_or_unverified_proof_never_becomes_acquired",
+            "line": 772
+          },
+          {
+            "name": "test_malformed_control_root_cannot_crash_or_qualify_other_receipts",
+            "line": 796
+          },
+          {
+            "name": "test_nested_list_or_scalar_fields_fail_closed_without_global_report_loss",
+            "line": 816
+          },
+          {
+            "name": "test_hash_matched_linked_manifest_must_still_be_expected_json_object",
+            "line": 825
+          },
+          {
+            "name": "test_new_control_links_are_role_whitelisted_before_any_protected_read",
+            "line": 835
+          },
+          {
+            "name": "test_absent_or_incomplete_documentary_scope_never_claims_completed_real_sequence",
+            "line": 865
+          },
+          {
+            "name": "test_direct_legacy_exact_artifacts_are_identity_without_changing_raw_intervals",
+            "line": 882
+          },
+          {
+            "name": "test_explicit_unproven_context_cannot_be_normalized_to_an_identity_ratio",
+            "line": 903
+          },
+          {
+            "name": "test_unmeasured_failure_is_unavailable_instead_of_a_paired_measurement",
+            "line": 921
+          },
+          {
+            "name": "test_legacy_valid_identity_stays_available_without_an_interval",
+            "line": 931
+          },
+          {
+            "name": "test_case_table_exposes_regression_intervals_and_uses_independent_direct_pairs",
+            "line": 937
+          },
+          {
+            "name": "test_case_table_never_turns_identity_or_unproven_context_into_measured_cases",
+            "line": 955
+          },
+          {
+            "name": "test_case_table_keeps_incomplete_or_invalid_intervals_unknown",
+            "line": 971
+          },
+          {
+            "name": "test_case_table_does_not_require_percentile_bootstrap_interval_to_contain_point_estimate",
+            "line": 978
+          },
+          {
+            "name": "test_case_table_displays_partial_measurement_failure_and_artifact_qualification_separately",
+            "line": 984
+          },
+          {
+            "name": "test_identity_requires_equal_complete_artifact_hashes_not_missing_or_source_only",
+            "line": 997
+          },
+          {
+            "name": "identity_pilot_receipt",
+            "line": 1003
+          },
+          {
+            "name": "test_pilot_identity_direct_pair_has_no_legacy_interval_in_panel_or_plot",
+            "line": 1017
+          },
+          {
+            "name": "test_pilot_refuses_explicit_unproven_context_before_qualification_and_plot",
+            "line": 1037
+          },
+          {
+            "name": "resumed_documentary_fixture",
+            "line": 1059
+          },
+          {
+            "name": "test_resumed_documentary_authority_preserves_incomplete_original_and_separates_new_calls",
+            "line": 1115
+          },
+          {
+            "name": "test_missing_resumption_is_an_independent_unknown_result",
+            "line": 1133
+          },
+          {
+            "name": "test_resume_cannot_erase_prior_failure_or_claim_uncertain_repeated_calls",
+            "line": 1145
+          },
+          {
+            "name": "_documentary_proof",
+            "line": 1160
+          },
+          {
+            "name": "twice_resumed_documentary_fixture",
+            "line": 1168
+          },
+          {
+            "name": "_repin_second_resume",
+            "line": 1256
+          },
+          {
+            "name": "third_resumed_documentary_fixture",
+            "line": 1267
+          },
+          {
+            "name": "test_third_resume_accepted_research_lineage_keeps_all_prior_incomplete_authorities_separate",
+            "line": 1366
+          },
+          {
+            "name": "test_third_resume_rejects_tampered_accepted_lineage_or_explicit_refresh",
+            "line": 1379
+          },
+          {
+            "name": "test_third_resume_absent_is_unknown_and_does_not_complete_old_accepted_research",
+            "line": 1427
+          },
+          {
+            "name": "test_standalone_final_control_absent_or_plan_cannot_prove_execution",
+            "line": 1436
+          },
+          {
+            "name": "test_standalone_final_control_requires_result_checks_owned_terminal_and_sources",
+            "line": 1446
+          },
+          {
+            "name": "test_second_documentary_resumption_authenticates_exact_seven_to_nine_refusal_chain",
+            "line": 1463
+          },
+          {
+            "name": "test_second_resumption_rejects_hash_resealed_but_unsupported_ancestry",
+            "line": 1477
+          },
+          {
+            "name": "test_absent_second_resumption_remains_separate_unknown_authority",
+            "line": 1496
+          },
+          {
+            "name": "test_second_resume_authenticates_source_trial_bytes_not_only_manifest_claim",
+            "line": 1502
+          },
+          {
+            "name": "test_campaign_ratio_table_identifies_baseline_alias_without_measured_interval",
+            "line": 1511
+          },
+          {
+            "name": "test_authorized_role_cannot_follow_symlink_to_private_in_repo_payload",
+            "line": 1523
+          },
+          {
+            "name": "metric_summary",
+            "line": 1547
+          },
+          {
+            "name": "test_metric_view_keeps_merged_method_values_and_raw_unknown_list",
+            "line": 1554
+          },
+          {
+            "name": "test_metric_view_distinguishes_recorded_zero_from_unknown",
+            "line": 1585
+          },
+          {
+            "name": "test_metric_view_never_infers_gain_or_milestone_usage_from_totals",
+            "line": 1604
+          },
+          {
+            "name": "test_metric_view_does_not_fill_a_missing_research_metric_from_legacy_spelling",
+            "line": 1615
+          },
+          {
+            "name": "test_metric_panel_handles_absent_or_malformed_optional_metadata",
+            "line": 1624
+          },
+          {
+            "name": "test_report_artifact_exports_additive_metric_view_and_prioritizes_section16",
+            "line": 1631
+          },
+          {
+            "name": "test_recorded_validity_view_preserves_method_overrides_without_deriving_fraction",
+            "line": 1684
+          },
+          {
+            "name": "test_recorded_validity_view_distinguishes_missing_null_and_explicit_zero",
+            "line": 1710
+          },
+          {
+            "name": "call_inventory_fixture",
+            "line": 1724
+          },
+          {
+            "name": "test_campaign_receipts_distinguish_seven_completed_ledger_calls_from_eight_attempts",
+            "line": 1736
+          },
+          {
+            "name": "test_campaign_receipts_reuse_global_alias_dedup_for_copies_and_attempts",
+            "line": 1759
+          },
+          {
+            "name": "test_shared_identity_is_ambiguous_even_when_other_campaign_is_not_in_summary",
+            "line": 1777
+          },
+          {
+            "name": "test_campaign_attribution_requires_exact_canonical_root_run_and_cli_layout",
+            "line": 1790
+          },
+          {
+            "name": "test_campaign_unknown_usage_is_not_a_zero_cost_or_total",
+            "line": 1804
+          },
+          {
+            "name": "test_absent_campaign_receipts_do_not_establish_zero_usage",
+            "line": 1815
+          },
+          {
+            "name": "test_mixed_snapshots_and_partial_usage_have_disjoint_status_categories",
+            "line": 1822
+          },
+          {
+            "name": "test_completed_receipt_stderr_does_not_by_itself_mean_failed_call",
+            "line": 1834
+          },
+          {
+            "name": "test_origin_metadata_cannot_override_campaign_derived_from_exact_path",
+            "line": 1841
+          }
+        ]
+      },
+      "offline_public_recipe": {
+        "path": "work/live/campaign-cli-receipt-attribution-774659-offline.json",
+        "sha256": "4786ebbfdcf9525677bbd15575dd843d0aec046e4b0b91650afb7df16da3532a",
+        "bytes": 17210
+      },
+      "peer_review": {
+        "status": "GO",
+        "reviewer": "/root/codex_research",
+        "source_sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+        "tests_sha256": "0babb0cd5df74dac0807e77cfff7dd9ad0e662257cfefb09d9c91efb2f71c722",
+        "scope": "Independent read-only code/test review; no tests, study data, model/GPU/SSH/DB or rendering by reviewer."
+      },
+      "scope": "249 tests ciblés du module de rapport, dont 19 nouveaux cas : compteur brut de méthode conservé, reçus CLI dédupliqués et attribution par chemins canoniques exacts incluant attempts. Copies et identités partagées, natif/original, usages absents ou nuls et overrides préservés. Inventaire global unique réutilisé, sans nouveau scan par campagne ni recalcul des métriques. Aucun modèle/GPU/SSH/DB, aucune étude active rendue ; CI du futur SHA distincte."
+    },
+    "terminal_campaign_cli_receipt_view_774659_offline": {
+      "path": "work/live/campaign-cli-receipt-attribution-774659-offline.json",
+      "sha256": "4786ebbfdcf9525677bbd15575dd843d0aec046e4b0b91650afb7df16da3532a",
+      "bytes": 17210,
+      "kind": "offline_public_terminal_cli_receipt_view_recipe",
+      "authority": {
+        "path": "work/live/matmul-1729-full-774659-00a67a3-terminal-audit-verified.json",
+        "sha256": "1ae25126c2d2e099c4c681444ea2dd6c78a4cc9db9af208bdae6acee3fa650be",
+        "bytes": 27833
+      },
+      "first_timeout": {
+        "path": "work/live/matmul-1729-proposal-timeout-774659-00a67a3-verified.json",
+        "sha256": "7a030c10a7678d59698ac557e38cb127a49764180f128b28a14b5a9c054da1ec",
+        "bytes": 29565
+      },
+      "generation_result": {
+        "path": "results/quality-study-v2/campaigns/quality-20261021-v2.matmul.1729.full/result.json",
+        "sha256": "b751e3aad9f9255a75773715b790ec5ba77d41b81939f2aaa995e16a0e87c61f",
+        "bytes": 6993
+      },
+      "run_id": "quality-20261021-v2.matmul.1729.full",
+      "recorded_ledger_model_calls": 7.0,
+      "observed_unique_cli_receipts": 8,
+      "status_counts": {
+        "completed": 7,
+        "failed": 1,
+        "incomplete": 0,
+        "mixed": 0,
+        "unknown": 0
+      },
+      "usage_reporting_counts": {
+        "complete": 7,
+        "partial": 0,
+        "unreported": 1
+      },
+      "known_usage_lower_bounds": {
+        "input_tokens": 6672596,
+        "cached_input_tokens": 5831552,
+        "output_tokens": 189296,
+        "model_tokens": 6861892
+      },
+      "producer_calls": 1,
+      "projection_reads_or_scans_receipts": false,
+      "all_read_JSON_and_result_unchanged": true,
+      "global_study_count_recomputed": false,
+      "scope": "Recette hors ligne bornée aux JSON publics de la campagne déjà terminale 774659 : compteur brut 7, huit identités uniques dont sept completed et un timeout sans usage. 6 861 892 tokens connus seulement, dont 5 831 552 tokens en cache déjà inclus dans l’entrée. Une passe du producteur puis projection sans relecture ; résultat, reçus et métriques bruts inchangés. Ce reçu de présentation ne modifie pas le minimum global daté de 27 générations et une finale ; aucune nouvelle exécution ROMEO ou modèle."
+    },
+    "terminal_campaign_cli_receipt_view_774659_preview": {
+      "path": "work/live/campaign-cli-receipt-attribution-774659-preview.json",
+      "sha256": "ccaa6984a5c6036dfded767ebee9516f8a260ed24abed8dbd4a3e9473e2223b6",
+      "bytes": 1092,
+      "kind": "acquired_campaign_CLI_projection_HTML_preview_only",
+      "projection": {
+        "path": "work/live/campaign-cli-receipt-attribution-774659-offline.json",
+        "sha256": "4786ebbfdcf9525677bbd15575dd843d0aec046e4b0b91650afb7df16da3532a"
+      },
+      "source_report_sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+      "HTML": {
+        "path": "work/live/campaign-cli-receipt-attribution-774659-preview.html",
+        "sha256": "2cc9f9cb0fc648594c30acae610b3a78a220d385482a43ec0758b01eec70147b",
+        "bytes": 2369
+      },
+      "additional_campaign_scans_or_reads": false,
+      "scope": "Aperçu HTML borné produit depuis la projection publique déjà acquise ; aucun nouveau scan, rapport actif ou calcul de coût. L’inspection visuelle est prouvée séparément."
+    },
+    "terminal_campaign_cli_receipt_view_774659_visual": {
+      "path": "work/live/campaign-cli-receipt-attribution-774659-visual-inspection.json",
+      "sha256": "cee481962da901afb45c51da396f4fd13ea360d7021780fedf9e4b00606998b2",
+      "bytes": 1641,
+      "kind": "bounded_public_campaign_report_visual_inspection",
+      "campaign_job_id": "774659",
+      "source_report_sha256": "5cdb0f3e91c0bee2c1b89e26d6d3cbaf3de6a4cab690351786312a6995f0197d",
+      "checks": {
+        "method_raw_seven_visible": true,
+        "eight_unique_receipt_groups_visible": true,
+        "seven_completed_and_one_failed_visible": true,
+        "one_unreported_usage_visible": true,
+        "known_tokens_lower_bound_6861892_visible": true,
+        "table_and_scope_text_readable": true
+      },
+      "files": [
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/campaign-cli-receipt-attribution-774659-preview.html",
+          "sha256": "2cc9f9cb0fc648594c30acae610b3a78a220d385482a43ec0758b01eec70147b",
+          "bytes": 2369
+        },
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/campaign-cli-receipt-attribution-774659-preview.html.png",
+          "sha256": "e9e1b779f9f1f4f4860585e7f11e4860207d7f28aaadb972dea556042e9203da",
+          "bytes": 382799
+        },
+        {
+          "path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/campaign-cli-receipt-attribution-774659-preview.json",
+          "sha256": "ccaa6984a5c6036dfded767ebee9516f8a260ed24abed8dbd4a3e9473e2223b6",
+          "bytes": 1092
+        }
+      ],
+      "scope": "Inspection Quick Look à 1600 px par le primaire : tableau lisible, 7 brut / 8 identités, sept complets et un usage absent, borne inférieure de 6 861 892 tokens. Aperçu existant uniquement, sans nouveau scan, modèle, GPU ou qualification des performances."
+    },
+    "ci_b402c2a": {
+      "path": "work/live/ci-b402c2a.json",
+      "sha256": "8d01266004d12a4ce38eed6720e02389b79221e60829bb74b7f37a4bae7a69a3",
+      "bytes": 2883,
+      "kind": "exact_sha_github_ci",
+      "headSha": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39696156704",
+      "jobs": [
+        {
+          "name": "policy-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39696156704/job/119553916720"
+        }
+      ],
+      "test_count_evidence": "published_campaign_metrics_b402c2a",
+      "scope": "CI du SHA publié b402c2a : 1 486 tests et 13 sous-tests passent, deux tests sont sautés, compileall réussit. Elle couvre le renderer historique d1d97584, y compris ses deux chaînes éditoriales post-test local ; le nouveau correctif 5cdb0f3e est postérieur et non couvert. Aucune exécution ou qualification modèle/GPU par cette CI."
+    },
+    "published_campaign_metrics_b402c2a": {
+      "path": "work/live/campaign-metrics-b402c2a-release.json",
+      "sha256": "042cf43766a8b977006181904acb5d52219734c335f85c3d169e7ca560cc2376",
+      "bytes": 22666,
+      "kind": "published_campaign_metrics_report_release",
+      "published_commit": "b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+      "published_ref": "origin/main",
+      "working_tree_clean_at_capture": true,
+      "tracked_files_match_commit_count": 188,
+      "source_files_match_commit": {
+        "scripts/report_study_fr.py": "d1d97584d83493849727e0078cb0833b8a8ddc1a05664b0a723eeebc9b8eeb0e",
+        "tests/test_study_report.py": "043c24812b25b82d5d6e3373a12da1c334ababecae9c9c719aad4c1d17ac734a",
+        "docs/SPEC_AUDIT.fr.md": "af558739d27a5f1c5704362e63338443c02d3243efba0afd96992351e6d2a1e5",
+        "docs/validation/requirement-evidence.json": "d827c906eb9d068acfedf40b0764010f3caaf27b2712dc78070c8b3eb608cdfa"
+      },
+      "ci": {
+        "path": "work/live/ci-b402c2a.json",
+        "sha256": "8d01266004d12a4ce38eed6720e02389b79221e60829bb74b7f37a4bae7a69a3",
+        "url": "https://github.com/wolf75222/agentic-cuda-optimizer/actions/runs/39696156704",
+        "status": "success",
+        "tests_passed": 1486,
+        "tests_skipped": 2,
+        "subtests_passed": 13,
+        "warnings": 15,
+        "pytest_seconds": 63.39,
+        "compileall_success": true,
+        "log_sha256": "c626ba2359b84c2abe67e67d441852ac38af5249c31a1a4d9b0589d2097483d0"
+      },
+      "source_archive": {
+        "path": "work/release-source-archives/b402c2a339f0bb4b408f7fb533b6e1319ec6a0c7",
+        "tar_sha256": "e4c175208aa75a91a11c841ed5c990f0c7fe94d373bc17cd85f0c9aacaeb9440",
+        "metadata_sha256": "b65c9fe722ca72934bc147991111b2560aecf451068ad189b44e21e629f8d73c",
+        "availability_only": true
+      },
+      "study_campaigns_complete": false,
+      "scope": "Publication du lot de métriques au b402c2a avec 188 fichiers suivis identiques au commit et archive source exacte disponible. CI séparée acquise au même SHA. La preuve locale 230 reste attachée à 5cb7304a ; la CI couvre ensuite d1d97584. Aucun nouveau modèle/GPU ni achèvement de l’étude inféré ; catalogue à 187 entrées et minimum 27/1 historiques à cette publication."
     }
   },
   "requirements": {
@@ -16089,7 +16902,8 @@
           "ci_0013118",
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
-          "local_campaign_metric_validity_view_00a67a3"
+          "local_campaign_metric_validity_view_00a67a3",
+          "local_campaign_cli_receipt_attribution_b402"
         ],
         "test_modules": {
           "test_portable_export": 15,
@@ -16105,7 +16919,7 @@
           "test_gain_observer": 6,
           "test_suite_first_gain_observer": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Cold real search registries rendered to JSON/SVG with unchanged source fingerprints, no model/GPU/SSH call; closure and greedy semantics preserved. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16127,7 +16941,9 @@
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
-          "ci_de38abb_skipped_scope"
+          "ci_de38abb_skipped_scope",
+          "published_campaign_metrics_b402c2a",
+          "ci_b402c2a"
         ]
       },
       "romeo_executed": {
@@ -16152,7 +16968,11 @@
         "historical_campaign_metric_preview_00a67a3",
         "local_campaign_metric_validity_view_00a67a3",
         "campaign_metric_validity_editorial_post230",
-        "historical_campaign_validity_preview_00a67a3"
+        "historical_campaign_validity_preview_00a67a3",
+        "local_campaign_cli_receipt_attribution_b402",
+        "terminal_campaign_cli_receipt_view_774659_offline",
+        "terminal_campaign_cli_receipt_view_774659_preview",
+        "terminal_campaign_cli_receipt_view_774659_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
@@ -16417,7 +17237,8 @@
           "source_current:optimizer_agent/suite_report.py",
           "source_current:optimizer_agent/upstream_original.py",
           "source_current:optimizer_agent/gain_observer.py",
-          "source_current:optimizer_agent/native_read_isolation.py"
+          "source_current:optimizer_agent/native_read_isolation.py",
+          "source_current:scripts/report_study_fr.py"
         ]
       },
       "local_tested": {
@@ -16430,7 +17251,8 @@
           "local_unscored_release",
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
-          "local_campaign_metric_validity_view_00a67a3"
+          "local_campaign_metric_validity_view_00a67a3",
+          "local_campaign_cli_receipt_attribution_b402"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -16443,7 +17265,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -16466,7 +17288,9 @@
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
-          "ci_de38abb_skipped_scope"
+          "ci_de38abb_skipped_scope",
+          "published_campaign_metrics_b402c2a",
+          "ci_b402c2a"
         ]
       },
       "romeo_executed": {
@@ -16507,7 +17331,11 @@
         "historical_campaign_metric_preview_00a67a3",
         "local_campaign_metric_validity_view_00a67a3",
         "campaign_metric_validity_editorial_post230",
-        "historical_campaign_validity_preview_00a67a3"
+        "historical_campaign_validity_preview_00a67a3",
+        "local_campaign_cli_receipt_attribution_b402",
+        "terminal_campaign_cli_receipt_view_774659_offline",
+        "terminal_campaign_cli_receipt_view_774659_preview",
+        "terminal_campaign_cli_receipt_view_774659_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
@@ -18973,7 +19801,8 @@
           "source_current:optimizer_agent/suite_report.py",
           "source_current:optimizer_agent/upstream_original.py",
           "source_current:optimizer_agent/gain_observer.py",
-          "source_current:optimizer_agent/native_read_isolation.py"
+          "source_current:optimizer_agent/native_read_isolation.py",
+          "source_current:scripts/report_study_fr.py"
         ]
       },
       "local_tested": {
@@ -18986,7 +19815,8 @@
           "local_unscored_release",
           "local_campaign_metric_views_00a67a3",
           "historical_campaign_metric_preview_00a67a3",
-          "local_campaign_metric_validity_view_00a67a3"
+          "local_campaign_metric_validity_view_00a67a3",
+          "local_campaign_cli_receipt_attribution_b402"
         ],
         "test_modules": {
           "test_quality_suite": 3,
@@ -18999,7 +19829,7 @@
           "test_suite_first_gain_observer": 9,
           "test_study_report": 11
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Vue additive 29371d3c validée par 223 tests ciblés et aperçu historique ; ce n’est pas une nouvelle suite locale complète. Complément validité/configurations 5cb7304a : 230 tests ciblés, sans recalcul ni qualification du dernier artefact depuis les taux SEARCH. L’ancien lot 223 reste historique exact. Deux chaînes éditoriales ont ensuite été modifiées : la source d1d97584 n’est pas retestée localement. Les 230 tests restent attachés à 5cb7304a ; prochaine CI séparée requise. Publication b402c2a ensuite validée par sa CI exacte : 1 486 tests et 13 sous-tests, deux skips ; cette CI couvre d1d97584. Correctif ultérieur 5cdb0f3e : 249 tests locaux ciblés et revue indépendante, CI du futur SHA à acquérir. Aucune nouvelle suite locale complète ni performance ROMEO déduite.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -19022,7 +19852,9 @@
         "published_release_evidence": [
           "published_report_metrics_de38abb",
           "ci_de38abb",
-          "ci_de38abb_skipped_scope"
+          "ci_de38abb_skipped_scope",
+          "published_campaign_metrics_b402c2a",
+          "ci_b402c2a"
         ]
       },
       "romeo_executed": {
@@ -19064,7 +19896,11 @@
         "historical_campaign_metric_preview_00a67a3",
         "local_campaign_metric_validity_view_00a67a3",
         "campaign_metric_validity_editorial_post230",
-        "historical_campaign_validity_preview_00a67a3"
+        "historical_campaign_validity_preview_00a67a3",
+        "local_campaign_cli_receipt_attribution_b402",
+        "terminal_campaign_cli_receipt_view_774659_offline",
+        "terminal_campaign_cli_receipt_view_774659_preview",
+        "terminal_campaign_cli_receipt_view_774659_visual"
       ],
       "availability_and_fixture_evidence": [
         "historical_transport_v1_exact_source_recovery",
@@ -19403,6 +20239,19 @@
         "historical_campaign_validity_preview_00a67a3"
       ],
       "scope": "Compteurs dépendant de l’instrumentation explicités, sans valeur changée. Source 5cb7304a et 230 tests conservés ; source courant après prose non retesté localement, CI future distincte. Minimum de 27 générations et une finale inchangé."
+    },
+    {
+      "observed_at_utc": "2026-10-22T00:23:42.671508+00:00",
+      "kind": "campaign_cli_receipt_attribution249_and_historical_b402_publication",
+      "evidence": [
+        "local_campaign_cli_receipt_attribution_b402",
+        "terminal_campaign_cli_receipt_view_774659_offline",
+        "terminal_campaign_cli_receipt_view_774659_preview",
+        "terminal_campaign_cli_receipt_view_774659_visual",
+        "ci_b402c2a",
+        "published_campaign_metrics_b402c2a"
+      ],
+      "scope": "Compteur brut de méthode conservé et libellé corrigé ; huit identités CLI observées pour le cas public 774659, dont un timeout sans usage, sans modifier résultats ou ledger. Publication/CI b402 historiques séparées du nouveau source local. Le minimum global reste 27 générations et une finale au constat daté précédent ; aucune nouvelle qualification de campagne."
     }
   ]
 }
