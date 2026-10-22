@@ -15,7 +15,7 @@ from optimizer_agent.suite_report import write_report
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation", "recover-unscored", "resume-unscored-preparation", "recover-evaluation", "resume-evaluation-preparation"))
+    parser.add_argument("command", choices=("plan", "run", "status", "report", "recover-final", "recover-bootstrap", "resume-bootstrap-preparation", "recover-unscored", "resume-unscored-preparation", "recover-evaluation", "resume-evaluation-preparation", "reconcile-completed-generation"))
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--config", type=Path)
     parser.add_argument("--seeds", type=int, nargs="+", default=(1729, 2718, 3141))
@@ -68,6 +68,11 @@ def main(argv=None):
         if not args.task:
             parser.error("resume-evaluation-preparation requires --task")
         recovery = orchestrator.resume_evaluation_preparation(args.task)
+    elif args.command == "reconcile-completed-generation":
+        if not args.task or not args.reason:
+            parser.error("reconcile-completed-generation requires --task and --reason")
+        from optimizer_agent.terminal_recovery import reconcile_completed_generation
+        recovery = reconcile_completed_generation(orchestrator, args.task, args.reason)
     status = orchestrator.run() if args.command == "run" else orchestrator.status()
     evidence = read_json(args.requirement_evidence) if args.requirement_evidence else None
     write_report(directory, status, evidence=evidence)

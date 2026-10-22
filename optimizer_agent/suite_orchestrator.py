@@ -6,7 +6,7 @@ or terminal incomplete attempt is retained, never silently regenerated.
 """
 from __future__ import annotations
 
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass, replace
 import fcntl
@@ -16,7 +16,7 @@ import json
 import math
 import multiprocessing
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import secrets
 import shutil
@@ -34,12 +34,67 @@ REPO = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "recovery_required"}
 
 
+def _infrastructure_diagnostic_lines(message):
+    # Never reinterpret provider/compiler text quoting an infrastructure example.
+    if re.search(r"(?i)\b(?:codex|openai|model|nvcc|nvrtc|compilation|compiler)\b", message):
+        return []
+    lines = [line.strip() for line in message.splitlines() if line.strip()]
+    known_pq_banner = [
+        "** WARNING: connection is not using a post-quantum key exchange algorithm.",
+        '** This session may be vulnerable to "store now, decrypt later" attacks.',
+        "** The server may need to be upgraded. See https://openssh.com/pq.html",
+    ]
+    while lines:
+        if lines[:3] == known_pq_banner:
+            del lines[:3]
+        elif re.fullmatch(r"Warning: Permanently added '[^']+' \([A-Za-z0-9-]+\) to the list of known hosts\.", lines[0]):
+            lines.pop(0)
+        else:
+            break
+    return lines
+
+
+def remote_storage_failure_directory(error):
+    """Identify only a complete mkdir EDQUOT/ENOSPC worker-session diagnostic."""
+    if type(error).__name__ == "CodexError" or type(error).__module__.endswith("codex_backend"):
+        return None
+    if isinstance(error, subprocess.CalledProcessError):
+        command = error.cmd
+        executable = command[0] if isinstance(command, (list, tuple)) and command else None
+        if not executable or Path(str(executable)).name != "ssh" or not error.returncode:
+            return None
+        message = error.stderr or ""
+        if isinstance(message, bytes):
+            message = message.decode(errors="replace")
+    else:
+        message = str(error)
+    lines = _infrastructure_diagnostic_lines(message)
+    if len(lines) != 1:
+        return None
+    diagnostic = re.sub(r"^BackendError:\s*", "", lines[0])
+    match = re.fullmatch(
+        r'''mkdir: cannot create directory (?:'(?P<single>[^'\x00\r\n]+)'|‘(?P<curly>[^’\x00\r\n]+)’|"(?P<double>[^"\x00\r\n]+)"): (?:Disk quota exceeded|No space left on device)''',
+        diagnostic)
+    if not match:
+        return None
+    path = next(value for value in match.groupdict().values() if value is not None)
+    directory = PurePosixPath(path)
+    if (not directory.is_absolute() or str(directory) != path or ".." in directory.parts
+            or len(directory.parts) < 6 or directory.parts[-2] != "sessions"
+            or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", directory.name) is None):
+        return None
+    return path
+
+
 def infrastructure_category(error):
-    """Recognize transport diagnostics, never infer infrastructure from a loss.
+    """Recognize explicit transport/storage failures, never a numerical loss.
 
     A generic timeout can belong to the model or compiler. Only an SSH process
     or an explicit transport diagnostic qualifies for transport recovery.
+    Storage admission additionally requires one complete worker mkdir error.
     """
+    if remote_storage_failure_directory(error) is not None:
+        return "remote_storage_failure"
     if type(error).__name__ == "CodexError" or type(error).__module__.endswith("codex_backend"):
         return None
     if isinstance(error, subprocess.TimeoutExpired):
@@ -60,24 +115,7 @@ def infrastructure_category(error):
         return "transport_timeout"
     if message.startswith("Worker session ") and " is terminal (job " in message:
         return "worker_terminal_incomplete"
-    # Do not reinterpret a compiler/provider error quoting an SSH example as
-    # evidence of a real SSH failure. Strings from actual runner receipts have
-    # the OpenSSH diagnostic as their leading context.
-    if re.search(r"(?i)\b(?:codex|openai|model|nvcc|nvrtc|compilation|compiler)\b",message):
-        return None
-    lines = [line.strip() for line in message.splitlines() if line.strip()]
-    known_pq_banner = [
-        "** WARNING: connection is not using a post-quantum key exchange algorithm.",
-        '** This session may be vulnerable to "store now, decrypt later" attacks.',
-        "** The server may need to be upgraded. See https://openssh.com/pq.html",
-    ]
-    while lines:
-        if lines[:3] == known_pq_banner:
-            del lines[:3]
-        elif re.fullmatch(r"Warning: Permanently added '[^']+' \([A-Za-z0-9-]+\) to the list of known hosts\.",lines[0]):
-            lines.pop(0)
-        else:
-            break
+    lines = _infrastructure_diagnostic_lines(message)
     diagnostic = lines[0] if lines else ""
     diagnostic = re.sub(r"^BackendError:\s*", "", diagnostic)
     timeout_patterns = (
@@ -1109,6 +1147,26 @@ class SuiteOrchestrator:
             finally:
                 fcntl.flock(file, fcntl.LOCK_UN)
 
+    def _commit_terminal_result(self, task, result, terminal, started, ready_at, *, owned_job_id):
+        """Commit lifecycle metadata only; callers authenticate the owned worker."""
+        result_path = self._directory(task) / "result.json"
+        result["worker_terminal"] = terminal
+        result["task_started_at_unix"] = started
+        result["task_finished_at_unix"] = time.time()
+        result["total_task_wall_seconds_including_queue"] = result["task_finished_at_unix"]-started
+        result["queue_and_worker_start_wall_seconds"] = ready_at-started if ready_at is not None else None
+        result["execution_complete"] = bool(terminal.get("terminal") and terminal.get("state") == "COMPLETED"
+            and str(terminal.get("exit_code")) == "0:0" and str(terminal.get("job_id")) == str(owned_job_id))
+        if task["kind"] == "generation":
+            result["execution_complete"] &= result.get("generation_complete") is True
+        else:
+            result["execution_complete"] &= result.get("evaluation_finished") is True
+        if not terminal.get("terminal") or terminal.get("state") != "COMPLETED" or str(terminal.get("exit_code")) != "0:0":
+            result["infrastructure_category"] = "worker_terminal_incomplete"
+        write_json(result_path, result)
+        self.journal.update(task["id"], state="completed" if result["execution_complete"] else "recovery_required",
+                            result=result, finished=time.time())
+
     def _execute_task(self, task):
         kind = task["kind"]
         entry = task["payload"] if kind == "generation" else task["payload"][0]
@@ -1205,22 +1263,7 @@ class SuiteOrchestrator:
             if not attached_status or attached_status.get("terminal") is not True:
                 backend.close()
             terminal = backend.wait_until_finished(timeout=60)
-            result["worker_terminal"] = terminal
-            result["task_started_at_unix"] = started
-            result["task_finished_at_unix"] = time.time()
-            result["total_task_wall_seconds_including_queue"] = result["task_finished_at_unix"]-started
-            result["queue_and_worker_start_wall_seconds"] = ready_at-started if ready_at is not None else None
-            result["execution_complete"] = bool(terminal.get("terminal") and terminal.get("state") == "COMPLETED"
-                and str(terminal.get("exit_code")) == "0:0" and str(terminal.get("job_id")) == str(backend.job_id))
-            if kind == "generation":
-                result["execution_complete"] &= result.get("generation_complete") is True
-            else:
-                result["execution_complete"] &= result.get("evaluation_finished") is True
-            if not terminal.get("terminal") or terminal.get("state") != "COMPLETED" or str(terminal.get("exit_code")) != "0:0":
-                result["infrastructure_category"] = "worker_terminal_incomplete"
-            write_json(result_path, result)
-            self.journal.update(task["id"], state="completed" if result["execution_complete"] else "recovery_required",
-                                result=result, finished=time.time())
+            self._commit_terminal_result(task, result, terminal, started, ready_at, owned_job_id=backend.job_id)
         except Exception as error:
             owned_job, ownership_error, journal_job = None, None, task.get("job_id")
             if backend is not None:
@@ -1403,18 +1446,49 @@ class SuiteOrchestrator:
             options = {} if self.backend_factory else {"mp_context": multiprocessing.get_context("spawn")}
             from .dispatch_attestation import capture_dispatch_attestation
             self._controller_epoch = capture_dispatch_attestation(self.directory)
+
+            def recorded_storage_failure(recorded):
+                if not recorded or recorded["state"] != "recovery_required":
+                    return False
+                outcome = recorded.get("result") or {}
+                return ((isinstance(outcome, dict) and outcome.get("infrastructure_category") == "remote_storage_failure")
+                        or infrastructure_category(recorded.get("error", "")) == "remote_storage_failure")
+
             with pool(max_workers=self.concurrency, **options) as workers:
                 # Stable sessions recover active work; known failures are retained.
+                storage_failure = any(recorded_storage_failure(row) for row in self.journal.tasks())
                 for kind in ("generation", "final"):
+                    if storage_failure:
+                        break
                     tasks = self.journal.tasks(kind)
                     if kind == "final":
                         generations = {r["id"]: r for r in self.journal.tasks("generation")}
                         tasks = [r for r in tasks if all(generations[e["config"]["run_id"]]["state"] in TERMINAL for e in r["payload"])]
-                    futures = [workers.submit(self._task, row) for row in sorted(tasks, key=self._dispatch_key)
-                               if row["state"] in {"pending", "running"}]
-                    for future in as_completed(futures):
-                        future.result()
-                        write_json(self.directory / "status.json", self.status())
+                    initial = iter(row for row in sorted(tasks, key=self._dispatch_key)
+                                   if row["state"] in {"pending", "running"})
+                    futures = {}
+
+                    def replenish():
+                        while len(futures) < self.concurrency:
+                            row = next(initial, None)
+                            if row is None:
+                                break
+                            futures[workers.submit(self._task, row)] = row["id"]
+
+                    replenish()
+                    while futures:
+                        done, _ = wait(futures, return_when=FIRST_COMPLETED)
+                        # Inspect all outcomes already available before filling
+                        # any freed slot. Never cancel or signal active workers.
+                        for future in done:
+                            task_id = futures.pop(future)
+                            future.result()
+                            recorded = self.journal.task(task_id)
+                            if recorded_storage_failure(recorded):
+                                storage_failure = True
+                            write_json(self.directory / "status.json", self.status())
+                        if not storage_failure:
+                            replenish()
         result = self.status()
         write_json(self.directory / "status.json", result)
         return result

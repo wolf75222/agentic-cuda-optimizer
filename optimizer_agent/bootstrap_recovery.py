@@ -51,7 +51,8 @@ def _inventory(directory):
 
 def recover_pre_model(orchestrator, task_id, reason):
     from .execution_backend import TERMINAL_STATES, slurm_state
-    from .suite_orchestrator import config_from_dict, infrastructure_category, read_json, write_json
+    from .suite_orchestrator import (config_from_dict, infrastructure_category,
+                                     remote_storage_failure_directory, read_json, write_json)
     orchestrator._require_active_study()
     if not isinstance(reason, str) or len(reason.strip()) < 20:
         raise ValueError("Describe the concrete infrastructure incident in at least twenty characters")
@@ -80,10 +81,13 @@ def recover_pre_model(orchestrator, task_id, reason):
                 raise ValueError("Bootstrap recovery requires the original failure receipt")
             failure = read_json(failure_path)
             category = failure.get("infrastructure_category") or infrastructure_category(failure.get("error", ""))
-            if category not in {"transport_timeout", "ssh_transport_failure", "worker_terminal_incomplete"}:
+            if category not in {"transport_timeout", "ssh_transport_failure", "worker_terminal_incomplete", "remote_storage_failure"}:
                 raise ValueError("The original failure is not a qualified transport/worker infrastructure incident")
             config = config_from_dict(task["payload"]["config"])
             backend = orchestrator._backend(task, config, directory)
+            if (category == "remote_storage_failure"
+                    and remote_storage_failure_directory(failure.get("error", "")) != backend.remote_dir):
+                raise ValueError("Storage failure directory differs from the owned worker session")
             # Inspect remote ownership before deciding that a new allocation is
             # permitted. A lost sbatch ACK/intent is never interpreted as no job.
             remote = backend._json("job_id.json", optional=True)
@@ -184,7 +188,8 @@ def resume_preparation(orchestrator, task_id):
     artifact are checked again before the pending local transaction is finished.
     """
     from .execution_backend import TERMINAL_STATES, slurm_state
-    from .suite_orchestrator import config_from_dict, read_json, write_json
+    from .suite_orchestrator import (config_from_dict, remote_storage_failure_directory,
+                                     read_json, write_json)
     orchestrator._require_active_study()
     with orchestrator.journal.controller():
         task = next((r for r in orchestrator.journal.tasks("generation") if r["id"] == task_id), None)
@@ -234,6 +239,9 @@ def resume_preparation(orchestrator, task_id):
                 prove_pre_model(archive.parent,task["payload"]["mode"])
             config = config_from_dict(task["payload"]["config"])
             backend = orchestrator._backend(old_task,config,directory)
+            if (audit.get("infrastructure_category") == "remote_storage_failure"
+                    and remote_storage_failure_directory(read_json(directory / "failure.json").get("error", "")) != backend.remote_dir):
+                raise ValueError("Prepared storage failure directory differs from the owned worker session")
             if audit["same_live_allocation"] or audit.get("new_session"):
                 status = backend.attach_existing()
                 if str(backend.job_id) != str(audit["previous_job_id"]):

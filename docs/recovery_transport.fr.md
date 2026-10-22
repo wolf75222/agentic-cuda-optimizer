@@ -48,6 +48,19 @@ chemin de reprise infrastructure.
 Cette commande prépare seulement la reprise : zéro appel modèle, requête GPU
 ou nouvelle soumission. Elle authentifie à nouveau la session et le job.
 
+Un refus de création du répertoire de session (`Disk quota exceeded` ou
+`No space left on device`) peut aussi relever de ce bootstrap. Le diagnostic
+doit désigner exactement le répertoire du worker ; les preuves d'absence de
+modèle et de soumission restent obligatoires. Libérer d'abord la capacité,
+puis préparer explicitement la reprise avec le motif de stockage observé.
+Une erreur d'écriture après le démarrage du modèle ne devient pas un bootstrap.
+
+Le contrôleur maintient au plus le nombre configuré de tâches en vol. Dès
+qu'un tel incident de stockage est reconnu, il retient les tâches suivantes
+et FINAL, en laissant terminer les tâches actives. Elles ne sont pas marquées
+en échec sans exécution. Cette protection ne fixe aucun budget global de
+tokens, d'appels ou de durée.
+
 - Worker vivant : même allocation et même GPU, préfixe de requêtes figé par
   SHA. Les résultats déjà acquis sont relus, et la dernière requête incertaine
   est collectée avec son identifiant et son contenu d'origine. Après le préfixe,
@@ -82,6 +95,26 @@ GPU ou modèle :
 
 La propriété distante et l'intégrité des fichiers sont recontrôlées. La même
 session préparée est conservée ; la tentative n'est pas incrémentée deux fois.
+
+## Génération terminée, reçu terminal manquant
+
+Une génération de l'agent LangGraph peut avoir écrit son résultat complet avant
+une erreur de fermeture du worker. Après fermeture gracieuse de cette seule
+allocation, la réconciliation suivante exige son reçu `COMPLETED`, `0:0`, les
+mêmes identifiants et les sources inchangées :
+
+```bash
+.venv/bin/python scripts/run_quality_suite.py reconcile-completed-generation \
+  --directory results/quality-study-v2 \
+  --task quality-20261021-v2.normalization.3141.full \
+  --reason "Résultat complet conservé ; fermeture bloquée par le quota, puis terminal authentifié"
+```
+
+Elle conserve les anciens fichiers avant d'ajouter les métadonnées de cycle
+de vie. Elle n'appelle ni modèle, ni compilation, ni benchmark et ne crée pas
+de tentative ou de session. Un résultat partiel, un worker actif ou en échec,
+un résultat de méthode en échec, FINAL et les modes CLI natif/original ne
+relèvent pas de cette commande. Le rejeu vérifie la transaction conservée.
 
 ## Réparation interrompue avant la première récompense
 
