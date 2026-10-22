@@ -713,6 +713,51 @@ def _classify_pending_trials(study, pending, documents, journals, raw_hashes):
     return active, historical, lineage_errors
 
 
+def _artifact_refusal_index(study, documents, writer, errors):
+    """Carry authenticated public refusals into the portable authority.
+
+    Absence is an observed empty registry, never a race-freedom claim. An
+    unreadable or inconsistent registry remains a conservative refusal rather
+    than disappearing behind an older positive FINAL receipt.
+    """
+    from .artifact_qualification_incidents import load_artifact_qualification_incidents
+    run_ids = set()
+    for path, document in documents:
+        relative = path.relative_to(study)
+        if len(relative.parts) >= 3 and relative.parts[0] == "campaigns":
+            run_ids.add(relative.parts[1])
+        if path == study / "plan.json" and isinstance(document, dict):
+            for entry in document.get("entries", []):
+                if isinstance(entry, dict) and isinstance(entry.get("config"), dict):
+                    run_id = entry["config"].get("run_id")
+                    if isinstance(run_id, str):
+                        run_ids.add(run_id)
+    try:
+        incidents, observations = load_artifact_qualification_incidents(study, run_ids)
+    except (OSError, ValueError, TypeError) as error:
+        incidents, observations = {}, [{"status":"uncertain", "qualification_status":"not_admitted",
+            "artifact_hash":None, "error":str(error)}]
+    rows = []
+    for artifact, records in incidents.items():
+        for incident in records:
+            member = "evidence/artifact-incidents/" + artifact + "/incident.json"
+            review = "evidence/" + incident["evidence"]["review"]["path"]
+            sha = incident["authentication"]["incident_sha256"]
+            review_sha = incident["evidence"]["review"]["sha256"]
+            if (writer.files.get(member, {}).get("sha256") != sha
+                    or writer.files.get(review, {}).get("sha256") != review_sha):
+                observations.append({"status":"uncertain", "qualification_status":"not_admitted",
+                    "artifact_hash":artifact, "reason":"exported_incident_bytes_differ_from_authenticated_registry"})
+                errors.append({"path":member, "error":"Incident authority changed or was omitted during export"})
+                continue
+            rows.append({"artifact_hash":artifact, "incident_member":member, "incident_sha256":sha,
+                         "review_member":review, "review_sha256":review_sha})
+    registry = study / "artifact-incidents"
+    return {"schema_version":1, "kind":"exported_artifact_refusal_index", "registry_observed":True,
+            "registry_present":registry.exists() or registry.is_symlink(),
+            "incidents":rows, "observations":observations}
+
+
 def export_study(directory,output,*,repo_dir=REPO):
     """Export a complete or explicitly partial local study; submit no work."""
     study,output,repo = Path(directory).resolve(),Path(output).resolve(),Path(repo_dir).resolve()
@@ -838,6 +883,7 @@ def export_study(directory,output,*,repo_dir=REPO):
             complete = False
         if complete and not candidates:
             errors.append({"error":"Completed journal has no portable frozen candidate receipts"})
+        artifact_refusals = _artifact_refusal_index(study, documents, writer, errors)
         after = {str(path):(path.stat().st_size,path.stat().st_mtime_ns) for path in study.rglob("*") if path.is_file() and not path.is_symlink()}
         changed = [name for name in set(before)|set(after) if before.get(name) != after.get(name) and not name.endswith(("-wal","-shm",".lock"))]
         requires_original = any(row.get("method") == "true_upstream_original" for _,value in documents for row in _walk(value))
@@ -866,6 +912,7 @@ def export_study(directory,output,*,repo_dir=REPO):
             "controller_or_worker_lock_observed_active":controller_active,"active_jobs_observed":observed_jobs,
             "inflight_search_trials":inflight_trials,"source_head_changed_during_export":source_changed,
             "historical_search_trials":historical_trials,
+            "artifact_qualification_incidents":artifact_refusals,
             "pending_search_trial_observations":inflight_trials+historical_trials,
             "lock_files_omitted":omitted_locks,
             "scheduler_observation":"Cached local receipts/journal only; scheduler was not queried",

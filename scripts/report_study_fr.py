@@ -110,43 +110,32 @@ def fmt(value, digits=3):
 
 
 def comparison_view(pair):
-    """Keep a legacy pair intact and derive an identity-aware presentation."""
-    pair = _mapping(pair)
-    interval = _mapping(pair.get("interval"))
-    identity_declared = pair.get("status") == "exact_artifact_identity" or pair.get("gain_basis") == "exact_artifact_identity"
-    unproven = (pair.get("status") == "artifact_identity_context_unproven"
-                or pair.get("gain_basis") == "unproven_artifact_context"
-                or (identity_declared and pair.get("ok") is not True))
-    exact = not unproven and _hash(pair.get("artifact_hash")) and pair["artifact_hash"] == pair.get("incumbent_artifact_hash")
-    unavailable = not exact and not unproven and not interval
-    return {"gain_basis": "unproven_artifact_context" if unproven else "exact_artifact_identity" if exact else "comparison_unavailable" if unavailable else "paired_measurement",
-            "gain": None if unproven else 1.0 if exact else interval.get("gain"),
-            "lower": None if exact or unproven else interval.get("lower"), "upper": None if exact or unproven else interval.get("upper"),
-            "case_gains": {} if exact or unproven else interval.get("case_gains", {}),
-            "source_status": pair.get("status"), "source_ok": pair.get("ok"),
-            "source_interval_preserved": interval,
-            "artifact_hash": pair.get("artifact_hash"), "incumbent_artifact_hash": pair.get("incumbent_artifact_hash")}
+    """Keep source decisions intact and share the Markdown qualification policy."""
+    from optimizer_agent.suite_report import method_comparison_view
+    return method_comparison_view(pair)
 
 
-def direct_comparison_views(final_groups):
-    return [{"group_id": group_id, "comparison": name, **comparison_view(pair)}
-            for group_id, group in _mapping(final_groups).items() if isinstance(group, dict)
-            for name, pair in _mapping(group.get("method_comparisons")).items()]
+def direct_comparison_views(final_groups, summary=None):
+    from optimizer_agent.suite_report import direct_method_comparison_views
+    return direct_method_comparison_views(summary, final_groups)
 
 
 def direct_comparison_table(views):
     if not views:
         return ""
     return "<h2>Contrastes directs des groupes finaux</h2>" + table(
-        ["Groupe", "Contraste", "Fondement", "Ratio", "IC95%", "Indicateur ok du reçu source"],
-        [[entry["group_id"], entry["comparison"],
+        ["Groupe", "Contraste", "Statut", "Fondement", "Ratio", "IC95%", "Indicateur ok du reçu source"],
+        [[entry["group_id"], entry["comparison"], entry["source_status"] or "inconnu",
           {"exact_artifact_identity": "identité exacte des artefacts",
            "unproven_artifact_context": "contexte d’exécution non prouvé",
+           "artifact_qualification_not_admitted": "artefact non admis scientifiquement",
            "comparison_unavailable": "comparaison indisponible"}.get(entry["gain_basis"], "mesure appariée"),
           fmt(entry["gain"]), "sans intervalle : identité" if entry["gain_basis"] == "exact_artifact_identity" else
-          "IC non établi" if entry["gain_basis"] in ("unproven_artifact_context", "comparison_unavailable") else
+          "IC non établi" if entry["gain_basis"] in ("unproven_artifact_context", "comparison_unavailable", "artifact_qualification_not_admitted") else
           "["+fmt(entry["lower"])+" ; "+fmt(entry["upper"])+"]", entry["source_ok"]] for entry in views]) + (
-        "<p>Les comparaisons héritées avec empreintes complètes identiques gardent le ratio 1, "
+        "<p>La vue qualifiée du résumé est prioritaire sur les reçus bruts historiques. Un artefact non admis "
+        "scientifiquement conserve un ratio inconnu et aucun intervalle affiché. Les comparaisons héritées "
+        "avec empreintes complètes identiques gardent le ratio 1, "
         "sauf en présence d’un refus explicite du contexte d’exécution. Ce refus conserve un ratio inconnu et un IC non établi. "
         "Les intervalles hérités bruités sont conservés dans les données sources et exclus de cette interprétation. "
         "Une identité ne qualifie ni le kernel ni la méthode. Une même source avec un lancement différent reste un autre artefact.</p>")
@@ -671,7 +660,8 @@ def case_comparison_table(summary, direct_views):
             continue
         cases = _mapping(value.get("case_gains")) if basis == "paired_measurement" else {}
         if not cases:
-            reason = "contexte d’exécution non prouvé" if basis == "unproven_artifact_context" else "mesure par cas indisponible"
+            reason = ("artefact non admis scientifiquement" if basis == "artifact_qualification_not_admitted" else
+                      "contexte d’exécution non prouvé" if basis == "unproven_artifact_context" else "mesure par cas indisponible")
             rows.append(prefix + ["non établi", "inconnu", "IC non établi", reason])
             continue
         for case, interval in cases.items():
@@ -2063,7 +2053,7 @@ def main():
     report["ci_evidence"] = {"receipt": ci, "exact_checkout_qualified": ci_ok,
                              "policy": "Successful completed CI on HEAD qualifies only a clean source checkout"}
     report["control_receipts"] = control_receipts(REPO)
-    report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"))
+    report["direct_comparison_views"] = direct_comparison_views(report.get("final_groups"), summary)
     report["campaign_metric_views"] = campaign_metric_views(summary)
     report["campaign_call_observations"] = campaign_call_observations(summary, report["project_observed_consumption"], args.study)
     report["campaign_research_model_consumption"] = campaign_research_model_consumption(

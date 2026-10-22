@@ -80,6 +80,8 @@ def make_bundle(directory, operation="convolution", damage=None, *, dependency=F
         "compilation_identity":{"source":source.read_text(),"options":[]}}
     manifest = {"kind":"portable_study_export","status":"complete","study_directory_observed":str(root),
         "controller_or_worker_lock_observed_active":False,"source_head_changed_during_export":False,
+        "artifact_qualification_incidents":{"schema_version":1,"kind":"exported_artifact_refusal_index",
+            "registry_observed":True,"registry_present":False,"incidents":[],"observations":[]},
         "active_jobs_observed":[],"inflight_search_trials":[],"errors":[],"changed_files_during_export":[],"candidates":[chosen]}
     if damage == "input":members[prefix+"a.bin"] = np.zeros_like(a).tobytes()
     elif damage == "contract":chosen["contract"]["allowed_precision"]="float64"

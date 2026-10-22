@@ -53,6 +53,36 @@ do not match. Complete denotes the exported study's recorded execution state.
 Exporting creates no scientific certification; the original final validation,
 sanitizer and paired confirmation receipts remain authoritative.
 
+## Declared artifact refusal and current validation boundary
+
+Integrity and scientific admission are separate. The [declared global-write
+incident](../work/live/artifact-global-write-review-775158.json) targets exact
+artifact `146ffc0b…`, source `04e8d51f…`: its original SEARCH measurements and
+source remain preserved, while their numerical success does not establish a
+scientifically admissible gain. Compute Sanitizer `racecheck` addresses
+shared-memory hazards and does not prove absence of unsynchronized global writes.
+The [report renderer receipt](../work/live/report-method-comparison-qualified-summary-acceptance.json)
+establishes CPU display behavior only. The [reconstruction gate](../work/live/reconstructed-artifact-incidents-cpu-acceptance.json)
+has 26 CPU tests, and [one synthetic-ZIP test](../work/live/portable-artifact-refusal-zip-integration.xml)
+checks the actual producer/consumer connection. These are synthetic fixtures,
+not a new cold archive of the running study or a reconstructed GPU execution.
+
+For a new qualification, `export-manifest.json.artifact_qualification_incidents`
+is mandatory: schema version 1, kind `exported_artifact_refusal_index`, an observed
+registry and authenticated incident/review references. The helper rejects a
+missing, unobserved, malformed, unresolved or selected-artifact refusal before
+opening numeric buffers. An old `qualified=true` never overrides it. A historical
+bundle without this index can still use the pure `export_study.py reconstruct`
+extraction shown above, which executes nothing and certifies nothing. Do not add
+an artificial empty index or relabel old receipts to obtain qualification.
+The [final CPU integration receipt](../work/live/functional-qualification-full-v3/acceptance.json)
+records 2,165 tests plus 13 subtests and successful compileall on 186 declared
+stable files. Its availability correction distinguishes cohort completion from
+scientific admission; it never executes or qualifies a refused artifact. This
+is separate from published-source CI, a real cold study ZIP and GPU reconstruction,
+which remain pending. A reconstruction must not repair or silently qualify the
+historical artifact.
+
 The exporter queries no scheduler and records job state from local journals and
 receipts. Active jobs are untouched. Partial SQLite backups can contain sealed
 final seeds: exports are protected with directory mode 0700 and archive mode

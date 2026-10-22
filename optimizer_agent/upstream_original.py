@@ -409,20 +409,47 @@ class OriginalCodexTransport:
         return SimpleNamespace(output_text=output["output_text"],model_dump=lambda **kwargs:output)
 
     def usage(self):
+        """Describe acknowledged CLI observations without changing upstream choices.
+
+        ``calls`` mirrors successful journal results and must not be added a
+        second time. An error acknowledgement or an unacknowledged intent does
+        not prove whether a CLI consumed tokens, so exact totals stay unknown.
+        This is metadata only: no reply is reconciled or model call issued.
+        """
+        from .model_usage import summarize_recorded_model_usage
+
+        events, acknowledged, uncertain_records = [], set(), []
+        for index, record in enumerate(self.records):
+            if not isinstance(record, dict):
+                events.append(None)
+                uncertain_records.append({"record_index": index})
+                continue
+            key, attempt = record.get("key"), record.get("attempt")
+            identity = {}
+            if isinstance(key, str) and key and type(attempt) is int and attempt >= 0:
+                acknowledged.add((key, str(attempt)))
+                identity["reservation_id"] = "original-" + content_hash({"key": key, "attempt": attempt})
+            result = record.get("result")
+            if isinstance(result, dict) and result and not record.get("error"):
+                identity.update(call_id=result.get("call_id"), usage=result.get("usage"))
+                events.append({"kind": "model", "payload": identity})
+            else:
+                events.append({"kind": "model_uncertain", "payload": identity})
+                uncertain_records.append({"record_index": index, "key": key if isinstance(key, str) else None,
+                                          "attempt": attempt if type(attempt) is int else None})
         pending = []
         if self.directory:
-            acknowledged = {(record["key"],str(record["attempt"])) for record in self.records}
-            for path in (self.directory/"intents").glob("*/*/intent.json"):
+            for path in sorted((self.directory/"intents").glob("*/*/intent.json")):
                 if (path.parent.parent.name,path.parent.name) not in acknowledged:
                     pending.append(str(path.relative_to(self.directory)))
-        totals = {"model_calls":len(self.records)+len(pending),"input_tokens":0,"cached_input_tokens":0,"output_tokens":0,
-                  "usage_complete":not pending and all(record.get("result") for record in self.records),
-                  "uncertain_model_intents":pending}
-        for call in self.calls:
-            for key in ("input_tokens","cached_input_tokens","output_tokens"):
-                totals[key] += call.usage.get(key,0)
-        totals["model_tokens"] = totals["input_tokens"]+totals["output_tokens"]
-        return totals
+                    events.append({"kind": "model_uncertain", "payload": {
+                        "reservation_id": "original-" + content_hash({"key": path.parent.parent.name,
+                                                                      "attempt": path.parent.name})}})
+        totals = summarize_recorded_model_usage(events, pending_model_calls=len(pending))
+        return {**totals, "uncertain_model_intents": pending,
+                "uncertain_model_records": uncertain_records,
+                "acknowledged_model_records": len(self.records),
+                "model_usage_scope": "Deduplicated acknowledged original-transport results; pending/error records do not establish actual CLI calls. Known counters are lower bounds, not complete consumption or billing."}
 
 
 class OriginalHarnessTransport:

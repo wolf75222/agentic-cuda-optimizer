@@ -1722,6 +1722,12 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
     summary = method_outcome_summary()
     summary["rows"][0]["metrics"] = {"first_useful_gain_status": "observed", "time_to_first_useful_gain_seconds": 3.125,
         "research_model_wall_seconds": 8.25, "unknown_metrics": ["research_seconds"]}
+    raw_groups = {"shared": {"method_comparisons": {"full_vs_true_upstream": {
+        "status": "promoted", "ok": True, "interval": {"gain": 9.875, "lower": 9.765, "upper": 9.985,
+            "case_gains": {"disqualified-raw-case": {"gain": 9.875, "lower": 9.765, "upper": 9.985}}}}}}}
+    summary["method_comparisons"]["shared"]["full_vs_true_upstream"].update(
+        status="artifact_qualification_not_admitted", ok=False, qualified=False, interval=None,
+        artifact_incident_blocked=True)
     raw = deepcopy(summary)
     class FixtureSuite:
         def __init__(self, plan, directory):
@@ -1730,7 +1736,7 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
             return {"fixture_only": True}
     def fixture_report(directory, status, evidence):
         assert directory == study and status == {"fixture_only": True}
-        return {"summary": deepcopy(summary), "method_outcome_policy": "Fixture method policy", "final_groups": {}}
+        return {"summary": deepcopy(summary), "method_outcome_policy": "Fixture method policy", "final_groups": deepcopy(raw_groups)}
     monkeypatch.setattr(orchestrator, "SuiteOrchestrator", FixtureSuite)
     monkeypatch.setattr(suite_report, "write_report", fixture_report)
     inventory_calls = []
@@ -1761,6 +1767,11 @@ def test_report_artifact_exports_additive_metric_view_and_prioritizes_section16(
     assert report["campaign_metric_views"][0]["first_useful_search_gain"]["seconds"] == 3.125
     assert report["campaign_metric_views"][0]["raw_unknown_metrics"] == ["research_seconds"]
     assert report["independent_frozen_gemm_pilot"] == pilot
+    blocked = next(value for value in report["direct_comparison_views"] if value["comparison"] == "full_vs_true_upstream")
+    assert blocked["gain_basis"] == "artifact_qualification_not_admitted" and blocked["gain"] is None
+    assert blocked["comparison_source"] == "summary.method_comparisons"
+    assert "artefact non admis scientifiquement" in html and "disqualified-raw-case" not in html
+    assert "9.88" not in html and report["final_groups"] == raw_groups
     assert inventory_calls == [True]
     assert report["campaign_call_observations"]["inventory_available"] is True
     assert "Coûts modèles du service de recherche" in html

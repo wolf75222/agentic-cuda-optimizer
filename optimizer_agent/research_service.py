@@ -26,10 +26,12 @@ try:
     from .codex_backend import CodexBackend, CodexError, STRING, STRINGS, plain, schema_object, observed_web_activity
     from .pmpp_guidance import PMPP_GUIDANCE, PMPP_TOPICS, consult_pmpp
     from .diagnostics import diagnostic_digest
+    from .model_usage import aggregate_model_usage
 except ImportError:
     from codex_backend import CodexBackend, CodexError, STRING, STRINGS, plain, schema_object, observed_web_activity
     from pmpp_guidance import PMPP_GUIDANCE, PMPP_TOPICS, consult_pmpp
     from diagnostics import diagnostic_digest
+    from model_usage import aggregate_model_usage
 
 
 class ResearchBlocked(RuntimeError):
@@ -1064,9 +1066,7 @@ Actually read source content:\n{json.dumps(contents)}"""
                 synthesis_prompt, synthesis_context, synthesis_schema(sources,
                 proposed_techniques=diagnostic_context["proposed_technique_names"] if diagnostic_context else None),
                 supplied_content={"path":content_path,"sha256":content_hash}, purpose="proposal", timeout_seconds=remaining)
-            usage = {"input_tokens": sum(result.usage.get("input_tokens", 0) for result in (search, synthesis)),
-                     "output_tokens": sum(result.usage.get("output_tokens", 0) for result in (search, synthesis)),
-                     "cost_usd": None}
+            usage = aggregate_model_usage(result.usage for result in (search, synthesis))
             synthesis_payload = normalize_research_references(synthesis.payload, sources)
             dossier = ResearchDossier(research_id, workload_hash, family, environment, queries,
                                       "retrieved", datetime.now(timezone.utc).isoformat(), sources,

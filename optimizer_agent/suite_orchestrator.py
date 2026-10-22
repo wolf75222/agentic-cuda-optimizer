@@ -28,6 +28,7 @@ import traceback
 from .campaign_config import CampaignConfig
 from .quality_suite import TOOLS, stable_id, summarize_suite
 from .protocol_incidents import load_protocol_incidents
+from .model_usage import aggregate_model_usage, inspect_model_usage
 
 REPO = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "recovery_required"}
@@ -400,9 +401,33 @@ def generation_adapter(entry, runner, directory, session, *, resume=False, sensi
         receipt = {**launch, "source_path": str(source.resolve()), "source_hash": hashlib.sha256(source.read_bytes()).hexdigest(), "kernel": config.workload}
         result["candidate"] = candidate_receipt(load_candidate(receipt))
     candidate = load_candidate(result["candidate"])
-    usage = dict(result.get("usage", {}))
-    if "input_tokens" in usage and "model_tokens" not in usage:
-        usage["model_tokens"] = usage["input_tokens"] + usage.get("output_tokens", 0)
+    raw_usage = result.get("usage")
+    usage = dict(raw_usage) if isinstance(raw_usage, dict) else {}
+    usage_observation = inspect_model_usage(raw_usage)
+    declared_incomplete = (isinstance(raw_usage, dict) and
+        (raw_usage.get("usage_complete") is False or bool(raw_usage.get("uncertain_model_intents"))
+         or bool(raw_usage.get("uncertain_model_records"))))
+    if declared_incomplete:
+        # Legacy adapters may have initialized missing counters to zero. Those
+        # values can only describe a partial observation, never a total for an
+        # interrupted invocation. Preserve the supplied values separately.
+        for key in ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_output_tokens"):
+            usage.setdefault("known_" + key, usage_observation.get("known_" + key, usage_observation.get(key)))
+            usage[key] = None
+            usage_observation[key] = None
+        usage.setdefault("known_model_tokens", usage_observation["known_model_tokens"])
+        usage_observation.update(model_tokens=None, usage_complete=False, declared_incomplete=True,
+            unknown_fields=["input_tokens", "output_tokens"])
+        usage["usage_complete"] = False
+        known_calls = usage.get("known_model_calls")
+        if known_calls is not None and (type(known_calls) is not int or known_calls < 0):
+            usage["known_model_calls"] = None
+        if (raw_usage.get("uncertain_model_intents") or raw_usage.get("uncertain_model_records")
+                or usage.get("model_calls") == 0):
+            # The legacy total can include unacknowledged intentions. Its raw
+            # value is retained below, but is not a proven CLI invocation count.
+            usage["model_calls"] = None
+    usage["model_tokens"] = usage_observation["model_tokens"]
     if mode == "native_codex_vanilla":
         usage["model_calls"] = 1
         usage["native_completed_turns"] = len(result.get("usage_events", []))
@@ -419,7 +444,8 @@ def generation_adapter(entry, runner, directory, session, *, resume=False, sensi
               "mode": mode, "status": "method_failed" if method_status == "failed" else "generation_complete",
               "method_status": method_status, "generation_stage_status": "generation_complete",
               "evidence_path": str(Path(directory).resolve()),
-              "usage": usage, "model_call_unit":"Codex CLI invocations; provider-internal model/tool cycles may be unreported",
+              "usage": usage, "usage_observation": usage_observation, "generation_usage_reported": raw_usage,
+              "model_call_unit":"Codex CLI invocations; provider-internal model/tool cycles may be unreported",
               "generation_scores_excluded_from_suite_final": True}
     return result
 
@@ -500,8 +526,54 @@ def observed_metrics(directory, result):
     clock_path = directory / "generation/clock.json"
     started = read_json(clock_path)["started_at"] if clock_path.exists() else None
     first = min(promotions) if promotions else None
-    first_models = [row for row in model_events.values() if first and row["created_at"] <= first]
-    research_models = [row for row in model_events.values() if "research" in str(row["payload"].get("purpose", ""))]
+    first_models = [row for row in model_events.values() if first is not None and row["created_at"] <= first]
+    research_models = [row for row in model_events.values()
+                       if isinstance(row["payload"].get("purpose"), str)
+                       and "research" in row["payload"]["purpose"]]
+    unknown_purpose_models = [row for row in model_events.values()
+                              if not isinstance(row["payload"].get("purpose"), str)
+                              or not row["payload"]["purpose"].strip()]
+    # One successful call with unreported usage may have both model and
+    # model_uncertain events. Preserve the uncertainty without counting twice.
+    model_reservations = {row["payload"].get("reservation_id") for row in model_events.values()
+                          if row["payload"].get("reservation_id")}
+    unmatched_uncertain = {}
+    for index, row in enumerate(events):
+        if row.get("kind") != "model_uncertain":
+            continue
+        payload = row.get("payload", {})
+        call_id, reservation_id = payload.get("call_id"), payload.get("reservation_id")
+        if (call_id and call_id in model_events) or (reservation_id and reservation_id in model_reservations):
+            continue
+        identity = ("call", call_id) if call_id else ("reservation", reservation_id) if reservation_id else ("event", index)
+        unmatched_uncertain[identity] = row
+    uncertain_research = [row for row in unmatched_uncertain.values()
+                          if not isinstance(row.get("payload", {}).get("purpose"), str)
+                          or not row["payload"]["purpose"].strip()
+                          or "research" in row["payload"]["purpose"]]
+    uncertain_first = [row for row in unmatched_uncertain.values()
+                       if first is not None and row.get("created_at", float("-inf")) <= first]
+    research_usage = aggregate_model_usage((row["payload"].get("usage") for row in research_models),
+                                           unreported_calls=len(uncertain_research) + len(unknown_purpose_models)) if model_events or unmatched_uncertain else None
+    first_usage = aggregate_model_usage((row["payload"].get("usage") for row in first_models),
+                                        unreported_calls=len(uncertain_first)) if first is not None and (first_models or uncertain_first) else None
+    def recorded_duration(value):
+        return value if (type(value) is int and value >= 0
+                         or type(value) is float and value >= 0 and math.isfinite(value)) else None
+    durations = [recorded_duration(row["payload"].get("elapsed_seconds")) for row in research_models]
+    known_durations = [value for value in durations if value is not None]
+    duration_sum_unknown = False
+    try:
+        known_research_wall = sum(known_durations) if (known_durations or research_usage is not None
+            and research_usage["observed_calls"] == 0) else None
+    except OverflowError:
+        known_research_wall, duration_sum_unknown = None, True
+    duration_sum_unknown = duration_sum_unknown or (
+        known_research_wall is not None and recorded_duration(known_research_wall) is None)
+    if duration_sum_unknown:
+        known_research_wall = None
+    unknown_research_durations = (len(durations) - len(known_durations)
+                                  + len(uncertain_research) + len(unknown_purpose_models))
     native_audit_path = directory / "generation/evidence/requests.jsonl"
     native_audit = [json.loads(line) for line in native_audit_path.read_text().splitlines() if line.strip()] if native_audit_path.exists() else []
     first_provisional = next((row["timestamp"] for row in native_audit if row.get("operation") == "benchmark" and row.get("ok") is True), None)
@@ -527,11 +599,20 @@ def observed_metrics(directory, result):
         "compile_cache_hits": sum(row.get("compile_cache_hit") is True for row in reports),
         "compile_cache_misses": sum(row.get("compile_cache_hit") is False for row in reports),
         "research_events": len(research_events) if events_path.exists() else None,
-        "research_model_wall_seconds": sum(row["payload"].get("elapsed_seconds", 0) for row in research_models) if model_events else None,
-        "research_model_tokens": sum(sum(row["payload"].get("usage", {}).get(key, 0) for key in ("input_tokens", "output_tokens")) for row in research_models) if model_events else None,
+        "research_model_wall_seconds": known_research_wall if research_usage is not None and not unknown_research_durations and not duration_sum_unknown else None,
+        "research_model_wall_seconds_known_lower_bound": known_research_wall,
+        "research_model_wall_seconds_unknown_observations": unknown_research_durations,
+        "research_model_wall_seconds_aggregation_unknown": duration_sum_unknown,
+        "research_model_tokens": research_usage["model_tokens"] if research_usage is not None else None,
+        "research_model_usage": research_usage,
+        "research_model_usage_scope": "Recorded research-purpose calls only; completed or uncertain calls with unknown purpose conservatively prevent complete attribution, without assigning their known tokens or duration to research. Durations are sums of recorded call observations, not documentary end-to-end elapsed time or provider HTTP requests.",
+        "model_observations_with_unknown_purpose": len(unknown_purpose_models),
+        "unmatched_model_uncertain_observations": len(unmatched_uncertain),
         "time_to_first_useful_gain_seconds": first-started if first is not None and started is not None else result.get("time_to_first_useful_gain_seconds"),
-        "model_tokens_to_first_useful_gain": sum(sum(row["payload"].get("usage", {}).get(key, 0) for key in ("input_tokens", "output_tokens")) for row in first_models) if first is not None else None,
-        "model_calls_to_first_useful_gain": len(first_models) if first is not None else None,
+        "model_tokens_to_first_useful_gain": first_usage["model_tokens"] if first_usage is not None else None,
+        "model_usage_to_first_useful_gain": first_usage,
+        "model_calls_to_first_useful_gain": len(first_models) if first_usage is not None and not uncertain_first else None,
+        "known_model_calls_to_first_useful_gain": len(first_models) if first_usage is not None else None,
         "cuda_event_seconds_to_first_useful_gain": sum(sum(row.get("report", {}).get("latency_samples_ms", []))/1000 for row in requests if first and row.get("ended_at_unix", float("inf")) <= first) if first else None,
         "time_to_final_generation_seconds": result.get("elapsed_seconds"),
         "first_useful_gain_status": "observed" if first is not None else "no_promoted_gain" if events_path.exists() else "not_recorded_by_method",
@@ -539,6 +620,8 @@ def observed_metrics(directory, result):
     metrics["unknown_metrics"] = [name for name in (
         "time_to_first_useful_gain_seconds", "research_model_wall_seconds")
         if metrics[name] is None]
+    metrics["unknown_token_metrics"] = [name for name in (
+        "research_model_tokens", "model_tokens_to_first_useful_gain") if metrics[name] is None]
     return metrics
 
 
@@ -562,7 +645,8 @@ class RecordingRunner:
             write_json(self.directory / (run_id + ".json"), receipt)
 
 
-def evaluate_group(entries, generations, runner, directory, seed, commitment):
+def evaluate_group(entries, generations, runner, directory, seed, commitment, *,
+                   artifact_qualification_incidents=None, artifact_incident_observations=None):
     """Freeze all methods, then reveal fresh data once on one borrowed GPU."""
     from .campaign import WorkloadSuite, WorkloadContract, Evaluator, device_identity
     group_started = time.monotonic()
@@ -663,6 +747,35 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         except Exception as error:
             results[entry["mode"]] = {"status": "generation_unavailable", "qualified": False, "error": str(error)}
     write_json(directory / "frozen-candidates.json", {key: candidate_receipt(value) for key, value in candidates.items()})
+    available_modes = set(candidates)
+    # A reviewed negative finding is independent of numerical/sanitizer success.
+    # Preserve the frozen executable and historical generation, but never run or
+    # rank a known-disqualified artifact as though racecheck covered global WAW.
+    artifact_qualification_incidents = artifact_qualification_incidents or {}
+    artifact_incident_observations = artifact_incident_observations or []
+    global_incident_uncertainty = any(row.get("status") == "uncertain" and not row.get("artifact_hash")
+                                      for row in artifact_incident_observations)
+    uncertain_artifacts = {row["artifact_hash"] for row in artifact_incident_observations
+                           if row.get("status") == "uncertain" and row.get("artifact_hash")}
+    baseline_reasons = artifact_qualification_incidents.get(baseline.artifact_hash, [])
+    if global_incident_uncertainty or baseline_reasons or baseline.artifact_hash in uncertain_artifacts:
+        raise ValueError("FINAL qualification suspended: baseline or global artifact incident is not admitted")
+    for mode, candidate in list(candidates.items()):
+        if mode == "baseline":
+            continue
+        incidents = artifact_qualification_incidents.get(candidate.artifact_hash, [])
+        uncertain = candidate.artifact_hash in uncertain_artifacts
+        if incidents or uncertain:
+            results[mode] = {**candidate_receipt(candidate), "qualified": False,
+                "scientific_qualification_eligible": False,
+                "status": "artifact_qualification_uncertain" if uncertain else "artifact_scientifically_disqualified",
+                "artifact_qualification_incidents": incidents,
+                "artifact_incident_observations": [row for row in artifact_incident_observations
+                                                    if row.get("artifact_hash") == candidate.artifact_hash],
+                "generation_method_status": generations.get(next(
+                    entry["config"]["run_id"] for entry in entries if entry["mode"] == mode), {}).get("method_status"),
+                "scope": "Exact artifact refused before FINAL input creation, validation or ranking. Historical SEARCH results and generation method status are unchanged."}
+            del candidates[mode]
     cases = suite.cases(final=True)
     inputs = {str(Path(a.input_file).relative_to(directory)): hashlib.sha256(Path(a.input_file).read_bytes()).hexdigest()
               for case in cases for a in case.request.arguments if getattr(a, "input_file", None)}
@@ -684,7 +797,10 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         "workload": config.workload, "campaign_seed": entries[0]["seed"], "final_seed": seed, "seed_commitment": commitment,
         "contract_hash": evaluator.contract_hash, "contract": asdict(contract), "environment": device_identity(properties),
         "input_hashes": inputs, "shapes": list(config.search_sizes), "candidates": results,
-        "baseline": candidate_receipt(baseline), "generation_scores_used": False, "execution_complete": False}
+        "baseline": candidate_receipt(baseline), "generation_scores_used": False, "execution_complete": False,
+        "artifact_incident_observations": artifact_incident_observations,
+        "artifact_qualification_excluded_modes": sorted(available_modes - candidates.keys()),
+        "artifact_qualification_scope": "Reviewed negative findings refuse exact artifacts; no incident is not a proof of race freedom."}
     # All independent validations and sanitizers precede every ranking call.
     qualifications, qualification_memo = {}, {}
     for mode, candidate in candidates.items():
@@ -786,7 +902,7 @@ def evaluate_group(entries, generations, runner, directory, seed, commitment):
         proof["method_comparisons"]["pmpp_permanent_only_vs_no_pmpp"] = evaluator.confirm(
             candidates["pmpp_permanent_only"], candidates["no_pmpp"])
         write_json(directory / "group-result.pending.json", proof)
-    proof["all_modes_available"] = all(e["mode"] in candidates for e in entries)
+    proof["all_modes_available"] = all(e["mode"] in available_modes for e in entries)
     transport_failures = [row for row in _walk(proof) if infrastructure_category(row.get("error", ""))]
     explicit_infrastructure_failure = any(row.get("status") == "infrastructure_failure" or row.get("worker_poisoned") is True
                                           for row in _walk(proof))
@@ -1073,8 +1189,15 @@ class SuiteOrchestrator:
                     result = self.generate(task["payload"], recording, directory / "generation", task["session"], **kwargs)
                 else:
                     generations = {r["id"]: r["result"] or {} for r in self.journal.tasks("generation")}
+                    kwargs = {}
+                    if self.qualify is evaluate_group:
+                        from .artifact_qualification_incidents import load_artifact_qualification_incidents
+                        incidents, observations = load_artifact_qualification_incidents(self.directory,
+                            [entry["config"]["run_id"] for entry in self.plan["entries"]])
+                        kwargs = {"artifact_qualification_incidents": incidents,
+                                  "artifact_incident_observations": observations}
                     result = self.qualify(task["payload"], generations, recording, directory,
-                        self.journal.seed(task["id"]), self.journal.commitments()[task["id"]])
+                        self.journal.seed(task["id"]), self.journal.commitments()[task["id"]], **kwargs)
                 result["metrics"] = {**observed_metrics(directory, result), **result.get("metrics", {})}
                 result.update(session_id=task["session"], job_id=str(backend.job_id), task_evidence_path=str(directory))
                 write_json(result_path, result)
@@ -1232,8 +1355,13 @@ class SuiteOrchestrator:
         manifests = {r["id"]: r["result"] for r in tasks if r["kind"] == "generation" and r["result"]}
         groups = {r["id"]: r["result"] for r in tasks if r["kind"] == "final" and r["result"]}
         protocol_incidents, incident_observations = load_protocol_incidents(self.directory, self.plan)
+        from .artifact_qualification_incidents import load_artifact_qualification_incidents
+        artifact_incidents, artifact_observations = load_artifact_qualification_incidents(self.directory,
+            [entry["config"]["run_id"] for entry in self.plan["entries"]])
         summary = summarize_suite(self.plan, manifests, groups, protocol_incidents=protocol_incidents,
-                                  protocol_incident_observations=incident_observations)
+                                  protocol_incident_observations=incident_observations,
+                                  artifact_qualification_incidents=artifact_incidents,
+                                  artifact_incident_observations=artifact_observations)
         with self.journal.connection() as db:
             previous_attempts = [{"task_id": row["task_id"], "attempt": row["attempt"], "reason": row["reason"],
                 "seed_commitment": row["commitment"], "receipt": json.loads(row["snapshot"])}

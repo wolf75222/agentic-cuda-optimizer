@@ -298,6 +298,19 @@ class ExperimentStore:
                 candidate["current_validity"] = {"valid":bool(validity["valid"]),"reason":validity["reason"]}
             return candidate
 
+    def candidate_source_records(self, run_id):
+        """Read archived candidates for one fixed campaign, without model input SQL.
+
+        The model transport projects these records into a public SEARCH snapshot;
+        the database itself is never exposed as a model tool or MCP resource.
+        """
+        if not isinstance(run_id, str) or not run_id:
+            raise ValueError("Candidate history requires an explicit campaign")
+        with self.connection() as db:
+            identifiers = [row["candidate_id"] for row in db.execute(
+                "SELECT candidate_id FROM candidates WHERE run_id=? ORDER BY candidate_id", (run_id,))]
+        return [self.get_candidate_source(identifier, run_id) for identifier in identifiers]
+
     def set_candidate_validity(self, run_id, candidate_id, valid, reason):
         with self.transaction() as db:
             db.execute("INSERT OR REPLACE INTO candidate_status VALUES (?,?,?,?)", (run_id,candidate_id,int(valid),reason))

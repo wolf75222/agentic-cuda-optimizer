@@ -2,6 +2,7 @@
 from pathlib import Path
 from html import escape
 import json
+import math
 import re
 
 from .suite_orchestrator import REPO, write_json
@@ -61,6 +62,90 @@ def _markdown_table(headers, rows):
     return ["| " + " | ".join(_markdown_cell(value) for value in headers) + " |",
             "| " + " | ".join("---" for _ in headers) + " |",
             *("| " + " | ".join(_markdown_cell(value) for value in row) + " |" for row in rows)]
+
+
+METHOD_COMPARISON_VIEW_KIND = "artifact_aware_method_comparison_summary"
+
+
+def method_comparison_view(pair):
+    """Present the selected decision without reviving a disqualified raw ratio."""
+    pair = pair if isinstance(pair, dict) else {}
+    interval = pair.get("interval") if isinstance(pair.get("interval"), dict) else {}
+    blocked = (pair.get("status") == "artifact_qualification_not_admitted"
+               or pair.get("artifact_incident_blocked") is True)
+    identity_declared = pair.get("status") == "exact_artifact_identity" or pair.get("gain_basis") == "exact_artifact_identity"
+    unproven = (pair.get("status") == "artifact_identity_context_unproven"
+                or pair.get("gain_basis") == "unproven_artifact_context"
+                or (identity_declared and pair.get("ok") is not True))
+    artifact = pair.get("artifact_hash")
+    exact = (not blocked and not unproven and isinstance(artifact, str)
+             and re.fullmatch(r"[0-9a-f]{64}", artifact) is not None
+             and artifact == pair.get("incumbent_artifact_hash"))
+    unavailable = not exact and not unproven and not interval
+    suppress = blocked or unproven
+    def number(value):
+        try:
+            return value if type(value) in (int, float) and math.isfinite(value) else None
+        except OverflowError:
+            return None
+    return {"gain_basis": "artifact_qualification_not_admitted" if blocked else
+                "unproven_artifact_context" if unproven else "exact_artifact_identity" if exact else
+                "comparison_unavailable" if unavailable else "paired_measurement",
+            "gain": None if suppress else 1.0 if exact else number(interval.get("gain")),
+            "lower": None if exact or suppress else number(interval.get("lower")),
+            "upper": None if exact or suppress else number(interval.get("upper")),
+            "case_gains": {} if exact or suppress else interval.get("case_gains", {}),
+            "source_status": pair.get("status"), "source_ok": pair.get("ok"),
+            "source_qualified": pair.get("qualified"),
+            "artifact_qualification_status": pair.get("artifact_qualification_status"),
+            "artifact_qualification_incident_ids": pair.get("artifact_qualification_incident_ids", []),
+            "source_interval_preserved": interval,
+            "artifact_hash": artifact, "incumbent_artifact_hash": pair.get("incumbent_artifact_hash")}
+
+
+def direct_method_comparison_views(summary, final_groups=None):
+    """Prefer the incident-aware summary; a present projection never falls back."""
+    summary = summary if isinstance(summary, dict) else {}
+    projected = "method_comparisons" in summary or "method_comparisons_view_kind" in summary
+    if projected:
+        groups = summary.get("method_comparisons") if summary.get("method_comparisons_view_kind") == METHOD_COMPARISON_VIEW_KIND else {}
+        groups = groups if isinstance(groups, dict) else {}
+    else:
+        raw = final_groups if isinstance(final_groups, dict) else {}
+        groups = {key: group.get("method_comparisons") for key, group in raw.items() if isinstance(group, dict)}
+    views = []
+    for group_id, pairs in groups.items():
+        if not isinstance(group_id, str) or not isinstance(pairs, dict):
+            continue
+        for name, pair in pairs.items():
+            if not isinstance(name, str):
+                continue
+            if projected and not (isinstance(pair, dict) and pair.get("kind") == METHOD_COMPARISON_VIEW_KIND
+                                  and pair.get("group_id") == group_id and pair.get("pair_key") == name):
+                pair = {"status": "summary_projection_unavailable"}
+            views.append({"group_id": group_id, "comparison": name, **method_comparison_view(pair),
+                          "comparison_source": "summary.method_comparisons" if projected else "legacy_final_group"})
+    return views
+
+
+def _direct_comparison_lines(views):
+    if not views:
+        return []
+    labels = {"exact_artifact_identity": "identité exacte des artefacts",
+              "unproven_artifact_context": "contexte d’exécution non prouvé",
+              "comparison_unavailable": "comparaison indisponible",
+              "artifact_qualification_not_admitted": "artefact non admis scientifiquement"}
+    rows = []
+    for view in views:
+        basis = view["gain_basis"]
+        interval = ("sans intervalle : identité" if basis == "exact_artifact_identity" else
+                    f"[{_number(view['lower'])} ; {_number(view['upper'])}]" if basis == "paired_measurement" else "IC non établi")
+        rows.append([view["group_id"], view["comparison"], view["source_status"] or "inconnu",
+                     labels.get(basis, "mesure appariée"), _number(view["gain"]), interval,
+                     view["source_ok"], view["comparison_source"]])
+    return ["", "## Contrastes directs des groupes finaux", "",
+            "La vue qualifiée du résumé est prioritaire sur les reçus bruts historiques. Un artefact non admis scientifiquement conserve un ratio inconnu et aucun intervalle affiché ; les données brutes restent préservées dans les groupes sources. Une identité ne qualifie ni l’artefact ni la méthode.", "",
+            *_markdown_table(["Groupe", "Contraste", "Statut", "Fondement", "Ratio", "IC95%", "Indicateur ok", "Source de la vue"], rows)]
 
 
 def _workload_dispersion_lines(summary):
@@ -191,6 +276,7 @@ def write_report(directory, status, *, evidence=None):
         report["requirement_audit"] = {key:value for key,value in evidence.items()
                                       if key not in {"requirements","evidence_catalog"}}
     report["remaining"] = [{"id":row["id"],"items":row["remaining"]} for row in report["requirements"] if row["remaining"]]
+    report["direct_comparison_views"] = direct_method_comparison_views(report["summary"], report.get("final_groups"))
     write_json(directory / "report.json", report)
     summary = report["summary"]
     lines = ["# Campagnes comparatives et ablations — état vérifié", "",
@@ -220,6 +306,7 @@ def write_report(directory, status, *, evidence=None):
                  row.get('artifact_hash') or 'absent']
         lines.append("| " + " | ".join(_markdown_cell(value) for value in cells) + " |")
     lines += _final_closure_lines(summary)
+    lines += _direct_comparison_lines(report["direct_comparison_views"])
     lines += ["", "Les résultats par cas, intervalles, sources figées, paramètres, contrats, empreintes GPU et coûts détaillés sont disponibles dans report.json et les reçus des groupes finaux. Une absence de mesure n’est pas une absence de coût.", "", "## Exigences", "",
         "| Identifiant | Exigence | Implémenté | Test local | Exécuté ROMEO | En attente |", "| --- | --- | --- | --- | --- | --- |"]
     for row in report["requirements"]:

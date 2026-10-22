@@ -166,15 +166,27 @@ class RecordedCodex:
         self.store.reserve(self.run_id, reservation, {"model_calls": 1})
         try:
             result = self.backend.generate_json(*args, **kwargs)
-        except BaseException:
+        except BaseException as error:
             # Provider consumption may be unknown after a transport failure.
-            self.store.event(self.run_id, "model_uncertain", {"reservation_id": reservation})
+            self.store.event(self.run_id, "model_uncertain", {"reservation_id": reservation,
+                "purpose": kwargs.get("purpose"), "call_id": getattr(error, "call_id", None),
+                "reason": "model_transport_failed_without_complete_usage"})
             raise
         usage = result.usage
-        tokens = usage.get("input_tokens", 0) + usage.get("output_tokens", 0)
-        self.store.reconcile(self.run_id, reservation, {"model_calls": 1, "model_tokens": tokens})
+        from .model_usage import inspect_model_usage
+        observed = inspect_model_usage(usage)
+        actual = {"model_calls": 1}
+        if observed["model_tokens"] is not None:
+            actual["model_tokens"] = observed["model_tokens"]
+        self.store.reconcile(self.run_id, reservation, actual)
         self.store.event(self.run_id, "model", {"call_id": result.call_id, "purpose": kwargs.get("purpose"),
-                         "usage": usage, "elapsed_seconds": result.elapsed_seconds})
+                         "reservation_id": reservation, "usage": usage, "usage_observation": observed,
+                         "elapsed_seconds": result.elapsed_seconds})
+        if not observed["usage_complete"]:
+            self.store.event(self.run_id, "model_uncertain", {"reservation_id": reservation,
+                "call_id": result.call_id, "purpose": kwargs.get("purpose"),
+                "reason": "completed_without_complete_token_usage", "model_calls_observed": 1,
+                "usage_observation": observed})
         return result
 
 
@@ -280,7 +292,7 @@ class CampaignRuntime:
             model=config.model, reasoning_effort=config.reasoning_effort,
             timeout_seconds=config.model_timeout_seconds, trace_dir=self.directory / "model"))
         self.backend = RecordedCodex(self.raw_backend, self.store, config.run_id)
-        self.generator = CandidateGenerator(self.backend)
+        self.generator = CandidateGenerator(self.backend, candidate_source_provider=self.candidate_source_context)
         self.research_service = ResearchService(self.backend, self.directory / "research", ResearchConfig(
             required=config.research_required, web_required=config.web_search_required,
             experimental=config.experimental_mode is not None,
@@ -320,6 +332,43 @@ class CampaignRuntime:
         if not path.exists():
             path.write_text(state["source"])
         return Candidate(candidate_id, path, state["kernel"], LaunchRule(**state["launch_rule"]), state["parameters"])
+
+    def candidate_source_context(self):
+        """Only this campaign's archived SEARCH sources can reach the readonly tool."""
+        return {"run_id": self.config.run_id, "contract_hash": self.contract_hash,
+                "environment_fingerprint": self.environment_hash,
+                "records": self.store.candidate_source_records(self.config.run_id)}
+
+    def manifest_usage(self):
+        """Keep partial ledger charges separate from strict observed consumption."""
+        from .model_usage import summarize_recorded_model_usage
+        ledger = self.store.budget_state(self.config.run_id)
+        pending = ledger["reserved"].get("model_calls", 0)
+        if (type(pending) not in (int, float) or not math.isfinite(pending)
+                or pending < 0 or int(pending) != pending):
+            raise ValueError("Invalid pending model-call reservation count")
+        events = self.store.events(self.config.run_id)
+        orphan_ledger = {key:value for key,value in ledger["spent"].items()
+            if key in {"model_calls", "model_tokens"}}
+        if orphan_ledger and not any(isinstance(event, dict) and event.get("kind") in
+                                    {"model", "model_uncertain"} for event in events):
+            # An old/imported charge without its observation cannot turn an
+            # otherwise empty event stream into evidence of zero consumption.
+            events = [*events, {"kind":"model_uncertain", "payload":{
+                "reason":"recorded_ledger_without_model_observations"}}]
+        else:
+            orphan_ledger = {}
+        observed = summarize_recorded_model_usage(events,
+                                                 pending_model_calls=int(pending))
+        observed["unattributed_recorded_ledger_model_entries"] = orphan_ledger
+        consumption = {**ledger["spent"], "model_tokens": observed["model_tokens"],
+                       "model_calls": observed["model_calls"],
+                       **{key: observed[key] for key in ("input_tokens", "output_tokens", "cached_input_tokens",
+                           "reasoning_output_tokens", "known_input_tokens", "known_output_tokens",
+                           "known_model_tokens", "known_model_calls")}}
+        return {"usage": consumption, "pending_usage": ledger["reserved"],
+                "model_usage_observation": observed, "recorded_ledger_spent": ledger["spent"],
+                "model_usage_scope": "Strict deduplicated model observations; unknown counters remain null. Recorded ledger entries are retained separately and may be partial or historical."}
 
     def trial_dir(self, state):
         return self.directory / "trials" / state["trial_id"]
@@ -1023,7 +1072,7 @@ class CampaignRuntime:
                       "certification_status": "generation_complete"}
             write_json(self.directory / "best-launch.json", frozen)
             write_json(self.directory / "candidate.json", frozen)
-            usage = self.store.budget_state(self.config.run_id)
+            usage = self.manifest_usage()
             manifest = {"run_id": self.config.run_id,
                         "termination_reason": state.get("termination_reason") or "completed",
                         "certification_status": "generation_complete", "generation_only": True,
@@ -1033,7 +1082,7 @@ class CampaignRuntime:
                         "trials_done": state.get("trials_done", 0),
                         "best_candidate_id": best.candidate_id, "artifact_hash": best.artifact_hash,
                         "candidate": frozen, "baseline_latencies_ms": self.baseline_latencies,
-                        "usage": usage["spent"], "pending_usage": usage["reserved"],
+                        **usage,
                         "global_resource_caps": None, "elapsed_seconds": time.time()-self.started_at,
                         "experimental_mode": self.config.experimental_mode,
                         "final": {"status": "deferred_common_final_evaluation", "ok": False}}
@@ -1073,14 +1122,14 @@ class CampaignRuntime:
         write_json(self.directory / "best-launch.json", {"candidate_id": best.candidate_id,
                    "artifact_hash": best.artifact_hash, "launch_rule": asdict(best.launch_rule), "parameters": best.parameters,
                    "certification_status": final["status"]})
-        usage = self.store.budget_state(self.config.run_id)
+        usage = self.manifest_usage()
         manifest = {"run_id": self.config.run_id, "termination_reason": state.get("termination_reason") or "completed",
                     "certification_status": final["status"], "config": self.config.to_dict(),
                     "contract_hash": self.contract_hash, "environment": self.environment,
                     "model": self.config.model, "reasoning_effort": self.config.reasoning_effort,
                     "trials_done": state.get("trials_done", 0), "best_candidate_id": best.candidate_id,
                     "artifact_hash": best.artifact_hash, "baseline_latencies_ms": self.baseline_latencies,
-                    "usage": usage["spent"], "pending_usage": usage["reserved"],
+                    **usage,
                     "global_resource_caps": None, "elapsed_seconds": time.time()-self.started_at,
                     "experimental_mode": self.config.experimental_mode,
                     "final": final}

@@ -394,7 +394,9 @@ def test_original_transport_retry_count_survives_resume_without_reissuing_exhaus
     with pytest.raises(module.CodexError):
         resumed._call("original prompt",module.CHAT_SCHEMA)
     assert backend.calls == 3
-    assert resumed.usage()["model_calls"] == 3
+    assert resumed.usage()["model_calls"] is None
+    assert resumed.usage()["known_model_calls"] == 0
+    assert resumed.usage()["unmatched_model_uncertain_calls"] == 3
     assert not resumed.usage()["usage_complete"]
 
 
@@ -512,7 +514,8 @@ def test_unacknowledged_cli_intent_without_exact_completion_fails_closed_before_
     with pytest.raises(module.OriginalTransportUncertain):
         resumed._call("new prompt must not be issued",module.CHAT_SCHEMA)
     assert len(calls) == 1 and resumed.usage()["usage_complete"] is False
-    assert resumed.usage()["model_calls"] == 1
+    assert resumed.usage()["model_calls"] is None
+    assert resumed.usage()["known_model_calls"] == 0
 
 
 def test_model_exception_after_valid_initial_preserves_best_but_reports_method_failure(tmp_path,pinned):

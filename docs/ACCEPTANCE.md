@@ -22,6 +22,43 @@ checkpoints, pinned TreeQuest, a durable experiment ledger and a separate CUDA
 worker. The model is hosted by the configured Codex provider; “local” describes
 the agent process and orchestration, not on-device model weights.
 
+## New scoped evidence and remaining qualification
+
+The [native MCP control 001](../results/candidate-history-native-functional-control-001/acceptance.json)
+is real local CLI/tool delivery, not merely tool availability: one served
+synthetic candidate is linked to the response and a final marker absent from
+the exact prompt. Its 34,459 observed input-plus-output tokens do not imply a
+known USD cost. It uses no GPU or SSH and does not qualify candidate correctness,
+ROMEO performance, provider weights, exhaustive reading or the whole LangGraph
+loop. Its source capsule (`57992232` backend / `6c2384be` server) is historical
+evidence for those exact bytes, separate from prospective transport changes.
+
+The [strict-usage CPU receipt](../work/live/model-usage-attribution-corrective-acceptance.json)
+keeps missing/invalid data unknown, preserves actual zeros, and separates known
+subtotals from complete accounting. A later model event cannot manufacture zero
+tokens/calls at an earlier gain, and absent purpose cannot establish research
+cost. These tests do not establish a future provider execution or billed cost.
+
+A [declared artifact incident](../work/live/artifact-global-write-review-775158.json)
+rejects artifact `146ffc0b…` / source `04e8d51f…` for unsynchronized global
+writers. Its historical SEARCH evidence remains available without constituting
+an admissible scientific gain. `racecheck` covers shared-memory hazards, not a
+general proof of global-memory race freedom. The [report-only CPU regressions](../work/live/report-method-comparison-qualified-summary-acceptance.json)
+prevent raw historical comparisons from overriding this refusal. The associated
+[reconstruction gate has 26 CPU tests](../work/live/reconstructed-artifact-incidents-cpu-acceptance.json)
+and one synthetic-ZIP producer/consumer fixture. New qualification requires the
+observed negative index before any buffer read; neither prior numerical success
+nor a complete archive overrides an incident. Legacy extraction remains possible
+without execution or new qualification. The adapter correction now keeps
+unresolved consumption unknown, preserves certain returned calls and raw usage,
+and validates known-call lower bounds. A loaded-but-refused artifact is available
+for cohort completion while remaining unexecuted and unqualified; absent source
+is still unavailable. The [final local integration receipt](../work/live/functional-qualification-full-v3/acceptance.json)
+records 2,165 tests plus 13 subtests, no failure/skip, successful compileall and
+186 declared stable files. The earlier full-run failure and intermediate pass
+remain separate evidence. Real study export/reconstruction, a GPU run of these
+new incident guards and exact published-source CI remain unacquired here.
+
 ## Functional matrix
 
 | Criterion | Implementation and automated evidence | Qualification still needed |

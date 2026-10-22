@@ -126,6 +126,142 @@ def _same_artifact(row, chosen):
                ("candidate_id", "source_hash", "artifact_hash", "kernel", "launch_rule", "parameters"))
 
 
+def _public_object(raw, label):
+    def pairs(items):
+        value = {}
+        for key, item in items:
+            if key in value:
+                raise ValueError("Duplicate JSON key in " + label)
+            value[key] = item
+        return value
+    try:
+        value = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs,
+                           parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite " + label)))
+    except (UnicodeError, RecursionError) as error:
+        raise ValueError("Malformed " + label) from error
+    if not isinstance(value, dict):
+        raise ValueError(label + " must be an object")
+    return value
+
+
+def authenticate_artifact_refusal_index(archive, manifest, chosen):
+    """Check exported public refusals before any FINAL buffer is read.
+
+    The exporter authenticates the public loader's evidence. This guard binds
+    that negative-only classification to the complete archived registry and
+    its incident/review bytes; absence is never a general safety certificate.
+    """
+    index = manifest.get("artifact_qualification_incidents")
+    keys = {"schema_version", "kind", "registry_observed", "registry_present", "incidents", "observations"}
+    if (not isinstance(index, dict) or set(index) != keys or type(index.get("schema_version")) is not int
+            or index["schema_version"] != 1 or index.get("kind") != "exported_artifact_refusal_index"
+            or index.get("registry_observed") is not True or type(index.get("registry_present")) is not bool
+            or not isinstance(index.get("incidents"), list) or not isinstance(index.get("observations"), list)):
+        raise ValueError("A complete observed artifact refusal index is required for new qualification")
+    hexadecimal = lambda value: isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+    artifact = chosen.get("artifact_hash")
+    if not hexadecimal(artifact):
+        raise ValueError("Selected artifact identity is unresolved")
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ValueError("Archived file inventory is missing")
+    folders = {}
+    prefix = "evidence/artifact-incidents/"
+    for member in files:
+        if not isinstance(member, str):
+            raise ValueError("Malformed archive inventory")
+        if not member.startswith(prefix):
+            continue
+        match = re.fullmatch(re.escape(prefix) + r"([0-9a-f]{64})/(incident|independent-review)\.json", member)
+        if not match:
+            raise ValueError("Unresolved artifact incident inventory")
+        folders.setdefault(match[1], set()).add(member)
+    observations = {}
+    observation_keys = {"status", "qualification_status", "artifact_hash", "run_id", "reason", "incident_sha256",
+                        "directory_artifact_hash", "declared_artifact_hash", "error"}
+    for row in index["observations"]:
+        if (not isinstance(row, dict) or set(row) - observation_keys
+                or row.get("status") not in ("confirmed", "uncertain")
+                or row.get("qualification_status") != "not_admitted"):
+            raise ValueError("Malformed artifact incident observation")
+        identity = row.get("artifact_hash")
+        if not hexadecimal(identity):
+            raise ValueError("Global or unresolved artifact incident uncertainty suspends qualification")
+        if any(row.get(key) not in (None, identity) for key in ("directory_artifact_hash", "declared_artifact_hash")):
+            raise ValueError("Conflicting artifact observation identities suspend qualification")
+        if identity in observations:
+            raise ValueError("Duplicate or contradictory artifact incident observations")
+        observations[identity] = row
+    if not index["registry_present"] and (folders or index["incidents"] or observations):
+        raise ValueError("Artifact registry presence contradicts its archived inventory")
+    if set(folders) != set(observations):
+        raise ValueError("Archived artifact incidents are missing from the refusal index")
+
+    def document(member, expected):
+        pin = files.get(member)
+        if (not isinstance(pin, dict) or not hexadecimal(expected) or pin.get("sha256") != expected
+                or type(pin.get("bytes")) is not int or not 0 <= pin["bytes"] <= 8 * 1024 * 1024
+                or archive.getinfo(member).file_size != pin["bytes"]):
+            raise ValueError("Artifact refusal member pin differs from the archive inventory")
+        raw = archive.read(member)
+        if len(raw) != pin["bytes"] or hashlib.sha256(raw).hexdigest() != expected:
+            raise ValueError("Artifact refusal member bytes changed")
+        return _public_object(raw, "artifact refusal authority")
+
+    for identity, observation in observations.items():
+        if observation["status"] != "uncertain":
+            continue
+        member = prefix + identity + "/incident.json"
+        pin = files.get(member, {})
+        incident = document(member, pin.get("sha256"))
+        declared = incident.get("identity")
+        if (not isinstance(declared, dict) or declared.get("artifact_hash") != identity
+                or not isinstance(declared.get("run_id"), str)
+                or "run_id" in observation and observation["run_id"] != declared["run_id"]):
+            raise ValueError("Unresolved archived artifact incident identity suspends qualification")
+
+    confirmed = set()
+    for row in index["incidents"]:
+        row_keys = {"artifact_hash", "incident_member", "incident_sha256", "review_member", "review_sha256"}
+        if not isinstance(row, dict) or set(row) != row_keys or not hexadecimal(row.get("artifact_hash")):
+            raise ValueError("Malformed confirmed artifact refusal")
+        identity = row["artifact_hash"]
+        incident_member, review_member = prefix + identity + "/incident.json", prefix + identity + "/independent-review.json"
+        observation = observations.get(identity, {})
+        if (identity in confirmed or row["incident_member"] != incident_member or row["review_member"] != review_member
+                or folders.get(identity) != {incident_member, review_member}
+                or observation.get("status") != "confirmed" or observation.get("incident_sha256") != row["incident_sha256"]):
+            raise ValueError("Confirmed refusal contradicts its public registry observation")
+        incident, review = document(incident_member, row["incident_sha256"]), document(review_member, row["review_sha256"])
+        declared = incident.get("identity")
+        evidence = incident.get("evidence")
+        if (incident.get("kind") != "declared_artifact_qualification_incident"
+                or incident.get("status") != "confirmed_static_violation"
+                or incident.get("issue") != "unsynchronized_duplicate_global_writers"
+                or incident.get("scientific_qualification_eligible") is not False
+                or not isinstance(declared, dict) or declared.get("artifact_hash") != identity
+                or declared.get("run_id") != observation.get("run_id")
+                or not isinstance(evidence, dict) or evidence.get("review") !=
+                    {"path": review_member.removeprefix("evidence/"), "sha256": row["review_sha256"]}
+                or review.get("kind") != "independent_manual_static_artifact_review"
+                or review.get("review_method") != "manual_static_source_and_archived_launch"
+                or review.get("verdict") != "confirmed_unsynchronized_global_writers"
+                or review.get("scientific_qualification_eligible") is not False or review.get("identity") != declared
+                or review.get("issue") != incident.get("issue")
+                or review.get("positive_evidence") != {key: value for key, value in evidence.items() if key != "review"}):
+            raise ValueError("Exported artifact refusal authorities disagree")
+        confirmed.add(identity)
+    if confirmed != {identity for identity, row in observations.items() if row["status"] == "confirmed"}:
+        raise ValueError("Confirmed artifact refusal authority is missing")
+    if artifact in observations:
+        raise ValueError("Selected artifact is explicitly refused or uncertain; historical qualification cannot override it")
+    return {"status": "no_recorded_refusal_for_selected_artifact", "artifact_hash": artifact,
+            "registry_present": index["registry_present"], "confirmed_refusals": len(confirmed),
+            "targeted_uncertainties": sum(row["status"] == "uncertain" for row in observations.values()),
+            "index_content_sha256": hashlib.sha256(json.dumps(index, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            "scope": "Negative-only exported public evidence; no general race-free or new scientific qualification asserted."}
+
+
 def authenticate_portable_options(original, portable, relocations, chosen):
     """Allow only the exporter's declared include-directory relocation.
 
@@ -239,7 +375,7 @@ def prepare(directory, bundle, bundle_sha256, *, selection, request_index, quies
     if sha(bundle) != bundle_sha256:
         raise ValueError("Bundle SHA differs from its independently pinned bytes")
     with zipfile.ZipFile(bundle) as archive:
-        manifest = json.loads(archive.read("export-manifest.json"))
+        manifest = _public_object(archive.read("export-manifest.json"), "export manifest")
         if (manifest.get("kind") != "portable_study_export" or manifest.get("status") != "complete"
                 or manifest.get("controller_or_worker_lock_observed_active") is not False
                 or any(manifest.get(key) for key in ("active_jobs_observed", "inflight_search_trials", "errors", "changed_files_during_export"))
@@ -251,14 +387,19 @@ def prepare(directory, bundle, bundle_sha256, *, selection, request_index, quies
         names = archive.namelist()
         if len(names) != len(set(names)) or set(names) != set(manifest["files"]) | {"export-manifest.json"}:
             raise ValueError("Duplicate, missing or unexpected archive members")
-        for name, identity in manifest["files"].items():
-            raw = archive.read(_member(name))
-            if len(raw) != identity["bytes"] or hashlib.sha256(raw).hexdigest() != identity["sha256"]:
-                raise ValueError("Archived member SHA differs: " + name)
+        for name in names:
+            _member(name)
         choices = [row for row in manifest["candidates"] if selection in (row["id"], row["selection"])]
         if len(choices) != 1:
             raise ValueError("Candidate selection is missing or ambiguous")
         chosen = choices[0]
+        refusal_guard = authenticate_artifact_refusal_index(archive, manifest, chosen)
+        # Only after the negative guard may the full integrity pass read any
+        # numeric payloads. Refused plans never open or materialize buffers.
+        for name, identity in manifest["files"].items():
+            raw = archive.read(_member(name))
+            if len(raw) != identity["bytes"] or hashlib.sha256(raw).hexdigest() != identity["sha256"]:
+                raise ValueError("Archived member SHA differs: " + name)
         group, mode, result, contract, metadata, link, original, report = _archive_authority(archive, manifest, chosen, request_index)
         source = archive.read(chosen["source"])
         if (hashlib.sha256(source).hexdigest() != chosen["source_hash"]
@@ -337,6 +478,7 @@ def prepare(directory, bundle, bundle_sha256, *, selection, request_index, quies
         "original_contract_hash":result["contract_hash"], "workload_contract_hash":contract.contract_hash,
         "original_environment":result["environment"], "original_job_id":result["job_id"],
         "authority_member":"evidence/"+group+"/result.json", "origin_request":link["origin"],
+        "artifact_refusal_guard":refusal_guard,
         "quiescence":observation, "request":asdict(request), "request_identity":request_identity(request),
         "source_tree_sha256":{str(directory/"reconstructed"/member):manifest["files"][member]["sha256"]
                               for member in chosen["source_files"].values()},

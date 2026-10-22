@@ -140,6 +140,26 @@ def study(tmp_path):
     db.close()
 
 
+def test_export_preserves_malformed_incident_and_negative_uncertainty_in_actual_zip(study,repo,tmp_path):
+    root,candidate,db = study
+    prefix = "artifact-incidents/" + candidate.artifact_hash + "/"
+    write(root / prefix / "incident.json", {"identity":{"run_id":"agent", "artifact_hash":candidate.artifact_hash}})
+    write(root / prefix / "independent-review.json", {"synthetic":"incomplete declaration"})
+    manifest = export_study(root,tmp_path / "negative-index",repo_dir=repo)
+    index = manifest["artifact_qualification_incidents"]
+    assert index["registry_observed"] is True and index["registry_present"] is True
+    assert index["incidents"] == []
+    assert index["observations"][0]["status"] == "uncertain"
+    assert index["observations"][0]["qualification_status"] == "not_admitted"
+    with zipfile.ZipFile(tmp_path / "negative-index/study-evidence.zip") as archive:
+        actual = json.loads(archive.read("export-manifest.json"))
+        assert actual["artifact_qualification_incidents"] == index
+        for name in ("incident.json", "independent-review.json"):
+            member = "evidence/" + prefix + name
+            assert archive.read(member) == (root / prefix / name).read_bytes()
+            assert actual["files"][member]["sha256"] == hashlib.sha256(archive.read(member)).hexdigest()
+
+
 def test_export_complete_reconstructs_exact_artifact_options_dependencies_and_inputs(study,repo,tmp_path):
     root,candidate,db = study
     assert Path(str(root/"suite.sqlite")+"-wal").is_file()

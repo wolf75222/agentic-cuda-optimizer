@@ -41,7 +41,10 @@ def test_generation_export_reconstructs_exact_artifact_without_final_access(tmp_
                               LaunchRule(**frozen["launch_rule"]), frozen["parameters"])
     assert reconstructed.artifact_hash == candidate.artifact_hash == frozen["artifact_hash"]
     manifest = json.loads((tmp_path / "manifest.json").read_text())
-    assert manifest["usage"]["model_tokens"] == 23
+    assert manifest["usage"]["model_tokens"] is None
+    assert manifest["usage"]["model_calls"] is None
+    assert manifest["recorded_ledger_spent"]["model_tokens"] == 23
+    assert manifest["model_usage_observation"]["unattributed_recorded_ledger_model_entries"] == {"model_tokens":23}
     assert manifest["final"] == {"status": "deferred_common_final_evaluation", "ok": False}
 
 
