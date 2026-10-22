@@ -272,7 +272,7 @@ def paired_bootstrap(candidate: dict[str, list[float]], incumbent: dict[str, lis
 class Evaluator:
     def __init__(self, runner, contract: WorkloadContract, oracle: Callable[[EvaluationCase], list[np.ndarray]],
                  suites: dict[str, list[EvaluationCase]], scheduler=None, *, final_suite_factory=None,
-                 final_suite_identity: str | None = None):
+                 final_suite_identity: str | None = None, input_identity=None):
         self.runner, self.contract, self.oracle, self.scheduler = runner, contract, oracle, scheduler
         self._suites = deepcopy(suites)
         self._final_suite_factory = final_suite_factory
@@ -303,9 +303,15 @@ class Evaluator:
         self._input_hashes = {a.input_file: hashlib.sha256(Path(a.input_file).read_bytes()).hexdigest()
                               for cases in self._suites.values() for case in cases for a in case.request.arguments
                               if isinstance(a, BufferArgument) and a.input_file}
-        self._suite_hash = content_hash({name: [asdict(c) for c in cases] for name, cases in self._suites.items()})
+        self._input_identity = input_identity
+        if input_identity is not None:
+            from optimizer_agent.evaluation_recovery import RecoveryInputIdentity
+            if not isinstance(input_identity, RecoveryInputIdentity):
+                raise ValueError("Input identity requires an authenticated recovery capsule")
+            input_identity.verify_inputs(self._input_hashes)
+        self._suite_hash = content_hash({name: [self._identity_case(c) for c in cases] for name, cases in self._suites.items()})
         self._contract_hash = content_hash({"contract": self.contract.contract_hash, "suites": self._suite_hash,
-                                           "input_hashes": self._input_hashes, "final_suite_identity": final_suite_identity})
+                                           "input_hashes": self._identity_inputs(), "final_suite_identity": final_suite_identity})
         self._validated: set[tuple[str, str]] = set()
         self._properties = None
         self._final_exposed = False
@@ -314,6 +320,25 @@ class Evaluator:
     @property
     def contract_hash(self):
         return self._contract_hash
+
+    def _identity_path(self, path):
+        return (self._input_identity.project(path, self._input_hashes[path])
+                if self._input_identity is not None else path)
+
+    def _identity_inputs(self, case=None):
+        names = (self._input_hashes if case is None else
+                 [a.input_file for a in case.request.arguments if isinstance(a, BufferArgument) and a.input_file])
+        return {self._identity_path(path): self._input_hashes[path] for path in names}
+
+    def _identity_case(self, case):
+        value = asdict(case)
+        if self._input_identity is not None:
+            # Typed argument projection only: source, options, dependencies,
+            # scalar values, metadata, numerical rules and seed stay exact.
+            for original, argument in zip(case.request.arguments, value["request"]["arguments"]):
+                if isinstance(original, BufferArgument) and original.input_file:
+                    argument["input_file"] = self._identity_path(original.input_file)
+        return value
 
     def _reservation(self, purpose):
         if self.scheduler is None:
@@ -459,9 +484,7 @@ class Evaluator:
                     # Identity covers arguments/input paths, numerical rules,
                     # metadata, seed and bytes pinned in the evaluator snapshot.
                     def identity(case):
-                        inputs = {a.input_file: self._input_hashes[a.input_file] for a in case.request.arguments
-                                  if isinstance(a, BufferArgument) and a.input_file}
-                        return content_hash({"case": asdict(case), "input_hashes": inputs})
+                        return content_hash({"case": self._identity_case(case), "input_hashes": self._identity_inputs(case)})
                     search_cases = {identity(case) for case in self._suites["search"]}
                     performance_cases = [identity(case) for case in self._suites["performance"]]
                     if performance_cases and all(case in search_cases for case in performance_cases):
@@ -540,8 +563,8 @@ class Evaluator:
                 # remain admissible; only qualification reuse is disabled.
                 reusable = reusable and not request.compiler_options
             identity = {"artifact_hash": candidate.artifact_hash, "contract_hash": self.contract_hash,
-                "environment": environment, "suite": suite, "suite_hash": content_hash([asdict(case) for case in cases]),
-                "input_hashes": dict(self._input_hashes), "required_sanitizers": list(self.contract.required_sanitizers),
+                "environment": environment, "suite": suite, "suite_hash": content_hash([self._identity_case(case) for case in cases]),
+                "input_hashes": self._identity_inputs(), "required_sanitizers": list(self.contract.required_sanitizers),
                 "builds": builds}
             self._guard(candidate)
             return {"key": content_hash(identity) if reusable else None, "identity": identity,

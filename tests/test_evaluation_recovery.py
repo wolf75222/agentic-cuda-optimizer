@@ -3,13 +3,17 @@
 These tests use real registry/checkpoint files and immutable request receipts;
 their evaluator and scheduler are declared fixtures, never CUDA/SSH/models.
 """
-from dataclasses import asdict
+from dataclasses import asdict, replace
+from copy import deepcopy
 import fcntl
 import hashlib
 import json
 import os
 from pathlib import Path
 import sqlite3
+import shutil
+
+import numpy as np
 
 import pytest
 
@@ -24,9 +28,35 @@ def no_activity(*args, **kwargs):
     pytest.fail("Recovery preparation must never submit, close, run GPU work or invoke a model")
 
 
+class CPUFileRunner(RunnerFixture):
+    """Declared NumPy harness double; real Evaluator/Runtime, no CUDA or CLI."""
+    def __init__(self, directory):
+        super().__init__()
+        self.directory, self.calls = directory, []
+        directory.mkdir()
+
+    def get_device_properties(self, device):
+        return {**super().get_device_properties(device), "cuda_toolkit_version": 12000,
+                "harness_build_id": "cpu-file-fixture"}
+
+    def run(self, run_id, request):
+        self.calls.append((run_id, deepcopy(request)))
+        n = request.arguments[3].value
+        a, b = [np.fromfile(request.arguments[i].input_file, dtype="<f4").astype(np.float64).reshape(n, n)
+                for i in (0, 1)]
+        value = (a @ b).astype("<f4").ravel()
+        path = self.directory / (run_id + ".bin")
+        value.tofile(path)
+        return {"ok": True, "guard_readonly_ok": True, "guard_outputs_poisoned": True,
+                "environment": self.get_device_properties(0), "outputs": [{"path": str(path), "bytes": value.nbytes}],
+                "latency_ms": 1., "latency_samples_ms": [1.] * request.iterations}
+
+
 @pytest.fixture
-def uncertain(tmp_path, monkeypatch):
-    monkeypatch.setattr(campaign, "Evaluator", EvaluatorFixture)
+def uncertain(tmp_path, monkeypatch, request):
+    real_evaluator = getattr(request, "param", False) == "real_evaluator"
+    if not real_evaluator:
+        monkeypatch.setattr(campaign, "Evaluator", EvaluatorFixture)
     EvaluatorFixture.instances, EvaluatorFixture.confirmations = [], []
     config = CampaignConfig(run_id="uncertain-unit", backend="local", search_sizes=(8,), final_sizes=(11,),
         max_trials=2, profile=False, benchmark_series=3, confirmation_batches=3, launches_per_series=2)
@@ -55,7 +85,8 @@ def uncertain(tmp_path, monkeypatch):
                               generate=no_activity, qualify=no_activity)
     task = suite.journal.tasks("generation")[0]
     directory = suite._directory(task)
-    runner, model = RunnerFixture(), ModelFixture()
+    runner = CPUFileRunner(tmp_path / "cpu-harness-fixture") if real_evaluator else RunnerFixture()
+    model = ModelFixture()
     runtime = campaign.CampaignRuntime(config, runner, directory / "generation", model_backend=model,
                                        generation_only=True)
     state = selected(runtime)
@@ -233,10 +264,10 @@ def test_runtime_refuses_recovery_pin_or_environment_mismatch_before_evaluation(
     else:
         path = marker_path
     campaign.write_json(path, {**campaign.read_json(path), "tampered_fixture": True})
-    resumed = resumed_runtime(uncertain)
     with pytest.raises((ValueError, RuntimeError)):
+        resumed = resumed_runtime(uncertain)
         resumed.evaluate(state)
-    assert resumed.evaluator.benchmarks == []
+    assert model.calls == []
 
 
 def test_interrupted_copy_is_preserved_and_resumed_without_new_epoch_or_worker(uncertain, monkeypatch):
@@ -427,6 +458,7 @@ def test_recovering_historical_ancestor_refuses_before_intent_copy_worker_or_jou
     assert receipt["new_job_submitted"] is False and model.calls == []
 
 
+@pytest.mark.parametrize("uncertain", [False, "real_evaluator"], indirect=True)
 def test_second_uncertain_recovery_appends_epoch_and_preserves_both_earlier_attempts(uncertain, monkeypatch):
     suite, task, old, state, config, runner, model, first_request, worker, actions = uncertain
     first = prepare(uncertain)
@@ -447,7 +479,11 @@ def test_second_uncertain_recovery_appends_epoch_and_preserves_both_earlier_atte
     second = suite.recover_evaluation(task["id"], second_request, "Another fixture crash after the recovered evaluation intent")
     assert second["epoch_id"] != first["epoch_id"] and second["new_task_attempt"] == 2
     assert before == recovery._inventory(resumed.directory)
+    old.directory.rename(old.directory.with_name("origin-no-longer-mounted"))
+    resumed.directory.rename(resumed.directory.with_name("previous-no-longer-mounted"))
     latest = resumed_runtime(uncertain)
+    assert recovery.recovery_input_identity(latest.directory).origin == str(old.directory)
+    assert latest.contract_hash == old.contract_hash
     result = latest.evaluate(state)
     path = next((latest.trial_dir(state) / "evaluation-requests").glob("*/completion.json"))
     request, complete, _ = campaign.evaluation_record(path.parent)
@@ -457,6 +493,183 @@ def test_second_uncertain_recovery_appends_epoch_and_preserves_both_earlier_atte
     assert len(attempts) == 3 and len({row["attempt_id"] for row in attempts}) == 3
     assert sum(row["status"] == "running" for row in attempts) == 2
     assert result["valid"] and model.calls == []
+
+
+@pytest.mark.parametrize("uncertain", ["real_evaluator"], indirect=True)
+def test_real_evaluator_cold_copy_keeps_contract_but_reads_only_new_files_and_replays_once(uncertain):
+    suite, task, old, state, config, runner, model, request_id, *_ = uncertain
+    original_contract = old.evaluator.contract_hash
+    baseline_bytes = (old.directory / "baseline-measurement.json").read_bytes()
+    old_inventory = recovery._inventory(old.directory)
+    prepare(uncertain)
+    current = suite.journal.task(task["id"])
+    recovery.validate_task_recovery(suite, current)
+    # A portable cold capsule must work without reading any historical root.
+    original_root = old.directory
+    original_root.rename(original_root.with_name("historical-root-unavailable"))
+    before = len(runner.calls)
+    resumed = resumed_runtime(uncertain)
+    assert resumed.contract_hash == original_contract and len(runner.calls) == before
+    assert (resumed.directory / "baseline-measurement.json").read_bytes() == baseline_bytes
+    assert set(resumed.evaluator._input_hashes) == {
+        str(resumed.directory / name) for name in old_inventory if name.endswith(".bin")}
+    result = resumed.evaluate(state)
+    assert result["valid"] and result["evaluation_status"] == "measured"
+    measured = len(runner.calls)
+    assert measured > before
+    assert all(Path(a.input_file).is_relative_to(resumed.directory) for _, request in runner.calls[before:]
+               for a in request.arguments if getattr(a, "input_file", None))
+    assert resumed.evaluate(state) == result and len(runner.calls) == measured
+    integrated = {**state, **result}
+    resumed.integrate(integrated)
+    after_confirmation = len(runner.calls)
+    resumed.integrate(integrated)
+    assert len(runner.calls) == after_confirmation and model.calls == []
+    with resumed.store.connection() as db:
+        assert db.execute("SELECT count(*) FROM reward_claims").fetchone()[0] == 1
+    identity = recovery.recovery_input_identity(resumed.directory)
+    assert identity.origin == str(original_root)
+    assert recovery._inventory(original_root.with_name("historical-root-unavailable")) == old_inventory
+
+
+@pytest.mark.parametrize("uncertain", ["real_evaluator"], indirect=True)
+def test_ordinary_evaluator_retains_its_original_path_sensitive_contract_formula(uncertain):
+    from compile_cache import content_hash
+    _, _, runtime, *_ = uncertain
+    evaluator = runtime.evaluator
+    suites = content_hash({name: [asdict(case) for case in cases] for name, cases in evaluator._suites.items()})
+    identity = campaign.digest({"generator": "benchmark_workloads-v1", "sizes": runtime.config.final_sizes,
+                                "seed_commitment": campaign.digest(runtime.config.seed + 1000003)})
+    assert evaluator.contract_hash == content_hash({"contract": evaluator.contract.contract_hash,
+        "suites": suites, "input_hashes": evaluator._input_hashes, "final_suite_identity": identity})
+
+
+@pytest.mark.parametrize("changed", ["input", "baseline", "environment", "contract", "config", "baseline_source"])
+def test_copied_input_and_metadata_are_checked_before_any_cases_or_evidence_rewrite(uncertain, monkeypatch, changed):
+    suite, task, old, state, config, runner, model, request_id, *_ = uncertain
+    prepare(uncertain)
+    generation = suite._directory(suite.journal.task(task["id"])) / "generation"
+    names = {"input": "evaluator_data/search-8/a.bin", "baseline": "baseline-measurement.json",
+             "environment": "environment.json", "contract": "contract.json", "config": "config.json",
+             "baseline_source": "evaluator_data/baseline.cu"}
+    path = generation / names[changed]
+    path.write_bytes(path.read_bytes() + b" ")
+    before = recovery._inventory(generation)
+    monkeypatch.setattr(campaign.WorkloadSuite, "cases", no_activity)
+    with pytest.raises(recovery.EvaluationRecoveryRefused, match="before suite construction"):
+        resumed_runtime(uncertain)
+    assert recovery._inventory(generation) == before and model.calls == []
+
+
+@pytest.mark.parametrize("part", ["preparation", "marker", "commit", "missing_marker", "legacy", "extra_input", "missing_input", "symlink"])
+def test_missing_or_changed_input_authority_refuses_before_suite_materialization(uncertain, monkeypatch, part):
+    suite, task, old, state, config, runner, model, request_id, *_ = uncertain
+    prepare(uncertain)
+    generation = suite._directory(suite.journal.task(task["id"])) / "generation"
+    marker_path = generation / "evaluation-recoveries" / (request_id + ".json")
+    marker = campaign.read_json(marker_path)
+    commit_path = marker_path.parent / ("committed-" + marker["epoch_id"] + ".json")
+    if part == "missing_marker":
+        marker_path.unlink()
+    elif part == "legacy":
+        marker.pop("input_identity")
+        campaign.write_json(marker_path, marker)
+        commit = campaign.read_json(commit_path)
+        commit["marker_sha256"] = recovery._sha(marker_path, generation)
+        campaign.write_json(commit_path, commit)
+    elif part == "marker":
+        marker["input_identity"]["origin_generation"] = "/arbitrary/external/origin"
+        campaign.write_json(marker_path, marker)
+    elif part == "extra_input":
+        (generation / "evaluator_data/unregistered.bin").write_bytes(b"public fixture extra input")
+    elif part == "missing_input":
+        (generation / "evaluator_data/search-8/a.bin").unlink()
+    elif part == "symlink":
+        path = generation / "evaluator_data/search-8/a.bin"
+        path.unlink()
+        path.symlink_to(old.directory / "evaluator_data/search-8/a.bin")
+    else:
+        path = (commit_path if part == "commit" else
+                marker_path.parent / ("preparation-" + marker["epoch_id"] + ".json"))
+        campaign.write_json(path, {**campaign.read_json(path), "unexpected_change": True})
+    before = recovery._inventory(generation) if part != "symlink" else None
+    monkeypatch.setattr(campaign.WorkloadSuite, "cases", no_activity)
+    with pytest.raises((ValueError, RuntimeError)):
+        resumed_runtime(uncertain)
+    if before is not None:
+        assert before == recovery._inventory(generation)
+    assert model.calls == []
+
+
+def test_contract_refusal_never_overwrites_existing_contract_receipt(uncertain, monkeypatch):
+    suite, task, old, state, config, runner, model, *_ = uncertain
+    path = old.directory / "contract.json"
+    before = path.read_bytes()
+    evaluator = campaign.Evaluator
+    class DifferentEvaluator(evaluator):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.contract_hash = "changed-derived-contract"
+    monkeypatch.setattr(campaign, "Evaluator", DifferentEvaluator)
+    with pytest.raises(ValueError, match="Baseline measurement contract differs"):
+        campaign.CampaignRuntime(config, runner, old.directory, model_backend=model, generation_only=True)
+    assert path.read_bytes() == before and model.calls == []
+
+
+@pytest.mark.parametrize("field", ["metadata", "seed", "scalar", "source", "option", "dependency", "launch", "comparison"])
+def test_identity_projection_preserves_all_non_input_fields_exactly(uncertain, field):
+    from evaluation import Evaluator as RealEvaluator
+    suite, task, old, *_ = uncertain
+    prepare(uncertain)
+    resumed = resumed_runtime(uncertain)
+    identity = recovery.recovery_input_identity(resumed.directory)
+    kwargs = dict(input_identity=identity)
+    original = RealEvaluator(resumed.runner, resumed.evaluator.contract, resumed.suite.oracle,
+                             resumed.evaluator._suites, **kwargs)
+    suites = deepcopy(resumed.evaluator._suites)
+    case = suites["search"][-1]
+    if field == "metadata":
+        case.metadata["a_string_that_looks_like_a_path"] = str(resumed.directory / "evaluator_data/search-8/a.bin")
+    elif field == "seed":
+        case.seed += 1
+    elif field == "scalar":
+        case.request.arguments[3].value += 1
+    elif field == "source":
+        case.request.source = str(resumed.directory / "evaluator_data/baseline.cu")
+    elif field == "option":
+        case.request.compiler_options = ["-DLOCATION=" + str(resumed.directory)]
+    elif field == "dependency":
+        case.request.dependencies = [str(resumed.directory / "evaluator_data/baseline.cu")]
+    elif field == "launch":
+        case.request.block = [64, 1, 1]
+    else:
+        case.comparisons[0].relative_tolerance += 1e-5
+    changed = RealEvaluator(resumed.runner, resumed.evaluator.contract, resumed.suite.oracle, suites, **kwargs)
+    assert original.contract_hash != changed.contract_hash
+
+
+def test_identity_rejects_unregistered_paths_and_detects_mutation_at_actual_io(uncertain, tmp_path):
+    from evaluation import Evaluator as RealEvaluator
+    suite, task, old, *_ = uncertain
+    prepare(uncertain)
+    resumed = resumed_runtime(uncertain)
+    identity = recovery.recovery_input_identity(resumed.directory)
+    kwargs = dict(input_identity=identity)
+    evaluator = RealEvaluator(resumed.runner, resumed.evaluator.contract, resumed.suite.oracle,
+                              resumed.evaluator._suites, **kwargs)
+    suites = deepcopy(resumed.evaluator._suites)
+    external = tmp_path / "same-bytes-external.bin"
+    source = Path(suites["search"][-1].request.arguments[0].input_file)
+    shutil.copy2(source, external)
+    suites["search"][-1].request.arguments[0].input_file = str(external)
+    with pytest.raises(ValueError, match="cold-copy inventory"):
+        RealEvaluator(resumed.runner, resumed.evaluator.contract, resumed.suite.oracle, suites, **kwargs)
+    with pytest.raises(ValueError, match="authenticated recovery capsule"):
+        RealEvaluator(resumed.runner, resumed.evaluator.contract, resumed.suite.oracle,
+                      resumed.evaluator._suites, input_identity={str(source): str(source)})
+    source.write_bytes(b"changed actual input")
+    with pytest.raises(ValueError, match="Frozen evaluator input changed"):
+        evaluator._guard(resumed.baseline)
 
 
 def test_recovery_authorization_does_not_restrict_a_later_scientific_trial(uncertain):

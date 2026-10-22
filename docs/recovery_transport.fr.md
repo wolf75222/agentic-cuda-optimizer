@@ -118,6 +118,88 @@ ne constitue donc pas une mesure de réservation GPU. Le bilan distingue les
 durées Slurm effectivement observées, le temps des requêtes natives et les
 durées CUDA Events.
 
+## Évaluation CUDA interrompue avant publication du résultat
+
+`recover-evaluation` conserve une évaluation dont l'intention est durable mais
+dont le résultat canonique n'a pas été publié. Il exige un checkpoint froid,
+un ancien worker possédé et terminé ou réellement mis en quarantaine, ainsi
+que des appels Codex achevés et authentifiés. Un processus modèle encore actif
+ou ambigu interdit la préparation. Cette opération concerne les générations
+de l'optimiseur amélioré ; elle exclut le dépôt original, Codex vanilla et FINAL.
+
+```bash
+.venv/bin/python scripts/run_quality_suite.py recover-evaluation \
+  --directory results/quality-study-v2 --task <RUN_ID> \
+  --request <REQUEST_SHA256> \
+  --reason "Mesure interrompue avant publication canonique ; ancien worker terminé"
+.venv/bin/python scripts/run_quality_suite.py resume-evaluation-preparation \
+  --directory results/quality-study-v2 --task <RUN_ID>
+.venv/bin/python scripts/run_quality_suite.py run \
+  --directory results/quality-study-v2 --concurrency 4
+```
+
+La deuxième commande sert seulement à terminer une préparation interrompue.
+La préparation ne lance aucun job, prompt ou calcul GPU. Elle préserve
+l'ancienne tentative, les checkpoints et les coûts incertains, puis autorise
+une nouvelle session et une nouvelle requête pour la proposition exacte.
+Elle ne publie aucun résultat fictif et n'applique aucune récompense à l'ancien
+travail. Le nouveau worker doit conserver exactement l'UUID GPU, le contrat
+et l'outillage ; un changement est refusé.
+
+La copie scelle aussi l'inventaire des entrées SEARCH et les métadonnées de
+baseline dans une capsule authentifiée par la préparation et son commit.
+L'évaluateur lit les nouveaux fichiers, tout en conservant les noms d'entrée
+du contrat initial pour son empreinte. Seuls les champs typés `input_file`
+prouvés par cette capsule sont projetés ; les octets, paramètres, options,
+comparaisons et autres champs restent vérifiés exactement. Les reprises
+successives conservent la première origine sans lire les anciens répertoires.
+Les fichiers sont vérifiés avant leur régénération et avant publication du
+contrat. Une préparation historique sans capsule d'identité est refusée
+explicitement ; aucune migration automatique ne réécrit ses preuves.
+
+## Contrôle autonome de la reprise
+
+`scripts/gpu_evaluation_recovery_acceptance.py` prépare par défaut un plan,
+sans importer le runtime, créer de base ou contacter ROMEO. Son option `--run`
+exécute un contrôle statique sans modèle, distinct de Codex vanilla et des
+cohortes de performance. Utiliser un clone publié, propre et détaché, ainsi
+que l'environnement Python installé dans le checkout principal :
+
+```bash
+git clone --no-hardlinks --no-checkout \
+  https://github.com/wolf75222/agentic-cuda-optimizer work/recovery-source
+git -C work/recovery-source checkout --detach <SHA_FORK_PUBLIE>
+ssh romeo "sinfo -N -h -p long -o '%N|%G|%f|%t'"
+.venv/bin/python -B scripts/gpu_evaluation_recovery_acceptance.py \
+  --source work/recovery-source --source-head <SHA_FORK_PUBLIE> \
+  --node <NOEUD_IDLE_PREDECLARE> \
+  --eligible-nodes <LISTE_COMPLETE_DES_NOEUDS_ELIGIBLES_SEPARES_PAR_VIRGULES> \
+  --output results/recovery-control-unique --run-id recovery-control-unique \
+  --plan
+```
+
+Choisir le nœud et la liste exhaustive avant toute mesure : la configuration
+doit admettre `armgpu` et une ressource `gpu:h100`, dont l'identité physique
+est vérifiée par le worker. Les noms doivent être individuels, sans plages.
+Après revue du plan, remplacer `--plan` par `--run` avec les autres arguments inchangés.
+Le script recontrôle l'inventaire et exige le nœud inoccupé. Il vérifie ensuite
+le placement réel avant la première mesure ; une liste d'exclusions seule ne
+prouve pas le placement.
+
+Le protocole comporte deux allocations d'un GPU : mesure réelle suivie d'une
+sortie contrôlée du processus avant publication et `tell`, préparation par
+l'API de reprise, nouvelle mesure, puis relecture sans requête GPU ni deuxième
+récompense. Seuls les workers authentifiés du contrôle sont fermés par leur
+signal STOP. La seconde allocation doit retrouver le même UUID ; sinon le
+contrôle reste partiel, sans troisième allocation automatique. Les durées
+Slurm obligatoires et délais techniques demeurent, sans budget global pour
+les campagnes.
+
+Une sortie déjà occupée est conservée et refusée. Un contrôle échoué garde
+son intention, ses résultats et ses coûts ; une nouvelle tentative nécessite
+un nouvel identifiant et un nouveau répertoire. La réussite du contrôle ne
+prouve ni un gain de performance ni la certification de l'étude §16.
+
 ## Portée des preuves
 
 L'incident du 21 octobre a révélé une perte de lien Wi-Fi et la suppression de

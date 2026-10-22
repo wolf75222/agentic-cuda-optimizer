@@ -152,6 +152,8 @@ Portable exports and reconstruction are documented in [portable_exports.md](docs
 
 The French requirement-by-requirement audit distinguishes implementation, local tests, ROMEO execution and outstanding work: [SPEC_AUDIT.fr.md](docs/SPEC_AUDIT.fr.md). Observed receipts, including regressions and failed attempts, are indexed in [evidence-index.json](docs/validation/evidence-index.json).
 
+[Recovery procedures and the standalone recovery control](docs/recovery_transport.fr.md) cover an interrupted evaluation before canonical publication. Preparation preserves uncertain work and submits no job; execution requires the same actual GPU, contract and toolchain. The standalone control defaults to a plan and uses no model or quality-study samples.
+
 The separate [documentary AC-02 control](docs/research_refresh_acceptance.fr.md)
 exercises real Codex/web research, compatible dossier reuse and rejection of an
 uncovered technique against an authenticated historical target. It makes no new

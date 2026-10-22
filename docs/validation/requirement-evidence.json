@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-22T02:17:39.917183+00:00",
+  "generated_at_utc": "2026-10-22T03:48:33.944179+00:00",
   "audit_kind": "read_only_existing_evidence_no_rerun",
   "spec": {
     "requested_path": "/Users/romaindespoulain/Downloads/spec.md",
@@ -256,6 +256,36 @@
         "final_closure_family_dispersion_primary_visual"
       ],
       "scope": "Correctifs finaux gelés : ciblés 85/195/213/313, peers et revue primaire, puis suite locale corrective 1 636 + 13. Ancien full échoué et anciennes captures préservés. Aucune nouvelle CI publiée, reprise réelle ou clôture réelle ROMEO acquise."
+    },
+    "historical_ci_count_before_30781de": {
+      "latest_ci_tests_passed": 1563,
+      "latest_ci_subtests_passed": 13,
+      "latest_ci_tests_skipped": 2,
+      "latest_ci_test_count_evidence": "published_runtime_history_provenance_edef4ed"
+    },
+    "latest_published_recovery_source_30781de": {
+      "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "publication_evidence": "published_recovery_diagnostic_closure_30781de",
+      "ci_evidence": "ci_30781de",
+      "scope": "CI 39711017930 réussie sur 307 ; contrôle 002 incomplet, aucun succès du candidat déduit."
+    },
+    "latest_cold_copy_input_identity_candidate": {
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "source_evidence": [
+        "source_current:optimizer_agent/evaluation_recovery.py",
+        "source_current:optimizer_agent/campaign.py",
+        "source_current:optimizer_agent/evaluation.py",
+        "source_current:tests/test_evaluation_recovery.py",
+        "source_current:scripts/gpu_evaluation_recovery_acceptance.py",
+        "source_current:tests/test_gpu_evaluation_recovery_acceptance.py"
+      ],
+      "local_evidence": [
+        "local_cold_copy_input_identity181_30781de",
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "peer_evidence": "cold_copy_input_identity_peer30781de",
+      "published_or_ROMEO_accepted": false,
+      "scope": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
     }
   },
   "policy": {
@@ -302,7 +332,7 @@
     },
     {
       "id": "SIX_FAMILIES_ORIGINAL_NATIVE_V2",
-      "state": "at_least_thirty_eight_audited_generations_one_common_final",
+      "state": "forty_six_completed_public_tasks_mixed_sources_one_FINAL_task",
       "evidence": [
         "study_v2_source",
         "study_v2_plan",
@@ -329,7 +359,8 @@
         "study_v2_thirty_eight_audited_minimum",
         "dispatch_edef4ed_first_epochs"
       ],
-      "remaining": "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+      "remaining": "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants.",
+      "completion_observation_evidence": "study_v2_forty_six_completed_public_observation_edef"
     },
     {
       "id": "PROFILE_COUNTERS",
@@ -349,23 +380,23 @@
     "user_requirements": 3,
     "local_junit_entries": 590,
     "local_testcase_nodes": 585,
-    "evidence_entries": 238,
-    "latest_local_junit_entries": 1649,
-    "latest_local_testcase_nodes": 1636,
-    "study_v2_completed_generation_receipts": 38,
+    "evidence_entries": 256,
+    "latest_local_junit_entries": 1718,
+    "latest_local_testcase_nodes": 1705,
+    "study_v2_completed_generation_receipts": 46,
     "study_v2_planned_generations": 144,
     "study_v2_common_finals_acquired_at_observation": 1,
     "study_v2_planned_common_finals": 18,
     "latest_local_subtests": 13,
-    "latest_ci_tests_passed": 1563,
-    "latest_ci_subtests_passed": 13,
-    "latest_ci_tests_skipped": 2,
-    "study_v2_generation_observation_at_utc": "2026-10-22T02:09:45.088842+00:00",
+    "latest_ci_tests_passed": null,
+    "latest_ci_subtests_passed": null,
+    "latest_ci_tests_skipped": null,
+    "study_v2_generation_observation_at_utc": "2026-10-22T03:36:07.815369+00:00",
     "latest_focused_report_tests_passed": 313,
-    "latest_ci_test_count_evidence": "published_runtime_history_provenance_edef4ed",
-    "study_v2_generation_count_scope": "Lower bound of authenticated terminal receipts; not an exhaustive live scheduler/controller inventory.",
+    "latest_ci_test_count_evidence": "ci_30781de",
+    "study_v2_generation_count_scope": "Public task count and result/terminal metadata, not 46 successful methods or qualified comparisons. Old 38 histories not numerically re-audited.",
     "latest_local_tests_skipped": 0,
-    "latest_local_test_count_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed"
+    "latest_local_test_count_evidence": "local_cold_copy_input_identity_full1705_30781de"
   },
   "evidence_catalog": {
     "frozen_gemm": {
@@ -6451,8 +6482,8 @@
     "source_current:optimizer_agent/campaign.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/campaign.py",
-      "sha256": "288f9519a5897bfe29ef0f1bd97aba041d9190cf165cb4f5fa7749a6b573a2f7",
-      "bytes": 91982,
+      "sha256": "93b77d3c3d44e9aea586c0e3e8feca4cd1ad291142cd33c6b5c93763cf425cf5",
+      "bytes": 92389,
       "definitions": [
         {
           "name": "digest",
@@ -6496,41 +6527,48 @@
         },
         {
           "name": "run_on_runner",
-          "line": 1086
+          "line": 1092
         },
         {
           "name": "execute",
-          "line": 1103
+          "line": 1109
         },
         {
           "name": "compare",
-          "line": 1133
+          "line": 1139
         },
         {
           "name": "load_direct_candidates",
-          "line": 1184
+          "line": 1190
         },
         {
           "name": "direct_evaluator",
-          "line": 1205
+          "line": 1211
         },
         {
           "name": "compare_generated_candidates",
-          "line": 1221
+          "line": 1227
         },
         {
           "name": "comparison_completed",
-          "line": 1241
+          "line": 1247
         },
         {
           "name": "main",
-          "line": 1307
+          "line": 1313
         }
       ],
-      "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-22T02:09:45.088842+00:00",
-      "scope": "Attribution du diagnostic et comparaison bornée des chemins de compilation lors de reprise : preuves CPU 85 et 195 à leurs snapshots exacts ; aucun nouvel essai réel de ces correctifs. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "focused_test_evidence": [
+        "local_cold_copy_input_identity181_30781de",
+        "cold_copy_input_identity_peer30781de"
+      ],
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -6692,9 +6730,96 @@
           "coherent_local_integration_evidence": "local_runtime_history_provenance_phase_integration_ed24b08",
           "published_commit": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
           "git_blob_sha256_verified_at_publication_link": "ca3d994a7c611d17f0e31ec49381b2a85ec7811d2a5c502fa2c2e6508ced7145"
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/campaign.py",
+          "sha256": "288f9519a5897bfe29ef0f1bd97aba041d9190cf165cb4f5fa7749a6b573a2f7",
+          "bytes": 91982,
+          "definitions": [
+            {
+              "name": "digest",
+              "line": 51
+            },
+            {
+              "name": "write_json",
+              "line": 55
+            },
+            {
+              "name": "read_json",
+              "line": 63
+            },
+            {
+              "name": "_fsync_evaluation_directory",
+              "line": 67
+            },
+            {
+              "name": "_mkdir_evaluation_durable",
+              "line": 75
+            },
+            {
+              "name": "write_immutable_json",
+              "line": 92
+            },
+            {
+              "name": "evaluation_record",
+              "line": 114
+            },
+            {
+              "name": "device_identity",
+              "line": 152
+            },
+            {
+              "name": "RecordedCodex",
+              "line": 159
+            },
+            {
+              "name": "CampaignRuntime",
+              "line": 181
+            },
+            {
+              "name": "run_on_runner",
+              "line": 1086
+            },
+            {
+              "name": "execute",
+              "line": 1103
+            },
+            {
+              "name": "compare",
+              "line": 1133
+            },
+            {
+              "name": "load_direct_candidates",
+              "line": 1184
+            },
+            {
+              "name": "direct_evaluator",
+              "line": 1205
+            },
+            {
+              "name": "compare_generated_candidates",
+              "line": 1221
+            },
+            {
+              "name": "comparison_completed",
+              "line": 1241
+            },
+            {
+              "name": "main",
+              "line": 1307
+            }
+          ],
+          "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-22T02:09:45.088842+00:00",
+          "scope": "Attribution du diagnostic et comparaison bornée des chemins de compilation lors de reprise : preuves CPU 85 et 195 à leurs snapshots exacts ; aucun nouvel essai réel de ces correctifs. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
+          "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
+          "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+          "git_blob_sha256_verified_at_publication_link": true,
+          "publication_evidence": "published_recovery_diagnostic_closure_30781de"
         }
-      ],
-      "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed"
+      ]
     },
     "source_current:optimizer_agent/campaign_config.py": {
       "kind": "current_implementation_source_snapshot",
@@ -7063,11 +7188,8 @@
     "source_current:optimizer_agent/evaluation.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/evaluation.py",
-      "sha256": "1fbacca426bb73edca8853415fcc69c8e073f53ac0e86e9a2da782b645bdab8d",
-      "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
-      "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
-      "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+      "sha256": "d2baef8148440db3b5e0847239c3f8a30d46b68b3496c16e1c2e729c6ca2f257",
+      "bytes": 51894,
       "definitions": [
         {
           "name": "LaunchRule",
@@ -7096,6 +7218,61 @@
         {
           "name": "Evaluator",
           "line": 272
+        }
+      ],
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "focused_test_evidence": [
+        "local_cold_copy_input_identity181_30781de",
+        "cold_copy_input_identity_peer30781de"
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/evaluation.py",
+          "sha256": "1fbacca426bb73edca8853415fcc69c8e073f53ac0e86e9a2da782b645bdab8d",
+          "HEAD_before_publication": "8dddfe818b67d17470b4ea9fd46b8c35553963fd",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-21T20:46:51.672793+00:00",
+          "scope": "Current source bytes and definitions; local test and published CI identities are separately recorded, not inferred from this inventory.",
+          "definitions": [
+            {
+              "name": "LaunchRule",
+              "line": 35
+            },
+            {
+              "name": "Candidate",
+              "line": 80
+            },
+            {
+              "name": "WorkloadContract",
+              "line": 112
+            },
+            {
+              "name": "EvaluationCase",
+              "line": 159
+            },
+            {
+              "name": "_source_contract_violations",
+              "line": 169
+            },
+            {
+              "name": "paired_bootstrap",
+              "line": 238
+            },
+            {
+              "name": "Evaluator",
+              "line": 272
+            }
+          ],
+          "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+          "git_blob_sha256_verified_at_publication_link": true,
+          "publication_evidence": "published_recovery_diagnostic_closure_30781de"
         }
       ]
     },
@@ -17196,8 +17373,8 @@
     "source_current:optimizer_agent/evaluation_recovery.py": {
       "kind": "current_implementation_source_snapshot",
       "path": "optimizer_agent/evaluation_recovery.py",
-      "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e",
-      "bytes": 31026,
+      "sha256": "106acbb68f7c5be2ee50f230049d01caae4d2c21446c2e141ecfb99413b22fc0",
+      "bytes": 44130,
       "definitions": [
         {
           "name": "EvaluationRecoveryRefused",
@@ -17260,50 +17437,77 @@
           "line": 197
         },
         {
-          "name": "recovery_request",
+          "name": "_recovery_records",
           "line": 202
         },
         {
+          "name": "recovery_request",
+          "line": 247
+        },
+        {
+          "name": "RecoveryInputIdentity",
+          "line": 295
+        },
+        {
+          "name": "_absolute_label",
+          "line": 320
+        },
+        {
+          "name": "_expected_input_names",
+          "line": 325
+        },
+        {
+          "name": "recovery_input_identity",
+          "line": 334
+        },
+        {
+          "name": "_input_capsule",
+          "line": 446
+        },
+        {
           "name": "_new_payload",
-          "line": 280
+          "line": 465
         },
         {
           "name": "_ready_record",
-          "line": 287
+          "line": 472
         },
         {
           "name": "validate_task_recovery",
-          "line": 294
+          "line": 482
         },
         {
           "name": "preparation_pending",
-          "line": 326
+          "line": 515
         },
         {
           "name": "_finish",
-          "line": 339
+          "line": 528
         },
         {
           "name": "_locked",
-          "line": 414
+          "line": 610
         },
         {
           "name": "prepare_evaluation_recovery",
-          "line": 426
+          "line": 622
         },
         {
           "name": "resume_evaluation_preparation",
-          "line": 490
+          "line": 687
         }
       ],
-      "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
       "uncommitted_patch_at_capture": true,
-      "observed_at_utc": "2026-10-22T02:11:08.057649+00:00",
-      "scope": "Helper final 1ceb677e avec garde génération-only et préflight sans effets pour ancien request déjà autorisé : 213 tests CPU, peer/revue primaire GO. Nouvelle suite globale en cours ; aucune reprise ROMEO réelle, source incompatible et CLI ambigu toujours refusés. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
-      "availability": {
-        "path": "work/live/evaluation-recovery-1ceb677e/evaluation_recovery.py",
-        "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e"
-      },
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "focused_test_evidence": [
+        "local_cold_copy_input_identity181_30781de",
+        "cold_copy_input_identity_peer30781de"
+      ],
       "previous_snapshots": [
         {
           "kind": "current_implementation_source_snapshot",
@@ -17417,9 +17621,140 @@
             "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e"
           },
           "test_evidence": "local_uncertain_evaluation_recovery_edef4ed"
+        },
+        {
+          "kind": "current_implementation_source_snapshot",
+          "path": "optimizer_agent/evaluation_recovery.py",
+          "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e",
+          "bytes": 31026,
+          "definitions": [
+            {
+              "name": "EvaluationRecoveryRefused",
+              "line": 23
+            },
+            {
+              "name": "_digest",
+              "line": 27
+            },
+            {
+              "name": "_safe",
+              "line": 31
+            },
+            {
+              "name": "_read",
+              "line": 43
+            },
+            {
+              "name": "_sha",
+              "line": 50
+            },
+            {
+              "name": "_write",
+              "line": 54
+            },
+            {
+              "name": "_inventory",
+              "line": 60
+            },
+            {
+              "name": "_sync_copy",
+              "line": 67
+            },
+            {
+              "name": "_closed_model_receipts",
+              "line": 80
+            },
+            {
+              "name": "_request_record",
+              "line": 116
+            },
+            {
+              "name": "_intent_path",
+              "line": 147
+            },
+            {
+              "name": "_worker_proof",
+              "line": 152
+            },
+            {
+              "name": "_without_epoch",
+              "line": 167
+            },
+            {
+              "name": "_relocated_request",
+              "line": 171
+            },
+            {
+              "name": "_epoch_binding",
+              "line": 197
+            },
+            {
+              "name": "recovery_request",
+              "line": 202
+            },
+            {
+              "name": "_new_payload",
+              "line": 280
+            },
+            {
+              "name": "_ready_record",
+              "line": 287
+            },
+            {
+              "name": "validate_task_recovery",
+              "line": 294
+            },
+            {
+              "name": "preparation_pending",
+              "line": 326
+            },
+            {
+              "name": "_finish",
+              "line": 339
+            },
+            {
+              "name": "_locked",
+              "line": 414
+            },
+            {
+              "name": "prepare_evaluation_recovery",
+              "line": 426
+            },
+            {
+              "name": "resume_evaluation_preparation",
+              "line": 490
+            }
+          ],
+          "HEAD_before_publication": "edef4ed4a8842b6cd921e82ec8de4870455c59fa",
+          "uncommitted_patch_at_capture": true,
+          "observed_at_utc": "2026-10-22T02:11:08.057649+00:00",
+          "scope": "Helper final 1ceb677e avec garde génération-only et préflight sans effets pour ancien request déjà autorisé : 213 tests CPU, peer/revue primaire GO. Nouvelle suite globale en cours ; aucune reprise ROMEO réelle, source incompatible et CLI ambigu toujours refusés. Intégration cohérente locale acquise ensuite : 1 636 tests et 13 sous-tests, 161 fichiers stables hors docs ; future CI et preuve réelle de la nouvelle reprise/clôture restent distinctes.",
+          "availability": {
+            "path": "work/live/evaluation-recovery-1ceb677e/evaluation_recovery.py",
+            "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e"
+          },
+          "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed",
+          "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+          "git_blob_sha256_verified_at_publication_link": true,
+          "publication_evidence": "published_recovery_diagnostic_closure_30781de"
         }
       ],
-      "coherent_local_evidence": "local_recovery_diagnostic_closure_corrected_integration_edef4ed"
+      "historical_availability_corrections": [
+        {
+          "reported_path": "work/live/evaluation-recovery-a522ae78/evaluation_recovery.py",
+          "reported_sha": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e",
+          "observed_path_sha": "a522ae7842eab2167ff01ab8c901ab409307de8be3b5c8b0a779741567bd9637",
+          "reported_path_exact": false,
+          "verified_alternative": {
+            "path": "work/live/evaluation-recovery-1ceb677e/evaluation_recovery.py",
+            "sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e",
+            "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+            "git_path": "optimizer_agent/evaluation_recovery.py",
+            "git_blob_sha256": "1ceb677e971ba6fcdd14c64b0fa930f355e2103c52e48d7c35c4549d4f59b60e"
+          },
+          "scope": "Annotation additive du lien disponible pour le snapshot 1ceb ; ancien snapshot et availability conservés verbatim, sans nouvelle exécution ni requalification."
+        }
+      ]
     },
     "local_recovery_diagnostic_closure_initial_integration_failure": {
       "path": "work/live/recovery-diagnostic-final-closure-integration.json",
@@ -17665,6 +18000,669 @@
       "observations": [
         "Viewed1600px top excerpt: family/seed table is legible and unknowns remain explicit.",
         "Viewed isolated complete three-column FINAL-closure table: rows, wrapped text, scope and unknown usage/USD are legible without overlap."
+      ]
+    },
+    "published_recovery_diagnostic_closure_30781de": {
+      "path": "work/live/recovery-diagnostic-final-closure-30781de-release.json",
+      "sha256": "88b88e067f36f37bdca56eb179fac3232e0bc172f1f5fab200dbea40b09ef9fe",
+      "bytes": 22978,
+      "kind": "published_source_and_exact_CI",
+      "scope": "Publication 30781de et CI exacte 39711017930 acquises ; reprise ROMEO encore incomplète, nouveau correctif non couvert.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "ci_30781de": {
+      "path": "work/live/ci-30781de.json",
+      "sha256": "be515adc98e5257040dcd523f332c4c62dfa9b63f32db3fc9933dbd3c76508c9",
+      "bytes": 1968,
+      "kind": "exact_commit_CI",
+      "scope": "CI réussie au SHA 30781de ; nombre de tests inconnu depuis ce reçu seul, aucune couverture des octets futurs.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "study_v2_edef_no_research_native_774857_774860": {
+      "path": "work/live/section16-edef4ed-no-research-native-774857-774860.json",
+      "sha256": "b6b3d52644e60cbef12af84e17faf906d09bf5b1b89614bf12bb37a84af28c11",
+      "bytes": 123682,
+      "kind": "romeo_generation_terminal_public_audit",
+      "scope": "Deux terminaux edef ; protocole natif, export exact, validité SEARCH et qualification FINAL restent distincts.",
+      "observed_at_utc": "2026-10-22T02:27:56.441354+00:00"
+    },
+    "study_v2_edef_greedy_noauto_774858_774859": {
+      "path": "work/live/section16-edef4ed-greedy-noauto-774858-774859.json",
+      "sha256": "b81065dec4473bff32267a8dc2126aed3be8227c81848e2594da5820cf71744b",
+      "bytes": 393221,
+      "kind": "romeo_generation_terminal_public_audit",
+      "scope": "Deux artefacts améliorés retenus sur SEARCH, huit CLI complets chacun, dossiers refusés consommés inclus. Comparaisons suivantes face à leur incumbent, aucune FINAL.",
+      "observed_at_utc": "2026-10-22T02:39:10.873333+00:00"
+    },
+    "study_v2_edef_permanent_original_774946_774993": {
+      "path": "work/live/section16-edef4ed-permanent-original-774946-774993.json",
+      "sha256": "b4941b2dd0844da19c0967d6114868df30038052eae6e4ec5b23fa8812926ecd",
+      "bytes": 255096,
+      "kind": "romeo_generation_terminal_public_audit",
+      "scope": "Guide permanent et véritable original exécutés, source edef propre ; consommations/refus et limites de SEARCH préservés, aucune qualification FINAL ajoutée.",
+      "observed_at_utc": "2026-10-22T03:11:55.872980+00:00"
+    },
+    "study_v2_edef_no_pmpp_775010": {
+      "path": "work/live/section16-edef4ed-no-pmpp-775010.json",
+      "sha256": "49dc0a5a98563c20b507fd3dffc817b7bcff0b467871210be9c57f7134870683",
+      "bytes": 105251,
+      "kind": "romeo_generation_terminal_public_audit",
+      "scope": "Ablation sans PMPP : liens de diagnostics et propositions authentifiés, refus/timeout documentaire et coûts conservés ; FINAL restante.",
+      "observed_at_utc": "2026-10-22T03:22:32.844180+00:00"
+    },
+    "study_v2_edef_no_research_775013": {
+      "path": "work/live/section16-edef4ed-no-research-matmul3141-775013.json",
+      "sha256": "4b4977192ff44382bfd20ff26a4df8c961e8e069fb2a4c1dfaa9c6abe0e99a88",
+      "bytes": 51362,
+      "kind": "romeo_generation_terminal_public_audit",
+      "scope": "Trois essais, huit configurations correctes enregistrées, trois CLI/241 963 tokens ; naïf conservé, aucun gain SEARCH promu et aucune FINAL. research_events=3 désigne la recherche désactivée, aucun web réel.",
+      "observed_at_utc": "2026-10-22T03:28:21.484298+00:00"
+    },
+    "study_v2_forty_six_completed_public_observation_edef": {
+      "path": "work/live/section16-forty-six-completed-public-observation-edef4ed.json",
+      "sha256": "18775cf99a541c1374dea0597245b22c41254905518f94c860553fa6aab0f57e",
+      "bytes": 153232,
+      "kind": "public_task_completion_metadata_observation",
+      "scope": "46/144 tâches génération et 1/18 tâche FINAL terminées au 22 octobre à 03:36:07 UTC. Métadonnées publiques seulement : méthodes 38 completed, un failed, sept absentes ; cinq HEAD/35 epochs et onze inconnues. Pas de re-audit numérique historique ni qualification globale.",
+      "observed_at_utc": "2026-10-22T03:36:07.815369+00:00"
+    },
+    "recovery_functional_control001_failed": {
+      "path": "work/live/evaluation-recovery-functional-control-001-terminal-audit.json",
+      "sha256": "68890a75694f7eea9171ea5dbab33f070217dcbc4a78cb8fcbcb61bf537e19a1",
+      "bytes": 2312,
+      "kind": "failed_helper_public_audit",
+      "scope": "Échec helper sur argument readonly non accepté par SSHTransport.run, zéro job. Ce contrôle reste échoué.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "local_recovery_helper_interface42_30781de": {
+      "path": "work/live/evaluation-recovery-functional-static-ssh-interface-cpu-30781de.json",
+      "sha256": "4f51f9ab0d310207b1c57dcdf54043379ef7bf6d28dd3458f04e31d74424c255",
+      "bytes": 8322,
+      "kind": "historical_CPU_helper_interface_fix",
+      "scope": "42 tests CPU au correctif historique du helper ; aucun job ni succès ROMEO déduit.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "recovery_functional_control002_incomplete": {
+      "path": "work/live/evaluation-recovery-functional-control-002-terminal-audit.json",
+      "sha256": "3d62fd8aa01f511de8237d11ed3d4c19bf7345176a38f10284e59211c7e84ffc",
+      "bytes": 22357,
+      "kind": "incomplete_ROMEO_recovery_control_public_audit",
+      "scope": "Deux jobs 775052/775053 COMPLETED 0:0 sur le même UUID, distincts des sorties enfants 73/2. Vrai benchmark puis crash/copie froide/préparation, coût ancien incertain préservé ; refus de hash lié aux chemins avant nouvelle requête native. Contrôle incomplet ; reprise complète du §11.2 non acquise.",
+      "observed_at_utc": "2026-10-22T03:21:02.613719+00:00"
+    },
+    "local_cold_copy_input_identity181_30781de": {
+      "path": "work/live/evaluation-input-recovery-cpu-30781de.json",
+      "sha256": "e87a83d6ea5d98aff4fa8f081e9071568aaa2225181ee3d16128a758bb6bdff0",
+      "bytes": 2087,
+      "kind": "CPU_authenticated_cold_copy_input_identity",
+      "scope": "181 tests CPU : input_file typé et authentifié seulement, deux reprises sans anciennes racines, I/O courant exact, contrat non écrasé sur refus, rejeu sans double mesure/tell. Legacy sans capsule explicitement refusé ; aucune nouvelle reprise ROMEO.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "validation": {
+        "junit": {
+          "path": "work/live/evaluation-input-recovery-final.xml",
+          "sha256": "8fd3aaed03c4694f3bb4f20d2a6916343c0ef6a5e541e6fe9b2a21badddf34aa",
+          "tests": 181,
+          "failures": 0,
+          "errors": 0,
+          "time_seconds": 10.849
+        },
+        "testcase_nodes": 181,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "real_GPU_model_SSH_calls": 0
+      }
+    },
+    "cold_copy_input_identity_peer30781de": {
+      "path": "work/live/evaluation-input-recovery-106acbb6-peer.json",
+      "sha256": "2cfba789a4b56f5501d046216598279059b318f502c72b9dd39ffd1df028892e",
+      "bytes": 2409,
+      "kind": "independent_readonly_peer_review",
+      "scope": "GO du correctif 106ac/93b77/d2ba/a2d2 et du reçu 181 CPU. Aucun nouveau test/modèle/GPU/SSH ni succès réel de reprise.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "cold_copy_input_identity_primary_prepublication_review": {
+      "path": "work/live/evaluation-input-recovery-primary-prepublication-review.json",
+      "sha256": "f284aff3334892eb9cff442c9d48806debaecd33ccfec275fd3468853d462fe8",
+      "bytes": 1976,
+      "kind": "primary_prepublication_review",
+      "scope": "Revue primaire capturée avant le reçu full séparé ; ni nouvelle exécution ROMEO ni future CI déduite.",
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00"
+    },
+    "local_cold_copy_input_identity_full1705_30781de": {
+      "path": "work/live/evaluation-input-recovery-full-primary.json",
+      "sha256": "1ce0725f2359a7cebf7da7d7674aef5048b621e49c71303fc331c9f93a1792f5",
+      "bytes": 37329,
+      "kind": "coherent_local_CPU_integration",
+      "scope": "1 705 tests et 13 sous-tests passent, zéro échec/skip, 15 avertissements, 112,68 s pytest et compileall réussi ; 163 fichiers déclarés stables hors documents et stabilité Git globale. Aucun nouveau GPU/ROMEO ni CI du candidat.",
+      "observed_at_utc": "2026-10-22T03:40:34.020990+00:00",
+      "validation": {
+        "junit": {
+          "path": "work/live/evaluation-input-recovery-full-primary.xml",
+          "sha256": "4c21820f349a792b4a5b5c2c11a7b80fb4a36928de22bef2fba53eb5bf0e7ae5"
+        },
+        "testcase_nodes": 1705,
+        "subtests": 13,
+        "junit_entries": 1718,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "warnings": 15,
+        "pytest_seconds": 112.68,
+        "driver_seconds": 113.95014058399829,
+        "compileall_returncode": 0,
+        "declared_stable_source_files": 163,
+        "scope": "163 fichiers déclarés, documents indépendants et stabilité Git entière exclus."
+      }
+    },
+    "source_current:tests/test_evaluation_recovery.py": {
+      "kind": "current_test_source_snapshot",
+      "path": "tests/test_evaluation_recovery.py",
+      "sha256": "a2d267e051e66ed1b8007ea1a21a93c483be914c76269fcbf166216dca7278a5",
+      "bytes": 40709,
+      "definitions": [
+        {
+          "name": "no_activity",
+          "line": 27
+        },
+        {
+          "name": "CPUFileRunner",
+          "line": 31
+        },
+        {
+          "name": "uncertain",
+          "line": 56
+        },
+        {
+          "name": "prepare",
+          "line": 117
+        },
+        {
+          "name": "resumed_runtime",
+          "line": 123
+        },
+        {
+          "name": "test_explicit_recovery_creates_new_attempt_preserving_uncertain_cost_and_single_tell",
+          "line": 130
+        },
+        {
+          "name": "test_live_or_ambiguous_old_worker_never_authorizes_new_attempt",
+          "line": 175
+        },
+        {
+          "name": "test_authenticated_remote_quarantine_can_authorize_separate_session",
+          "line": 184
+        },
+        {
+          "name": "test_ownership_mismatch_refuses_preparation",
+          "line": 196
+        },
+        {
+          "name": "test_ambiguous_model_child_refuses_without_pid_or_prompt_inspection",
+          "line": 208
+        },
+        {
+          "name": "test_cli_output_without_terminal_receipt_refuses",
+          "line": 217
+        },
+        {
+          "name": "test_completed_old_request_uses_normal_replay_instead_of_recovery",
+          "line": 224
+        },
+        {
+          "name": "test_old_late_result_is_archived_and_cannot_replace_recovered_measurement",
+          "line": 232
+        },
+        {
+          "name": "test_runtime_refuses_recovery_pin_or_environment_mismatch_before_evaluation",
+          "line": 246
+        },
+        {
+          "name": "test_interrupted_copy_is_preserved_and_resumed_without_new_epoch_or_worker",
+          "line": 273
+        },
+        {
+          "name": "test_journal_commit_interruption_blocks_dispatch_until_same_preparation_finishes",
+          "line": 297
+        },
+        {
+          "name": "test_late_source_result_during_unfinished_preparation_refuses_copy",
+          "line": 322
+        },
+        {
+          "name": "test_active_target_process_lock_refuses_even_with_terminal_scheduler_fixture",
+          "line": 335
+        },
+        {
+          "name": "test_cold_copy_preserves_committed_wal_pages_without_decoding_checkpoint_values",
+          "line": 345
+        },
+        {
+          "name": "test_aliased_cold_evidence_is_refused_without_copying",
+          "line": 368
+        },
+        {
+          "name": "test_copy_changed_after_journal_commit_cannot_be_activated",
+          "line": 385
+        },
+        {
+          "name": "test_recovery_task_payload_binding_mismatch_refuses_before_dispatch",
+          "line": 403
+        },
+        {
+          "name": "test_final_list_payload_is_outside_generation_recovery_without_reading_evidence",
+          "line": 415
+        },
+        {
+          "name": "test_malformed_generation_payload_is_still_refused",
+          "line": 424
+        },
+        {
+          "name": "test_recovering_historical_ancestor_refuses_before_intent_copy_worker_or_journal_mutation",
+          "line": 429
+        },
+        {
+          "name": "test_second_uncertain_recovery_appends_epoch_and_preserves_both_earlier_attempts",
+          "line": 462
+        },
+        {
+          "name": "test_real_evaluator_cold_copy_keeps_contract_but_reads_only_new_files_and_replays_once",
+          "line": 499
+        },
+        {
+          "name": "test_ordinary_evaluator_retains_its_original_path_sensitive_contract_formula",
+          "line": 536
+        },
+        {
+          "name": "test_copied_input_and_metadata_are_checked_before_any_cases_or_evidence_rewrite",
+          "line": 548
+        },
+        {
+          "name": "test_missing_or_changed_input_authority_refuses_before_suite_materialization",
+          "line": 565
+        },
+        {
+          "name": "test_contract_refusal_never_overwrites_existing_contract_receipt",
+          "line": 604
+        },
+        {
+          "name": "test_identity_projection_preserves_all_non_input_fields_exactly",
+          "line": 620
+        },
+        {
+          "name": "test_identity_rejects_unregistered_paths_and_detects_mutation_at_actual_io",
+          "line": 651
+        },
+        {
+          "name": "test_recovery_authorization_does_not_restrict_a_later_scientific_trial",
+          "line": 675
+        },
+        {
+          "name": "test_explicit_cli_prepares_only_and_never_dispatches",
+          "line": 694
+        }
+      ],
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "focused_test_evidence": [
+        "local_cold_copy_input_identity181_30781de",
+        "cold_copy_input_identity_peer30781de"
+      ],
+      "previous_snapshots": [
+        {
+          "kind": "published_test_source_snapshot",
+          "path": "tests/test_evaluation_recovery.py",
+          "sha256": "cc72d4474cfe5078244c1d559fb59990ea92b097147bc199a026d4e544ba9a71",
+          "bytes": 28930,
+          "definitions": [
+            {
+              "name": "no_activity",
+              "line": 23
+            },
+            {
+              "name": "uncertain",
+              "line": 28
+            },
+            {
+              "name": "prepare",
+              "line": 86
+            },
+            {
+              "name": "resumed_runtime",
+              "line": 92
+            },
+            {
+              "name": "test_explicit_recovery_creates_new_attempt_preserving_uncertain_cost_and_single_tell",
+              "line": 99
+            },
+            {
+              "name": "test_live_or_ambiguous_old_worker_never_authorizes_new_attempt",
+              "line": 144
+            },
+            {
+              "name": "test_authenticated_remote_quarantine_can_authorize_separate_session",
+              "line": 153
+            },
+            {
+              "name": "test_ownership_mismatch_refuses_preparation",
+              "line": 165
+            },
+            {
+              "name": "test_ambiguous_model_child_refuses_without_pid_or_prompt_inspection",
+              "line": 177
+            },
+            {
+              "name": "test_cli_output_without_terminal_receipt_refuses",
+              "line": 186
+            },
+            {
+              "name": "test_completed_old_request_uses_normal_replay_instead_of_recovery",
+              "line": 193
+            },
+            {
+              "name": "test_old_late_result_is_archived_and_cannot_replace_recovered_measurement",
+              "line": 201
+            },
+            {
+              "name": "test_runtime_refuses_recovery_pin_or_environment_mismatch_before_evaluation",
+              "line": 215
+            },
+            {
+              "name": "test_interrupted_copy_is_preserved_and_resumed_without_new_epoch_or_worker",
+              "line": 242
+            },
+            {
+              "name": "test_journal_commit_interruption_blocks_dispatch_until_same_preparation_finishes",
+              "line": 266
+            },
+            {
+              "name": "test_late_source_result_during_unfinished_preparation_refuses_copy",
+              "line": 291
+            },
+            {
+              "name": "test_active_target_process_lock_refuses_even_with_terminal_scheduler_fixture",
+              "line": 304
+            },
+            {
+              "name": "test_cold_copy_preserves_committed_wal_pages_without_decoding_checkpoint_values",
+              "line": 314
+            },
+            {
+              "name": "test_aliased_cold_evidence_is_refused_without_copying",
+              "line": 337
+            },
+            {
+              "name": "test_copy_changed_after_journal_commit_cannot_be_activated",
+              "line": 354
+            },
+            {
+              "name": "test_recovery_task_payload_binding_mismatch_refuses_before_dispatch",
+              "line": 372
+            },
+            {
+              "name": "test_final_list_payload_is_outside_generation_recovery_without_reading_evidence",
+              "line": 384
+            },
+            {
+              "name": "test_malformed_generation_payload_is_still_refused",
+              "line": 393
+            },
+            {
+              "name": "test_recovering_historical_ancestor_refuses_before_intent_copy_worker_or_journal_mutation",
+              "line": 398
+            },
+            {
+              "name": "test_second_uncertain_recovery_appends_epoch_and_preserves_both_earlier_attempts",
+              "line": 430
+            },
+            {
+              "name": "test_recovery_authorization_does_not_restrict_a_later_scientific_trial",
+              "line": 462
+            },
+            {
+              "name": "test_explicit_cli_prepares_only_and_never_dispatches",
+              "line": 481
+            }
+          ],
+          "published_commit": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+          "git_blob_sha256_verified_at_publication_link": true,
+          "scope": "Test précédent publié, conservé sans relance."
+        }
+      ]
+    },
+    "source_current:scripts/gpu_evaluation_recovery_acceptance.py": {
+      "kind": "current_implementation_source_snapshot",
+      "path": "scripts/gpu_evaluation_recovery_acceptance.py",
+      "sha256": "6d9c00742affc24a0d13b924e0c1b6cf95a39fb1695a6e0c576320f71c5bbe74",
+      "bytes": 43157,
+      "definitions": [
+        {
+          "name": "Refused",
+          "line": 40
+        },
+        {
+          "name": "sha",
+          "line": 44
+        },
+        {
+          "name": "read",
+          "line": 48
+        },
+        {
+          "name": "write_exclusive",
+          "line": 55
+        },
+        {
+          "name": "sync_dir",
+          "line": 74
+        },
+        {
+          "name": "git",
+          "line": 82
+        },
+        {
+          "name": "safe_directory",
+          "line": 86
+        },
+        {
+          "name": "source_identity",
+          "line": 93
+        },
+        {
+          "name": "node_names",
+          "line": 152
+        },
+        {
+          "name": "make_plan",
+          "line": 161
+        },
+        {
+          "name": "load_api",
+          "line": 196
+        },
+        {
+          "name": "scheduler_read_text",
+          "line": 208
+        },
+        {
+          "name": "scheduler_preflight",
+          "line": 218
+        },
+        {
+          "name": "NoModels",
+          "line": 240
+        },
+        {
+          "name": "CountingRunner",
+          "line": 245
+        },
+        {
+          "name": "event_counts",
+          "line": 257
+        },
+        {
+          "name": "actual_placement",
+          "line": 264
+        },
+        {
+          "name": "control_generation",
+          "line": 283
+        },
+        {
+          "name": "new_suite",
+          "line": 373
+        },
+        {
+          "name": "child",
+          "line": 385
+        },
+        {
+          "name": "close_owned",
+          "line": 412
+        },
+        {
+          "name": "uncertain_cost_state",
+          "line": 431
+        },
+        {
+          "name": "run_child",
+          "line": 442
+        },
+        {
+          "name": "public_requests",
+          "line": 465
+        },
+        {
+          "name": "run",
+          "line": 483
+        },
+        {
+          "name": "main",
+          "line": 635
+        }
+      ],
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
+      ]
+    },
+    "source_current:tests/test_gpu_evaluation_recovery_acceptance.py": {
+      "kind": "current_test_source_snapshot",
+      "path": "tests/test_gpu_evaluation_recovery_acceptance.py",
+      "sha256": "608b25ad32d59b8ec87e455106ac5ac6b44905fbd34c2bc352579af12096a24b",
+      "bytes": 27045,
+      "definitions": [
+        {
+          "name": "git",
+          "line": 23
+        },
+        {
+          "name": "frozen",
+          "line": 28
+        },
+        {
+          "name": "plan",
+          "line": 44
+        },
+        {
+          "name": "strict_transport",
+          "line": 49
+        },
+        {
+          "name": "test_plan_is_public_no_import_network_or_output_creation",
+          "line": 61
+        },
+        {
+          "name": "test_frozen_source_guard_refuses_before_runtime_import",
+          "line": 76
+        },
+        {
+          "name": "test_placement_must_be_predeclared_individual_nodes",
+          "line": 104
+        },
+        {
+          "name": "test_pinned_publication_authority_supports_frozen_clone_refs_without_weakening_pins",
+          "line": 111
+        },
+        {
+          "name": "test_occupied_intent_cannot_reenter_or_import_runtime",
+          "line": 137
+        },
+        {
+          "name": "test_durable_exclusive_intent_keeps_old_bytes",
+          "line": 148
+        },
+        {
+          "name": "test_scheduler_preflight_is_readonly_exact_and_no_adaptive_placement",
+          "line": 162
+        },
+        {
+          "name": "test_real_sshtransport_signature_and_captured_bytes_without_any_ssh",
+          "line": 186
+        },
+        {
+          "name": "test_scheduler_stdout_uses_strict_utf8_without_silent_replacement",
+          "line": 212
+        },
+        {
+          "name": "test_owned_close_uses_real_backend_signatures_and_never_submits_or_cancels",
+          "line": 220
+        },
+        {
+          "name": "test_child_authenticates_effective_config_and_remote_identity_before_dispatch",
+          "line": 256
+        },
+        {
+          "name": "test_import_failure_retains_durable_intent_and_prevents_retry",
+          "line": 290
+        },
+        {
+          "name": "test_unexpected_terminal_child_closes_only_owned_job_and_never_dispatches_second",
+          "line": 307
+        },
+        {
+          "name": "test_actual_ready_placement_refuses_drift_before_runtime_baseline",
+          "line": 338
+        },
+        {
+          "name": "test_generation_callback_checks_actual_placement_before_runtime_or_measurement",
+          "line": 358
+        },
+        {
+          "name": "cpu_runtime",
+          "line": 374
+        },
+        {
+          "name": "first_crash",
+          "line": 416
+        },
+        {
+          "name": "test_actual_cpu_graph_cold_copy_replay_no_duplicate_evaluation_or_tell",
+          "line": 433
+        },
+        {
+          "name": "test_actual_cpu_context_mismatch_refuses_before_new_evaluator_work",
+          "line": 453
+        },
+        {
+          "name": "test_real_subprocess_exit73_preserves_intent_without_completion_or_reward",
+          "line": 465
+        }
+      ],
+      "HEAD_before_publication": "30781de7ae2b7b257ced765ad0d7b9279e336308",
+      "uncommitted_patch_at_capture": true,
+      "observed_at_utc": "2026-10-22T03:48:33.944179+00:00",
+      "scope": "Octets candidats exacts, suite CPU complète 1 705 + 13 acquise ; nouvelle reprise ROMEO et future CI distinctes. Le helper de contrôle et ses tests restent CPU seulement pour ces octets.",
+      "coherent_local_evidence": [
+        "local_cold_copy_input_identity_full1705_30781de"
       ]
     }
   },
@@ -17957,14 +18955,21 @@
           "study_v2_original_matmul1729_774816_00a_terminal",
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
-          "study_v2_thirty_eight_audited_minimum"
+          "study_v2_thirty_eight_audited_minimum",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ]
     },
     "SEC-3": {
@@ -18076,14 +19081,21 @@
           "study_v2_original_matmul1729_774816_00a_terminal",
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
-          "study_v2_thirty_eight_audited_minimum"
+          "study_v2_thirty_eight_audited_minimum",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ]
     },
     "SEC-3.1": {
@@ -18190,14 +19202,21 @@
           "study_v2_original_matmul1729_774816_00a_terminal",
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
-          "study_v2_thirty_eight_audited_minimum"
+          "study_v2_thirty_eight_audited_minimum",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ]
     },
     "SEC-3.2": {
@@ -20242,7 +21261,9 @@
           "source_current:optimizer_agent/dispatch_attestation.py",
           "source_current:optimizer_agent/evaluation_recovery.py",
           "source_current:scripts/run_quality_suite.py",
-          "source_current:optimizer_agent/campaign.py"
+          "source_current:optimizer_agent/campaign.py",
+          "source_current:optimizer_agent/evaluation.py",
+          "source_current:scripts/gpu_evaluation_recovery_acceptance.py"
         ]
       },
       "local_tested": {
@@ -20259,7 +21280,11 @@
           "codex_prompt_launch_provenance_primary_review_ed24b08",
           "local_campaign_evaluation_history_durable148_ed24b08",
           "local_uncertain_evaluation_recovery_edef4ed",
-          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed"
+          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
+          "local_recovery_helper_interface42_30781de",
+          "local_cold_copy_input_identity181_30781de",
+          "cold_copy_input_identity_peer30781de",
+          "local_cold_copy_input_identity_full1705_30781de"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -20267,7 +21292,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources. Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -20296,17 +21321,24 @@
         "applicable": true,
         "evidence": [
           "process_recovery",
-          "study_v2_full_transport_failure"
+          "study_v2_full_transport_failure",
+          "recovery_functional_control002_incomplete"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
       },
       "remaining": [
-        "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures."
+        "Réconcilier transport/reprise v2 sans double récompense ni mélange de mesures.",
+        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
       ],
       "prospective_evaluation_history_evidence": [
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "recovery_control_evidence": [
+        "recovery_functional_control001_failed",
+        "local_recovery_helper_interface42_30781de",
+        "recovery_functional_control002_incomplete"
       ]
     },
     "SEC-11.1": {
@@ -20389,7 +21421,7 @@
         "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
       },
       "remaining": [
-        "Crash/replay local réel de preuveCUDA archivée; pas de nouvelle exécutionROMEO.",
+        "Mesure, crash et copie froide réels au contrôle 002 incomplet ; replay et reprise complète sur ROMEO restent à acquérir. Preuve locale antérieure conservée.",
         "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "availability_and_fixture_evidence": [
@@ -20430,7 +21462,9 @@
           "source_current:optimizer_agent/suite_orchestrator.py",
           "source_current:optimizer_agent/evaluation_recovery.py",
           "source_current:scripts/run_quality_suite.py",
-          "source_current:optimizer_agent/campaign.py"
+          "source_current:optimizer_agent/campaign.py",
+          "source_current:optimizer_agent/evaluation.py",
+          "source_current:scripts/gpu_evaluation_recovery_acceptance.py"
         ]
       },
       "local_tested": {
@@ -20447,7 +21481,11 @@
           "codex_prompt_launch_provenance_primary_review_ed24b08",
           "local_campaign_evaluation_history_durable148_ed24b08",
           "local_uncertain_evaluation_recovery_edef4ed",
-          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed"
+          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
+          "local_recovery_helper_interface42_30781de",
+          "local_cold_copy_input_identity181_30781de",
+          "cold_copy_input_identity_peer30781de",
+          "local_cold_copy_input_identity_full1705_30781de"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -20455,7 +21493,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Earlier coherent CPU release:1062 tests+5subtests,139 source/test/config hashes stable before/after; no live invocation or complete study inferred. Provenance backend prospective : 20 tests CPU et 8 sous-tests, revue primaire ; aucune vraie invocation Codex/GPU de cette version. État prepared ≠ lancement prouvé ; empreinte de prompt ≠ réception fournisseur. Correctif canonique d’évaluation/cache/historique : 148 tests CPU finaux, état 144 exact conservé séparément ; aucune nouvelle exécution GPU/ROMEO, reconstruction d’historique perdu ou CI du nouveau SHA déduite. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources. Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -20483,17 +21521,29 @@
         "status": "partial",
         "applicable": true,
         "evidence": [
-          "process_recovery"
+          "process_recovery",
+          "recovery_functional_control002_incomplete"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
       },
       "remaining": [
-        "Reprise explicite d’évaluation inachevée testée initialement sur 195 fixtures CPU, puis 213 après correctif final 1ceb677e seulement ; scénario réel ROMEO de cette nouvelle procédure restant, même UUID/contrat/toolchain obligatoires. La préparation ne soumet aucun job ; dispatch séparé. Les anciennes preuves et coûts incertains sont préservés, jamais convertis en zéro. Étude de 144 générations/18 groupes et exports réels incomplets."
+        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir."
       ],
       "prospective_evaluation_history_evidence": [
         "local_campaign_evaluation_history_144_ed24b08",
         "local_campaign_evaluation_history_durable148_ed24b08",
         "campaign_evaluation_history_final_source_capture_ed24b08"
+      ],
+      "recovery_control_evidence": [
+        "recovery_functional_control001_failed",
+        "local_recovery_helper_interface42_30781de",
+        "recovery_functional_control002_incomplete"
+      ],
+      "historical_remaining_observations": [
+        {
+          "observed_at_utc": "2026-10-22T02:13:12.249212+00:00",
+          "statement": "Reprise explicite d’évaluation inachevée testée initialement sur 195 fixtures CPU, puis 213 après correctif final 1ceb677e seulement ; scénario réel ROMEO de cette nouvelle procédure restant, même UUID/contrat/toolchain obligatoires. La préparation ne soumet aucun job ; dispatch séparé. Les anciennes preuves et coûts incertains sont préservés, jamais convertis en zéro. Étude de 144 générations/18 groupes et exports réels incomplets."
+        }
       ]
     },
     "SEC-11.3": {
@@ -21150,15 +22200,22 @@
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
           "study_v2_thirty_eight_audited_minimum",
-          "dispatch_edef4ed_first_epochs"
+          "dispatch_edef4ed_first_epochs",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ],
       "offline_presentation_evidence": [
         "historical_observed_metrics_view_dfd93d0",
@@ -22955,14 +24012,21 @@
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
           "study_v2_thirty_eight_audited_minimum",
-          "dispatch_edef4ed_first_epochs"
+          "dispatch_edef4ed_first_epochs",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ]
     },
     "USER-PROFILE": {
@@ -23115,14 +24179,21 @@
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
           "study_v2_thirty_eight_audited_minimum",
-          "dispatch_edef4ed_first_epochs"
+          "dispatch_edef4ed_first_epochs",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ],
       "derived_from": "SEC-3.1"
     },
@@ -23628,7 +24699,9 @@
           "source_current:optimizer_agent/evaluation_recovery.py",
           "source_current:scripts/run_quality_suite.py",
           "source_current:optimizer_agent/suite_orchestrator.py",
-          "source_current:optimizer_agent/campaign.py"
+          "source_current:optimizer_agent/campaign.py",
+          "source_current:optimizer_agent/evaluation.py",
+          "source_current:scripts/gpu_evaluation_recovery_acceptance.py"
         ]
       },
       "local_tested": {
@@ -23640,7 +24713,11 @@
           "ci_45407a2",
           "local_unscored_release",
           "local_uncertain_evaluation_recovery_edef4ed",
-          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed"
+          "local_uncertain_evaluation_recovery_preflight_fixes_edef4ed",
+          "local_recovery_helper_interface42_30781de",
+          "local_cold_copy_input_identity181_30781de",
+          "cold_copy_input_identity_peer30781de",
+          "local_cold_copy_input_identity_full1705_30781de"
         ],
         "test_modules": {
           "test_search_state": 19,
@@ -23648,7 +24725,7 @@
           "test_campaign_workflow": 5,
           "test_suite_resume_boundaries": 9
         },
-        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources.",
+        "scope": "Régressions déjà exécutées; portéeCPU/simulée et identité source limitée par le JUnit. CI séparée vérifiée au45407a2;aucune propagation aux changements ultérieurs. Nouvelle suiteCPU locale892tests+5sous-tests:identité06bd4be+dirty et hashes dans local_unscored_release;aucune exécutionROMEO supplémentaire. Préparation explicite d’évaluation inachevée : 195 tests CPU au snapshot a522ae78, revue indépendante ; aucun scénario ROMEO de cette nouvelle reprise acquis. Contrat, UUID et toolchain strictement identiques, CLI ambigu refusé ; aucune reprise original/natif/finale ou élargissement des retries. Correctif final 1ceb677e : 213 tests CPU incluent tous les contrôles suite_orchestrator ; garde génération-only et refus préflight sans effets d’un ancien request déjà repris. Premier full échoué conservé, aucun succès global ou ROMEO déduit. Suite corrective cohérente 1 636 tests + 13 sous-tests, zéro skip/échec et compileall réussi ; 161 fichiers stables hors docs. Premier full échoué préservé, aucune nouvelle preuve ROMEO/CI de ces sources. Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir.",
         "additional_test_modules_by_evidence": {
           "local_unscored_release": {
             "test_unscored_rehost": 41,
@@ -23676,12 +24753,13 @@
         "applicable": true,
         "evidence": [
           "process_recovery",
-          "study_v2_full_transport_failure"
+          "study_v2_full_transport_failure",
+          "recovery_functional_control002_incomplete"
         ],
-        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads."
+        "scope": "Seulement les scénarios et sources précises des reçus cités; ne certifie pas cette release sur tous les workloads. Contrôle 002 : benchmark et préparation réels, refus conservateur avant nouveau résultat/tell ; reprise complète non acquise."
       },
       "remaining": [
-        "Nouvelle reprise explicite d’évaluation inachevée : 195 tests CPU historiques puis 213 après correctif 1ceb677e, avec intégration CPU cohérente 1 636 + 13 sous-tests. Scénario ROMEO restant avec contrat/UUID/toolchain identiques et sans double récompense ; anciennes reprises bornées à leurs preuves propres.",
+        "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir.",
         "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés."
       ],
       "derived_from": "SEC-11",
@@ -23689,6 +24767,17 @@
         "historical_transport_v1_exact_source_recovery",
         "original_complete_source_availability_1e9464d",
         "local_assembler_declared_inventory_28_fixtures"
+      ],
+      "recovery_control_evidence": [
+        "recovery_functional_control001_failed",
+        "local_recovery_helper_interface42_30781de",
+        "recovery_functional_control002_incomplete"
+      ],
+      "historical_remaining_observations": [
+        {
+          "observed_at_utc": "2026-10-22T02:13:12.249212+00:00",
+          "statement": "Nouvelle reprise explicite d’évaluation inachevée : 195 tests CPU historiques puis 213 après correctif 1ceb677e, avec intégration CPU cohérente 1 636 + 13 sous-tests. Scénario ROMEO restant avec contrat/UUID/toolchain identiques et sans double récompense ; anciennes reprises bornées à leurs preuves propres."
+        }
       ]
     },
     "QUALITY-01": {
@@ -23819,15 +24908,22 @@
           "study_v2_full_matmul2718_774818_00a_terminal",
           "study_v2_permanent_matmul1729_774815_00a_terminal",
           "study_v2_thirty_eight_audited_minimum",
-          "dispatch_edef4ed_first_epochs"
+          "dispatch_edef4ed_first_epochs",
+          "study_v2_edef_no_research_native_774857_774860",
+          "study_v2_edef_greedy_noauto_774858_774859",
+          "study_v2_edef_permanent_original_774946_774993",
+          "study_v2_edef_no_pmpp_775010",
+          "study_v2_edef_no_research_775013",
+          "study_v2_forty_six_completed_public_observation_edef"
         ],
-        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié."
+        "scope": "Les scénarios historiques restent attachés à leurs propres sources et reçus. Observation du 21 octobre à 22:08:48 UTC : 20 générations terminées sur 144 et une finale commune sur 18, sans gain certifié. Les quatre dernières générations du source 55da43e retiennent le naïf exact ; un incident de méthode hérité reste conservé. Autres cohortes, dispersion, exports et reconstructions à terminer. Au constat du 21 octobre à 22:33:07 UTC : 21 générations terminées sur 144 et une finale commune sur 18. Le nouveau terminal original 774527 conserve une méthode failed et un artefact de proposition 2 validé sur SEARCH seulement. Aucun gain final supplémentaire ; natif convolution 3141 non ajouté avant son audit. Au constat du 21 octobre à 22:43:57 UTC : 22 générations terminées sur 144 et une finale commune sur 18. L’original 774527 reste failed avec artefact retenu valide sur SEARCH ; le natif convolution 3141 (774528) termine completed mais son artefact exporté exact n’a pas été essayé sur SEARCH. Qualification FINAL de ces exports et autres cohortes à terminer ; aucun nouveau gain certifié. Au constat du 21 octobre à 23:12:28 UTC : 26 générations terminées sur 144 et une finale commune sur 18. Quatre nouveaux terminaux DFD retiennent le naïf exact ; deux essais sont annulés pour recherche bloquée dans chacun des modes sans autotuning et sans PMPP. Aucun nouveau gain certifié ni groupe final. Original 774527 failed et export natif 774528 non essayé sur SEARCH restent inchangés ; autres cohortes et qualifications FINAL à terminer. Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer. Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié. Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       },
       "remaining": [
         "Au constat du 21 octobre à 23:38:52 UTC : au moins 27 générations terminées auditées sur 144 et une finale commune sur 18. Le nouvel original 774657 termine completed au source 00a : dix appels CLI conformes au transport, meilleur itération 2 validé sur quatorze cas SEARCH. Aucun gain utile confirmé ni FINAL pour cet artefact ; l’ancien original 774527 failed et l’export natif 774528 non essayé sur SEARCH restent inchangés. Autres cohortes, qualifications finales et exports réels à terminer.",
         "Sources supplémentaires disponibles et 28 fixtures d’assemblage acquises ; cela ne produit pas l’export réel §16. Trois snapshots dirty initiaux et certains prompts historiques complets restent non récupérés.",
         "Au constat du 22 octobre à 00:49:17 UTC : au moins 35 générations terminées auditées sur 144 et une finale commune sur 18. Huit nouveaux terminaux au source 00a sont ajoutés par audits publics disjoints ; les constats antérieurs restent datés et les 35 ne sont pas tous au même SHA. Promotions SEARCH et exports natifs non essayés sur SEARCH restent distincts de FINAL. Autres cohortes, qualifications finales et exports réels à terminer ; aucun gain final supplémentaire certifié.",
-        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer."
+        "Au constat du 22 octobre à 02:09:45 UTC : au moins 38 générations terminées auditées sur 144 et une finale commune sur 18. Le minimum daté de 35 est complété par les trois terminaux disjoints 774816, 774818 et 774815 au source 00a ; les 38 ne sont pas tous au même SHA. Les nouveaux dispatchs edef ne sont pas comptés comme terminaux. Promotions SEARCH, clôture du task et qualification FINAL restent distinctes ; autres cohortes, comparaisons finales et exports réels à terminer.",
+        "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
       ],
       "derived_from": "SEC-16",
       "offline_presentation_evidence": [
@@ -24283,6 +25379,35 @@
         "final_closure_family_dispersion_primary_visual"
       ],
       "scope": "Full local correctif vert, zéro échec/skip, 161 fichiers sources/config/deps stables hors docs. L’échec global précédent n’est pas requalifié. Minimum scientifique daté 38/144 et 1/18 inchangé, nouveaux tests/visuel synthétique sans GPU/modèle/ROMEO ; CI après publication restante."
+    },
+    {
+      "observed_at_utc": "2026-10-22T03:36:07.815369+00:00",
+      "kind": "public_46_completed_generation_tasks_mixed_sources_1_FINAL_task",
+      "evidence": [
+        "study_v2_edef_no_research_native_774857_774860",
+        "study_v2_edef_greedy_noauto_774858_774859",
+        "study_v2_edef_permanent_original_774946_774993",
+        "study_v2_edef_no_pmpp_775010",
+        "study_v2_edef_no_research_775013",
+        "study_v2_forty_six_completed_public_observation_edef"
+      ],
+      "scope": "Au constat du 22 octobre à 03:36:07 UTC : 46 tâches génération terminées sur 144 et une tâche FINAL terminée sur 18. Métadonnées job/session/terminal exactes ; méthodes brutes 38 completed, un failed, sept absentes. Huit nouveaux terminaux edef liés à cinq audits, anciens 38 datés ; cinq HEAD sur 35 epochs et onze inconnues. Convolution 24/24, matmul 22/24 ; normalization, reduction, scan et stencil sans génération terminée. Aucune nouvelle qualification FINAL globale ; autres cohortes et exports réels restants."
+    },
+    {
+      "observed_at_utc": "2026-10-22T03:40:34.020990+00:00",
+      "kind": "cold_copy_input_identity_CPU1705_plus13_after_incomplete_control002",
+      "evidence": [
+        "published_recovery_diagnostic_closure_30781de",
+        "ci_30781de",
+        "recovery_functional_control001_failed",
+        "local_recovery_helper_interface42_30781de",
+        "recovery_functional_control002_incomplete",
+        "local_cold_copy_input_identity181_30781de",
+        "cold_copy_input_identity_peer30781de",
+        "cold_copy_input_identity_primary_prepublication_review",
+        "local_cold_copy_input_identity_full1705_30781de"
+      ],
+      "scope": "Contrôles 001 échoué avant job et 002 réellement benchmarké/préparé mais incomplet après refus de hash lié aux chemins, même UUID et coûts anciens incertains préservés. Correctif 106ac/93b77/d2ba/a2d2 : 181 CPU, peer GO puis full local 1 705 + 13 ; input_file typé authentifié seulement, capsules legacy absentes refusées, ancien contrat non écrasé. Publication/CI du candidat et reprise ROMEO corrigée restent à acquérir. 163 fichiers déclarés stables, documents et stabilité Git globale exclus."
     }
   ]
 }

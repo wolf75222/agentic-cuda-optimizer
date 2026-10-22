@@ -199,10 +199,9 @@ def _epoch_binding(marker, marker_sha):
             "previous_attempt_id": marker["previous_attempt_id"], "authorization_sha256": marker_sha}
 
 
-def recovery_request(generation, request):
-    """Resolve a committed chain; preserve the NEW actual manifest paths."""
+def _recovery_records(generation):
+    """Authenticate copied markers without consulting any previous directory."""
     generation = Path(generation)
-    request = json.loads(json.dumps(request, default=str))
     records = {}
     for path in (generation / "evaluation-recoveries").glob("*.json"):
         if not re.fullmatch(r"[0-9a-f]{64}\.json", path.name):
@@ -211,8 +210,6 @@ def recovery_request(generation, request):
         previous = marker.get("request")
         if not isinstance(previous, dict):
             raise EvaluationRecoveryRefused("Malformed evaluation recovery request")
-        if not all(previous.get(key) == request.get(key) for key in ("trial_id", "repair", "research_round")):
-            continue  # A later scientific trial/repair remains an ordinary request.
         epoch, request_id = marker.get("epoch_id"), path.stem
         if (marker.get("schema_version") != 1 or marker.get("kind") != "uncertain_evaluation_recovery"
                 or not isinstance(epoch, str) or not re.fullmatch(r"[0-9a-f]{32}", epoch)
@@ -220,7 +217,10 @@ def recovery_request(generation, request):
                 or not isinstance(marker.get("previous_generation"), str)
                 or not Path(marker["previous_generation"]).is_absolute()):
             raise EvaluationRecoveryRefused("Evaluation recovery request/epoch mismatch")
-        directory = generation / "trials" / request["trial_id"] / "evaluation-requests" / request_id
+        trial = previous.get("trial_id")
+        if not isinstance(trial, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", trial):
+            raise EvaluationRecoveryRefused("Malformed recovery trial identity")
+        directory = generation / "trials" / trial / "evaluation-requests" / request_id
         if _read(directory / "request.json", generation) != previous:
             raise EvaluationRecoveryRefused("Recovered request bytes changed")
         files = marker.get("old_request_files")
@@ -241,6 +241,16 @@ def recovery_request(generation, request):
                 or commit.get("new_task_attempt") != marker.get("new_task_attempt")):
             raise EvaluationRecoveryRefused("Evaluation recovery is not durably committed")
         records[request_id] = (marker, _sha(path, generation))
+    return records
+
+
+def recovery_request(generation, request):
+    """Resolve a committed chain; preserve the NEW actual manifest paths."""
+    generation = Path(generation)
+    request = json.loads(json.dumps(request, default=str))
+    records = {key: row for key, row in _recovery_records(generation).items()
+               if all(row[0]["request"].get(name) == request.get(name)
+                      for name in ("trial_id", "repair", "research_round"))}
     if not records:
         return request
     parents = set()
@@ -277,6 +287,181 @@ def recovery_request(generation, request):
     return {**request, "recovery": _epoch_binding(marker, sha)}
 
 
+_INPUT_IDENTITY_TOKEN = object()
+_INPUT_METADATA = ("baseline-measurement.json", "environment.json", "contract.json", "config.json",
+                   "execution-mode.json", "evaluator_data/baseline.cu")
+
+
+class RecoveryInputIdentity:
+    """Validated labels for input-file identity, never execution locations.
+
+    Only recovery_input_identity() constructs this object. The evaluator must
+    still hash and read its CURRENT files, and every other case field remains
+    part of the original contract formula.
+    """
+    def __init__(self, generation, origin, files, tip, *, _token=None):
+        if _token is not _INPUT_IDENTITY_TOKEN:
+            raise EvaluationRecoveryRefused("Input identity requires an authenticated recovery capsule")
+        self._files = tuple((str(Path(generation) / name), str(Path(origin) / name), sha)
+                            for name, sha in sorted(files.items()))
+        self.generation, self.origin, self.tip = str(generation), str(origin), dict(tip)
+
+    def project(self, path, sha):
+        for actual, original, expected in self._files:
+            if path == actual and sha == expected:
+                return original
+        raise EvaluationRecoveryRefused("Input is outside the authenticated recovery identity or its bytes changed")
+
+    def verify_inputs(self, inputs):
+        if inputs != {actual: sha for actual, _, sha in self._files}:
+            raise EvaluationRecoveryRefused("Evaluator inputs differ from the authenticated cold-copy inventory")
+
+
+def _absolute_label(value):
+    return (isinstance(value, str) and Path(value).is_absolute()
+            and ".." not in Path(value).parts and str(Path(value)) == value)
+
+
+def _expected_input_names(config):
+    # This capsule is deliberately scoped to the generation-only WorkloadSuite
+    # producer. It never discovers, materializes or aliases final/private data.
+    sizes = config.get("search_sizes")
+    if not isinstance(sizes, list) or not sizes or any(type(n) is not int or n <= 0 for n in sizes):
+        raise EvaluationRecoveryRefused("Recovery input identity requires the frozen search distribution")
+    return {f"evaluator_data/search-{n}/{name}.bin" for n in (1, 17, 63, *sizes) for name in ("a", "b")}
+
+
+def recovery_input_identity(generation):
+    """Validate a self-contained cold capsule BEFORE cases() rewrites inputs.
+
+    All authority is copied: marker -> committed preparation SHA -> its source
+    inventory. No previous root is followed or read. Missing legacy capsules
+    are refused rather than retroactively assigning old contract hashes.
+    """
+    generation = Path(generation)
+    records = _recovery_records(generation)
+    if not records:
+        directory = generation / "evaluation-recoveries"
+        if directory.exists() and any(directory.iterdir()):
+            raise EvaluationRecoveryRefused("Recovery input identity has no committed authorization marker")
+        return None
+    capsules, parents = {}, set()
+    for request_id, (marker, marker_sha) in records.items():
+        cap = marker.get("input_identity")
+        if not isinstance(cap, dict):
+            raise EvaluationRecoveryRefused("Legacy evaluation recovery has no authenticated input identity capsule")
+        expected_keys = {"schema_version", "kind", "origin_generation", "previous_generation", "new_generation",
+                         "contract_hash", "environment_fingerprint", "input_files_sha256", "metadata_sha256", "parent"}
+        if (set(cap) != expected_keys or cap["schema_version"] != 1 or cap["kind"] != "workload_search_input_identity"
+                or any(not _absolute_label(cap[name]) for name in ("origin_generation", "previous_generation", "new_generation"))
+                or cap["previous_generation"] != marker["previous_generation"]
+                or cap["contract_hash"] != marker["request"].get("contract_hash")
+                or cap["environment_fingerprint"] != marker["request"].get("environment_fingerprint")):
+            raise EvaluationRecoveryRefused("Recovery input capsule identity mismatch")
+        epoch = marker["epoch_id"]
+        commit = _read(generation / "evaluation-recoveries" / ("committed-" + epoch + ".json"), generation)
+        preparation_path = generation / "evaluation-recoveries" / ("preparation-" + epoch + ".json")
+        if _sha(preparation_path, generation) != commit["preparation_sha256"]:
+            raise EvaluationRecoveryRefused("Recovery input preparation SHA mismatch")
+        audit = _read(preparation_path, generation)
+        files = audit.get("source_files_sha256")
+        if (audit.get("kind") != "uncertain_evaluation_recovery_preparation" or audit.get("schema_version") != 1
+                or audit.get("marker") != marker or audit.get("epoch_id") != epoch
+                or audit.get("request_id") != request_id or audit.get("old_generation") != cap["previous_generation"]
+                or audit.get("new_generation") != cap["new_generation"] or audit.get("new_session") != marker["new_session"]
+                or audit.get("new_task_attempt") != marker["new_task_attempt"] or not isinstance(files, dict)):
+            raise EvaluationRecoveryRefused("Recovery input preparation binding mismatch")
+        inputs, metadata = cap["input_files_sha256"], cap["metadata_sha256"]
+        if (not isinstance(inputs, dict) or not inputs or not isinstance(metadata, dict)
+                or set(metadata) != set(_INPUT_METADATA)
+                or any(not isinstance(name, str) or not re.fullmatch(r"evaluator_data/search-[1-9][0-9]*/[ab]\.bin", name) for name in inputs)
+                or any(not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{64}", sha)
+                       or files.get(name) != sha for name, sha in {**inputs, **metadata}.items())):
+            raise EvaluationRecoveryRefused("Recovery input capsule is not bound to the cold-copy inventory")
+        for name, sha in marker["old_request_files"].items():
+            relative = f"trials/{marker['request']['trial_id']}/evaluation-requests/{request_id}/{name}"
+            if files.get(relative) != sha:
+                raise EvaluationRecoveryRefused("Recovery request is outside its preparation inventory")
+        capsules[request_id] = cap
+        parent = cap["parent"]
+        if parent is not None:
+            if (not isinstance(parent, dict) or set(parent) != {"request_id", "marker_sha256", "input_identity_sha256"}
+                    or parent.get("request_id") not in records):
+                raise EvaluationRecoveryRefused("Broken recovery input ancestry")
+            parent_id = parent["request_id"]
+            parent_marker, parent_sha = records[parent_id]
+            parent_cap = parent_marker.get("input_identity")
+            if (parent.get("marker_sha256") != parent_sha or parent.get("input_identity_sha256") != _digest(parent_cap)
+                    or files.get("evaluation-recoveries/" + parent_id + ".json") != parent_sha
+                    or not isinstance(parent_cap, dict)
+                    or cap["previous_generation"] != parent_cap.get("new_generation")
+                    or any(cap[name] != parent_cap.get(name) for name in
+                           ("origin_generation", "contract_hash", "environment_fingerprint", "input_files_sha256", "metadata_sha256"))):
+                raise EvaluationRecoveryRefused("Recovery input origin or ancestor evidence changed")
+            for name in (parent_id + ".json", "committed-" + parent_marker["epoch_id"] + ".json",
+                         "preparation-" + parent_marker["epoch_id"] + ".json"):
+                relative = "evaluation-recoveries/" + name
+                if files.get(relative) != _sha(generation / relative, generation):
+                    raise EvaluationRecoveryRefused("Copied recovery ancestor differs from the authorized inventory")
+            parents.add(parent_id)
+        elif cap["origin_generation"] != cap["previous_generation"]:
+            raise EvaluationRecoveryRefused("Recovery input origin has no authenticated root")
+    tips = set(capsules) - parents
+    if len(tips) != 1:
+        raise EvaluationRecoveryRefused("Ambiguous or cyclic recovery input ancestry")
+    tip = next(iter(tips))
+    cursor, visited = tip, set()
+    while cursor not in visited:
+        visited.add(cursor)
+        parent = capsules[cursor]["parent"]
+        if parent is None:
+            break
+        cursor = parent["request_id"]
+    if visited != set(capsules):
+        raise EvaluationRecoveryRefused("Disconnected recovery input ancestry")
+    cap = capsules[tip]
+    if cap["new_generation"] != str(generation):
+        raise EvaluationRecoveryRefused("Recovery input capsule belongs to another destination")
+    present = {str(path.relative_to(generation)) for path in (generation / "evaluator_data").rglob("*")
+               if _safe(path, generation).is_file() and path.suffix == ".bin"}
+    if present != set(cap["input_files_sha256"]):
+        raise EvaluationRecoveryRefused("Copied recovery input inventory contains missing or unexpected files")
+    for name, sha in {**cap["metadata_sha256"], **cap["input_files_sha256"]}.items():
+        if _sha(generation / name, generation) != sha:
+            raise EvaluationRecoveryRefused("Copied recovery input or baseline metadata changed before suite construction")
+    config = _read(generation / "config.json", generation)
+    baseline = _read(generation / "baseline-measurement.json", generation)
+    if (set(cap["input_files_sha256"]) != _expected_input_names(config)
+            or _read(generation / "execution-mode.json", generation) != {"generation_only": True}
+            or (generation / "holdout-exposed.json").exists()
+            or baseline.get("ok") is not True or baseline.get("contract_hash") != cap["contract_hash"]
+            or _read(generation / "contract.json", generation).get("contract_hash") != cap["contract_hash"]
+            or _digest(_read(generation / "environment.json", generation)) != cap["environment_fingerprint"]):
+        raise EvaluationRecoveryRefused("Recovery baseline, search distribution or environment identity mismatch")
+    return RecoveryInputIdentity(generation, cap["origin_generation"], cap["input_files_sha256"],
+        {"request_id": tip, "marker_sha256": records[tip][1], "input_identity_sha256": _digest(cap)},
+        _token=_INPUT_IDENTITY_TOKEN)
+
+
+def _input_capsule(generation, destination, request, files):
+    previous = recovery_input_identity(generation)
+    inputs = {name: sha for name, sha in files.items() if name.startswith("evaluator_data/") and name.endswith(".bin")}
+    if set(inputs) != _expected_input_names(_read(generation / "config.json", generation)):
+        raise EvaluationRecoveryRefused("Only the exact unexposed search input inventory can be relocated")
+    if not set(_INPUT_METADATA) <= files.keys():
+        raise EvaluationRecoveryRefused("Recovery input identity requires the complete baseline metadata")
+    metadata = {name: files[name] for name in _INPUT_METADATA}
+    baseline = _read(generation / "baseline-measurement.json", generation)
+    if baseline.get("ok") is not True or baseline.get("contract_hash") != request["contract_hash"]:
+        raise EvaluationRecoveryRefused("Recovery baseline does not authenticate the input contract")
+    return {"schema_version": 1, "kind": "workload_search_input_identity",
+        "origin_generation": previous.origin if previous else str(generation),
+        "previous_generation": str(generation), "new_generation": str(destination),
+        "contract_hash": request["contract_hash"], "environment_fingerprint": request["environment_fingerprint"],
+        "input_files_sha256": inputs, "metadata_sha256": metadata,
+        "parent": previous.tip if previous else None}
+
+
 def _new_payload(audit):
     return {**audit["original_task"]["payload"], "source_recovery": {
         "kind": "uncertain_evaluation_retry", "epoch_id": audit["epoch_id"],
@@ -285,9 +470,12 @@ def _new_payload(audit):
 
 
 def _ready_record(audit, preparation_sha, marker_sha):
+    preparation = ({"evaluation-recoveries/preparation-" + audit["epoch_id"] + ".json": preparation_sha}
+                   if "input_identity" in audit["marker"] else {})
     return {"epoch_id": audit["epoch_id"], "preparation_sha256": preparation_sha,
         "marker_sha256": marker_sha, "rng_or_checkpoint_values_decoded": False,
         "cold_copy_files_sha256": {**audit["source_files_sha256"],
+            **preparation,
             "evaluation-recoveries/" + audit["request_id"] + ".json": marker_sha}}
 
 
@@ -321,6 +509,7 @@ def validate_task_recovery(orchestrator, task):
             audit, binding["preparation_sha256"], _sha(marker, generation)):
         raise EvaluationRecoveryRefused("Recovery readiness evidence changed")
     recovery_request(generation, audit["marker"]["request"])
+    recovery_input_identity(generation)
 
 
 def preparation_pending(orchestrator, task):
@@ -351,11 +540,14 @@ def _finish(orchestrator, audit, path):
         if _inventory(source) != audit["source_files_sha256"]:
             raise EvaluationRecoveryRefused("The original cold campaign changed, including a possible late result")
         marker_path = destination / "evaluation-recoveries" / (audit["request_id"] + ".json")
+        preparation_copy = destination / "evaluation-recoveries" / ("preparation-" + audit["epoch_id"] + ".json")
         expected_copy = dict(audit["source_files_sha256"])
         if destination.exists():
             actual = _inventory(destination)
             if marker_path.exists() and _read(marker_path, destination) == audit["marker"]:
                 actual.pop(str(marker_path.relative_to(destination)), None)
+            if preparation_copy.exists() and _sha(preparation_copy, destination) == preparation_sha:
+                actual.pop(str(preparation_copy.relative_to(destination)), None)
             if actual != expected_copy:
                 archive = destination.parent / ("interrupted-evaluation-copy-" + uuid.uuid4().hex)
                 destination.rename(archive)
@@ -366,10 +558,14 @@ def _finish(orchestrator, audit, path):
             _mkdir_evaluation_durable(destination.parent)
             shutil.copytree(source, destination, copy_function=shutil.copy2)
         if _inventory(source) != expected_copy or {k: v for k, v in _inventory(destination).items()
-                if k != str(marker_path.relative_to(destination))} != expected_copy:
+                if k not in {str(marker_path.relative_to(destination)), str(preparation_copy.relative_to(destination))}} != expected_copy:
             raise EvaluationRecoveryRefused("The cold copy differs from its authenticated source")
         _sync_copy(destination)
         _write(marker_path, audit["marker"])
+        if "input_identity" in audit["marker"]:
+            _write(preparation_copy, audit)
+            if _sha(preparation_copy, destination) != preparation_sha:
+                raise EvaluationRecoveryRefused("Copied preparation serialization differs from its pinned bytes")
         _write(path.with_suffix(".ready.json"), _ready_record(audit, preparation_sha, _sha(marker_path, destination)))
         with orchestrator.journal.connection() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -468,6 +664,7 @@ def prepare_evaluation_recovery(orchestrator, task_id, request_id, reason):
         marker = {"schema_version": 1, "kind": "uncertain_evaluation_recovery", "epoch_id": epoch,
             "previous_request_id": request_id, "previous_attempt_id": intent["attempt_id"], "request": request,
             "previous_generation": str(generation),
+            "input_identity": _input_capsule(generation, destination, request, files),
             "old_request_files": {p.name: _sha(p, generation) for p in request_directory.iterdir()
                 if p.is_file() and p.name in {"request.json", "intent.json", "constraints.json", "autotuning.json", "measurement.json"}},
             "previous_task_attempt": task["attempt"], "new_task_attempt": next_task["attempt"],

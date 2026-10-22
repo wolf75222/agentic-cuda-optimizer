@@ -191,6 +191,11 @@ class CampaignRuntime:
                 or self.rehost_context.get("old_proof",{}).get("run_id") != config.run_id
                 or not self.generation_only):
             raise ValueError("Only a committed unscored generation transfer can start a fresh context")
+        # Authenticate relocated inputs before config/environment publication
+        # or WorkloadSuite.cases() can rewrite the copied evidence. This never
+        # opens the old root and never changes actual request I/O locations.
+        from .evaluation_recovery import recovery_input_identity
+        input_identity = recovery_input_identity(self.directory)
         mode_path = self.directory / "execution-mode.json"
         execution_mode = {"generation_only": self.generation_only}
         if mode_path.exists() and read_json(mode_path) != execution_mode:
@@ -240,9 +245,9 @@ class CampaignRuntime:
             {"short": cases[:2], "search": cases, "performance": perf},
             final_suite_factory=lambda: self.suite.cases(final=True),
             final_suite_identity=digest({"generator": "benchmark_workloads-v1", "sizes": config.final_sizes,
-                                         "seed_commitment": digest(config.seed + 1000003)}))
+                                         "seed_commitment": digest(config.seed + 1000003)}),
+            input_identity=input_identity)
         self.contract_hash = self.evaluator.contract_hash
-        write_json(self.directory / "contract.json", {"contract": asdict(contract), "contract_hash": self.contract_hash})
         baseline_path = self.directory / "baseline-measurement.json"
         if baseline_path.exists():
             self.baseline_measurement = read_json(baseline_path)
@@ -254,6 +259,7 @@ class CampaignRuntime:
             write_json(baseline_path, self.baseline_measurement)
         if not self.baseline_measurement.get("ok"):
             raise RuntimeError("Baseline independent validation failed: " + json.dumps(self.baseline_measurement)[:1000])
+        write_json(self.directory / "contract.json", {"contract": asdict(contract), "contract_hash": self.contract_hash})
         if callable(getattr(runner, "require_complete", None)):
             runner.require_complete()
         self.baseline_latencies = self.latencies(self.baseline_measurement)
