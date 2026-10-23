@@ -93,6 +93,7 @@ class SlurmConfig:
     startup_timeout: int = 600
     request_timeout: int = 300
     exclude: str = ""
+    nodelist: str = ""
     transport_mode: str = "auto"
     reconnect_transport: bool = True
 
@@ -118,6 +119,8 @@ class SlurmConfig:
                 raise ValueError("Invalid module name")
         if self.exclude and not re.fullmatch(r"[A-Za-z0-9_,.\[\]-]+", self.exclude):
             raise ValueError("Invalid node exclusion")
+        if not isinstance(self.nodelist, str) or (self.nodelist and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", self.nodelist)):
+            raise ValueError("Node placement must name exactly one node")
         if self.poll_seconds <= 0 or min(self.startup_timeout, self.request_timeout) <= 0:
             raise ValueError("Timeouts and polling interval must be positive")
         if self.transport_mode not in ("auto", "legacy", "exchange"):
@@ -324,6 +327,8 @@ class SlurmBackend:
                       "gres": self.config.gres, "constraint": self.config.constraint, "cpus": self.config.cpus,
                       "memory": self.config.memory, "walltime": self.config.walltime,
                       "exclude": self.config.exclude}
+        if self.config.nodelist:
+            submission["nodelist"] = self.config.nodelist
         self.transport.write(f"{self.remote_dir}/submission.json", json.dumps(submission).encode())
         # Commit the stage receipt last; an interrupted stage can be repeated.
         self.transport.write(f"{self.remote_dir}/snapshot.json", json.dumps({"sha256": snapshot}).encode())

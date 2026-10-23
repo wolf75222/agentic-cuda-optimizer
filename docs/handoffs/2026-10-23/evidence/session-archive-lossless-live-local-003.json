@@ -1,0 +1,23 @@
+{
+  "actual_campaign_data_read": false,
+  "actual_gpfs_rename_failure_receipt_sha256": "ca7887734817d0689632c83391bf2b8c59186f06acee4d42ed676e34bd455432",
+  "captured_tool_chunk_id": "68e745",
+  "command": ".venv/bin/python -m unittest discover -s work/live -p test_session_archive_lossless_live_003.py -q",
+  "elapsed_test_seconds": 0.475,
+  "errors": 0,
+  "failures": 0,
+  "kind": "synthetic_local_live_staging_v3_gpfs_link_install_acceptance",
+  "limitations": [
+    "Synthetic Mac fixtures and inode-based simulated xattrs; actual GPFS hardlink install not executed by this worker.",
+    "No source publication or payload deletion in staging helper.",
+    "Unjournaled creations/torn journal still refuse preserving copies."
+  ],
+  "new_regression": "No renameat2 staging operation. Atomic no-clobber hardlink then temp alias unlink. Resume authenticates exact two-name same-inode UID/GID/nlink2 pair; extra external aliases/replaced temp refuse preserving all.",
+  "observed_at_unix": 1792765768.552935,
+  "parent_v2_receipt_sha256": "0fdc38bb44eb2ccc29f27f073bd91148530db146ca0095f6e6d73a10eae32ed7",
+  "remote_operations": 0,
+  "source_sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+  "test_count": 32,
+  "test_sha256": "25df8a516e1dc56a59a9208b349fd93cec24dc5974efea5c318251874949ff23",
+  "v1_v2_preserved": true
+}

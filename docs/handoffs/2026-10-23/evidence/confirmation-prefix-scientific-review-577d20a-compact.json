@@ -1,0 +1,210 @@
+{
+  "access_scope": {
+    "campaign_mutations": 0,
+    "database_or_checkpoint_payload_reads": 0,
+    "final_reads": 0,
+    "input_argument_hash_scope": "public SEARCH request arguments after exact per-RPC path projection; no raw buffer byte identity claimed",
+    "raw_input_or_output_buffer_reads": 0,
+    "ssh_model_slurm_gpu_calls": 0
+  },
+  "analysis_helper": {
+    "path": "work/live/confirmation_prefix_review_577d20a.py",
+    "sha256": "c1ba016a1cfde85b73e38be85788db30270b6118f28e81d857ec4cde6e508950"
+  },
+  "canonical_policy": "Keep original completed canonical measurement and completion receipt unchanged; reuse that single tree reward only through authenticated idempotent integration. No canonical benchmark or model replay.",
+  "decision": "New full independent confirmation epoch on a new allocation with exactly the same physical GPU UUID, contract and toolchain; never merge historical partial pairs across allocations.",
+  "evidence_count": 6039,
+  "evidence_manifest_sha256": "5d6f0d466fda23fd5db1fb98f30f4009acf0359dbb4cc6f2d2d3371af2d15a41",
+  "full_evidence_receipt": {
+    "bytes": 1790161,
+    "path": "work/live/confirmation-prefix-scientific-review-577d20a.json",
+    "sha256": "e524b4fe18a87902f4d431583db1358f42becd4d9f38f1b428d4eaa3de5069c4"
+  },
+  "kind": "compact_search_confirmation_prefix_scientific_recovery_review",
+  "limitations": [
+    "An authenticated RPC prefix is historical evidence, not a complete confirmation receipt.",
+    "Input scalar/extent/direction and strict per-RPC filenames agree; raw buffer bytes are not read or independently proved identical by this review.",
+    "The incumbent/version in private store or checkpoint is not attested by this public-only review.",
+    "Historical native reports do not prove a fresh allocation can recover the same GPU UUID."
+  ],
+  "minimal_extension_review": [
+    "A distinct confirmation recovery API/CLI; never relax recover-evaluation completed-request rejection.",
+    "Prepare under controller/task locks with generation-only/unexposed scope, closed CLI receipts, authenticated exact old terminal ownership, immutable evidence inventory, preserved failure/result/accounting costs, source epoch and documentary receipts.",
+    "Trusted runtime helper alone binds the interrupted checkpoint next=integrate, trial/evaluation ID, valid/research flags, completed canonical hashes, candidate artifact/source/launch/parameters and actual store incumbent candidate/version; no checkpoint payload emitted. Public history predicts PMPP baseline/version0 and no_research7a24af29d077d66d32000b82/version1; these are not a replacement for store attestation.",
+    "Copy cold campaign/RNG/checkpoints opaquely to a new attempt/session with fsynced prepared/committed journal and typed authenticated input capsule. The completed canonical authority, evaluation ID and old confirmation RPC fragments remain byte-for-byte unchanged.",
+    "Add a committed confirmation epoch marker bound to old request/completion/measurement hashes and frozen incumbent version. New full confirmation uses its own durable intent/result; no old fragment enters the new 140-pair bootstrap. Cache keys may vary with original source paths, so independently pin source bytes/options/architecture/toolchain as well as cache-key/report consistency.",
+    "Use validated per-recovery placement (prefer old node) plus actual exact UUID/driver/NVRTC/toolkit/harness gate before any measurement/model. Placement is not UUID proof. Existing SlurmConfig has exclude only and no node pin; retain single-GPU constraint and do not reserve all GPUs. Wrong UUID must close the owned lease and retain explicit incomplete status, with no hidden resubmission.",
+    "Use fresh evaluator state and normal independent correctness/precision/readonly/poison guards, then the unchanged fixed20-batch7-case AB/BA confirmation. Preserve required sanitizer/documentary/scientific admission guards. No old/new timing pool even on same UUID.",
+    "Durable new confirmation is published before any store promotion/tell; promotion compare-and-swap must use frozen incumbent version, and tree tell must consume only the original completed canonical evaluation ID once. Resume/read-only committed replay must emit zero extra model, canonical benchmark, paired measurement, promotion or tell.",
+    "Regressions must cover completed canonical mismatch, wrong incumbent/version, source/launch/input/contract drift, live/unknown old worker or model, wrong GPU/toolchain, output write/fsync crashes, prepared copy crashes, duplicate command/replay and partial new confirmation failure. Do not claim implemented or ROMEO tested from this analysis."
+  ],
+  "not_implemented": [
+    "authenticated confirmation recovery preparation and cold-copy commit",
+    "trusted checkpoint/incumbent-version binding",
+    "new allocation placement and exact UUID admission",
+    "durable confirmation epoch result and exactly-once promotion/tell"
+  ],
+  "observed_at_utc": "2026-10-23T14:16:39.465671+00:00",
+  "records": [
+    {
+      "all_launch_source_input_argument_protocol_and_order_checks_passed": true,
+      "baseline_artifact_hash": "756e10654730212b62ac95d1b6d3e66e4b24e0d6bd1e37ea8d490170726fe624",
+      "candidate_artifact_hash": "743f57c1cd04ae6cdab66aa36506f8aba972f94b1abcd6135655515e5fec9861",
+      "candidate_id": "da0668f3474007f9614c5718",
+      "canonical_evaluation_id": "614e898208c34f66805d020cd494b027",
+      "canonical_native_reports_exactly_linked": 49,
+      "canonical_request_id": "f10e3d5adff9014ab5a588538c21be609a88d209bfe53f807c7d8bcce02af401",
+      "cases": [
+        "search-1",
+        "search-17",
+        "search-63",
+        "search-64",
+        "search-128",
+        "search-256",
+        "search-512"
+      ],
+      "checkpoint_incumbent_version_not_read_or_attested": true,
+      "complete_batches": 17,
+      "complete_pairs": 119,
+      "contract_hash": "aae7ad069d0a5d517add239946f2a08a793e31704192d9f1ef1cb4d877fae89a",
+      "environment_fingerprint": "775a0092b02eb4a602add929da5de22bac144669f866b2ff5c2823032846dace",
+      "expected_incumbent_version_from_public_history": 0,
+      "failed_next_measurement": {
+        "accepted_native_success": false,
+        "batch_zero_based": 17,
+        "case_id": "search-1",
+        "launch_input_protocol_identity_sha256": "6d951f3fe11a3d079305a4abf1d914b0b9486eac2911f4ad096d6f44affc69f0",
+        "report_sha256": "e62355cfec418759d3a43893de24dc8118b104ce9306943648af98c1183eac90",
+        "request_sha256": "5a16a10eb791ce79fbead368be2f1917063fb65fe764eb0310ae90583796ee42",
+        "role": "incumbent",
+        "rpc_id": "c168911e386a40f6a8197912c41d0499",
+        "source_sha256": "22967d19dc7b5a60ef641e64d9d0715d34a1278d6cf134626f67811fa172844c"
+      },
+      "hardware": {
+        "architecture": "sm_90",
+        "cuda_toolkit_version": 12060,
+        "driver_version": 13010,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+        "nvrtc_version": "12.6",
+        "uuid": "7c184a2e41ea3d2bdf5b1699c95fc1fe"
+      },
+      "incumbent_artifact_hash": "756e10654730212b62ac95d1b6d3e66e4b24e0d6bd1e37ea8d490170726fe624",
+      "incumbent_id": "baseline",
+      "incumbent_label_bound_by_source_and_exact_benchmark_request": true,
+      "job_id": "775345",
+      "mode": "pmpp_permanent_only",
+      "node": "romeo-a041",
+      "partial_failure_samples_not_admitted": true,
+      "planned_batches": 20,
+      "prefix_rows_sha256": "9b030bc407bdd18603e62af3d1f50fb2d47a0f301ce10df1b416ea16bf7a6bfb",
+      "session_id": "suite-gen-28892fc4b7b27020630b113371988dfa",
+      "unpaired_successes": 1,
+      "valid_confirmation_rpc_count": 239
+    },
+    {
+      "all_launch_source_input_argument_protocol_and_order_checks_passed": true,
+      "baseline_artifact_hash": "756e10654730212b62ac95d1b6d3e66e4b24e0d6bd1e37ea8d490170726fe624",
+      "candidate_artifact_hash": "d969ffed890a2f5804d8cd35d1e859abc72da1f3785b9d1bb05b3acd5921fee0",
+      "candidate_id": "1a7b3e6db88fc59f93e9c7db",
+      "canonical_evaluation_id": "5681b105c7a046c593ff4831cfa27b73",
+      "canonical_native_reports_exactly_linked": 49,
+      "canonical_request_id": "30060b2f4d45847061190466f34f056797dbc00b22e91813f41df5138c73ea37",
+      "cases": [
+        "search-1",
+        "search-17",
+        "search-63",
+        "search-64",
+        "search-128",
+        "search-256",
+        "search-512"
+      ],
+      "checkpoint_incumbent_version_not_read_or_attested": true,
+      "complete_batches": 4,
+      "complete_pairs": 28,
+      "contract_hash": "e6970cc413d1cb3e303532d133054399e53d93f5c807c6a7f1d6577e5daad286",
+      "environment_fingerprint": "c482e0c6aee7892e2a487cec95ce9b58cc8cb3c49f6083b3fa6a5b44c8c04e95",
+      "expected_incumbent_version_from_public_history": 1,
+      "failed_next_measurement": {
+        "accepted_native_success": false,
+        "batch_zero_based": 4,
+        "case_id": "search-1",
+        "launch_input_protocol_identity_sha256": "35db01708c79bfb53c11a418107f4be2a0866defb9a347806cf8d2ddca46b885",
+        "report_sha256": "c848a0da72b1b45f0c4afba5550c0aa4d5956391fa965dfbd71fac56c837ce9a",
+        "request_sha256": "02897c6db8d1e97086b884663d3950a3019e30ae8180e43a10ef507ec2e81486",
+        "role": "incumbent",
+        "rpc_id": "6c4a03a239a34cdd8c6bde541668954c",
+        "source_sha256": "1ef761be1934b0b1bb040daac7b955acd4132362c7906768d9704d5c9155c11c"
+      },
+      "hardware": {
+        "architecture": "sm_90",
+        "cuda_toolkit_version": 12060,
+        "driver_version": 13010,
+        "harness_build_id": "8b6d252f9bf9dc0640de52aea9e180e48fc98554142ccdcbec086641114663ab",
+        "nvrtc_version": "12.6",
+        "uuid": "030256aceeacca7debde79112d9593a6"
+      },
+      "incumbent_artifact_hash": "caaa2a111c46f6dd647bb7d1ec90406e9cafa6fa91a5fe260a3165b8dcb0ba55",
+      "incumbent_id": "7a24af29d077d66d32000b82",
+      "incumbent_label_bound_by_source_and_exact_benchmark_request": true,
+      "job_id": "775347",
+      "mode": "no_research",
+      "node": "romeo-a043",
+      "partial_failure_samples_not_admitted": true,
+      "planned_batches": 20,
+      "prefix_rows_sha256": "65b7632f74758a7366c7c1e66a17d2526aab147294c39c745ae1882a34addac6",
+      "session_id": "suite-gen-1fde9cf50aedfac47c2ccb8468499d27",
+      "unpaired_successes": 0,
+      "valid_confirmation_rpc_count": 56
+    }
+  ],
+  "schema_version": 1,
+  "source_epoch": "577d20a8b8a7de333309a32dddc0c6ce79104df9",
+  "source_files": {
+    "docs/recovery_transport.fr.md": {
+      "sha256": "13bf640f233a07ee3fa30107602518b076c2363dea9148dfb6ebbd8258ea4411"
+    },
+    "optimizer_agent/campaign.py": {
+      "sha256": "c5bfeb74c5014b6e4c3d2871274cbae4b5de7c52546a185d6b623d35c5385061"
+    },
+    "optimizer_agent/evaluation.py": {
+      "sha256": "d2baef8148440db3b5e0847239c3f8a30d46b68b3496c16e1c2e729c6ca2f257"
+    },
+    "optimizer_agent/evaluation_recovery.py": {
+      "sha256": "106acbb68f7c5be2ee50f230049d01caae4d2c21446c2e141ecfb99413b22fc0"
+    },
+    "optimizer_agent/execution_backend.py": {
+      "sha256": "c6b18c51165b04efb2847f00b6fd01a113802037d52f51a51cbe3742c5c3e7c4"
+    }
+  },
+  "source_ranges": {
+    "docs/recovery_transport.fr.md": [
+      "64-70 no timing pool across allocations",
+      "175-189 exact hardware and typed input recovery identity"
+    ],
+    "optimizer_agent/campaign.py": [
+      "198-224 generation-only and authenticated input/config guards",
+      "326-334 candidate source/launch/parameter reconstruction",
+      "866-941 completed canonical reuse, confirmation authority, promotion and tree reward",
+      "1163-1176 checkpoint stream resumption"
+    ],
+    "optimizer_agent/evaluation.py": [
+      "397-403 exact UUID/toolchain comparison",
+      "432-492 independent correctness validation and per-suite reuse",
+      "498-511 fresh RPC and raw sample guards",
+      "588-611 confirm admission",
+      "613-655 deterministic AB/BA pairing and bootstrap"
+    ],
+    "optimizer_agent/evaluation_recovery.py": [
+      "116-145 completed canonical explicit refusal",
+      "334-463 typed authenticated input identity capsule",
+      "622-685 cold recovery preconditions and immutable intent"
+    ],
+    "optimizer_agent/execution_backend.py": [
+      "80-123 one GPU and Slurm config",
+      "559-617 request fingerprint and collection"
+    ],
+    "optimizer_agent/remote_worker.py": [
+      "269-280 durable submission intent and sbatch flags"
+    ]
+  }
+}

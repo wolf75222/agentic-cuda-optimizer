@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "generation_only": true,
+  "source": "/gpfs/scratch/rmdraux/agentic-cuda-optimizer-20261021/sessions",
+  "destination": "/gpfs/projet/r250127/rmdraux-agentic-cuda-optimizer-retained-20261022",
+  "observed_at_unix": 1792766029.2184613,
+  "no_active_owned_jobs": true,
+  "no_known_source_writers": true,
+  "queue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "visible_process_list_sha256": "e7c36c287f5522a5163d4a939daf395d86469daf80b9f77a1ddb42b710d1c88b",
+  "process_scope": "Current login node processes and current own-user Slurm queue; no universal same-UID writer exclusion claimed. Source immutable inventory before/after is mandatory.",
+  "quota_before": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25193088  104857600  110100480     163840     none |   548860 1000000  1500000       40     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35504992  104857600  110100480          0     none |  1496302 1000000  1500000        0   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224482472          0          0          0     none |  2863972       0        0        0     none romeo.romeo.univ-reims.fr\n",
+  "terminal_jobs": {
+    "suite-gen-168ebe9470e795deffa60085e0db8815": {
+      "job_id": "775251",
+      "state": "COMPLETED",
+      "exit_code": "0:0"
+    },
+    "suite-gen-77d89ccf16da23c828d8aa6503eaaf74": {
+      "job_id": "775252",
+      "state": "COMPLETED",
+      "exit_code": "0:0"
+    },
+    "suite-gen-384811d9ca7a729c0f7ce04ea82c1aef": {
+      "job_id": "775253",
+      "state": "COMPLETED",
+      "exit_code": "0:0"
+    },
+    "suite-gen-10621470f80015cf6eab7c53689c5f60": {
+      "job_id": "775254",
+      "state": "COMPLETED",
+      "exit_code": "0:0"
+    }
+  },
+  "role_sha256": {
+    "suite-gen-168ebe9470e795deffa60085e0db8815": {
+      "job_id.json": "4a61dff22cb655862d11a814f2588d2f0acb5a28d6d2e5513d19b51a8e8cd6d8",
+      "snapshot.json": "e83b6894a3ed51060ad1748210a1568ccf8dd4a7db8ca2a268e5af70a66be727",
+      "ready.json": "2364df7d9033cf0f9618692169db82d677693e23a4a00015eb5bffd8fbec6ed3",
+      "build.json": "e2244bf08bca4c8bbcbeed539c5eacb46994744b1e4d74c63cfcb10295585693"
+    },
+    "suite-gen-77d89ccf16da23c828d8aa6503eaaf74": {
+      "job_id.json": "2018b8c85b123be7f084b0e39231f6c8a07ed335a6ea44216ec065490199313b",
+      "snapshot.json": "e83b6894a3ed51060ad1748210a1568ccf8dd4a7db8ca2a268e5af70a66be727",
+      "ready.json": "eaee6a451f8c16c20d88f960823151e007d3966ddcc549a983ac9cda0c13f737",
+      "build.json": "8eaa71bdb58f93fec6f621d42b0136ddaeaf8ca17878353e627917d56b5b0fdd"
+    },
+    "suite-gen-384811d9ca7a729c0f7ce04ea82c1aef": {
+      "job_id.json": "4b5d11ba8e359f7a8d931b8ecdef380df0534ea2c41285639a988312bfae67fa",
+      "snapshot.json": "e83b6894a3ed51060ad1748210a1568ccf8dd4a7db8ca2a268e5af70a66be727",
+      "ready.json": "9dfffddf125c09df6feffe6dd50e4a2be096d0cd028469fdbb0c426eb837c05f",
+      "build.json": "93210249b8eeb98b00fc3693422f0916e5e8222f30287ffa1b4cba482b4ce8ba"
+    },
+    "suite-gen-10621470f80015cf6eab7c53689c5f60": {
+      "job_id.json": "175ae59c40751c57ae98340d10f274cf66e325ff1cf010ddc653647b20a107f0",
+      "snapshot.json": "e83b6894a3ed51060ad1748210a1568ccf8dd4a7db8ca2a268e5af70a66be727",
+      "ready.json": "fd611f873e69d2bc974a6edebd3171736a22a35be80f07b589f0eb1f8bdc32b0",
+      "build.json": "9ad01f6926d00a13b32d69fef69f3ffc20c7c4c33015b9251b68411fb8d09ce8"
+    }
+  },
+  "historical_receipt_sha256": {
+    "four_closed_historical_access": "8770cf295e7af918f5108a4b94f1578fd84db3e89a31a785d3fe110f97d1079d",
+    "terminal_authority": "e05e30731f62aacc0c0e0a0e9857caa8714f09ee1c3bdb659c229b03f631371b"
+  },
+  "reviewed_staging_source_sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+  "publication_or_retirement_authorized": false
+}

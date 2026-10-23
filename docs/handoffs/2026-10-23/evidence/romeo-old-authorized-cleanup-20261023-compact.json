@@ -1,0 +1,166 @@
+{
+  "batches": [
+    {
+      "archive_bytes": 40587510,
+      "archive_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-numeric-scratch-20261023T141416Z-bda691c09d86.tar.gz",
+      "archive_sha256": "46942e765432e589592b5895db9eb99c31d68efd48b97db75e0b665f3c1d7e5e",
+      "deleted_dirs": 324,
+      "deleted_entries": 3453,
+      "deleted_files": 3129,
+      "errors": [],
+      "label": "old-numeric-scratch",
+      "manifest_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-numeric-scratch-20261023T141416Z-bda691c09d86-manifest.json",
+      "manifest_sha256": "f22ca1874165369c1a5a5a7c3dcf52a0d47b53e31a535fe3136fb5ded483e72d",
+      "parent": "/gpfs/scratch/rmdraux",
+      "quota_after": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25231920  104857600  110100480     397848     none |   549468 1000000  1500000       97     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35505128  104857600  110100480      60096     none |  1496313 1000000  1500000       80   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224482472          0          0          0     none |  2863964       0        0        0     none romeo.romeo.univ-reims.fr\n"
+      },
+      "quota_before": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25218256  104857600  110100480     163832     none |   549465 1000000  1500000      100     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35565224  104857600  110100480          0     none |  1499755 1000000  1500000        0   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224482472          0          0          0     none |  2863964       0        0        0     none romeo.romeo.univ-reims.fr\n"
+      },
+      "receipt_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-numeric-scratch-20261023T141416Z-bda691c09d86-receipt.json",
+      "refused_roots": {},
+      "retired_roots": [
+        "249797",
+        "249798",
+        "250039",
+        "250047",
+        "250057",
+        "253182",
+        "253199",
+        "253202",
+        "253340",
+        "259030",
+        "259059",
+        "259103",
+        "259562",
+        "259621",
+        "259667",
+        "259669",
+        "259677",
+        "259705",
+        "259746",
+        "259783",
+        "259812",
+        "260080",
+        "260088",
+        "261628",
+        "261629",
+        "261668",
+        "263142",
+        "263147",
+        "263154",
+        "270608",
+        "272419"
+      ],
+      "source_allocated_bytes": 62665728,
+      "source_logical_bytes": 58264346,
+      "squeue_after": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "squeue_before": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "squeue_before_retirement": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      }
+    },
+    {
+      "archive_bytes": 41721789,
+      "archive_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-authorized-home-20261023T141702Z-047ea22e3a52.tar.gz",
+      "archive_sha256": "d5765d63b8723cc907721de4538e000ce3640d7f7984fe17f1497d4cdea8284f",
+      "deleted_dirs": 159,
+      "deleted_entries": 616,
+      "deleted_files": 457,
+      "entries_with_xattrs": 601,
+      "errors": [],
+      "label": "old-authorized-home",
+      "manifest_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-authorized-home-20261023T141702Z-047ea22e3a52-manifest.json",
+      "manifest_sha256": "146346187f31449625563f7f0c4ef7fc3d5b55781527a37e751126515d3e6137",
+      "opaque_xattrs_policy": "Complete base64 values in manifest rows and agentic.cleanup.xattrs_base64 PAX header; restore with os.setxattr from these values. Ordinary tar extraction alone does not restore this custom metadata.",
+      "parent": "/gpfs/home/rmdraux",
+      "quota_after": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25196208  104857600  110100480     433560     none |   548870 1000000  1500000       80     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35504992  104857600  110100480      60232     none |  1496302 1000000  1500000       91   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224482472          0          0          0     none |  2863964       0        0        0     none romeo.romeo.univ-reims.fr\n"
+      },
+      "quota_before": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25259472  104857600  110100480     370296     none |   549469 1000000  1500000       96     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35504992  104857600  110100480      60232     none |  1496302 1000000  1500000       91   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224482472          0          0          0     none |  2863964       0        0        0     none romeo.romeo.univ-reims.fr\n"
+      },
+      "receipt_path": "/gpfs/home/rmdraux/.cleanup-preserved/old-authorized-home-20261023T141702Z-047ea22e3a52-receipt.json",
+      "refused_roots": {},
+      "retired_roots": [
+        "adc_hires_build",
+        "adc_cpp.stale-20260529",
+        "TP-20260331",
+        "simplexe_gpu",
+        "vec"
+      ],
+      "source_allocated_bytes": 110363648,
+      "source_logical_bytes": 109858837,
+      "squeue_after": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "squeue_before": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "squeue_before_retirement": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": ""
+      }
+    }
+  ],
+  "completed_utc": "2026-10-23T14:17:39.087566+00:00",
+  "deleted_dirs": 483,
+  "deleted_entries": 4069,
+  "deleted_files": 3586,
+  "first_transport_note": "Scratch batch completed; wrapper returned1 when HOME roots were conservatively refused for security.selinux. Original script, stderr and receipts retained. Second execution only HOME preserves every xattr value in manifest and PAX; scratch not replayed.",
+  "home_downloaded_receipts": {
+    "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/romeo-old-authorized-cleanup-20261023-002/old-authorized-home-20261023T141702Z-047ea22e3a52-manifest.json": {
+      "bytes": 316143,
+      "sha256": "146346187f31449625563f7f0c4ef7fc3d5b55781527a37e751126515d3e6137"
+    },
+    "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/romeo-old-authorized-cleanup-20261023-002/old-authorized-home-20261023T141702Z-047ea22e3a52-receipt.json": {
+      "bytes": 39179,
+      "sha256": "682c79cdf80c13eacc0db61a543c5d1dac61a70ac2987f2f3ca1bf69c49eed5f"
+    },
+    "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/romeo-old-authorized-cleanup-20261023-002/old-authorized-home-20261023T141702Z-047ea22e3a52-verified-before-retirement.json": {
+      "bytes": 2516,
+      "sha256": "3334bdad4c6e24ec02003db37b31de13d620b011d0b96e652a687627c4beb4b1"
+    }
+  },
+  "local_consistency_checks": [
+    {
+      "archive_verified_before_and_after_retirement": true,
+      "every_manifest_entry_deleted_exactly_once": true,
+      "lot": "old-numeric-scratch",
+      "manifest_matches_receipt": true
+    },
+    {
+      "archive_verified_before_and_after_retirement": true,
+      "every_manifest_entry_deleted_exactly_once": true,
+      "lot": "old-authorized-home",
+      "manifest_matches_receipt": true
+    }
+  ],
+  "scope": "31 exact old scratch roots plus 5 exact old HOME roots; no Slurm mutations; no current scientific or FINAL paths",
+  "script_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/work/live/romeo_old_directories_verified_cleanup_20261023.py",
+  "script_sha256": "40db852cce149949e4f29c19490a41a48c3ed4f35ac84ffc428d9961ed25f1a0"
+}

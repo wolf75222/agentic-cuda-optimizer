@@ -345,6 +345,14 @@ def recovery_input_identity(generation):
         if directory.exists() and any(directory.iterdir()):
             raise EvaluationRecoveryRefused("Recovery input identity has no committed authorization marker")
         return None
+    return _input_identity_from_records(generation, records)
+
+
+def _input_identity_from_records(generation, records, *, namespace="evaluation-recoveries",
+                                 preparation_kind="uncertain_evaluation_recovery_preparation",
+                                 canonical_request_key=None):
+    """Shared cold-copy capsule validation; callers authenticate their records."""
+    generation = Path(generation)
     capsules, parents = {}, set()
     for request_id, (marker, marker_sha) in records.items():
         cap = marker.get("input_identity")
@@ -359,13 +367,13 @@ def recovery_input_identity(generation):
                 or cap["environment_fingerprint"] != marker["request"].get("environment_fingerprint")):
             raise EvaluationRecoveryRefused("Recovery input capsule identity mismatch")
         epoch = marker["epoch_id"]
-        commit = _read(generation / "evaluation-recoveries" / ("committed-" + epoch + ".json"), generation)
-        preparation_path = generation / "evaluation-recoveries" / ("preparation-" + epoch + ".json")
+        commit = _read(generation / namespace / ("committed-" + epoch + ".json"), generation)
+        preparation_path = generation / namespace / ("preparation-" + epoch + ".json")
         if _sha(preparation_path, generation) != commit["preparation_sha256"]:
             raise EvaluationRecoveryRefused("Recovery input preparation SHA mismatch")
         audit = _read(preparation_path, generation)
         files = audit.get("source_files_sha256")
-        if (audit.get("kind") != "uncertain_evaluation_recovery_preparation" or audit.get("schema_version") != 1
+        if (audit.get("kind") != preparation_kind or audit.get("schema_version") != 1
                 or audit.get("marker") != marker or audit.get("epoch_id") != epoch
                 or audit.get("request_id") != request_id or audit.get("old_generation") != cap["previous_generation"]
                 or audit.get("new_generation") != cap["new_generation"] or audit.get("new_session") != marker["new_session"]
@@ -379,7 +387,8 @@ def recovery_input_identity(generation):
                        or files.get(name) != sha for name, sha in {**inputs, **metadata}.items())):
             raise EvaluationRecoveryRefused("Recovery input capsule is not bound to the cold-copy inventory")
         for name, sha in marker["old_request_files"].items():
-            relative = f"trials/{marker['request']['trial_id']}/evaluation-requests/{request_id}/{name}"
+            canonical_id = marker[canonical_request_key] if canonical_request_key else request_id
+            relative = f"trials/{marker['request']['trial_id']}/evaluation-requests/{canonical_id}/{name}"
             if files.get(relative) != sha:
                 raise EvaluationRecoveryRefused("Recovery request is outside its preparation inventory")
         capsules[request_id] = cap
@@ -392,7 +401,7 @@ def recovery_input_identity(generation):
             parent_marker, parent_sha = records[parent_id]
             parent_cap = parent_marker.get("input_identity")
             if (parent.get("marker_sha256") != parent_sha or parent.get("input_identity_sha256") != _digest(parent_cap)
-                    or files.get("evaluation-recoveries/" + parent_id + ".json") != parent_sha
+                    or files.get(namespace + "/" + parent_id + ".json") != parent_sha
                     or not isinstance(parent_cap, dict)
                     or cap["previous_generation"] != parent_cap.get("new_generation")
                     or any(cap[name] != parent_cap.get(name) for name in
@@ -400,7 +409,7 @@ def recovery_input_identity(generation):
                 raise EvaluationRecoveryRefused("Recovery input origin or ancestor evidence changed")
             for name in (parent_id + ".json", "committed-" + parent_marker["epoch_id"] + ".json",
                          "preparation-" + parent_marker["epoch_id"] + ".json"):
-                relative = "evaluation-recoveries/" + name
+                relative = namespace + "/" + name
                 if files.get(relative) != _sha(generation / relative, generation):
                     raise EvaluationRecoveryRefused("Copied recovery ancestor differs from the authorized inventory")
             parents.add(parent_id)
@@ -443,8 +452,8 @@ def recovery_input_identity(generation):
         _token=_INPUT_IDENTITY_TOKEN)
 
 
-def _input_capsule(generation, destination, request, files):
-    previous = recovery_input_identity(generation)
+def _input_capsule(generation, destination, request, files, *, previous_identity=None, resolve_previous=True):
+    previous = recovery_input_identity(generation) if resolve_previous else previous_identity
     inputs = {name: sha for name, sha in files.items() if name.startswith("evaluator_data/") and name.endswith(".bin")}
     if set(inputs) != _expected_input_names(_read(generation / "config.json", generation)):
         raise EvaluationRecoveryRefused("Only the exact unexposed search input inventory can be relocated")
@@ -469,14 +478,14 @@ def _new_payload(audit):
         "preparation_path": audit["preparation_path"], "preparation_sha256": audit["preparation_sha256"]}}
 
 
-def _ready_record(audit, preparation_sha, marker_sha):
-    preparation = ({"evaluation-recoveries/preparation-" + audit["epoch_id"] + ".json": preparation_sha}
+def _ready_record(audit, preparation_sha, marker_sha, *, namespace="evaluation-recoveries"):
+    preparation = ({namespace + "/preparation-" + audit["epoch_id"] + ".json": preparation_sha}
                    if "input_identity" in audit["marker"] else {})
     return {"epoch_id": audit["epoch_id"], "preparation_sha256": preparation_sha,
-        "marker_sha256": marker_sha, "rng_or_checkpoint_values_decoded": False,
+        "marker_sha256": marker_sha, "rng_or_checkpoint_values_decoded": audit.get("checkpoint_public_metadata_projected", False),
         "cold_copy_files_sha256": {**audit["source_files_sha256"],
             **preparation,
-            "evaluation-recoveries/" + audit["request_id"] + ".json": marker_sha}}
+            namespace + "/" + audit["request_id"] + ".json": marker_sha}}
 
 
 def validate_task_recovery(orchestrator, task):
@@ -525,11 +534,13 @@ def preparation_pending(orchestrator, task):
     return False
 
 
-def _finish(orchestrator, audit, path):
+def _finish(orchestrator, audit, path, *, namespace="evaluation-recoveries", payload_factory=None,
+            snapshot_key="evaluation_recovery_preparation_sha256"):
+    """Shared durable cold transfer, after protocol-specific admission."""
     original = audit["original_task"]
     preparation_sha = _sha(path, orchestrator.directory)
     enriched = {**audit, "preparation_sha256": preparation_sha}
-    expected_payload = _new_payload(enriched)
+    expected_payload = (payload_factory or _new_payload)(enriched)
     current = orchestrator.journal.task(original["id"])
     transferred = (current and current["attempt"] == audit["new_task_attempt"]
                    and current["session"] == audit["new_session"] and current["payload"] == expected_payload)
@@ -539,8 +550,8 @@ def _finish(orchestrator, audit, path):
         source, destination = Path(audit["old_generation"]), Path(audit["new_generation"])
         if _inventory(source) != audit["source_files_sha256"]:
             raise EvaluationRecoveryRefused("The original cold campaign changed, including a possible late result")
-        marker_path = destination / "evaluation-recoveries" / (audit["request_id"] + ".json")
-        preparation_copy = destination / "evaluation-recoveries" / ("preparation-" + audit["epoch_id"] + ".json")
+        marker_path = destination / namespace / (audit["request_id"] + ".json")
+        preparation_copy = destination / namespace / ("preparation-" + audit["epoch_id"] + ".json")
         expected_copy = dict(audit["source_files_sha256"])
         if destination.exists():
             actual = _inventory(destination)
@@ -566,7 +577,7 @@ def _finish(orchestrator, audit, path):
             _write(preparation_copy, audit)
             if _sha(preparation_copy, destination) != preparation_sha:
                 raise EvaluationRecoveryRefused("Copied preparation serialization differs from its pinned bytes")
-        _write(path.with_suffix(".ready.json"), _ready_record(audit, preparation_sha, _sha(marker_path, destination)))
+        _write(path.with_suffix(".ready.json"), _ready_record(audit, preparation_sha, _sha(marker_path, destination), namespace=namespace))
         with orchestrator.journal.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM tasks WHERE id=?", (original["id"],)).fetchone()
@@ -575,7 +586,7 @@ def _finish(orchestrator, audit, path):
             if snapshot != original:
                 raise EvaluationRecoveryRefused("The owned task changed before recovery commit")
             db.execute("INSERT INTO task_attempts VALUES(?,?,?,?,?,?,?)", (original["id"], original["attempt"],
-                json.dumps({"task": original, "evaluation_recovery_preparation_sha256": preparation_sha}, sort_keys=True),
+                json.dumps({"task": original, snapshot_key: preparation_sha}, sort_keys=True),
                 None, None, audit["reason"], time.time()))
             db.execute("UPDATE tasks SET payload=?,state='pending',session=?,job_id=NULL,result=NULL,error=NULL,started=NULL,finished=NULL,attempt=? WHERE id=?",
                 (json.dumps(expected_payload, sort_keys=True), audit["new_session"], audit["new_task_attempt"], original["id"]))
@@ -584,23 +595,23 @@ def _finish(orchestrator, audit, path):
             row = db.execute("SELECT snapshot FROM task_attempts WHERE task_id=? AND attempt=?",
                              (original["id"], original["attempt"])).fetchone()
         archived = json.loads(row[0]) if row else {}
-        if archived != {"task": original, "evaluation_recovery_preparation_sha256": preparation_sha}:
+        if archived != {"task": original, snapshot_key: preparation_sha}:
             raise EvaluationRecoveryRefused("The original task snapshot does not authenticate this recovery")
     generation = Path(audit["new_generation"])
-    marker = generation / "evaluation-recoveries" / (audit["request_id"] + ".json")
+    marker = generation / namespace / (audit["request_id"] + ".json")
     ready = _read(path.with_suffix(".ready.json"), orchestrator.directory)
-    if (ready != _ready_record(audit, preparation_sha, _sha(marker, generation))
+    if (ready != _ready_record(audit, preparation_sha, _sha(marker, generation), namespace=namespace)
             or _read(marker, generation) != audit["marker"]):
         raise EvaluationRecoveryRefused("Recovery readiness evidence changed")
     if not path.with_suffix(".committed.json").exists():
         actual = _inventory(generation)
-        actual.pop("evaluation-recoveries/committed-" + audit["epoch_id"] + ".json", None)
+        actual.pop(namespace + "/committed-" + audit["epoch_id"] + ".json", None)
         if actual != ready["cold_copy_files_sha256"]:
             raise EvaluationRecoveryRefused("The prepared cold context changed before activation")
     commit = {"epoch_id": audit["epoch_id"], "marker_sha256": _sha(marker, generation),
         "preparation_sha256": preparation_sha, "new_session": audit["new_session"],
         "new_task_attempt": audit["new_task_attempt"]}
-    _write(generation / "evaluation-recoveries" / ("committed-" + audit["epoch_id"] + ".json"), commit)
+    _write(generation / namespace / ("committed-" + audit["epoch_id"] + ".json"), commit)
     _write(path.with_suffix(".committed.json"), commit)
     return {**commit, "task_id": original["id"], "previous_request_id": audit["request_id"],
         "previous_attempt_id": audit["marker"]["previous_attempt_id"], "previous_cost_status": "uncertain_preserved",

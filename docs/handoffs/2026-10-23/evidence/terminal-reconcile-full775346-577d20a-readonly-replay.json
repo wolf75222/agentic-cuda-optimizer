@@ -1,0 +1,54 @@
+{
+  "kind": "actual_committed_terminal_reconciliation_readonly_replay",
+  "observed_at_utc": "2026-10-22T09:51:01.565012+00:00",
+  "source_head": "577d20a8b8a7de333309a32dddc0c6ce79104df9",
+  "task_id": "quality-20261021-v2.normalization.3141.full",
+  "commit": {
+    "schema_version": 1,
+    "kind": "completed_generation_terminal_commit",
+    "task_binding": {
+      "task_id": "quality-20261021-v2.normalization.3141.full",
+      "kind": "generation",
+      "session_id": "suite-gen-d08bc5ee693f3ec7dea65575c32b39e5",
+      "job_id": "775346",
+      "attempt": 0,
+      "payload_sha256": "48830cf80564e8d4e5320cec0b1ae71006832f4a8abd9dfa27cf54f252adf797"
+    },
+    "prepared_sha256": "cccf74c4cdfafddb8a5b0e26cf2caf8f1f1db9ca78761d1dea767cb87234b406",
+    "result_sha256": "19e6f8e83a25ba7845964dfab0dbdcc82a1ecf36ee8b660c7e8f57bf0d35121f",
+    "failure_sha256": "1559930ef6e32bbdcdff96408a0547eebd412f057b78ed856d6e5d4d707f7f5b",
+    "accounting_sha256": "cf4604444a4252905dfcdf1b1885fd552f726ae93f8ec18eb0c4040991d7e1c4",
+    "scientific_fields_sha256": "094564e90d96b2010bd9253f69b044d1e5e50ea32fe1e8445d004e6394171604",
+    "worker_terminal": {
+      "job_id": "775346",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "elapsed": "01:02:19",
+      "nodes": "romeo-a041",
+      "terminal": true
+    },
+    "new_job_submitted": false,
+    "model_calls_during_reconciliation": 0,
+    "gpu_requests_during_reconciliation": 0,
+    "scope": "Terminal lifecycle reconciliation only; no new scientific or performance qualification"
+  },
+  "unchanged_public_files": {
+    "terminal-reconciliations/865e3e78f20cce191677726a64482c429f477de2a9ed87f8b5af53ee6f6a2793/000/result.json.original": "3dd9c0f6295191850bc29d5439287a9b6661f2b0f8c74ff3c8c4301c720e35ad",
+    "terminal-reconciliations/865e3e78f20cce191677726a64482c429f477de2a9ed87f8b5af53ee6f6a2793/000/failure.json.original": "1559930ef6e32bbdcdff96408a0547eebd412f057b78ed856d6e5d4d707f7f5b",
+    "terminal-reconciliations/865e3e78f20cce191677726a64482c429f477de2a9ed87f8b5af53ee6f6a2793/000/prepared.json": "cccf74c4cdfafddb8a5b0e26cf2caf8f1f1db9ca78761d1dea767cb87234b406",
+    "terminal-reconciliations/865e3e78f20cce191677726a64482c429f477de2a9ed87f8b5af53ee6f6a2793/000/accounting.observed.json": "cf4604444a4252905dfcdf1b1885fd552f726ae93f8ec18eb0c4040991d7e1c4",
+    "terminal-reconciliations/865e3e78f20cce191677726a64482c429f477de2a9ed87f8b5af53ee6f6a2793/000/committed.json": "82a1a247372208e1f8cc841d69136b75d1eff1f1f960121c4fb22e63cfc9a273",
+    "campaigns/quality-20261021-v2.normalization.3141.full/result.json": "19e6f8e83a25ba7845964dfab0dbdcc82a1ecf36ee8b660c7e8f57bf0d35121f",
+    "campaigns/quality-20261021-v2.normalization.3141.full/failure.json": "1559930ef6e32bbdcdff96408a0547eebd412f057b78ed856d6e5d4d707f7f5b",
+    "campaigns/quality-20261021-v2.normalization.3141.full/worker/slurm-diagnostics/accounting.json": "cf4604444a4252905dfcdf1b1885fd552f726ae93f8ec18eb0c4040991d7e1c4"
+  },
+  "forbidden_call_counts": {
+    "backend": 0,
+    "journal_update": 0,
+    "terminal_commit": 0
+  },
+  "model_calls": 0,
+  "gpu_requests": 0,
+  "new_submissions": 0,
+  "scope": "Actual committed API replay; instance guards would fail before any backend/update/rewrite. No database payload/hash, scientific result mutation or new model/GPU qualification."
+}

@@ -1,0 +1,32 @@
+{
+  "actual_campaign_data_read": false,
+  "captured_tool_chunk_id": "87d104",
+  "command": ".venv/bin/python -m unittest discover -s work/live -p test_session_archive_lossless_retire_001.py -q",
+  "elapsed_test_seconds": 0.336,
+  "errors": 0,
+  "failures": 0,
+  "kind": "synthetic_local_redundant_rollback_retirement_acceptance",
+  "limitations": [
+    "Synthetic local private temp fixtures and simulated xattrs only, not real GPFS retirement.",
+    "Root must review all code and explicitly authorize exact retirement after live staging/publication and independent post-publication readonly attach.",
+    "A malicious same-UID actor is outside the documented private namespace/known-writer assumptions.",
+    "Empty private rollback parent and lock remain (two entries); quota release is not inferred from asynchronous GPFS counters.",
+    "Recovered absence is reported separately from durably recorded completed remove calls."
+  ],
+  "observed_at_unix": 1792766410.225421,
+  "publication_helper_sha256": "19e2d2fd97feb693a39395abb3d9b3895525161a00f8fa4d8b5e8afddbfca7ec",
+  "qualified": [
+    "only manifest-listed redundant original files/dirs removed through no-follow directory FDs; unrelated sibling preserved",
+    "project copy and old published symlinks reverified before and after retirement",
+    "remaining hardlink class count, source opaque SHA, UID/GID/mode/inode/size/mtime/attrs/ACL checked before every file unlink",
+    "resume after file unlink before progress, progress before active clear and directory rmdir before progress",
+    "unknown extra/missing/drifted originals and external hardlinks refuse",
+    "pre-transfer historical receipt cannot authorize retirement; live receipt must explicitly bind approved publication SHA and post_publication:true",
+    "completed replay performs no deletion"
+  ],
+  "remote_operations": 0,
+  "source_sha256": "4480576b8e500ddeb7848f9811facc09913b1aaba3da2a66228843e9e62b0e10",
+  "stage_helper_sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+  "test_count": 10,
+  "test_sha256": "34370960920a8d5fcb64cbaadab90c0817cd33c47e44316f460675a16c33465c"
+}

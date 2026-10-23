@@ -1,0 +1,13 @@
+{
+  "prepared": 78,
+  "slurm_submissions": 0,
+  "gpu_requests": 0,
+  "model_calls": 0,
+  "at_utc": "2026-10-23T14:39:03.454420+00:00",
+  "kind": "public_completed_bootstrap_preparation_summary",
+  "source": "577d20a8b8a7de333309a32dddc0c6ce79104df9",
+  "logical_journal_state": "running",
+  "all_job_id_null": true,
+  "original_started_sha256": "f46052ea2b631aa769e34f5abdc61738a765b7fdb6544277631d19a7e55071bf",
+  "progress_sha256": "26da016861621487b3b8a43224c65c42da05aa3effd8cf9893ddfadc1222669a"
+}

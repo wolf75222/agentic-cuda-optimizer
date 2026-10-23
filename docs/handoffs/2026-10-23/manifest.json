@@ -1,0 +1,242 @@
+{
+  "kind": "wip_stop_checkpoint_public_source_and_evidence_only",
+  "scientific_portable_release": false,
+  "source_copies": [
+    {
+      "source_path": "work/live/hold-finals-only-20261023.py",
+      "snapshot_path": "scripts/recovery_20261023/hold-finals-only-20261023.py",
+      "sha256": "4cf0c4e2e01a6df3c8ee61391fc8c17c29564f00e7ad063d42923fc2a38f418c",
+      "bytes": 3636
+    },
+    {
+      "source_path": "work/live/observe-public-study-tasks.py",
+      "snapshot_path": "scripts/recovery_20261023/observe-public-study-tasks.py",
+      "sha256": "27078af81c786bfab72a84ad4d1a5cb69e56a5cf48952899bf912bfaa817009e",
+      "bytes": 2350
+    },
+    {
+      "source_path": "work/live/inspect_original_775348_readonly.py",
+      "snapshot_path": "scripts/recovery_20261023/inspect_original_775348_readonly.py",
+      "sha256": "5710bcad870dbd260971b79fb43ca9c31553f3bc2ac1b255f23b5a3c485d9d4d",
+      "bytes": 25319
+    },
+    {
+      "source_path": "work/live/test_inspect_original_775348_readonly.py",
+      "snapshot_path": "scripts/recovery_20261023/test_inspect_original_775348_readonly.py",
+      "sha256": "8a07a3d62df038776f6f804a09ca15b5a72b226c3584a14d5566d45b942a084b",
+      "bytes": 10023
+    },
+    {
+      "source_path": "work/live/finalize_original_775348_cold.py",
+      "snapshot_path": "scripts/recovery_20261023/finalize_original_775348_cold.py",
+      "sha256": "90de24ddd1787e51743999a5dd795b8fe70f3cf764ef2114d6e76ea6e9c4f8e1",
+      "bytes": 30096
+    },
+    {
+      "source_path": "work/live/test_finalize_original_cold_20261023.py",
+      "snapshot_path": "scripts/recovery_20261023/test_finalize_original_cold_20261023.py",
+      "sha256": "97c96e96d9791a1e70ea4b02052f127df2a4c5d665ca526bd593b59180f1f36e",
+      "bytes": 11197
+    },
+    {
+      "source_path": "work/live/test_original_finalize_fixture_20261023.py",
+      "snapshot_path": "scripts/recovery_20261023/test_original_finalize_fixture_20261023.py",
+      "sha256": "52b7c7257e00c61bfff7609b6446672ae0083dc571508737dfbbaac0f0f70f72",
+      "bytes": 14042
+    },
+    {
+      "source_path": "work/live/session_archive_lossless_live_003.py",
+      "snapshot_path": "scripts/recovery_20261023/session_archive_lossless_live_003.py",
+      "sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+      "bytes": 44890
+    },
+    {
+      "source_path": "work/live/test_session_archive_lossless_live_003.py",
+      "snapshot_path": "scripts/recovery_20261023/test_session_archive_lossless_live_003.py",
+      "sha256": "25df8a516e1dc56a59a9208b349fd93cec24dc5974efea5c318251874949ff23",
+      "bytes": 17256
+    },
+    {
+      "source_path": "work/live/session_archive_lossless_publish_003.py",
+      "snapshot_path": "scripts/recovery_20261023/session_archive_lossless_publish_003.py",
+      "sha256": "19e2d2fd97feb693a39395abb3d9b3895525161a00f8fa4d8b5e8afddbfca7ec",
+      "bytes": 19232
+    },
+    {
+      "source_path": "work/live/test_session_archive_lossless_publish_003.py",
+      "snapshot_path": "scripts/recovery_20261023/test_session_archive_lossless_publish_003.py",
+      "sha256": "7c316940bf09a64c8aa12d929a26e6276d996948429835605fd50cbabaf91323",
+      "bytes": 7555
+    },
+    {
+      "source_path": "work/live/session_archive_lossless_retire_001.py",
+      "snapshot_path": "scripts/recovery_20261023/session_archive_lossless_retire_001.py",
+      "sha256": "4480576b8e500ddeb7848f9811facc09913b1aaba3da2a66228843e9e62b0e10",
+      "bytes": 18479
+    },
+    {
+      "source_path": "work/live/test_session_archive_lossless_retire_001.py",
+      "snapshot_path": "scripts/recovery_20261023/test_session_archive_lossless_retire_001.py",
+      "sha256": "34370960920a8d5fcb64cbaadab90c0817cd33c47e44316f460675a16c33465c",
+      "bytes": 6150
+    },
+    {
+      "source_path": "work/live/selinux_capability_probe_001.py",
+      "snapshot_path": "scripts/recovery_20261023/selinux_capability_probe_001.py",
+      "sha256": "95b4d12b84f108c65615e4fabdd7c1a731d3b289420d9656a30a70c5a68cffb0",
+      "bytes": 15597
+    },
+    {
+      "source_path": "work/live/selinux_capability_probe_002.py",
+      "snapshot_path": "scripts/recovery_20261023/selinux_capability_probe_002.py",
+      "sha256": "350aa9b73557b44210bc8f80bf1b77fd6ec5730a9cffeb1167532d33e9d0de20",
+      "bytes": 17168
+    },
+    {
+      "source_path": "work/live/test_selinux_capability_probe_002.py",
+      "snapshot_path": "scripts/recovery_20261023/test_selinux_capability_probe_002.py",
+      "sha256": "d98008f14a154b215fcde27b6375d10ba0cc245ec07464220a131ade0c18a4cf",
+      "bytes": 5032
+    },
+    {
+      "source_path": "work/live/romeo_old_directories_verified_cleanup_20261023.py",
+      "snapshot_path": "scripts/recovery_20261023/romeo_old_directories_verified_cleanup_20261023.py",
+      "sha256": "40db852cce149949e4f29c19490a41a48c3ed4f35ac84ffc428d9961ed25f1a0",
+      "bytes": 17701
+    }
+  ],
+  "evidence_copies": [
+    {
+      "source_path": "work/live/stopped-20261023-public-state.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/stopped-20261023-public-state.json",
+      "sha256": "c24ff81fdf7b8972ee3fa313197cf9d0892286d78c126c9d85dbd7a44dde52a6",
+      "bytes": 19442
+    },
+    {
+      "source_path": "work/live/stopped-20261023-remote-state.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/stopped-20261023-remote-state.json",
+      "sha256": "f6a1602e96ba0064abaa0ee112f667d930e377334d4ebce7f40bda07660f7bf2",
+      "bytes": 1361
+    },
+    {
+      "source_path": "work/live/stopped-20261023-source-syntax.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/stopped-20261023-source-syntax.json",
+      "sha256": "304ddfa759c524338f58aaa0b9a1cb46d249aca0c89650e75802d93f4f703137",
+      "bytes": 1984
+    },
+    {
+      "source_path": "work/live/confirmation-recovery-real-runtime-cpu-acceptance.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/confirmation-recovery-real-runtime-cpu-acceptance.json",
+      "sha256": "33712bd8c9d26e1356fe738c783176c15071f7c0deed5ee9c4a6ddbf3dac01d6",
+      "bytes": 3357
+    },
+    {
+      "source_path": "work/live/confirmation-placement-cpu-20261023.xml",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/confirmation-placement-cpu-20261023.xml",
+      "sha256": "c1652d5e21a04474f18cca85325bb431f66cb5776de412abc28ffc3ba37b9548",
+      "bytes": 8127
+    },
+    {
+      "source_path": "work/live/confirmation-prefix-scientific-review-577d20a-compact.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/confirmation-prefix-scientific-review-577d20a-compact.json",
+      "sha256": "7407af517b1cd7fc13b83ac55ba594bb2f68ccd531620fbdfacd205b7e5e384e",
+      "bytes": 12467
+    },
+    {
+      "source_path": "work/live/original775348-checkpoint-readonly-002.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/original775348-checkpoint-readonly-002.json",
+      "sha256": "3903de251c9a45644277c5c8133fee98ae3bde511301ea866948d58a1f9b6604",
+      "bytes": 18513
+    },
+    {
+      "source_path": "work/live/original775348-cold-finalizer-cpu-acceptance.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/original775348-cold-finalizer-cpu-acceptance.json",
+      "sha256": "71dbe6ddb37cf58183775186fe5f017f924cc9cc4a9e1f7f5a5ec9de162e0cea",
+      "bytes": 4792
+    },
+    {
+      "source_path": "work/live/original775348-readonly-clock-semantics-cpu-acceptance.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/original775348-readonly-clock-semantics-cpu-acceptance.json",
+      "sha256": "cdebf61a801f02c223da38cd1a63f5369d251c0d394698128a796c3520b65fa5",
+      "bytes": 3397
+    },
+    {
+      "source_path": "work/live/romeo-old-authorized-cleanup-20261023-compact.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/romeo-old-authorized-cleanup-20261023-compact.json",
+      "sha256": "83aaf0c621973d548f4257332ea8f91ac4006073ccf61886d23bec3174bef642",
+      "bytes": 9106
+    },
+    {
+      "source_path": "work/live/four-session-stage003-started-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-stage003-started-20261023.json",
+      "sha256": "3d5ccc0fd7a1e867d54e8bbac49d509d90b752187da9da9c483e875ba1ee69a7",
+      "bytes": 741
+    },
+    {
+      "source_path": "work/live/four-session-stage003-preflight-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-stage003-preflight-20261023.json",
+      "sha256": "4b7bd3097450705c498d9225410fb34a018f41d681e2db0376ca765ca17da7d8",
+      "bytes": 4077
+    },
+    {
+      "source_path": "work/live/four-session-stage003-result-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-stage003-result-20261023.json",
+      "sha256": "6aa57498f35d930ecc3a1f5316bb1009b434ea26d54bc7844c553ba6b25b72da",
+      "bytes": 2460
+    },
+    {
+      "source_path": "work/live/four-session-native-rename-probes-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-native-rename-probes-20261023.json",
+      "sha256": "ca7887734817d0689632c83391bf2b8c59186f06acee4d42ed676e34bd455432",
+      "bytes": 893
+    },
+    {
+      "source_path": "work/live/four-session-selinux-capability-probe-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-selinux-capability-probe-20261023.json",
+      "sha256": "cc245c607f275be83b05c49fe78826032628761b25fea98b458ae6c50ad6c7aa",
+      "bytes": 1301
+    },
+    {
+      "source_path": "work/live/four-session-selinux-source-guard-diagnostic-20261023.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/four-session-selinux-source-guard-diagnostic-20261023.json",
+      "sha256": "3dfc185deb9621210defb63cd89f8e9bbbd4654906650b368a87adc67f5ea67b",
+      "bytes": 2474
+    },
+    {
+      "source_path": "work/live/session-archive-lossless-live-local-003.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/session-archive-lossless-live-local-003.json",
+      "sha256": "81c0afed2b87abb24f5c60f0a495cc483c9b5a12c90ca17f1d8841f882f95783",
+      "bytes": 1353
+    },
+    {
+      "source_path": "work/live/session-archive-lossless-publish-local-003.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/session-archive-lossless-publish-local-003.json",
+      "sha256": "1d1642de9128f2603d04466f738e9ba1dc2a00d0e6bf3b56f3c9fe3bd2883baa",
+      "bytes": 2376
+    },
+    {
+      "source_path": "work/live/session-archive-lossless-retire-local-001.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/session-archive-lossless-retire-local-001.json",
+      "sha256": "3a2974b2db7b6a3b9cdc9b3d0b78aa28b3676e60e80d73f6c805e367ca6f1e05",
+      "bytes": 2142
+    },
+    {
+      "source_path": "work/live/storage-recovery-577d20a-release.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/storage-recovery-577d20a-release.json",
+      "sha256": "b90a7088ec52edd92cdc17c1c8bb90474ccb35d5e7e0115571199d365083bf9b",
+      "bytes": 2593
+    },
+    {
+      "source_path": "work/live/terminal-reconcile-full775346-577d20a-readonly-replay.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/terminal-reconcile-full775346-577d20a-readonly-replay.json",
+      "sha256": "1db0b8652bc40c99eb46ed34d300d4ce52d672aba474be330f0db2784e0c2fcb",
+      "bytes": 3336
+    },
+    {
+      "source_path": "work/live/model-healthcheck-20261023-alpha11-001/receipt.json",
+      "snapshot_path": "docs/handoffs/2026-10-23/evidence/luna-max-healthcheck.json",
+      "sha256": "25c16d6842e2c64311a98c00d62db9cc4104dac973f895e30f97b9ceb49f7fc4",
+      "bytes": 595
+    }
+  ]
+}

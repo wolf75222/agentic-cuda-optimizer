@@ -1,0 +1,670 @@
+{
+  "kind": "query_only_public_task_state_observation",
+  "observed_at_utc": "2026-10-23T15:07:25.039400+00:00",
+  "journal_path": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/agentic-cuda-optimizer/results/quality-study-v2/suite.sqlite",
+  "read_columns_allowlist": [
+    "",
+    "attempt",
+    "id",
+    "job_id",
+    "kind",
+    "session",
+    "state"
+  ],
+  "sqlite_authorizer": "SELECT, tasks allowlisted columns and count only; all others denied",
+  "counts": [
+    {
+      "kind": "final",
+      "state": "completed",
+      "count": 1
+    },
+    {
+      "kind": "final",
+      "state": "pending",
+      "count": 17
+    },
+    {
+      "kind": "generation",
+      "state": "completed",
+      "count": 62
+    },
+    {
+      "kind": "generation",
+      "state": "recovery_required",
+      "count": 4
+    },
+    {
+      "kind": "generation",
+      "state": "running",
+      "count": 78
+    }
+  ],
+  "running": [
+    {
+      "id": "quality-20261021-v2.reduction.1729.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-531ed1299af49e1239ebb83516ab5d41",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-29d47d5e17078e0f9d489cfe4d82de9c",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-8abf2283e515c9549ae38e6f9beb1838",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-9cc1568c61c89360bd29e537b5313597",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-34415c1d19c3ac7ada9abeaaed438776",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-cb409bf67670649304702bbfdb634755",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-dd36652dc5a1eb9691d44c3e1873db1d",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.1729.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-7d1847ea4b82b77b53c3626bca321bad",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-d05ad9aaf3dc427bd7b339313e7092e3",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-2ab3e03742078ea4aa67e9b9328b1593",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-461a1db8592d0f0003a960b0cdbb4ea8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-5c70d4eb0631351eb6705b2310bec1ad",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-e5166e865770905d9ded113d4d65c3c2",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-5844add67007657f889dcea32e1c9da5",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-6d73d4e44bdd95cff5f931690a96be47",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.2718.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-221d093138b661561223f7736c0d8b3f",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-b6df863a5f19ae0b8eb2bc781cddc7e8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-0ddf74dd9a50c12535a9128db5c83199",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-66d692e11bd80f6c52e5c89750eecbb7",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-54fb2658b8f9f09a9d1d76bbec4b22ff",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-c996eaed694f55f065d62ba15a65aea4",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-87ab04cb188c0070aac0345647bad188",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-08a4a300d3d0698737ec63a780cb13a5",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.reduction.3141.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-c2bb64f6bdee4481bf86dc2a6938ea96",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-68c75d30b47a7f9b24e22f8e422715b8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-1c51ace13b0ca7e913b11578c8d88baa",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-36497a6fc27ac6344e97818ebf100a16",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-96c82313d74d4f6774aaea79c6db283b",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-f3c3c197f8b71110e2a460fe5e56b01a",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-2ea2bcb21149cab4b9c7cf64c02e7818",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-fc84de1b019fb9937aea80c1f7cc82f8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.1729.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-d95d732803f829a4c89b5eb2752d46af",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-b911817d78ec22058e8fde1848234cd0",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-187a0e667aab05a11f13c05a514efde7",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-18f1bfc076d02e157d3f8fc055966cc8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-985bd2a784c17a3fa58ce51cbda7cc16",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-7fb4f5b6f525f19744d1eefa79d939ea",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-ab7613b8b1589e151b50d7f05238d822",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-0b188f7ebd15e3ea78814318ffd4c848",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.2718.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-433e3b98a296e0f189f8c96e5ade07bb",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-26985d29e2ef35dc4d8d729c52fbc158",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-509dba91ace3bbe7299b5a04abd1d830",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-0ae1e1f592d0b3254fc09a6f4ad925f4",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-9f8123955b770b831f6239018fe15500",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-0eff43b9fa14cc2c202f0fb2ea162e15",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-a0126776ac2cda2ff84c5001c842fd26",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-da286b11e38a894f42055ba65a46c98f",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.scan.3141.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-83ca7aa55b8f11a66ef73ff34e3cde61",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-e29923646e56f68fdf5d5b6860eea5dd",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-a45c44145f5f3d0668b9207779347d2f",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-8b86144190bc2ffe16527a851b5324a8",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-7cb46a5e6a4d479368931087fc0719ba",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-f51544a1c15eafc04673a985cf92997a",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-61c8c72b64929b4d314fcaf78f5938ec",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-db5abe1f9a21ed4e4dd59f0c41ccb1e0",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.1729.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-dff00a5f2484f0597b0ec2fd2fdafca2",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-b123a41341bf247c407b22d6b09c5b0f",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-48c57e013c8eaf738ca5416c5cd8312b",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-b56c16d71e6422d674d0516c8b1b0144",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-dbcb92fdf8a4a5d625e3f5826504bbfd",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-19bf708a1d418314116f588dbf8baa35",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-3b5628befae935a0f3f14b1435227988",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-9249a027b1d00e8bb79cf6ee4883b1ad",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.2718.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-3c715934766783d554ebae63923ca8f7",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.full",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-527b42be14952b0bf969d496745b37b0",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-327e491504ba734fa104e23a35431462",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-a0c37796de15b06aff1242ec08fe7a47",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-9ed16a6465f371e9ec74ebde2fc775f1",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-cf189c1636c9e83b7f575cf5d372ca23",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-ce6abcb2b86a8a27720ad36e7b6682de",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-f1b7498b11bc6a6012f0a7690b38fed3",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.stencil.3141.greedy_parent",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-f454fb51dfc2551af30212e561109325",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.true_upstream",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-228f7df407a3590c4c851f29543b4329",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.native_codex_vanilla",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-edc29c97c769d9a79512622db301d93e",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.no_autotuning",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-1e08ae08762d3ecdac3f7e1c9e37b497",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.no_research",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-258a9ea490fa9844237ba855b1d472de",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.pmpp_permanent_only",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-428b3e49e173254713f179cf301df51a",
+      "job_id": null
+    },
+    {
+      "id": "quality-20261021-v2.normalization.3141.no_pmpp",
+      "kind": "generation",
+      "state": "running",
+      "attempt": 0,
+      "session": "suite-gen-58f6a03535e3d78ad3588cb72f386570",
+      "job_id": null
+    }
+  ],
+  "observer_source_sha256": "27078af81c786bfab72a84ad4d1a5cb69e56a5cf48952899bf912bfaa817009e",
+  "scope": "Public task journal states only; no payload/result/seed/private input/RNG/checkpoint. Completed tasks do not prove successful methods or FINAL qualification. Mutable journal is not hashed as a cold artifact."
+}

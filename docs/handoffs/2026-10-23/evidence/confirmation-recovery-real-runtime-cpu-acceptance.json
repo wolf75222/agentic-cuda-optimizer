@@ -1,0 +1,75 @@
+{
+  "covered": [
+    "same completed canonical retained without benchmark replay",
+    "fixed full independent confirmation epoch; no historical pair pooling",
+    "nonbaseline incumbent version1 attested by actual store API",
+    "new physical UUID mismatch refusal",
+    "cold copy interruption and preserved incomplete copy",
+    "prepared/committed publication windows",
+    "result parent fsync failure replay without new measurements",
+    "crash after promotion before tell_once; one promotion and one reward",
+    "live SqliteSaver graph resumption admission",
+    "partial result and canonical/source drift refusal",
+    "live or ambiguous old worker and active model refusal",
+    "generation-only/unexposed and documentary proposal admission",
+    "65 existing uncertain evaluation recovery regressions unchanged"
+  ],
+  "junit": {
+    "path": "work/live/confirmation-recovery-cpu-junit.xml",
+    "sha256": "79b045e04c8ee9ee50a9a317e17aace72a140781a0046c98e1ff8cfa75d6c0fb"
+  },
+  "kind": "confirmation_recovery_real_runtime_cpu_acceptance",
+  "limitations": [
+    "CPU orchestration acceptance is not ROMEO/CUDA qualification.",
+    "Mixed uncertain-evaluation and confirmation recovery ancestry is explicitly refused.",
+    "Historical documentary cache paths remain unchanged and must be preserved; input capsule does not imply complete documentary portability.",
+    "The trusted helper internally decodes only public checkpoint metadata for binding; no RNG/private checkpoint payload is projected."
+  ],
+  "observed_at_utc": "2026-10-23T14:39:31.705395+00:00",
+  "outcome": {
+    "by_module": {
+      "tests.test_campaign_runtime": 50,
+      "tests.test_confirmation_recovery": 23,
+      "tests.test_evaluation_recovery": 65
+    },
+    "compileall_exit_code": 0,
+    "elapsed_seconds_reported": 22.77,
+    "failed": 0,
+    "git_diff_check_exit_code": 0,
+    "passed": 138,
+    "skipped": 0
+  },
+  "post_test_source_pins": {
+    "optimizer_agent/campaign.py": {
+      "bytes": 97411,
+      "sha256": "db81f82f2c34a4c89dfac9e095fc8d98f99fc14b0c2e72b22e30e9600b3e5a1a"
+    },
+    "optimizer_agent/confirmation_recovery.py": {
+      "bytes": 27617,
+      "sha256": "cb5c35209d28287ffebbc04a0480141a62739f7b400660e7e06af6a3ad1f1c02"
+    },
+    "optimizer_agent/evaluation_recovery.py": {
+      "bytes": 44894,
+      "sha256": "9e72c7dedd2e602ff6ebc2c7297225286da5080fcde60cf617f7bc4a39af9da8"
+    },
+    "tests/test_confirmation_recovery.py": {
+      "bytes": 18804,
+      "sha256": "b36db7dff7f32fb980781ec4b631cf8e8a09a3ef6b191e88b3d8a3d687135e31"
+    }
+  },
+  "pytest_command": ".venv/bin/python -m pytest -q tests/test_confirmation_recovery.py tests/test_evaluation_recovery.py tests/test_campaign_runtime.py --disable-warnings --maxfail=3 --tb=short --junitxml=work/live/confirmation-recovery-cpu-junit.xml",
+  "schema_version": 1,
+  "scope": {
+    "actual_cuda_or_gpu_calls": 0,
+    "historical_campaign_mutations": 0,
+    "model_calls": 0,
+    "real_evaluator_and_abba_confirmation": true,
+    "real_langgraph_sqlite_checkpoint": true,
+    "real_runtime": true,
+    "real_treequest_and_registry": true,
+    "runner": "declared NumPy CPU double; synthetic timings",
+    "slurm_submissions": 0,
+    "ssh_calls": 0
+  },
+  "source_pin_scope": "Post-test bytes; no pre-test source hash was captured. Exact published SHA CI remains required."
+}

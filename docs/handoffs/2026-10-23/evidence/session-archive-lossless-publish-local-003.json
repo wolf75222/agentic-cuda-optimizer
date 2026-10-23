@@ -1,0 +1,39 @@
+{
+  "actual_campaign_data_read": false,
+  "captured_tool_chunk_id": "cb5c49",
+  "command": ".venv/bin/python -m unittest discover -s work/live -p test_session_archive_lossless_publish_003.py -q",
+  "elapsed_test_seconds": 0.375,
+  "errors": 0,
+  "failures": 0,
+  "kind": "synthetic_local_private_rollback_parent_publication_v3_acceptance",
+  "limitations": [
+    "Synthetic private fixtures only. No actual remote move/publication invoked.",
+    "No no-clobber directory rename guarantee against malicious same-UID actors; explicit known-writer/quiescence/private namespace assumption.",
+    "A brief original namespace gap exists, including after an interrupted source rename.",
+    "All redundant originals stay until independent historical readonly attach and a separate root-approved retirement tool.",
+    "Native GPFS renameat2 unsupported proofs are retained; no positive native capability claim is fabricated."
+  ],
+  "namespace_gap_possible": true,
+  "observed_at_unix": 1792766103.538887,
+  "observed_gpfs_unsupported_rename_receipt_sha256": "ca7887734817d0689632c83391bf2b8c59186f06acee4d42ed676e34bd455432",
+  "publication_atomic": false,
+  "qualified": [
+    "resume after source rename, durable link inode and first session",
+    "unknown unjournaled symlink/private parent creation preserves copies and refuses",
+    "ordinary symlink error restores exact original if pathname still absent; unknown gap occupant preserved and rollback refused",
+    "source/target drift, changed parent mode and changed published link refuse",
+    "completed replay performs no rename or symlink creation"
+  ],
+  "remote_operations": 0,
+  "runtime_features": [
+    "fresh private0700 source-owned scratch rollback parent with identity/nativeACL/xattr checks and advisory flock",
+    "ordinary rename into private rollback parent after exact absence check",
+    "atomic no-clobber os.symlink(target, oldname)",
+    "durable source/project parent fsyncs and operation journal",
+    "all original files retained; global opaque hashes and cross-parent hardlink classes checked before/after"
+  ],
+  "source_sha256": "19e2d2fd97feb693a39395abb3d9b3895525161a00f8fa4d8b5e8afddbfca7ec",
+  "stage_helper_sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+  "test_count": 12,
+  "test_sha256": "7c316940bf09a64c8aa12d929a26e6276d996948429835605fd50cbabaf91323"
+}

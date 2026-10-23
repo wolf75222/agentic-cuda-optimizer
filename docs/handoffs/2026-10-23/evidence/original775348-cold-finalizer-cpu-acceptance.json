@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "kind": "isolated_original_finalize_only_operational_tool_cpu_acceptance",
+  "status": "ready_for_primary_review_before_actual_prepare_or_finalization",
+  "tool": {
+    "path": "work/live/finalize_original_775348_cold.py",
+    "sha256": "90de24ddd1787e51743999a5dd795b8fe70f3cf764ef2114d6e76ea6e9c4f8e1",
+    "bytes": 30096
+  },
+  "protocol_and_integration_proposal": {
+    "path": "work/live/original775348-cold-finalization-protocol.md",
+    "sha256": "e0e96de8d4c86274524254678b9e5b53015354dfbf271acaa4ab0e27c12320dc"
+  },
+  "reviewed_original_checkpoint_inspection": {
+    "path": "work/live/original775348-checkpoint-readonly-002.json",
+    "sha256": "3903de251c9a45644277c5c8133fee98ae3bde511301ea866948d58a1f9b6604",
+    "proven_by_primary": "next/tasks finalize_result; iteration3/max3/history4; bestiteration2; errorNone; nointerrupt"
+  },
+  "synthetic_actual_original_graph_fixture": {
+    "path": "work/live/test_original_finalize_fixture_20261023.py",
+    "sha256": "52b7c7257e00c61bfff7609b6446672ae0083dc571508737dfbbaac0f0f70f72",
+    "original_commit": "1e9464da54dfc651337a97c3643bfeefec712bc1",
+    "original_python_blobs": 16,
+    "case_count": 7,
+    "setup": "Real original graph with synthetic CPU model/harness doubles, iteration1invalid/2best/3validslower, external interruption before graph finalizer; separate failed-summary catch as in the historical wrapper.",
+    "previous_four_case_fixture_preserved": "work/live/test_original_finalize_fixture_20261023.e07c148d-four-cases.py",
+    "previous_four_case_fixture_sha256": "e07c148dcc9d470c71a842159d81f91f046c7edd8889c23d08549bd5db202ddd"
+  },
+  "tests": {
+    "path": "work/live/test_finalize_original_cold_20261023.py",
+    "sha256": "97c96e96d9791a1e70ea4b02052f127df2a4c5d665ca526bd593b59180f1f36e",
+    "command": ".venv/bin/python -B -m pytest -q work/live/test_finalize_original_cold_20261023.py -p no:cacheprovider --tb=short --junitxml=work/live/original775348-cold-finalizer-final-tests.xml",
+    "junit": "work/live/original775348-cold-finalizer-final-tests.xml",
+    "junit_sha256": "41b40625cd35164c408fbb8ade09c46d3eba2519a409ad272d0e011300f752e8",
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 10.09,
+    "warnings": 11,
+    "warnings_scope": "Existing upstream plot_history colormap PendingDeprecationWarning; no numerical/GPU claim",
+    "previous_failed_fixture_run_retained": "work/live/original775348-cold-finalizer-first-tests.xml",
+    "previous_failed_fixture_run": "10PASS/5FAIL because the original synthetic fixture had4cases; the unchanged exact7case admission guard correctly refused it",
+    "intermediate_run_retained": "work/live/original775348-cold-finalizer-second-tests.xml",
+    "intermediate_run": "18PASS; then two additional original-blob/default-plan guards added"
+  },
+  "tested_properties": [
+    "Opaque copy preserves source bytes/modes/mtime and resumes partial copy without duplicates",
+    "Collision, symlink, noncold source and changed selected source or original algorithm blob refuse",
+    "Partial staging artifacts are preserved; exclusive-link publication crash is reconciled",
+    "Durable phase records are exclusive and idempotent",
+    "True original graph finalizes only inside the independent copy and reaches END",
+    "Only typed session_dir relocation is allowed; every other private state value retains its digest",
+    "Historical failed summary and entire source generation remain unchanged",
+    "Crash after copied checkpoint relocation before receipt, after relocation receipt and after END can resume",
+    "Real synthetic child process death after durable node return leaves WAL that is archived then recovered by SQLite itself, without manually deleting a sidecar",
+    "Recovered durable node return is replayed with zero new original CPU finalizer body executions",
+    "Committed replay uses no checkpoint/model/backend API",
+    "Default plan never opens the actual campaign"
+  ],
+  "actual_775348_prepare_or_copy_performed_by_author": false,
+  "actual_775348_finalization_performed_by_author": false,
+  "actual_model_calls": 0,
+  "actual_gpu_requests": 0,
+  "scheduler_calls": 0,
+  "actual_campaign_mutations": 0,
+  "historical_method_relabeling": false,
+  "github_ci_claim": false,
+  "remaining": [
+    "Primary review and explicit execution of prepare/finalize/replay on the actual source checkpoint",
+    "Production integration/API with an authenticated new session and explicit attempt activation",
+    "New observer epoch for interrupted iteration3 and fresh independent selected-export validation",
+    "Exact UUID/harness/toolchain/contract/input identity checks before any new GPU measurement",
+    "Owned successful new Slurm terminal and later common FINAL qualification"
+  ]
+}

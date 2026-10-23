@@ -1,0 +1,59 @@
+{
+  "kind": "public_summary_of_one_previously_audited_final_group",
+  "source_path": "work/live/common-final-convolution-1729-terminal-audit.json",
+  "source_sha256": "403df69cd0a609094318f8bf8c3b70b11eeacdaea27dc40b47e752cd1a4bab37",
+  "group_id": "quality-20261021-v2.convolution.1729",
+  "job_id": "774017",
+  "full_vs_naive_identity": {
+    "status": "validated_no_gain",
+    "same_frozen_artifact": true,
+    "baseline_normalized_identity_ratio": 1.0,
+    "per_case_identity_ratio": {
+      "final-1": 1.0,
+      "final-17": 1.0,
+      "final-63": 1.0,
+      "final-64": 1.0,
+      "final-128": 1.0,
+      "final-256": 1.0,
+      "final-512": 1.0
+    },
+    "statistical_interval": null,
+    "interpretation": "Exact full retained artifact equals naive. Identity ratio, not a separately measured noisy gain."
+  },
+  "comparisons": [
+    {
+      "label": "true_upstream_vs_naive",
+      "status": "not_improved",
+      "gain": 1.0037595214272692,
+      "lower": 0.9849948034605965,
+      "upper": 1.0175462988196893,
+      "critical_cases_ok": false
+    },
+    {
+      "label": "native_codex_vanilla_vs_naive",
+      "status": "inconclusive",
+      "gain": 1.0064860844800434,
+      "lower": 0.9961935606661381,
+      "upper": 1.030457048976979,
+      "critical_cases_ok": true
+    },
+    {
+      "label": "full_vs_true_upstream",
+      "status": "inconclusive",
+      "gain": 1.021106552350284,
+      "lower": 1.0069530150872341,
+      "upper": 1.0341398035615594,
+      "critical_cases_ok": true
+    },
+    {
+      "label": "full_vs_native_codex_vanilla",
+      "status": "inconclusive",
+      "gain": 1.0051823982043422,
+      "lower": 0.9877621372289889,
+      "upper": 1.0175428099915478,
+      "critical_cases_ok": true
+    }
+  ],
+  "cohort_limit": "One workload/one public seed; no extrapolation to the six-workload/three-seed study. Six identical-artifact raw pair payloads remain limited.",
+  "section16_complete": false
+}

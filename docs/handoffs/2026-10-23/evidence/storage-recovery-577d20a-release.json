@@ -1,0 +1,56 @@
+{
+  "kind": "published_storage_recovery_release_before_metadata_only_reconciliation",
+  "observed_at_utc": "2026-10-22T09:48:23.667829+00:00",
+  "head": "577d20a8b8a7de333309a32dddc0c6ce79104df9",
+  "ci": {
+    "path": "work/live/ci-577d20a.json",
+    "sha256": "09b944773e53fc9ba4da5b4323c71863bbd3beb23de7b67be61191119b08b1a5",
+    "bytes": 1993
+  },
+  "ci_log": {
+    "path": "work/live/ci-577d20a.log",
+    "sha256": "98148f61e84b7bd43aa0502270eecb91d45c7f7099537a0e5adb204230414d1e",
+    "bytes": 52475
+  },
+  "ci_tests": {
+    "passed": 2282,
+    "subtests": 13,
+    "skipped": 2,
+    "duration_seconds": 95.36,
+    "compileall": "success"
+  },
+  "storage_cpu": {
+    "path": "work/live/storage-startup-bounded-dispatch-cpu-acceptance.json",
+    "sha256": "139617e30c26daeca33c8dc62577ec79652711e891349bc11a5e4a17db83bcf4",
+    "bytes": 10310
+  },
+  "terminal_cpu": {
+    "path": "work/live/terminal-generation-reconciliation-shared-cpu-acceptance.json",
+    "sha256": "8c04fab54112e5ef51fa7afc4ec844af850f3f5b08a2b16c9bd5118ae3efffcc",
+    "bytes": 7257
+  },
+  "terminal_peer": {
+    "path": "work/live/terminal-generation-reconciliation-shared-independent-review.json",
+    "sha256": "dcf6ba0ee0089d23914c0bccb4ae8b6753cfa9867832144199d9d2daba092ad9",
+    "bytes": 4329
+  },
+  "source_metadata": {
+    "path": "results/quality-study-v2/controller-sources/577d20a8b8a7de333309a32dddc0c6ce79104df9/source.json",
+    "sha256": "215143dcac43e5578e32b2253fe37e70234109601e015107e4b72ad00901a8df",
+    "bytes": 24871
+  },
+  "source_archive": {
+    "path": "results/quality-study-v2/controller-sources/577d20a8b8a7de333309a32dddc0c6ce79104df9/source.tar.gz",
+    "sha256": "33cb306c31bc06294acb3f08b5b186cab25c122428fa03fb76cbf2ff479d3500",
+    "bytes": 2105505
+  },
+  "frozen_checkout": "/Users/romaindespoulain/Documents/Codex/2026-10-21/fork-https-github-com-bertaye-agentic/work/study-source-577d20a",
+  "verified_tracked_tar_frozen_files": 223,
+  "owned_full_worker_graceful_close": {
+    "path": "work/live/owned-full-775346-graceful-close-001/receipt.json",
+    "sha256": "209d0fb4fdf854191250eeee295487134b0fd03daf15d22f4b9bf48b8b2b3904",
+    "bytes": 1164
+  },
+  "dispatch_state": "No new controller, model or Slurm submission. Drainer85668 retains99 incomplete tasks; terminal metadata reconciliation775346 only is ready. Headroom and other recoveries remain before dispatch.",
+  "scope": "Actual exact-SHA CI and source-byte verification. Local targeted receipts retain failed-fixture histories and distinct source epochs; no full local rerun or new GPU qualification inferred."
+}

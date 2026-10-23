@@ -1,0 +1,54 @@
+{
+  "at_unix": 1792767026.40974,
+  "diagnostic": {
+    "current_identity": [
+      50,
+      198429866,
+      16384,
+      100267,
+      100267,
+      448,
+      4096,
+      1792654306666060000,
+      1792654306666060000,
+      2
+    ],
+    "current_label_summary": {
+      "sha256": "9229a1db3316ce80edae331c33644ead5f27dd62d9f60680c515bba377856d5b",
+      "size": 33
+    },
+    "identity_differing_fields": [],
+    "kind": "read_only_stage003_build_label_guard_diagnostic",
+    "manifest_identity": [
+      50,
+      198429866,
+      16384,
+      100267,
+      100267,
+      448,
+      4096,
+      1792654306666060000,
+      1792654306666060000,
+      2
+    ],
+    "manifest_security_entry": null,
+    "probe_creations": 0,
+    "project_parent_label": {
+      "sha256": "d28f24cf8e9925d904e9b51d156ca381cec1fa2a71c612c324160e16c7afde14",
+      "size": 37
+    },
+    "real_archive_mutations": 0,
+    "source_manifest_sha256": "df763baeb67a629307d23c68aa1bf5d2f4b9005681948c78969c81b9d426805d",
+    "source_mutations": 0,
+    "source_role": "suite-gen-10621470f80015cf6eab7c53689c5f60/build",
+    "source_uid_gid": [
+      100267,
+      100267
+    ],
+    "source_xattr_names": []
+  },
+  "kind": "readonly_selinux_probe_source_guard_diagnostic_invocation",
+  "returncode": 0,
+  "stderr": "** WARNING: connection is not using a post-quantum key exchange algorithm.\r\n** This session may be vulnerable to \"store now, decrypt later\" attacks.\r\n** The server may need to be upgraded. See https://openssh.com/pq.html\r\n",
+  "stdout": "{\"current_identity\": [50, 198429866, 16384, 100267, 100267, 448, 4096, 1792654306666060000, 1792654306666060000, 2], \"current_label_summary\": {\"sha256\": \"9229a1db3316ce80edae331c33644ead5f27dd62d9f60680c515bba377856d5b\", \"size\": 33}, \"identity_differing_fields\": [], \"kind\": \"read_only_stage003_build_label_guard_diagnostic\", \"manifest_identity\": [50, 198429866, 16384, 100267, 100267, 448, 4096, 1792654306666060000, 1792654306666060000, 2], \"manifest_security_entry\": null, \"probe_creations\": 0, \"project_parent_label\": {\"sha256\": \"d28f24cf8e9925d904e9b51d156ca381cec1fa2a71c612c324160e16c7afde14\", \"size\": 37}, \"real_archive_mutations\": 0, \"source_manifest_sha256\": \"df763baeb67a629307d23c68aa1bf5d2f4b9005681948c78969c81b9d426805d\", \"source_mutations\": 0, \"source_role\": \"suite-gen-10621470f80015cf6eab7c53689c5f60/build\", \"source_uid_gid\": [100267, 100267], \"source_xattr_names\": []}\n"
+}

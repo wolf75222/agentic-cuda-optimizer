@@ -1,0 +1,26 @@
+{
+  "completed_at_unix": 1792766968.719381,
+  "kind": "actual_isolated_selinux_capability_probe_invocation",
+  "local_micro_tests": {
+    "captured_tool_chunk_id": "149b30",
+    "elapsed_seconds": 0.008,
+    "errors": 0,
+    "failures": 0,
+    "passed": 6
+  },
+  "remote_command": [
+    "ssh",
+    "romeo",
+    "env",
+    "ACO_PROBE_SOURCE_SHA=95b4d12b84f108c65615e4fabdd7c1a731d3b289420d9656a30a70c5a68cffb0",
+    "python3",
+    "-"
+  ],
+  "returncode": 1,
+  "root_authorization": "Exact isolated synthetic SET/readback/restore probe only, fresh project0700 UID100267 GID200109; no real source/archive relabel or mutation.",
+  "source_sha256": "95b4d12b84f108c65615e4fabdd7c1a731d3b289420d9656a30a70c5a68cffb0",
+  "started_at_unix": 1792766967.4978418,
+  "stderr": "** WARNING: connection is not using a post-quantum key exchange algorithm.\r\n** This session may be vulnerable to \"store now, decrypt later\" attacks.\r\n** The server may need to be upgraded. See https://openssh.com/pq.html\r\nTraceback (most recent call last):\n  File \"<stdin>\", line 318, in <module>\n  File \"<stdin>\", line 274, in main\n__main__.Refusal: Source build identity/label drift since stage003 preparation\n",
+  "stdout": "",
+  "tests_sha256": "b42e0e0b3eec20f6ecc9099a69d42beaeb387f9167f6c06a8458bb0cbce29646"
+}

@@ -166,6 +166,10 @@ def _local_session_job(task, backend):
     # It cannot change GPU resources, inputs, kernels or measurement protocols.
     if saved_config is not None and "reconnect_transport" not in saved_config and hasattr(config, "reconnect_transport"):
         saved_config["reconnect_transport"] = config.reconnect_transport
+    # Historical leases had no placement field: absence means no node pin,
+    # never permission to silently reinterpret one as a pinned allocation.
+    if saved_config is not None and "nodelist" not in saved_config and hasattr(config, "nodelist"):
+        saved_config["nodelist"] = ""
     if not is_dataclass(config) or saved_config != json.loads(json.dumps(asdict(config))):
         raise ValueError("Local submission acknowledgement configuration ownership mismatch")
     current = getattr(backend,"job_id",None)
@@ -1001,7 +1005,17 @@ class SuiteOrchestrator:
         path = Path(config.execution_config)
         if not path.is_absolute():
             path = REPO / path
-        return SlurmBackend(SlurmConfig.load(path), REPO, directory / "worker", session_id=task["session"])
+        settings = SlurmConfig.load(path)
+        binding = task.get("payload", {}).get("source_recovery", {})
+        from .confirmation_recovery import KIND as confirmation_kind, validate_task_recovery
+        if binding.get("kind") == confirmation_kind:
+            validate_task_recovery(self, task)
+            audit = read_json(Path(binding["preparation_path"]))
+            node = audit["marker"]["previous_worker_observation"].get("nodes")
+            if not isinstance(node, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", node):
+                raise ValueError("Confirmation recovery needs one authenticated historical node")
+            settings = replace(settings, nodelist=node)
+        return SlurmBackend(settings, REPO, directory / "worker", session_id=task["session"])
 
     def _directory(self, task):
         root = self.directory / ("campaigns" if task["kind"] == "generation" else "final-groups") / task["id"]
@@ -1141,6 +1155,11 @@ class SuiteOrchestrator:
                 if preparation_pending(self, task):
                     return
                 validate_task_recovery(self, task)
+                from .confirmation_recovery import preparation_pending as confirmation_preparation_pending
+                from .confirmation_recovery import validate_task_recovery as validate_confirmation_recovery
+                if confirmation_preparation_pending(self, task):
+                    return
+                validate_confirmation_recovery(self, task)
                 from .dispatch_attestation import capture_dispatch_attestation
                 capture_dispatch_attestation(self.directory, task=task, controller_epoch=self._controller_epoch)
                 self._execute_task(task)
@@ -1315,6 +1334,14 @@ class SuiteOrchestrator:
     def resume_evaluation_preparation(self, task_id):
         from .evaluation_recovery import resume_evaluation_preparation
         return resume_evaluation_preparation(self, task_id)
+
+    def recover_confirmation(self, task_id, request_id, reason):
+        from .confirmation_recovery import prepare_confirmation_recovery
+        return prepare_confirmation_recovery(self, task_id, request_id, reason)
+
+    def resume_confirmation_preparation(self, task_id):
+        from .confirmation_recovery import resume_confirmation_preparation
+        return resume_confirmation_preparation(self, task_id)
 
     def recover_final(self, task_id, reason):
         """Explicit new independent attempt after a proven infrastructure loss.

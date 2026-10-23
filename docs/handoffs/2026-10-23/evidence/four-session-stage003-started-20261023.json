@@ -1,0 +1,13 @@
+{
+  "kind": "actual_four_closed_generation_staging_started",
+  "at_utc": "2026-10-23T14:33:50.635523+00:00",
+  "local_pid": 4857,
+  "source_sha256": "6c591396031e8b6575bd46dced4b2444f90868324789182d105479b25e3e2c65",
+  "preflight_path": "work/live/four-session-stage003-preflight-20261023.json",
+  "preflight_sha256": "4b7bd3097450705c498d9225410fb34a018f41d681e2db0376ca765ca17da7d8",
+  "remote_script": "/gpfs/home/rmdraux/.cleanup-preserved/agentic-storage-tools-20261023/session_archive_lossless_live_003-6c591396.py",
+  "remote_preflight": "/gpfs/home/rmdraux/.cleanup-preserved/agentic-storage-tools-20261023/stage003-preflight-4b7bd3097450.json",
+  "source_mutations_authorized": false,
+  "slurm_submissions": 0,
+  "model_calls": 0
+}

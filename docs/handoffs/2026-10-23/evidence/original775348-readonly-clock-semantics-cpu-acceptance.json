@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "trusted_original_read_only_helper_distinct_clock_semantics_correction",
+  "status": "ready_for_primary_review_before_any_new_real_checkpoint_inspection",
+  "helper": {
+    "path": "work/live/inspect_original_775348_readonly.py",
+    "sha256": "5710bcad870dbd260971b79fb43ca9c31553f3bc2ac1b255f23b5a3c485d9d4d",
+    "bytes": 25319
+  },
+  "preserved_initial_helper": {
+    "path": "work/live/inspect_original_775348_readonly.8086df54-before-duration-semantics.py",
+    "sha256": "8086df54f533158962d9ae29d8fc52abe184a0a75adb99a397904f860613c4bf",
+    "primary_reported_initial_outcome": "exit2 original_cli_ack_changed before checkpoint API; no output receipt"
+  },
+  "cause": "CodexBackend samples raw receipt elapsed_seconds after communicate, then samples CodexResult elapsed_seconds after event parsing and schema validation. Those two historical durations describe different instants and were incorrectly required to be equal by the initial helper.",
+  "historical_source_pins": {
+    "codex_backend.py": "326f756ec9c4bb3d9dee0c684c54335ccf6aa28a30dbd8918f310317de52071e",
+    "upstream_original.py": "826906e63e5c69a0b8285d441a7dfcb858d1610c097004f4832917a19fd61241"
+  },
+  "actual_public_cli_authentication": {
+    "path": "work/live/original775348-public-cli-clock-semantics-authenticated.json",
+    "sha256": "0b26a3e89d7ee63ab3c8429967b1b7a9c407702cc419d301c6c5b45f4a8d77a4",
+    "cli_count": 10,
+    "only_different_result_field": "elapsed_seconds",
+    "all_durable_reply_records_exactly_match_calls_ack": true,
+    "all_production_cli_terminal_verifiers_accept": true,
+    "all_historical_source_pins_match_primary_frozen_and_manifest": true,
+    "all_ack_clocks_finite_nonnegative_not_earlier_than_cli": true,
+    "scope": "Only public CLI intent/receipt/reply/ACK data authenticated; values compared internally, public field names and hashes projected. No actual checkpoint API invoked."
+  },
+  "retained_guards": [
+    "Exact seven-key result envelope; no extra field silently ignored",
+    "Exact payload, usage, events, model, reasoning_effort and call_id",
+    "Exact raw CLI receipt SHA, intent hash and ACK record hash",
+    "Exact durable reply.json.record equals calls.json ACK and reply intent hash matches",
+    "Both duration samples remain pinned without rewriting or replacing historical values",
+    "Finite nonnegative durations; ACK sample cannot precede raw CLI sample",
+    "Clock interpretation requires the exact historical CodexBackend/bridge sources and manifest adapter pins",
+    "All previous read-only graph, source, task lock, artifact and projection guards retained"
+  ],
+  "tests": {
+    "path": "work/live/test_inspect_original_775348_readonly.py",
+    "sha256": "8a07a3d62df038776f6f804a09ca15b5a72b226c3584a14d5566d45b942a084b",
+    "junit": "work/live/original775348-readonly-clock-semantics-tests.xml",
+    "junit_sha256": "05ccea894b4be05d0e8306a3541f4ba458f69da0dd3981035176da2a69fb950d",
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 0.59,
+    "new_cases": 16,
+    "scope": "24 acquired synthetic graph/projection tests plus16 duration/envelope/identity regression cases. No actual study checkpoint."
+  },
+  "actual_campaign_checkpoint_reads_by_this_correction": 0,
+  "model_calls": 0,
+  "gpu_requests": 0,
+  "scheduler_calls": 0,
+  "campaign_mutations": 0,
+  "method_relabeling": false
+}

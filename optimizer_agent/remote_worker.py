@@ -253,6 +253,9 @@ def recover_job(config):
 def submit(directory):
     directory = Path(directory).resolve()
     config = json.loads((directory / "submission.json").read_text())
+    placement = config.get("nodelist", "")
+    if not isinstance(placement, str) or (placement and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", placement)):
+        raise ValueError("Node placement must name exactly one node")
     with (directory / "submission.lock").open("a") as lock:
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         receipt = directory / "job_id.json"
@@ -276,6 +279,8 @@ def submit(directory):
                        "--error=" + str(directory / "slurm-%j.err")]
             if config.get("exclude"):
                 command.append("--exclude=" + config["exclude"])
+            if placement:
+                command.append("--nodelist=" + placement)
             command.append(str(directory / "job.sh"))
             try:
                 process = run(command, timeout=45)

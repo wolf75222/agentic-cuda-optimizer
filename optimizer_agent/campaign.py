@@ -206,7 +206,7 @@ class CampaignRuntime:
         # Authenticate relocated inputs before config/environment publication
         # or WorkloadSuite.cases() can rewrite the copied evidence. This never
         # opens the old root and never changes actual request I/O locations.
-        from .evaluation_recovery import recovery_input_identity
+        from .confirmation_recovery import recovery_input_identity
         input_identity = recovery_input_identity(self.directory)
         mode_path = self.directory / "execution-mode.json"
         execution_mode = {"generation_only": self.generation_only}
@@ -906,7 +906,11 @@ class CampaignRuntime:
                                   confirmation.get("measurement_evaluation_id") != measurement["evaluation_id"]):
                     raise ValueError("Confirmation differs from its canonical evaluation request")
             else:
-                confirmation = self.evaluator.confirm(candidate, incumbent_candidate)
+                from .confirmation_recovery import confirmation as recovered_confirmation
+                confirmation = recovered_confirmation(self, state, candidate, incumbent_candidate,
+                                                      measurement, measurement_path)
+                if confirmation is None:
+                    confirmation = self.evaluator.confirm(candidate, incumbent_candidate)
                 confirmation["incumbent_version"] = incumbent["version"]
                 if canonical:
                     confirmation.update(evaluation_request_id=measurement_path.parent.name,
@@ -1167,6 +1171,8 @@ def run_on_runner(config, runner, directory, *, resume=False, generation_only=Fa
         graph = build_campaign_graph(runtime, checkpointer)
         graph_config = {"configurable": {"thread_id": config.run_id}, "recursion_limit": max(100, config.max_trials*40)}
         existing = graph.get_state(graph_config)
+        from .confirmation_recovery import bind_checkpoint
+        bind_checkpoint(runtime, existing)
         if existing.values and not resume:
             raise ValueError("Campaign already exists; use resume or a new run_id")
         if existing.values and not existing.next:

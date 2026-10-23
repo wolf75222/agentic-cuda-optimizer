@@ -1,0 +1,29 @@
+{
+  "at_utc": "2026-10-23T15:09:50.733827+00:00",
+  "kind": "stop_handoff_read_only_remote_scheduler_and_quota",
+  "mutations": 0,
+  "observation": {
+    "squeue": {
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "quota": {
+      "returncode": 0,
+      "stdout": "                         Block Limits                                               |     File Limits\nFilesystem Fileset    type             KB      quota      limit   in_doubt    grace |    files   quota    limit in_doubt    grace  Remarks\ngpfs       home       USR        25452488  104857600  110100480          0     none |   549749 1000000  1500000        0     none romeo.romeo.univ-reims.fr\ngpfs       scratch    USR        35504992  104857600  110100480          0     none |  1496302 1000000  1500000        0   5 days romeo.romeo.univ-reims.fr\ngpfs       projet     USR       224519824          0          0          0     none |  2863984       0        0        0     none romeo.romeo.univ-reims.fr\n",
+      "stderr": ""
+    },
+    "project_partial": {
+      "path": "/gpfs/projet/r250127/rmdraux-agentic-cuda-optimizer-retained-20261022",
+      "exists": true,
+      "copy_proof_exists": false,
+      "root_entries": [
+        ".lock",
+        "intent.json",
+        "journal.jsonl",
+        "sessions",
+        "source-manifest.json"
+      ]
+    }
+  }
+}

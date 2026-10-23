@@ -22,6 +22,8 @@ import remote_worker
     {"account": "r250127\n--exclusive"}, {"walltime": "1;id"},
     {"request_timeout": 0}, {"exclude": "romeo;id"},
     {"constraint": "armgpu;id"},
+    {"nodelist": "romeo-a[001-004]"}, {"nodelist": "romeo-a041,romeo-a043"},
+    {"nodelist": "romeo-a041\n--exclusive"}, {"nodelist": True},
 ])
 def test_invalid_config_rejected(values):
     with pytest.raises(ValueError):
@@ -74,6 +76,33 @@ def test_submission_receipt_reused_without_sbatch(monkeypatch, tmp_path):
     assert "--gres=gpu:h100:1" in commands[0]
     assert "--constraint=armgpu" in commands[0]
     assert "--exclude=romeo-c003" in commands[0]
+
+
+def test_single_node_placement_keeps_one_gpu_and_idempotent_submission(monkeypatch, tmp_path):
+    config = submission_config(tmp_path)
+    config["nodelist"] = "romeo-a041"
+    (tmp_path / "submission.json").write_text(json.dumps(config))
+    commands = []
+    def invoke(argv, timeout=30):
+        commands.append(argv)
+        return subprocess.CompletedProcess(argv, 0, "987654;cluster\n", "")
+    monkeypatch.setattr(remote_worker, "run", invoke)
+    first = remote_worker.submit(tmp_path)
+    second = remote_worker.submit(tmp_path)
+    assert first["job_id"] == second["job_id"] == "987654"
+    assert len(commands) == 1
+    assert "--nodelist=romeo-a041" in commands[0]
+    assert "--gres=gpu:h100:1" in commands[0]
+
+
+def test_invalid_worker_placement_is_refused_before_submission_intent(tmp_path, monkeypatch):
+    config = submission_config(tmp_path)
+    config["nodelist"] = "romeo-a041,romeo-a043"
+    (tmp_path / "submission.json").write_text(json.dumps(config))
+    monkeypatch.setattr(remote_worker, "run", lambda *a, **k: pytest.fail("No scheduler call allowed"))
+    with pytest.raises(ValueError, match="exactly one node"):
+        remote_worker.submit(tmp_path)
+    assert not (tmp_path / "submission_started.json").exists()
 
 
 def test_uncertain_submission_recovers_exact_name(monkeypatch, tmp_path):

@@ -1,0 +1,33 @@
+{
+  "at_utc": "2026-10-23T14:25:50.302197+00:00",
+  "probe": {
+    "kind": "actual_gpfs_rename_noreplace_probe",
+    "rows": [
+      {
+        "source": "a",
+        "target": "b",
+        "rc": -1,
+        "errno": 17,
+        "expected_errno": 17
+      },
+      {
+        "source": "a",
+        "target": "c",
+        "rc": -1,
+        "errno": 22,
+        "expected_errno": 0
+      }
+    ],
+    "passed": false,
+    "path": "/gpfs/projet/r250127/.aco-synthetic-noreplace-probe-3c08353f0a21438daa380dba32416ed7",
+    "real_session_operations": 0,
+    "preceding_exchange_probe_failed_errno": 22,
+    "preceding_exchange_probe_trees_preserved": [
+      {
+        "path": "/gpfs/projet/r250127/.aco-synthetic-exchange-probe-290ae5cdba5b466bac2478bc8d1ae76d",
+        "preserved": true
+      }
+    ]
+  },
+  "tool002_sha256": "d58937179a8312914d605801b1c8e40bf93669b5ddecf355b9ade6017c0b7cee"
+}

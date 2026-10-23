@@ -1,0 +1,68 @@
+[
+  {
+    "path": "optimizer_agent/bootstrap_recovery.py",
+    "sha256": "2a0c5e9cd709e572690de3706532c1e8bb3d713fa3532e547b8218de0ec6986d",
+    "bytes": 35579,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/campaign.py",
+    "sha256": "db81f82f2c34a4c89dfac9e095fc8d98f99fc14b0c2e72b22e30e9600b3e5a1a",
+    "bytes": 97411,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/evaluation_recovery.py",
+    "sha256": "9e72c7dedd2e602ff6ebc2c7297225286da5080fcde60cf617f7bc4a39af9da8",
+    "bytes": 44894,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/execution_backend.py",
+    "sha256": "a159f219ca898c395443af2056eb1b89f3355b027b3ed2a28a4f8fe69756bbce",
+    "bytes": 41114,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/remote_worker.py",
+    "sha256": "57726ec5934ac68e84b7a34b33fc70ccd5a136e7c25eb6a7d54f03edffc24147",
+    "bytes": 35595,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/suite_orchestrator.py",
+    "sha256": "43f725b587881c18d005cc2c2016973f9e9d96476098897b092bfa20d2a00d9b",
+    "bytes": 98699,
+    "syntax": "ok"
+  },
+  {
+    "path": "scripts/run_quality_suite.py",
+    "sha256": "59e74b811ba5f02e92d0fbd4c97b71d33a5cb76f33f39869258f1dc509639ccb",
+    "bytes": 5874,
+    "syntax": "ok"
+  },
+  {
+    "path": "tests/test_execution_backend.py",
+    "sha256": "fbfb34f1805ba29372c7f97fec6bc74781d5dc1bb02280201e5336bc795a96a8",
+    "bytes": 25120,
+    "syntax": "ok"
+  },
+  {
+    "path": "optimizer_agent/confirmation_recovery.py",
+    "sha256": "cb5c35209d28287ffebbc04a0480141a62739f7b400660e7e06af6a3ad1f1c02",
+    "bytes": 27617,
+    "syntax": "ok"
+  },
+  {
+    "path": "tests/test_confirmation_placement.py",
+    "sha256": "eaa684ee36e6fceeba8693c9ff4e410d2fa5845565d780385dcbb1aa776b9a8f",
+    "bytes": 1457,
+    "syntax": "ok"
+  },
+  {
+    "path": "tests/test_confirmation_recovery.py",
+    "sha256": "b36db7dff7f32fb980781ec4b631cf8e8a09a3ef6b191e88b3d8a3d687135e31",
+    "bytes": 18804,
+    "syntax": "ok"
+  }
+]
